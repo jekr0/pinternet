@@ -49,3 +49,29 @@ body {
     left: 1634px;
     top: 20px;
 }
+
+/* Кнопка-иконка */
+.header__icon-button {
+    position: absolute;           
+    left: 1698px;                 
+    top: 32px;                    
+    width: 16px;           
+    height: 26px;    
+    color: #000000;
+
+    /* Сбрасываем стандартные стили кнопки */
+    background: none;
+    border: none;
+    padding: 0;
+    
+    /* Отладка хитбокса*/
+    /* background-color: rgba(0, 255, 0, 0.2); полупрозрачный зелёный для видимости хитбокса */
+}
+
+/* Сама иконка внутри кнопки */
+.header__icon {
+    display: block;               /* убираем лишние отступы */
+    width: 16px;                  /* размер иконки = хитбокс */
+    height: 26px;
+    fill: currentColor;           /* иконка будет наследовать цвет от кнопки */
+}
