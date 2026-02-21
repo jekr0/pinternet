@@ -14,7 +14,7 @@
 }
 
 body {
-    font-family: 'MyFont', Arial, sans-serif;
+    font-family: 'MC_font', Arial, sans-serif;
     background-color: #f5f5f5;
 }
 
@@ -25,4 +25,14 @@ body {
     background-color: #e0e0e0;
     border-bottom-left-radius: 20px;
     border-bottom-right-radius: 20px;
+
+    /* Flexbox для центрирования текста */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    /* Настройки текста */
+    font-family: 'MC_font', Arial, sans-serif;
+    font-size: 16px;
+    color: #000000;
 }
