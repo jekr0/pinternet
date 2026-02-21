@@ -36,3 +36,16 @@ body {
     font-size: 16px;
     color: #000000;
 }
+
+/* Круг в шапке */
+.header__circle {
+    width: 50px;
+    height: 50px;
+    background-color: #ffffff;
+    border-radius: 50%;
+
+    /* Позиционирование */
+    position: absolute;
+    left: 1634px;
+    top: 20px;
+}
