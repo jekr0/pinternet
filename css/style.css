@@ -13,13 +13,17 @@
     font-display: swap;
 }
 
+/* Вся страница */
 body {
     font-family: 'MC_font', Arial, sans-serif;
     background-color: #f5f5f5;
 }
 
+/* =========================== Верхняя панель ================================================================================= */
+
+/* Верхняя панель */
 .header {
-    max-width: 1552px;
+    width: 90%;
     height: 90px;
     margin: 0 auto;
     background-color: #e0e0e0;
@@ -35,43 +39,78 @@ body {
     font-family: 'MC_font', Arial, sans-serif;
     font-size: 16px;
     color: #000000;
+
+    /* Абсолютное позиционирования внутри */
+    position: relative;
 }
 
-/* Круг в шапке */
-.header__circle {
+/* --------------------------- Профиль --------------------------------------------------------------------------------- */
+
+/* Профиль, кнопка */
+.header__profile-button {
+    position: absolute;
+    right: 60px;
+    top: 20px;
     width: 50px;
     height: 50px;
-    background-color: #ffffff;
     border-radius: 50%;
+    overflow: hidden;
 
-    /* Позиционирование */
-    position: absolute;
-    left: 1634px;
-    top: 20px;
+    /* Сброс стандартных стилей кнопки */
+    background-color: #ffffff;
+    border: none;
+    padding: 0;
+
+    /* Центрируем содержимое (иконку) по умолчанию */
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-/* Кнопка-иконка */
-.header__icon-button {
-    position: absolute;           
-    left: 1698px;                 
-    top: 32px;                    
-    width: 16px;           
-    height: 26px;    
+/* Стили для изображения внутри кнопки */
+.header__profile-button img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* Стили для иконки-заглушки (SVG) */
+.header__profile-icon {
+    width: 60%;
+    height: 60%;
+    flex-shrink: 0;
+    object-fit: cover;
+    fill: currentColor;
+}
+
+/* --------------------------- Профиль, настройки --------------------------------------------------------------------------------- */
+
+/* Кнопка настроек */
+.header__prof_settings-button {
+    width: 16px;
+    height: 26px;
     color: #000000;
+
+    /* Позиционирование (относительно header) */
+    position: absolute;
+    right: 20px;
+    top: 32px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
     /* Сбрасываем стандартные стили кнопки */
     background: none;
     border: none;
     padding: 0;
-    
-    /* Отладка хитбокса*/
-    /* background-color: rgba(0, 255, 0, 0.2); полупрозрачный зелёный для видимости хитбокса */
 }
 
-/* Сама иконка внутри кнопки */
-.header__icon {
-    display: block;               /* убираем лишние отступы */
-    width: 16px;                  /* размер иконки = хитбокс */
-    height: 26px;
-    fill: currentColor;           /* иконка будет наследовать цвет от кнопки */
+/* Кнопка настроек, иконка */
+.header__prof_settings-icon {
+    width: 120%;
+    height: 120%;
+    flex-shrink: 0;
+    fill: currentColor;
 }

@@ -11,12 +11,18 @@
 <body>
     <!-- Шапка сайта -->
     <header class="header">
-        привет!
-        <div class="header__circle"></div> <!-- Аватар -->
+        work in progress
 
-        <!-- Кнопка с иконкой из спрайта -->
-        <button class="header__icon-button">
-            <svg class="header__icon" width="16" height="26">
+        <!-- Профиль -->
+        <button class="header__profile-button" id="profile-button">
+            <svg class="header__profile-icon">
+                <use xlink:href="images/sprite.svg#icon-at-sign"></use>
+            </svg>
+        </button>
+
+        <!-- Профиль, настройки -->
+        <button class="header__prof_settings-button">
+            <svg class="header__prof_settings-icon">
                 <use xlink:href="images/sprite.svg#icon-vertical-dots"></use>
             </svg>
         </button>
