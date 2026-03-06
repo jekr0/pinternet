@@ -1,22 +1,33 @@
 /* =========================== Главный объект приложения ================================================================================= */
 
 const App = {
-    /* Запуск после загрузки DOM */
+    supabaseClient: null,
+
     init: function () {
         console.log('App initialized');
+
+        // Инициализируем Supabase
+        this.initSupabase();
 
         // Запуск всех модулей
         this.components = {
             profile: new ProfileComponent(),
-            // example: new ExampleComponent(),
         };
 
-        // Запуск всех компонентов
         Object.values(this.components).forEach(component => {
             if (component && typeof component.init === 'function') {
                 component.init();
             }
         });
+    },
+
+    /* Для работы с клиентом */
+    initSupabase: function () {
+        const SUPABASE_URL = 'https://fulgfacmboxgmmkjsgrg.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_XjU6Y4sctj3KdOuPv7_xlw_C8xKgKp2';
+
+        this.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        console.log('Supabase client initialized');
     },
 
     /* Утилиты для работы с DOM */

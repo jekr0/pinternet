@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Мой сайт</title>
+    <title>Pinternet</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 
@@ -28,7 +28,10 @@
         </button>
     </header>
 
-    <!-- Подключаем JS файл в самом конце body -->
+    <!-- Подключение Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Подключение JS файлов -->
     <script src="js/script.js"></script>
 </body>
 
