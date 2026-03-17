@@ -1,6 +1,15 @@
 <?php
+// Отображение ошибок
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
-// Удаляем начальный /htdocs, если он есть
+// Получаем запрошенный URI без параметров
+$request = $_SERVER['REQUEST_URI'];
+$path = parse_url($request, PHP_URL_PATH);
+$path = rtrim($path, '/');
+
+// Удаляем начальный /htdocs, если он есть (для случая, когда сайт расположен в подпапке)
 $base = '/htdocs';
 if (strpos($path, $base) === 0) {
     $path = substr($path, strlen($base));
@@ -9,27 +18,20 @@ if (strpos($path, $base) === 0) {
     }
 }
 
-// Получаем запрошенный URI без параметров
-$request = $_SERVER['REQUEST_URI'];
-$path = parse_url($request, PHP_URL_PATH);
-$path = rtrim($path, '/');
-
 // Определяем, какая страница нужна
 switch ($path) {
     case '':
-
     case '/':
+    case '/home':
         $page = 'home_page.php';
         $pageTitle = 'Главная';
-        // Список CSS-компонентов для главной страницы
         $cssComponents = [
             'header_comp.css',
             'footer_comp.css',
             // ...
         ];
-        // Список JS-модулей для главной страницы
         $jsModules = [
-            'header_mod-profile_button.js', // если модуль отвечает за шапку
+            'header_mod-profile_button.js',
             // ...
         ];
         break;
@@ -53,7 +55,7 @@ switch ($path) {
     default:
         // 404 Not Found
         http_response_code(404);
-        $page = '404_page.php'; // создайте такой шаблон при необходимости
+        $page = '404_page.php';
         $pageTitle = 'Страница не найдена';
         $cssComponents = [
             'header_comp.css',
@@ -72,15 +74,15 @@ switch ($path) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $pageTitle; ?> | Grinderest</title>
-        <link rel="stylesheet" href="assets/css/main.css">
+    <title><?php echo $pageTitle; ?> / Grinderest</title>
+    <link rel="stylesheet" href="assets/css/main.css">
     <?php foreach ($cssComponents as $cssFile): ?>
         <link rel="stylesheet" href="assets/css/components/<?php echo $cssFile; ?>">
     <?php endforeach; ?>
-        <script src="assets/js/main.js" defer></script>
     <?php foreach ($jsModules as $jsFile): ?>
         <script src="assets/js/modules/<?php echo $jsFile; ?>" defer></script>
     <?php endforeach; ?>
+    <script src="assets/js/main.js" defer></script>
 </head>
 
 <body>

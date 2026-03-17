@@ -40,8 +40,8 @@ const App = {
     /* Хранилище данных приложения */
     store: {
         profile: {
-            avatarPath: '/htdocs/uploads/avatars/avatar.jpg',
-            defaultIcon: 'icon-at-sign'
+            avatarPath: 'uploads/avatars/avatar.jpg',
+            defaultIcon: 'assets/images/icons/at-sign.svg'
         },
     }
 };

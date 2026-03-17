@@ -29,18 +29,14 @@ class ProfileComponent {
     // Обработка исключения
     showDefaultIcon() {
         console.warn('Avatar failed to load, showing default icon');
-        this.button.innerHTML = `
-        <svg class="header__profile-icon">
-            <use xlink:href="assets/images/sprite.svg#${App.store.profile.defaultIcon}"></use>
-        </svg>
-    `;
+        this.button.innerHTML = '<img class="header__profile-icon" src="assets/images/icons/at-sign.svg">';
     }
 
     /* Показать загруженный аватар */
     showAvatar(img) {
         this.button.innerHTML = '';
+        img.classList.add('header__profile-avatar'); 
         this.button.appendChild(img);
-        console.log('Avatar loaded successfully');
     }
 
     /* Обработчики событий */
@@ -52,7 +48,7 @@ class ProfileComponent {
 
     /* Клик по кнопке профиля */
     handleClick(e) {
-        console.log('Profile button clicked');
-        // Здесь будет логика открытия меню профиля и т.д.
+        console.log('header_mod-profile_button was clicked');
+        window.location.href = '/profile';
     }
 }

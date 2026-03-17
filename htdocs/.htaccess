@@ -1,8 +1,5 @@
 RewriteEngine On
-
-# Если запрошенный файл или папка реально существуют — отдаём их напрямую
+RewriteBase /
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-
-# Всё остальное направляем на index.php
 RewriteRule ^(.*)$ index.php [QSA,L]
