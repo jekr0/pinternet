@@ -23,29 +23,30 @@ switch ($path) {
     case '':
     case '/':
     case '/home':
-        $page = 'home_page.php';
+        $page = 'home_pg.php';
         $pageTitle = 'Главная';
         $cssComponents = [
-            'header_comp.css',
-            'footer_comp.css',
+            'header_cp.css',
+            'footer_cp.css',
             // ...
         ];
         $jsModules = [
-            'header_mod-profile_button.js',
+            'profile_button.js',
+            'dropdown_menu.js',
             // ...
         ];
         break;
 
     case '/profile':
-        $page = 'profile_page.php';
+        $page = 'profile_pg.php';
         $pageTitle = 'Профиль';
         $cssComponents = [
-            'header_comp.css',
-            'footer_comp.css',
+            'header_cp.css',
+            'footer_cp.css',
             // ...
         ];
         $jsModules = [
-            'header_mod-profile_button.js',
+            'profile_button.js',
             // ...
         ];
         break;
@@ -55,14 +56,15 @@ switch ($path) {
     default:
         // 404 Not Found
         http_response_code(404);
-        $page = '404_page.php';
+        $page = '404_pg.php';
         $pageTitle = 'Страница не найдена';
         $cssComponents = [
-            'header_comp.css',
-            'footer_comp.css',
+            'header_cp.css',
+            'footer_cp.css',
         ];
         $jsModules = [
-            'header_mod-profile_button.js',
+            'profile_button.js',
+            'dropdown_menu.js',
         ];
         break;
 }

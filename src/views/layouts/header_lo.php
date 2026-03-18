@@ -1,13 +1,13 @@
 <!-- src/views/layouts/header.php -->
 <header class="header">
-    <!-- Профиль -->
-    <button class="header__profile-button" id="header_mod-profile_button">
+    <!-- Кнопка профиля -->
+    <button class="header__profile-button" data-component="profile_button" data-profile-img="1">
     </button>
 
-    <!-- Профиль, настройки -->
-    <button class="header__prof_settings-button">
-        <svg class="header__prof_settings-icon">
-            <use xlink:href="assets/images/icons/vertical-dots.svg"></use>
+    <!-- Кнопка выпадающего меню -->
+    <button class="header__dropdown-button" data-component="dropdown_button">
+        <svg class="header__dropdown-icon">
+            <img src="assets/images/icons/vertical-dots.svg" class="header__dropdown-icon">
         </svg>
     </button>
 </header>

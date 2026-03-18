@@ -1,0 +1,37 @@
+.dropdown {
+    position: absolute;
+    top: 60px;          /* отступ от header (10px + высота кнопки?) */
+    right: 20px;         /* выравнивание по правому краю header (как у кнопки) */
+    width: 200px;        /* ширина квадрата */
+    background: white;
+    border-radius: 20px; /* скругление углов */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 1000;
+}
+
+.dropdown--hidden {
+    display: none;
+}
+
+.dropdown__list {
+    list-style: none;
+    margin: 0;
+    padding: 8px 0;
+}
+
+.dropdown__item {
+    padding: 0;
+}
+
+.dropdown__link {
+    display: block;
+    padding: 10px 16px;
+    text-decoration: none;
+    color: #333;
+    font-family: 'MC_caps', sans-serif;
+    transition: background 0.2s;
+}
+
+.dropdown__link:hover {
+    background: #f0f0f0;
+}

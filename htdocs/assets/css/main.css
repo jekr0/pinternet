@@ -1,5 +1,6 @@
 /* Импорт стилей компонентов */
-@import 'components/header_comp.css';
+@import 'components/header_cp.css';
+@import 'components/dropdown_cp.css';
 
 /* Сброс базовых отступов */
 * {

@@ -6,7 +6,8 @@ const App = {
 
         // Запуск всех модулей
         this.components = {
-            profile: new ProfileComponent(),
+            profile: new ProfileComponent(), 
+            dropdownMenu: new DropdownMenuComponent(),
         };
 
         Object.values(this.components).forEach(component => {
