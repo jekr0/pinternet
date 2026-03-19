@@ -1,21 +1,41 @@
-/* =========================== Главный объект приложения ================================================================================= */
+/* =========================== Главный объект приложения ========================== */
 
 const App = {
+    // Реестр зарегистрированных компонентов (ключ = имя файла модуля)
+    registry: {},
+
+    // Метод для регистрации компонента
+    register: function (name, componentClass) {
+        this.registry[name] = componentClass;
+    },
+
+    // Инициализация: создаём экземпляры только тех модулей, которые нужны на странице
     init: function () {
         console.log('App initialized');
 
-        // Запуск всех модулей
-        this.components = {
-            profile: new ProfileComponent(), 
-            dropdownMenu: new DropdownMenuComponent(),
-        };
+        if (!window.activeModules || !Array.isArray(window.activeModules)) {
+            console.warn('activeModules is not defined or not an array');
+            return;
+        }
 
-        Object.values(this.components).forEach(component => {
-            if (component && typeof component.init === 'function') {
-                component.init();
+        window.activeModules.forEach(moduleFile => {
+            const ComponentClass = this.registry[moduleFile];
+            if (ComponentClass) {
+                try {
+                    const instance = new ComponentClass();
+                    instance.init();               // компонент сам ищет свои элементы
+                    this.components[moduleFile] = instance; // опционально, для хранения экземпляров
+                } catch (e) {
+                    console.error(`Component initialization error ${moduleFile}:`, e);
+                }
+            } else {
+                console.warn(`No registered class for module: ${moduleFile}`);
             }
         });
     },
+
+    // Хранилище для экземпляров (можно использовать позже)
+    components: {},
 
     /* Утилиты для работы с DOM */
     utils: {
@@ -44,12 +64,9 @@ const App = {
             avatarPath: 'uploads/avatars/avatar.jpg',
             defaultIcon: 'assets/images/icons/at-sign.svg'
         },
+        // другие глобальные данные
     }
 };
 
-/* Точка входа, запускаем приложение после полной загрузки DOM */
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => App.init());
-} else {
-    App.init();
-}
+// Инициализируем после полной загрузки DOM (все скрипты уже выполнены)
+document.addEventListener('DOMContentLoaded', () => App.init());

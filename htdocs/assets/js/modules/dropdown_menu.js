@@ -23,3 +23,6 @@ class DropdownMenuComponent {
         // ...
     }
 }
+
+// Регистрация
+App.register('dropdown_menu.js', DropdownMenuComponent);

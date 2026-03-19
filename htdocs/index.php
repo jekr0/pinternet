@@ -81,10 +81,19 @@ switch ($path) {
     <?php foreach ($cssComponents as $cssFile): ?>
         <link rel="stylesheet" href="assets/css/components/<?php echo $cssFile; ?>">
     <?php endforeach; ?>
+    
+    <!-- Передаём список модулей в JavaScript (синхронно, до defer-скриптов) -->
+    <script>
+        window.activeModules = <?php echo json_encode($jsModules); ?>;
+    </script>
+
+    <!-- Основной скрипт приложения (определяет App) -->
+    <script src="assets/js/main.js" defer></script>
+
+    <!-- Модули, которые используют App и регистрируются -->
     <?php foreach ($jsModules as $jsFile): ?>
         <script src="assets/js/modules/<?php echo $jsFile; ?>" defer></script>
     <?php endforeach; ?>
-    <script src="assets/js/main.js" defer></script>
 </head>
 
 <body>
