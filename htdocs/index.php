@@ -51,7 +51,7 @@ switch ($path) {
         ];
         break;
 
-    // case '...':
+    // case '42':
 
     default:
         // 404 Not Found
