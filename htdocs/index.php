@@ -31,13 +31,14 @@ switch ($path) {
         ];
         $CSS = [
             'header_lo.css',
-            'footer_lo.css',
+            'profile-container_cp.css',
             'dropdown-menu_cp.css',
-            'profile-container_cp.css'
+            'footer_lo.css'
         ];
         $JS = [
             'profile_button.js',
-            'dropdown_menu.js'
+            'dropdown_menu.js',
+            'adaptive_text.js'
         ];
         break;
 
@@ -66,13 +67,14 @@ switch ($path) {
         ];
         $CSS = [
             'header_lo.css',
-            'footer_lo.css',
+            'profile-container_cp.css',
             'dropdown-menu_cp.css',
-            'profile-container_cp.css'
+            'footer_lo.css'
         ];
         $JS = [
             'profile_button.js',
-            'dropdown_menu.js'
+            'dropdown_menu.js',
+            'adaptive_text.js'
         ];
         break;
 }
