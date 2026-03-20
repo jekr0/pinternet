@@ -1,13 +1,15 @@
 <!-- src/views/layouts/header.php -->
 <header class="header">
-    <!-- Кнопка профиля -->
-    <button class="header__profile-button" data-component="profile_button" data-profile-img="1">
-    </button>
+    <a href="/" class="header__logo">grinderest</a>
 
-    <!-- Кнопка выпадающего меню -->
+    <!-- Контейнер профиля (вынесен в отдельный компонент) -->
+    <?php include '../src/views/components/profile-container_cp.php'; ?>
+
     <button class="header__dropdown-button" data-component="dropdown_button">
         <svg class="header__dropdown-icon">
             <img src="assets/images/icons/vertical-dots.svg" class="header__dropdown-icon">
         </svg>
     </button>
+
+    <?php include '../src/views/components/dropdown-menu_cp.php'; ?>
 </header>

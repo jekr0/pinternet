@@ -1,4 +1,4 @@
-<!-- src/views/layouts/dropdown_lo.php -->
+<!-- src/views/components/dropdown-menu_lo.php -->
 <div class="dropdown dropdown--hidden" id="header-dropdown-menu">
     <ul class="dropdown__list">
         <li class="dropdown__item">

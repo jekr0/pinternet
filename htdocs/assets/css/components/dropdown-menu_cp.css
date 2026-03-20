@@ -1,10 +1,16 @@
+/* Обязательно: родительский элемент (header) должен быть relative */
+.header {
+    position: relative;
+}
+
 .dropdown {
     position: absolute;
-    top: 60px;          /* отступ от header (10px + высота кнопки?) */
-    right: 20px;         /* выравнивание по правому краю header (как у кнопки) */
-    width: 200px;        /* ширина квадрата */
+    top: 100%;
+    right: 56px;
+    width: 290px;
+    margin-top: 10px;
     background: white;
-    border-radius: 20px; /* скругление углов */
+    border-radius: 10px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     z-index: 1000;
 }

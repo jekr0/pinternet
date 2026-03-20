@@ -25,46 +25,54 @@ switch ($path) {
     case '/home':
         $page = 'home_pg.php';
         $pageTitle = 'Главная';
-        $cssComponents = [
-            'header_cp.css',
-            'footer_cp.css',
-            // ...
+        $PHP = [
+            'header_lo.php',
+            'footer_lo.php'
         ];
-        $jsModules = [
+        $CSS = [
+            'header_lo.css',
+            'footer_lo.css',
+            'dropdown-menu_cp.css',
+            'profile-container_cp.css'
+        ];
+        $JS = [
             'profile_button.js',
-            'dropdown_menu.js',
-            // ...
+            'dropdown_menu.js'
         ];
         break;
 
     case '/profile':
         $page = 'profile_pg.php';
         $pageTitle = 'Профиль';
-        $cssComponents = [
-            'header_cp.css',
-            'footer_cp.css',
-            // ...
+        $PHP = [
+            // none
         ];
-        $jsModules = [
-            'profile_button.js',
-            // ...
+        $CSS = [
+            // none
+        ];
+        $JS = [
+            // none
         ];
         break;
-
-    // case '42':
 
     default:
         // 404 Not Found
         http_response_code(404);
         $page = '404_pg.php';
         $pageTitle = 'Страница не найдена';
-        $cssComponents = [
-            'header_cp.css',
-            'footer_cp.css',
+        $PHP = [
+            'header_lo.php',
+            'footer_lo.php'
         ];
-        $jsModules = [
+        $CSS = [
+            'header_lo.css',
+            'footer_lo.css',
+            'dropdown-menu_cp.css',
+            'profile-container_cp.css'
+        ];
+        $JS = [
             'profile_button.js',
-            'dropdown_menu.js',
+            'dropdown_menu.js'
         ];
         break;
 }
@@ -78,35 +86,47 @@ switch ($path) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $pageTitle; ?> / Grinderest</title>
     <link rel="stylesheet" href="assets/css/main.css">
-    <?php foreach ($cssComponents as $cssFile): ?>
-        <link rel="stylesheet" href="assets/css/components/<?php echo $cssFile; ?>">
+
+    <?php
+    // Подключаем CSS-файлы из подпапок layouts/ и components/
+    foreach ($CSS as $cssFile):
+        // Определяем подпапку по суффиксу файла
+        if (str_ends_with($cssFile, '_lo.css')) {
+            $subfolder = 'layouts';
+        } elseif (str_ends_with($cssFile, '_cp.css')) {
+            $subfolder = 'components';
+        } else {
+            // fallback – компоненты
+            $subfolder = 'components';
+        }
+    ?>
+        <link rel="stylesheet" href="assets/css/<?php echo $subfolder; ?>/<?php echo $cssFile; ?>">
     <?php endforeach; ?>
-    
-    <!-- Передаём список модулей в JavaScript (синхронно, до defer-скриптов) -->
+
+    <!-- Передаём список JS-модулей для инициализации (синхронно) -->
     <script>
-        window.activeModules = <?php echo json_encode($jsModules); ?>;
+        window.activeModules = <?php echo json_encode($JS); ?>;
     </script>
 
     <!-- Основной скрипт приложения (определяет App) -->
     <script src="assets/js/main.js" defer></script>
 
-    <!-- Модули, которые используют App и регистрируются -->
-    <?php foreach ($jsModules as $jsFile): ?>
+    <!-- Модули (регистрируются в App.registry) -->
+    <?php foreach ($JS as $jsFile): ?>
         <script src="assets/js/modules/<?php echo $jsFile; ?>" defer></script>
     <?php endforeach; ?>
 </head>
 
 <body>
-    <!-- Подключаем шапку -->
-    <?php include '../src/views/layouts/header_lo.php'; ?>
+    <!-- Подключаем layout-файлы (шапка, подвал) -->
+    <?php foreach ($PHP as $layout): ?>
+        <?php include '../src/views/layouts/' . $layout; ?>
+    <?php endforeach; ?>
 
     <!-- Основной контент страницы -->
     <main class="main-content">
         <?php include '../src/views/pages/' . $page; ?>
     </main>
-
-    <!-- Подключаем подвал -->
-    <?php include '../src/views/layouts/footer_lo.php'; ?>
 </body>
 
 </html>
