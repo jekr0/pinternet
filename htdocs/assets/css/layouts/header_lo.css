@@ -5,7 +5,7 @@
     width: 90%;
     height: 90px;
     margin: 0 auto;
-    background:linear-gradient(90deg, rgba(230, 230, 230, 0.7), rgba(200, 200, 200, 0.7));
+    background:linear-gradient(90deg, rgba(200, 200, 200, 0.7), rgba(180, 180, 180, 0.7));
     backdrop-filter: blur(10px);
     box-shadow: 0 2px 3px rgba(0,0,0,0.07);
     border-bottom-left-radius: 20px;
@@ -29,7 +29,7 @@
 
 .header__logo {
     position: absolute;
-    left: 40px;
+    left: 60px;
     top: 50%;
     transform: translateY(-50%);
     font-family: 'MC_caps', Arial, sans-serif;
@@ -43,6 +43,16 @@
 
 .header__logo:hover {
     opacity: 0.8;
+}
+
+/* Иконка клубники */
+.header__strawberry-icon {
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 32px;
+    height: 32px;
 }
  
 /* --------------------------- Выпадающее меню --------------------------------------------------------------------------------- */
@@ -63,6 +73,26 @@
     background: none;
     border: none;
     padding: 0;
+    cursor: pointer;
+}
+
+.header__dropdown-button:after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 16px;
+    height: 26px;
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 20%;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.1s ease;
+}
+
+.header__dropdown-button:hover::after {
+    opacity: 1;
 }
 
 /* Кнопка настроек, иконка */

@@ -1,6 +1,7 @@
 <!-- src/views/layouts/header.php -->
 <header class="header">
     <a href="/" class="header__logo">grinderest</a>
+    <img src="assets/images/icons/strawberry2.svg" class="header__strawberry-icon">
 
     <!-- Контейнер профиля (вынесен в отдельный компонент) -->
     <?php include '../src/views/components/profile-container_cp.php'; ?>
