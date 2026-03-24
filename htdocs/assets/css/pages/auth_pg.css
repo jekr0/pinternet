@@ -1,0 +1,148 @@
+/* =========================== Страницы авторизации ========================== */
+
+/* Полноэкранная обёртка — центрирует контейнер */
+.auth {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Фиксированный белый контейнер */
+.auth__container {
+    width: 450pt;
+    height: 310pt;
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+}
+
+/* --------------------------- Логотип ----------------------------------- */
+
+.auth__logo {
+    font-family: 'MC_caps', Arial, sans-serif;
+    font-size: 36px;
+    color: rgb(40, 5, 40);
+    letter-spacing: 1px;
+    user-select: none;
+    text-align: center;
+    margin-top: 10pt;
+    margin-bottom: 10pt;
+}
+
+/* --------------------------- Ошибка ------------------------------------ */
+
+.auth__error {
+    font-family: 'SF_def', Arial, sans-serif;
+    font-size: 13px;
+    color: rgb(100, 100, 200);
+    background: rgba(180, 50, 50, 0.07);
+    border-radius: 8px;
+    padding: 8px 12px;
+    text-align: center;
+}
+
+.auth__error a {
+    color: rgb(100, 100, 200);
+}
+
+/* --------------------------- Форма ------------------------------------- */
+
+.auth__form {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+}
+
+/* --------------------------- Поля ввода -------------------------------- */
+
+.auth__input {
+    width: 80%;
+    height: 50px;
+    padding: 0 14px;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 10px;
+    font-family: 'SF_def', Arial, sans-serif;
+    font-size: 14px;
+    color: #333;
+    background: #fff;
+    outline: none;
+    transition: border-color 0.2s ease;
+    box-sizing: border-box;
+}
+
+.auth__input::placeholder {
+    color: #bbb;
+}
+
+.auth__input:focus {
+    border-color: rgb(100, 100, 200);
+}
+
+/* --------------------------- Кнопки ------------------------------------ */
+
+.auth__actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 10pt;
+    width: 80%;
+}
+
+.auth__button {
+    flex: 1;
+    height: 50px;
+    border-radius: 10px;
+    font-family: 'SF_def', Arial, sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    transition: border-color 0.2s ease, opacity 0.2s ease;
+    border: none;
+}
+
+.auth__button--back {
+    background: #ffffff;
+    border: 1.5px solid #e0e0e0;
+    color: #555;
+}
+
+.auth__button--back:hover {
+    border: 1.5px solid rgb(100, 100, 200);
+}
+
+.auth__button--submit {
+    background: rgb(100, 100, 200);
+    color: #ffffff;
+}
+
+.auth__button--submit:hover {
+    opacity: 0.8;
+}
+
+/* --------------------------- Подпись ----------------------------------- */
+
+.auth__footer {
+    font-family: 'SF_def', Arial, sans-serif;
+    font-size: 16px;
+    color: #999;
+    text-align: center;
+    margin-top: auto;
+    /* прижимает футер к низу */
+    margin-bottom: 20pt;
+}
+
+.auth__link {
+    color: rgb(100, 100, 200);
+    text-decoration: none;
+}
+
+.auth__link:hover {
+    text-decoration: underline;
+}
