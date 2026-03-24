@@ -44,7 +44,7 @@ unset($_SESSION['auth_error']);
             >
 
             <div class="auth__actions">
-                <button class="auth__button auth__button--back" type="button" onclick="history.back()">
+                <button class="auth__button auth__button--back" type="button" onclick="window.location.href='/home'">
                     Назад
                 </button>
                 <button class="auth__button auth__button--submit" type="submit">

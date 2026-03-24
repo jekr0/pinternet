@@ -55,6 +55,25 @@ const App = {
             img.onload = () => onSuccess?.(img);
             img.onerror = () => onError?.();
             return img;
+        },
+
+        /* Загрузка SVG из файла и вставка инлайн (с кешированием) */
+        _svgCache: {},
+        loadSVG: function (src, container) {
+            if (this._svgCache[src]) {
+                container.innerHTML = this._svgCache[src];
+                return;
+            }
+            fetch(src)
+                .then(r => {
+                    if (!r.ok) throw new Error(`SVG not found: ${src}`);
+                    return r.text();
+                })
+                .then(svg => {
+                    this._svgCache[src] = svg;
+                    container.innerHTML = svg;
+                })
+                .catch(err => console.warn(err));
         }
     },
 

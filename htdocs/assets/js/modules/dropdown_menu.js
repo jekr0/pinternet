@@ -13,6 +13,8 @@ class DropdownMenuComponent {
         if (this.buttons.length === 0) return;
 
         this.buttons.forEach(button => {
+            const svgSrc = button.dataset.svgSrc;
+            if (svgSrc) App.utils.loadSVG(svgSrc, button);
             // Определяем связанное меню: либо по data-dropdown-target, либо по умолчанию
             let menu = null;
             const targetSelector = button.dataset.dropdownTarget;

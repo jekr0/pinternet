@@ -11,11 +11,12 @@
 
 /* Фиксированный белый контейнер */
 .auth__container {
+    position: relative;          /* Добавляем для позиционирования ошибки */
     width: 450pt;
     height: 310pt;
     background: #ffffff;
     border-radius: 20px;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 2px 3px rgba(0,0,0,0.07);
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
@@ -37,13 +38,26 @@
 /* --------------------------- Ошибка ------------------------------------ */
 
 .auth__error {
+    position: absolute;
+    top: -35px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    width: auto;
+    max-width: 200%;
+    white-space: normal;
     font-family: 'SF_def', Arial, sans-serif;
-    font-size: 13px;
-    color: rgb(100, 100, 200);
-    background: rgba(180, 50, 50, 0.07);
-    border-radius: 8px;
+    font-size: 14px;
+    color: #555;
+    background: rgb(255, 255, 255);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 10px;
     padding: 8px 12px;
     text-align: center;
+    box-sizing: border-box;
+    display: flex;
+    align-items: flex-end;
 }
 
 .auth__error a {
@@ -64,7 +78,7 @@
 /* --------------------------- Поля ввода -------------------------------- */
 
 .auth__input {
-    width: 80%;
+    width: 75%;
     height: 50px;
     padding: 0 14px;
     border: 1.5px solid #e0e0e0;
@@ -93,7 +107,7 @@
     justify-content: center;
     gap: 10px;
     margin-top: 10pt;
-    width: 80%;
+    width: 75%;
 }
 
 .auth__button {
@@ -134,7 +148,6 @@
     color: #999;
     text-align: center;
     margin-top: auto;
-    /* прижимает футер к низу */
     margin-bottom: 20pt;
 }
 

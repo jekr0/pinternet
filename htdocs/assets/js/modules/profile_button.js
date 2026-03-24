@@ -5,7 +5,6 @@ class ProfileComponent {
         this.buttons = [];
     }
 
-    // Инициализация: поиск всех элементов с data-component="profile_button"
     init() {
         this.buttons = document.querySelectorAll('[data-component="profile_button"]');
         if (this.buttons.length === 0) return;
@@ -16,7 +15,6 @@ class ProfileComponent {
         });
     }
 
-    // Подготовка кнопки: решает, показывать аватар или иконку по умолчанию
     prepareButton(button) {
         const needImage = Number(button.dataset.profileImg) === 1;
         if (needImage) {
@@ -27,10 +25,16 @@ class ProfileComponent {
     }
 
     loadAvatar(button) {
+        // Путь к аватару берём из data-атрибута кнопки
+        const src = button.dataset.avatarSrc || '';
+        if (!src) {
+            this.setDefaultIcon(button);
+            return;
+        }
         App.utils.loadImage(
-            App.store.profile.avatarPath,
+            src,
             (img) => this.showAvatar(button, img),
-            () => this.showDefaultIcon(button)
+            ()    => this.setDefaultIcon(button)
         );
     }
 
@@ -44,17 +48,11 @@ class ProfileComponent {
         button.innerHTML = '<img class="header__profile-icon" src="assets/images/icons/at-sign.svg" alt="Profile">';
     }
 
-    showDefaultIcon(button) {
-        this.setDefaultIcon(button);
-    }
-
     handleClick(e, button) {
         e.preventDefault();
-        console.log('Profile button clicked', button);
         const url = button.dataset.profileUrl || '/profile';
         window.location.href = url;
     }
 }
 
-// Регистрация
 App.register('profile_button.js', ProfileComponent);

@@ -42,18 +42,36 @@ switch ($path) {
         ];
         break;
 
-    case '/profile':
+        case '/profile':
         $page = 'profile_pg.php';
         $pageTitle = 'Профиль';
-        $PHP = [
-            // none
-        ];
-        $CSS = [
-            // none
-        ];
-        $JS = [
-            // none
-        ];
+        $PHP = [];
+        $CSS = [];
+        $JS  = [];
+        break;
+
+        case '/login':
+        $page = 'login_pg.php';
+        $pageTitle = 'Вход';
+        $PHP = [];
+        $CSS = ['auth_pg.css'];
+        $JS  = [];
+        break;
+
+        case '/logout':
+        require_once '../src/controllers/logout_ctrl.php';
+        exit;
+
+        case '/auth':
+        require_once '../src/controllers/auth_ctrl.php';
+        exit;
+
+        case '/registration':
+        $page = 'registration_pg.php';
+        $pageTitle = 'Регистрация';
+        $PHP = [];
+        $CSS = ['auth_pg.css'];
+        $JS  = [];
         break;
 
     default:
@@ -97,8 +115,9 @@ switch ($path) {
             $subfolder = 'layouts';
         } elseif (str_ends_with($cssFile, '_cp.css')) {
             $subfolder = 'components';
+        } elseif (str_ends_with($cssFile, '_pg.css')) {
+            $subfolder = 'pages';
         } else {
-            // fallback – компоненты
             $subfolder = 'components';
         }
     ?>
