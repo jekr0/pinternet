@@ -2,7 +2,7 @@
 
 .header__profile-container {
     position: absolute;
-    right: 56px;
+    right: 60px;
     top: 50%;
     transform: translateY(-50%);
     width: 290px;
@@ -20,17 +20,34 @@
 
 .header__nickname {
     position: absolute;
-    top: 10px;
+    bottom: 20px;
     left: 10px;
-    width: 210px;
-    height: 30px;
-    font-family: 'MC_def', Arial, sans-serif;
+    width: 160px;
+    height: 36px;
+    font-family: 'SF_def', Arial, sans-serif;
     font-size: 16px;
-    line-height: 30px;
+    line-height: 36px;
+    text-align: left;
     white-space: nowrap;
     overflow: hidden;
-    text-overflow: ellipsis;
     color: #333;
+}
+
+/* --------------------------- Уровень ----------------------------------- */
+
+.header__level {
+    position: absolute;
+    bottom: 15px;
+    right: 70px;
+    width: 40px;
+    height: 25px;
+    font-family: 'SF_def', Arial, sans-serif;
+    font-size: 12px;
+    line-height: 30px;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    color: rgb(100, 100, 200);
 }
 
 /* --------------------------- Кнопка профиля ---------------------------- */
@@ -41,7 +58,7 @@
     height: 50px;
     border-radius: 50%;
     overflow: hidden;
-    background-color: rgb(150, 150, 255);
+    background-color: rgb(200, 200, 255);
     border: none;
     padding: 0;
     cursor: pointer;
@@ -87,18 +104,18 @@
 
 .header__experience-bar {
     position: absolute;
-    bottom: 10px;
+    bottom: 8px;
     left: 10px;
-    width: 210px;
+    width: 205px;
     height: 5px;
-    background-color: rgb(230, 240, 240);
+    background-color: rgb(240, 240, 240);
     border-radius: 3px;
     overflow: hidden;
 }
 
 .header__experience-fill {
     height: 100%;
-    background: linear-gradient(90deg, rgb(73, 235, 87), rgb(21, 224, 38));
+    background: linear-gradient(90deg, rgb(200, 200, 255), rgb(100, 100, 200));
     border-radius: 3px;
     width: 0%;
     transition: width 0.3s ease;

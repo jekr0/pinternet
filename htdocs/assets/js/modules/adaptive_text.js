@@ -22,8 +22,8 @@ class AdaptiveTextComponent {
         const containerWidth = container.clientWidth;
         const containerHeight = container.clientHeight;
         let fontSize = parseInt(getComputedStyle(container).fontSize, 16) || 32;
-        const maxFontSize = 32;
-        const minFontSize = 16;
+        const minFontSize = parseInt(container.dataset.minFont, 10) || 16;
+        const maxFontSize = parseInt(container.dataset.maxFont, 10) || 32;
 
         // Создаём временный элемент для измерения
         const measureSpan = document.createElement('span');

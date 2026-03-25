@@ -7,15 +7,15 @@
         margin: 2rem 0;
     }
     .font-1 {
-        font-family: 'MC_caps', sans-serif;
+        font-family: 'MC_caps';
         font-size: 40px;
     }
     .font-2 {
-        font-family: "MC_def";
+        font-family: "SF_def";
         font-size: 32px;
     }
     .font-3 {
-        font-family: 'SF_def', monospace;
+        font-family: "SF_def";
         font-size: 24px;
     }
 </style>

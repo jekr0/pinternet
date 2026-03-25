@@ -29,30 +29,32 @@ function handleLogin(PDO $pdo): void
     }
 
     // Ищем пользователя по почте
-    $stmt = $pdo->prepare('SELECT id, username, password_hash, is_banned, role FROM Users WHERE email = ?');
+    $stmt = $pdo->prepare('SELECT id, username, password_hash, is_banned, role, exp, level FROM Users WHERE email = ?');
     $stmt->execute([$email]);
     $user = $stmt->fetch();
-
-    // Временная диагностика — убрать после решения проблемы
-    error_log('Login attempt: email=' . $email);
-    error_log('User found: ' . ($user ? 'yes' : 'no'));
-    if ($user) {
-        error_log('Password verify: ' . (password_verify($password, $user['password_hash']) ? 'ok' : 'fail'));
-        error_log('Hash in DB: ' . $user['password_hash']);
-    }
 
     if (!$user || !password_verify($password, $user['password_hash'])) {
         redirectTo('/login', 'Неверная почта или пароль');
     }
 
     if ($user['is_banned']) {
-        redirectTo('/login', 'Аккаунт заблокирован!');
+        redirectTo('/login', 'Аккаунт заблокирован');
     }
 
-    // Записываем данные в сессию
+    require_once __DIR__ . '/../config/level_helper.php';
+
+    // Пересчитываем уровень при логине как страховка от рассинхронизации
+    $correctLevel = calcLevel((int) $user['exp']);
+    if ($correctLevel !== (int) $user['level']) {
+        $upd = $pdo->prepare('UPDATE Users SET level = ? WHERE id = ?');
+        $upd->execute([$correctLevel, $user['id']]);
+    }
+
     $_SESSION['user_id']  = $user['id'];
     $_SESSION['username'] = $user['username'];
     $_SESSION['role']     = $user['role'];
+    $_SESSION['exp']      = (int) $user['exp'];
+    $_SESSION['level']    = $correctLevel;
 
     redirectTo('/');
 }

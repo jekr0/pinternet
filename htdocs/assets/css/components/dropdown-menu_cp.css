@@ -32,33 +32,61 @@
     padding: 0;
 }
 
+/* --------------------------- Заголовок "сейчас:" ----------------------- */
+ 
+.dropdown__item--title {
+    padding: 10px 16px 10px;
+    font-family: 'SF_def', Arial, sans-serif;
+    font-size: 18px;
+    color: #555;
+    text-align: center;
+    cursor: default;
+    user-select: none;
+}
+
 /* --------------------------- Информационные строки (email, exp) -------- */
 
 .dropdown__item--info {
-    padding: 6px 16px;
+    padding: 3px 15px;
     font-family: 'SF_def', Arial, sans-serif;
-    font-size: 12px;
+    font-size: 14px;
     color: #999;
     cursor: default;
     user-select: none;
+}
+
+/* --------------------------- Счётчик уведомлений ----------------------- */
+ 
+.dropdown__badge {
+    font-family: 'MC_caps', Arial, sans-serif;
+    font-size: 14px;
+    color: rgb(100, 100, 200);
+    margin-right: 5px;
+    min-width: 14px;
+    text-align: right;
+}
+ 
+.dropdown__badge--empty {
+    color: #999;
 }
 
 /* --------------------------- Разделитель ------------------------------- */
 
 .dropdown__divider {
     height: 1px;
-    background: #f0f0f0;
-    margin: 6px 0;
+    background: #E0E0E0;
+    width: 90%;
+    margin: 6px auto;
 }
 
 /* --------------------------- Ссылки ------------------------------------ */
 
 .dropdown__link {
     display: block;
-    padding: 10px 16px;
+    padding: 5px 15px;
     text-decoration: none;
     color: #333;
-    font-family: 'MC_caps', sans-serif;
+    font-family: 'MC_caps';
     font-size: 14px;
     transition: background 0.15s ease;
 }

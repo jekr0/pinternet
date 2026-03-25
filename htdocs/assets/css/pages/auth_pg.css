@@ -12,8 +12,8 @@
 /* Фиксированный белый контейнер */
 .auth__container {
     position: relative;          /* Добавляем для позиционирования ошибки */
-    width: 450pt;
-    height: 310pt;
+    width: 500px;
+    height: 400px;
     background: #ffffff;
     border-radius: 20px;
     box-shadow: 0 2px 3px rgba(0,0,0,0.07);
@@ -31,15 +31,15 @@
     letter-spacing: 1px;
     user-select: none;
     text-align: center;
-    margin-top: 10pt;
-    margin-bottom: 10pt;
+    margin-top: 10px;
+    margin-bottom: 10px;
 }
 
 /* --------------------------- Ошибка ------------------------------------ */
 
 .auth__error {
     position: absolute;
-    top: -35px;
+    top: -45px;
     left: 50%;
     transform: translateX(-50%);
     z-index: 10;
@@ -106,7 +106,7 @@
     display: flex;
     justify-content: center;
     gap: 10px;
-    margin-top: 10pt;
+    margin-top: 10px;
     width: 75%;
 }
 
@@ -148,7 +148,7 @@
     color: #999;
     text-align: center;
     margin-top: auto;
-    margin-bottom: 20pt;
+    margin-bottom: 20px;
 }
 
 .auth__link {

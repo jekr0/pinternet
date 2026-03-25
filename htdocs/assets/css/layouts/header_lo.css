@@ -35,7 +35,7 @@
     font-family: 'MC_caps', Arial, sans-serif;
     font-size: 30px;
     font-weight: normal;
-    color: rgb(40, 5, 40);
+    color: #333;
     text-decoration: none;
     letter-spacing: 1px;
     transition: opacity 0.2s ease;
@@ -49,13 +49,13 @@
 
 /* Кнопка настроек */
 .header__dropdown-button {
-    width: 16px;
-    height: 26px;
-    color: #000000;
+    width: 24px;
+    height: 40px;
+    color: #333;
 
     /* Позиционирование (относительно header) */
     position: absolute;
-    right: 20px;
+    right: 18px;
     top: 50%;
     transform: translateY(-50%);
 
@@ -66,16 +66,16 @@
     cursor: pointer;
 }
 
-.header__dropdown-button:after {
+.header__dropdown-button::after {
+    width: 24px;
+    height: 40px;
     content: '';
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 16px;
-    height: 26px;
     background-color: rgba(100, 100, 200, 0.1);
-    border-radius: 20%;
+    border-radius: 10%;
     pointer-events: none;
     opacity: 0;
     transition: opacity 0.1s ease;
