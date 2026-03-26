@@ -27,3 +27,6 @@
         <p class="create-post-modal__hint">Поддерживаются PNG, JPEG и GIF до 20 МБ.</p>
     </div>
 </div>
+
+
+<button class="create-post-open-button" data-component="create-post-open" aria-label="Создать пост">+</button>
