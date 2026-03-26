@@ -101,20 +101,21 @@
 }
 
 .auth__password-row {
+    position: relative;
     width: 75%;
-    display: flex;
-    align-items: center;
 }
 
 .auth__input--password {
-    width: calc(100% - 40px);
+    width: 100%;
 }
 
 .auth__password-toggle {
-    position: relative;
+    position: absolute;
+    top: 50%;
+    left: calc(100% + 5px);
+    transform: translateY(-50%);
     width: 35px;
     height: 35px;
-    margin-left: 5px;
     padding: 0;
     border: none;
     color: #333;
