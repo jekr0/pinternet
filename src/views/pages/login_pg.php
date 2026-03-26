@@ -34,14 +34,25 @@ unset($_SESSION['auth_error']);
                 autocomplete="email"
                 required
             >
-            <input
-                class="auth__input"
-                type="password"
-                name="password"
-                placeholder="password123"
-                autocomplete="current-password"
-                required
-            >
+            <div class="auth__password-row">
+                <input
+                    class="auth__input auth__input--password"
+                    type="password"
+                    name="password"
+                    placeholder="password123"
+                    autocomplete="current-password"
+                    required
+                >
+                <button
+                    class="auth__password-toggle"
+                    type="button"
+                    aria-label="Показать пароль"
+                    data-component="password_toggle"
+                    data-svg-src="assets/images/icons/eye-closed.svg"
+                    data-open-icon="assets/images/icons/eye-opened.svg"
+                    data-closed-icon="assets/images/icons/eye-closed.svg"
+                ></button>
+            </div>
 
             <div class="auth__actions">
                 <button class="auth__button auth__button--back" type="button" onclick="window.location.href='/home'">
