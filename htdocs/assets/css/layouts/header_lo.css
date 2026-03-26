@@ -49,8 +49,8 @@
 
 /* Кнопка настроек */
 .header__dropdown-button {
-    width: 24px;
-    height: 40px;
+    width: 20px;
+    height: 36px;
     color: #333;
 
     /* Позиционирование (относительно header) */
@@ -75,7 +75,7 @@
     left: 50%;
     transform: translate(-50%, -50%);
     background-color: rgba(100, 100, 200, 0.1);
-    border-radius: 10%;
+    border-radius: 5px;
     pointer-events: none;
     opacity: 0;
     transition: opacity 0.1s ease;
@@ -91,6 +91,6 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 150%;
-    height: 150%;
+    width: 100%;
+    height: 100%;
 }

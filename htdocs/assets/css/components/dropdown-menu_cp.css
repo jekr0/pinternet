@@ -53,6 +53,7 @@
     color: #999;
     cursor: default;
     user-select: none;
+    justify-content: center;
 }
 
 /* --------------------------- Счётчик уведомлений ----------------------- */
