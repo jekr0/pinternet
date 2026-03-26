@@ -3,7 +3,7 @@
 .header__profile-container {
     position: absolute;
     top: 50%;
-    right: 60px;
+    right: 56px;
     transform: translateY(-50%);
     width: 290px;
     height: 70px;
