@@ -6,10 +6,10 @@
     right: 60px;
     width: 290px;
     margin-top: 10px;
+    z-index: 1000;
     background: white;
     border-radius: 10px;
     box-shadow: 0 2px 3px rgba(0,0,0,0.07);
-    z-index: 1000;
 }
 
 .dropdown--hidden {
@@ -23,9 +23,9 @@
 }
 
 .dropdown__list {
-    list-style: none;
     margin: 0;
     padding: 8px 0;
+    list-style: none;
 }
 
 .dropdown__item {
@@ -36,35 +36,34 @@
  
 .dropdown__item--title {
     padding: 10px 16px 10px;
+    cursor: default;
+    user-select: none;
+    text-align: center;
     font-family: 'SF_def', Arial, sans-serif;
     font-size: 18px;
     color: #555;
-    text-align: center;
-    cursor: default;
-    user-select: none;
 }
 
 /* --------------------------- Информационные строки (email, exp) -------- */
 
 .dropdown__item--info {
     padding: 3px 15px;
+    cursor: default;
+    user-select: none;
     font-family: 'SF_def', Arial, sans-serif;
     font-size: 14px;
     color: #999;
-    cursor: default;
-    user-select: none;
-    justify-content: center;
 }
 
 /* --------------------------- Счётчик уведомлений ----------------------- */
  
 .dropdown__badge {
+    min-width: 14px;
+    margin-right: 5px;
+    text-align: right;
     font-family: 'MC_caps', Arial, sans-serif;
     font-size: 14px;
     color: rgb(100, 100, 200);
-    margin-right: 5px;
-    min-width: 14px;
-    text-align: right;
 }
  
 .dropdown__badge--empty {
@@ -74,10 +73,10 @@
 /* --------------------------- Разделитель ------------------------------- */
 
 .dropdown__divider {
-    height: 1px;
-    background: #E0E0E0;
     width: 90%;
+    height: 1px;
     margin: 6px auto;
+    background: #E0E0E0;
 }
 
 /* --------------------------- Ссылки ------------------------------------ */
@@ -85,10 +84,10 @@
 .dropdown__link {
     display: block;
     padding: 5px 15px;
-    text-decoration: none;
-    color: #333;
     font-family: 'MC_caps';
     font-size: 14px;
+    color: #333;
+    text-decoration: none;
     transition: background 0.15s ease;
 }
 
@@ -104,10 +103,10 @@
 
 .dropdown__item--guest {
     padding: 1px 16px;
+    cursor: default;
+    text-align: center;
+    line-height: 1.5;
     font-family: 'SF_def', Arial, sans-serif;
     font-size: 14px;
-    text-align: center;
     color: #999;
-    line-height: 1.5;
-    cursor: default;
 }

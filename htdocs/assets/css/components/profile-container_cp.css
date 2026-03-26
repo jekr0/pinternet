@@ -2,18 +2,18 @@
 
 .header__profile-container {
     position: absolute;
-    right: 56px;
     top: 50%;
+    right: 56px;
     transform: translateY(-50%);
     width: 290px;
     height: 70px;
-    background: rgb(255, 255, 255);
-    border: 1.5px solid #e0e0e0;
-    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: flex-end;
     box-sizing: border-box;
+    background: rgb(255, 255, 255);
+    border: 1.5px solid #e0e0e0;
+    border-radius: 10px;
 }
 
 /* --------------------------- Никнейм ----------------------------------- */
@@ -24,12 +24,12 @@
     left: 10px;
     width: 160px;
     height: 36px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-align: left;
     font-family: 'SF_def', Arial, sans-serif;
     font-size: 16px;
     line-height: 36px;
-    text-align: left;
-    white-space: nowrap;
-    overflow: hidden;
     color: #333;
 }
 
@@ -41,45 +41,45 @@
     right: 70px;
     width: 40px;
     height: 25px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-align: center;
     font-family: 'SF_def', Arial, sans-serif;
     font-size: 12px;
     line-height: 30px;
-    text-align: center;
-    white-space: nowrap;
-    overflow: hidden;
     color: rgb(100, 100, 200);
 }
 
 /* --------------------------- Кнопка профиля ---------------------------- */
 
 .header__profile-button {
+    position: relative;
     right: 10px;
     width: 50px;
     height: 50px;
-    border-radius: 50%;
-    overflow: hidden;
-    background-color: rgb(200, 200, 255);
-    border: none;
-    padding: 0;
-    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    position: relative;
+    overflow: hidden;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background-color: rgb(200, 200, 255);
+    cursor: pointer;
 }
 
 .header__profile-button::after {
-    content: '';
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     width: 50px;
     height: 50px;
+    content: '';
     background-color: rgba(0, 0, 0, 0.1);
     border-radius: 50%;
-    pointer-events: none;
     opacity: 0;
+    pointer-events: none;
     transition: opacity 0.1s ease;
 }
 
@@ -88,10 +88,10 @@
 }
 
 .header__profile-avatar {
+    display: block;
     width: 100%;
     height: 100%;
     object-fit: cover;
-    display: block;
 }
 
 .header__profile-icon {
@@ -108,16 +108,16 @@
     left: 10px;
     width: 205px;
     height: 5px;
+    overflow: hidden;
     background-color: rgb(240, 240, 240);
     border-radius: 3px;
-    overflow: hidden;
 }
 
 .header__experience-fill {
-    height: 100%;
-    background: linear-gradient(90deg, rgb(200, 200, 255), rgb(100, 100, 200));
-    border-radius: 3px;
     width: 0%;
+    height: 100%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, rgb(200, 200, 255), rgb(100, 100, 200));
     transition: width 0.3s ease;
 }
 
@@ -128,12 +128,12 @@
 }
 
 .header__login-link {
+    text-align: center;
     font-family: 'MC_caps', Arial, sans-serif;
     font-size: 24px;
     color: rgb(100, 100, 200);
     text-decoration: none;
     transition: opacity 0.2s ease;
-    text-align: center;
 }
 
 .header__login-link:hover {
