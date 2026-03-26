@@ -69,6 +69,11 @@ function handleRegistration(PDO $pdo): void
     if (!$username || !$email || !$password) {
         redirectTo('/registration', 'Заполните все поля');
     }
+    
+    // Валидация имени пользователя: 3-12 символов, только латиница, цифры и _
+    if (!preg_match('/^[A-Za-z0-9_]{3,12}$/', $username)) {
+        redirectTo('/registration', 'Имя пользователя: 3–12 символов, только латинские буквы, цифры и _');
+    }
 
     // Валидация формата почты
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {

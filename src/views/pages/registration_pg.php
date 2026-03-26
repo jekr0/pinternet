@@ -31,6 +31,10 @@ unset($_SESSION['auth_error']);
                 name="username"
                 placeholder="username"
                 autocomplete="username"
+                minlength="3"
+                maxlength="12"
+                pattern="[A-Za-z0-9_]{3,12}"
+                title="Имя 3-12 символов: латинские буквы, цифры и _"
                 required
             >
             <input
