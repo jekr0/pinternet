@@ -2,42 +2,36 @@
 
 /*  Сама панель */
 .header {
+    position: relative;
     width: 90%;
     height: 90px;
     margin: 0 auto;
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(10px);
-    box-shadow: 0 2px 3px rgba(0,0,0,0.07);
-    border-bottom-left-radius: 20px;
-    border-bottom-right-radius: 20px;
-
-    /* Flexbox для центрирования текста */
     display: flex;
     align-items: center;
     justify-content: center;
-
-    /* Настройки текста */
     font-family: 'MC_caps', Arial, sans-serif;
     font-size: 16px;
     color: #000000;
-
-    /* Абсолютное позиционирования внутри */
-    position: relative;
+    background: rgba(255, 255, 255, 0.7);
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
+    box-shadow: 0 2px 3px rgba(0,0,0,0.07);
+    backdrop-filter: blur(10px);
 }
 
 /* --------------------------- Логотип --------------------------------------------------------------------------------- */
 
 .header__logo {
     position: absolute;
-    left: 30px;
     top: 50%;
+    left: 30px;
     transform: translateY(-50%);
     font-family: 'MC_caps', Arial, sans-serif;
     font-size: 30px;
     font-weight: normal;
+    letter-spacing: 1px;
     color: #333;
     text-decoration: none;
-    letter-spacing: 1px;
     transition: opacity 0.2s ease;
 }
 
@@ -49,35 +43,31 @@
 
 /* Кнопка настроек */
 .header__dropdown-button {
+    position: absolute;
+    top: 50%;
+    right: 18px;
+    transform: translateY(-50%);
     width: 24px;
     height: 40px;
-    color: #333;
-
-    /* Позиционирование (относительно header) */
-    position: absolute;
-    right: 18px;
-    top: 50%;
-    transform: translateY(-50%);
-
-    /* Сбрасываем стандартные стили кнопки */
-    background: none;
-    border: none;
     padding: 0;
+    border: none;
+    color: #333;
+    background: none;
     cursor: pointer;
 }
 
 .header__dropdown-button::after {
-    width: 24px;
-    height: 40px;
-    content: '';
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
+    width: 24px;
+    height: 40px;
+    content: '';
     background-color: rgba(100, 100, 200, 0.1);
     border-radius: 10%;
-    pointer-events: none;
     opacity: 0;
+    pointer-events: none;
     transition: opacity 0.1s ease;
 }
 
