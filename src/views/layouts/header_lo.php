@@ -10,3 +10,5 @@
 
     <?php include '../src/views/components/dropdown-menu_cp.php'; ?>
 </header>
+
+<?php include '../src/views/components/create-post-modal_cp.php'; ?>

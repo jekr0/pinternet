@@ -33,11 +33,13 @@ switch ($path) {
             'header_lo.css',
             'profile-container_cp.css',
             'dropdown-menu_cp.css',
+            'create-post-modal_cp.css',
             'footer_lo.css'
         ];
         $JS = [
             'profile_button.js',
             'dropdown_menu.js',
+            'create_post_modal.js',
             'adaptive_text.js'
         ];
         break;
@@ -87,11 +89,13 @@ switch ($path) {
             'header_lo.css',
             'profile-container_cp.css',
             'dropdown-menu_cp.css',
+            'create-post-modal_cp.css',
             'footer_lo.css'
         ];
         $JS = [
             'profile_button.js',
             'dropdown_menu.js',
+            'create_post_modal.js',
             'adaptive_text.js'
         ];
         break;
