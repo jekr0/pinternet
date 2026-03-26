@@ -109,13 +109,15 @@
     width: 100%;
 }
 
+/* --------------------------- Показать пароль -------------------------------- */
+
 .auth__password-toggle {
     position: absolute;
     top: 50%;
-    left: calc(100% + 5px);
+    left: calc(100% + 13px);
     transform: translateY(-50%);
-    width: 35px;
-    height: 35px;
+    width: 34px;
+    height: 34px;
     padding: 0;
     border: none;
     color: #333;
@@ -128,8 +130,8 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 35px;
-    height: 35px;
+    width: 34px;
+    height: 34px;
     content: '';
     background-color: rgba(100, 100, 200, 0.1);
     border-radius: 5px;
