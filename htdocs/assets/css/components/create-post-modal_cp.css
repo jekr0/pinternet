@@ -92,18 +92,18 @@
     color: #bbb;
 }
 
-.create-post-modal__input--description {
-    top: 100px;
-    height: 150px;
-    padding-top: 14px;
-    resize: none;
-}
-
 .create-post-modal__collection {
     position: absolute;
     top: 270px;
     right: 60px;
     width: 630px;
+}
+
+.create-post-modal__input--description {
+    top: 100px;
+    height: 150px;
+    padding-top: 14px;
+    resize: none;
 }
 
 .create-post-modal__input--collection {
@@ -132,6 +132,12 @@
     border-top: none;
     overflow-y: auto;
     display: block;
+    transition: border-color 0.2s ease;
+}
+
+.create-post-modal__collection:focus-within .create-post-modal__input--collection,
+.create-post-modal__collection:focus-within .create-post-modal__collection-list {
+    border-color: rgb(100, 100, 200);
 }
 
 .create-post-modal__collection-list button {
