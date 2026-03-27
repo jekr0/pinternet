@@ -1,5 +1,6 @@
 <div class="create-post-modal create-post-modal--hidden" id="create-post-modal" aria-hidden="true">
     <div class="create-post-modal__panel" role="dialog" aria-modal="true" aria-labelledby="create-post-modal-title">
+      
         <!-- Левая колонка: область загрузки -->
         <div class="create-post-modal__upload-column">
             <div
