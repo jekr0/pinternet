@@ -1,5 +1,7 @@
 <div class="create-post-modal create-post-modal--hidden" id="create-post-modal" aria-hidden="true">
     <div class="create-post-modal__panel" role="dialog" aria-modal="true" aria-labelledby="create-post-modal-title">
+      
+        <!-- Левая колонка: область загрузки -->
         <div class="create-post-modal__upload-column">
             <div
                 class="create-post-modal__upload-dropzone"
@@ -26,9 +28,11 @@
             <p class="create-post-modal__hint">Поддерживаются PNG, JPEG и GIF до 20 МБ.</p>
         </div>
 
+        <!-- Правая колонка: метаданные поста -->
         <div class="create-post-modal__meta-column">
             <h2 class="create-post-modal__title" id="create-post-modal-title">Новый пост</h2>
 
+            <!-- Описание -->
             <textarea
                 class="create-post-modal__input create-post-modal__input--description"
                 name="post-description"
@@ -36,13 +40,13 @@
                 autocomplete="off"
             ></textarea>
 
+            <!-- Коллекция и список выбора -->
             <div class="create-post-modal__collection" data-component="post-collection">
                 <input
                     class="create-post-modal__input create-post-modal__input--collection"
                     type="text"
                     placeholder="Добавить в коллекцию"
                     data-component="post-collection-trigger"
-                    aria-expanded="false"
                 >
 
                 <ul class="create-post-modal__collection-list" data-component="post-collection-list">
@@ -54,6 +58,7 @@
                 </ul>
             </div>
 
+            <!-- Теги -->
             <input
                 class="create-post-modal__input create-post-modal__input--tags"
                 type="text"
@@ -62,9 +67,10 @@
                 autocomplete="off"
             >
 
+            <!-- Действия -->
             <div class="create-post-modal__actions">
-                <button class="create-post-modal__button create-post-modal__button--submit" type="button">Создать пост</button>
                 <button class="create-post-modal__button create-post-modal__button--cancel" type="button" data-component="create-post-cancel">Отмена</button>
+                <button class="create-post-modal__button create-post-modal__button--submit" type="button">Создать пост</button>
             </div>
         </div>
     </div>

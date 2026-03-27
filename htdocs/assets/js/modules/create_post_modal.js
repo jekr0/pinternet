@@ -1,13 +1,17 @@
 class CreatePostModalComponent {
     constructor() {
+        // Modal and upload elements
         this.modal = null;
         this.dropzone = null;
         this.fileInput = null;
         this.placeholder = null;
         this.preview = null;
+
+        // Collection field elements
         this.collectionTrigger = null;
-        this.collectionList = null;
         this.collectionItems = [];
+
+        // Upload constraints/state
         this.maxFileSize = 20 * 1024 * 1024;
         this.allowedMimeTypes = ['image/png', 'image/jpeg', 'image/gif'];
         this.objectUrl = null;
@@ -22,7 +26,6 @@ class CreatePostModalComponent {
         this.placeholder = this.modal.querySelector('[data-component="post-upload-placeholder"]');
         this.preview = this.modal.querySelector('[data-component="post-upload-preview"]');
         this.collectionTrigger = this.modal.querySelector('[data-component="post-collection-trigger"]');
-        this.collectionList = this.modal.querySelector('[data-component="post-collection-list"]');
         this.collectionItems = Array.from(this.modal.querySelectorAll('[data-component="post-collection-item"]'));
 
         if (!this.dropzone || !this.fileInput || !this.placeholder || !this.preview) return;
@@ -76,32 +79,12 @@ class CreatePostModalComponent {
     }
 
     bindCollectionHandlers() {
-        if (!this.collectionTrigger || !this.collectionList) return;
-
-        this.collectionTrigger.addEventListener('click', () => {
-            const isOpen = this.collectionList.classList.contains('create-post-modal__collection-list--open');
-            this.toggleCollectionList(!isOpen);
-        });
-
-        this.collectionTrigger.addEventListener('focus', () => {
-            this.toggleCollectionList(true);
-        });
-
-        this.collectionTrigger.addEventListener('input', () => {
-            this.toggleCollectionList(true);
-        });
+        if (!this.collectionTrigger || this.collectionItems.length === 0) return;
 
         this.collectionItems.forEach((item) => {
             item.addEventListener('click', () => {
                 this.collectionTrigger.value = item.textContent.trim();
-                this.toggleCollectionList(false);
             });
-        });
-
-        document.addEventListener('click', (event) => {
-            if (!event.target.closest('[data-component="post-collection"]')) {
-                this.toggleCollectionList(false);
-            }
         });
     }
 
