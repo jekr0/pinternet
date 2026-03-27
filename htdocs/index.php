@@ -34,6 +34,7 @@ switch ($path) {
             'profile-container_cp.css',
             'dropdown-menu_cp.css',
             'create-post-modal_cp.css',
+            'home_pg.css',
             'footer_lo.css'
         ];
         $JS = [

@@ -7,6 +7,7 @@ class CreatePostModalComponent {
         this.preview = null;
         this.maxFileSize = 20 * 1024 * 1024;
         this.allowedMimeTypes = ['image/png', 'image/jpeg', 'image/gif'];
+        this.objectUrl = null;
     }
 
     init() {
@@ -106,10 +107,15 @@ class CreatePostModalComponent {
             return;
         }
 
-        const previewUrl = URL.createObjectURL(file);
-        this.preview.src = previewUrl;
+        if (this.objectUrl) {
+            URL.revokeObjectURL(this.objectUrl);
+        }
+
+        this.objectUrl = URL.createObjectURL(file);
+        this.preview.src = this.objectUrl;
         this.preview.classList.remove('create-post-modal__preview--hidden');
         this.placeholder.style.display = 'none';
+        this.dropzone.classList.add('create-post-modal__upload-dropzone--filled');
     }
 }
 
