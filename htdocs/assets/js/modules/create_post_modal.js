@@ -5,8 +5,12 @@ class CreatePostModalComponent {
         this.fileInput = null;
         this.placeholder = null;
         this.preview = null;
+        this.collectionTrigger = null;
+        this.collectionList = null;
+        this.collectionItems = [];
         this.maxFileSize = 20 * 1024 * 1024;
         this.allowedMimeTypes = ['image/png', 'image/jpeg', 'image/gif'];
+        this.objectUrl = null;
     }
 
     init() {
@@ -17,11 +21,15 @@ class CreatePostModalComponent {
         this.fileInput = this.modal.querySelector('[data-component="post-upload-input"]');
         this.placeholder = this.modal.querySelector('[data-component="post-upload-placeholder"]');
         this.preview = this.modal.querySelector('[data-component="post-upload-preview"]');
+        this.collectionTrigger = this.modal.querySelector('[data-component="post-collection-trigger"]');
+        this.collectionList = this.modal.querySelector('[data-component="post-collection-list"]');
+        this.collectionItems = Array.from(this.modal.querySelectorAll('[data-component="post-collection-item"]'));
 
         if (!this.dropzone || !this.fileInput || !this.placeholder || !this.preview) return;
 
         this.bindOpenHandlers();
         this.bindUploadHandlers();
+        this.bindCollectionHandlers();
         this.bindCloseHandlers();
     }
 
@@ -67,9 +75,46 @@ class CreatePostModalComponent {
         });
     }
 
+    bindCollectionHandlers() {
+        if (!this.collectionTrigger || !this.collectionList) return;
+
+        this.collectionTrigger.addEventListener('click', () => {
+            const isOpen = this.collectionList.classList.contains('create-post-modal__collection-list--open');
+            this.toggleCollectionList(!isOpen);
+        });
+
+        this.collectionTrigger.addEventListener('focus', () => {
+            this.toggleCollectionList(true);
+        });
+
+        this.collectionTrigger.addEventListener('input', () => {
+            this.toggleCollectionList(true);
+        });
+
+        this.collectionItems.forEach((item) => {
+            item.addEventListener('click', () => {
+                this.collectionTrigger.value = item.textContent.trim();
+                this.toggleCollectionList(false);
+            });
+        });
+
+        document.addEventListener('click', (event) => {
+            if (!event.target.closest('[data-component="post-collection"]')) {
+                this.toggleCollectionList(false);
+            }
+        });
+    }
+
     bindCloseHandlers() {
         this.modal.addEventListener('click', (event) => {
             if (event.target === this.modal) {
+                this.close();
+            }
+        });
+
+        document.addEventListener('click', (event) => {
+            const cancelButton = event.target.closest('[data-component="create-post-cancel"]');
+            if (cancelButton) {
                 this.close();
             }
         });
@@ -81,6 +126,13 @@ class CreatePostModalComponent {
         });
     }
 
+    toggleCollectionList(shouldOpen) {
+        if (!this.collectionList || !this.collectionTrigger) return;
+
+        this.collectionList.classList.toggle('create-post-modal__collection-list--open', shouldOpen);
+        this.collectionTrigger.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+    }
+
     open() {
         this.modal.classList.remove('create-post-modal--hidden');
         this.modal.setAttribute('aria-hidden', 'false');
@@ -89,6 +141,7 @@ class CreatePostModalComponent {
     close() {
         this.modal.classList.add('create-post-modal--hidden');
         this.modal.setAttribute('aria-hidden', 'true');
+        this.toggleCollectionList(false);
     }
 
     handleFile(file) {
@@ -106,10 +159,15 @@ class CreatePostModalComponent {
             return;
         }
 
-        const previewUrl = URL.createObjectURL(file);
-        this.preview.src = previewUrl;
+        if (this.objectUrl) {
+            URL.revokeObjectURL(this.objectUrl);
+        }
+
+        this.objectUrl = URL.createObjectURL(file);
+        this.preview.src = this.objectUrl;
         this.preview.classList.remove('create-post-modal__preview--hidden');
         this.placeholder.style.display = 'none';
+        this.dropzone.classList.add('create-post-modal__upload-dropzone--filled');
     }
 }
 

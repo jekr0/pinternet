@@ -1,0 +1,53 @@
+/* =========================== Главная страница ========================== */
+
+/* --------------------------- Демо шрифтов ------------------------------ */
+
+.font-demo {
+    margin: 2rem 0;
+    text-align: center;
+}
+
+.font-1 {
+    font-family: 'MC_caps', Arial, sans-serif;
+    font-size: 40px;
+}
+
+.font-2 {
+    font-family: 'SF_def', Arial, sans-serif;
+    font-size: 32px;
+}
+
+.font-3 {
+    font-family: 'SF_def', Arial, sans-serif;
+    font-size: 24px;
+}
+
+/* ------------------------ Кнопка создания поста ------------------------ */
+
+.create-post-open-button {
+    position: fixed;
+    right: 30px;
+    bottom: 30px;
+    z-index: 1100;
+    width: 60px;
+    height: 60px;
+    border: none;
+    border-radius: 50%;
+    background: rgb(100, 100, 200);
+    color: #fff;
+    font-family: 'SF_def', Arial, sans-serif;
+    font-size: 36px;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+    transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.create-post-open-button:hover {
+    transform: translateY(-2px);
+}
+
+.create-post-open-button:active {
+    transform: translateY(0);
+    opacity: 0.9;
+}
