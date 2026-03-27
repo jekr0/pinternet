@@ -37,25 +37,29 @@
 }
 
 .create-post-modal__meta-column {
+    position: relative;
     width: 630px;
     min-height: 660px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding-top: 0;
+    margin-left: auto;
 }
 
 .create-post-modal__title {
-    margin-bottom: 12px;
+    position: absolute;
+    top: 60px;
+    right: 60px;
+    width: 630px;
     font-family: 'MC_caps', Arial, sans-serif;
     font-size: 24px;
     font-weight: normal;
     color: #333;
+    text-align: center;
 }
 
 /* --------------------------- Поля формы ------------------------------------- */
 
 .create-post-modal__input {
+    position: absolute;
+    right: 60px;
     width: 630px;
     padding: 0 14px;
     box-sizing: border-box;
@@ -78,37 +82,36 @@
 }
 
 .create-post-modal__input--description {
+    top: 140px;
     height: 150px;
     padding-top: 14px;
     resize: none;
 }
 
 .create-post-modal__collection {
-    position: relative;
+    position: absolute;
+    top: 310px;
+    right: 60px;
     width: 630px;
-    margin-top: 140px;
 }
 
 .create-post-modal__input--collection {
+    position: relative;
+    right: auto;
+    width: 100%;
     height: 50px;
-    cursor: pointer;
-}
-
-.create-post-modal__input--collection[aria-expanded='true'],
-.create-post-modal__input--collection:hover,
-.create-post-modal__input--collection:focus-visible {
-    border-color: rgb(100, 100, 200);
+    z-index: 2;
 }
 
 .create-post-modal__collection-list {
     position: absolute;
-    top: calc(100% + 8px);
+    top: 40px;
     left: 0;
-    z-index: 3;
+    z-index: 1;
     width: 630px;
-    max-height: 145px;
+    max-height: 140px;
     margin: 0;
-    padding: 10px 0;
+    padding: 18px 0 10px;
     list-style: none;
     background: #fff;
     border: 1.5px solid #e0e0e0;
@@ -123,7 +126,7 @@
 
 .create-post-modal__collection-list button {
     width: 100%;
-    height: 34px;
+    height: 32px;
     padding: 0 14px;
     border: none;
     background: transparent;
@@ -139,16 +142,17 @@
 }
 
 .create-post-modal__input--tags {
+    top: 500px;
     height: 50px;
-    margin-top: 110px;
 }
 
 /* ------------------------------ Кнопки -------------------------------------- */
 
 .create-post-modal__actions {
+    position: absolute;
+    right: 60px;
+    bottom: 60px;
     width: 630px;
-    margin-top: auto;
-    margin-bottom: 60px;
     display: flex;
     gap: 10px;
 }

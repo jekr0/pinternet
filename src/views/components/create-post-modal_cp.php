@@ -40,8 +40,7 @@
                 <input
                     class="create-post-modal__input create-post-modal__input--collection"
                     type="text"
-                    value="Добавить в коллекцию"
-                    readonly
+                    placeholder="Добавить в коллекцию"
                     data-component="post-collection-trigger"
                     aria-expanded="false"
                 >

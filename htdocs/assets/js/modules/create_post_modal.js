@@ -83,6 +83,14 @@ class CreatePostModalComponent {
             this.toggleCollectionList(!isOpen);
         });
 
+        this.collectionTrigger.addEventListener('focus', () => {
+            this.toggleCollectionList(true);
+        });
+
+        this.collectionTrigger.addEventListener('input', () => {
+            this.toggleCollectionList(true);
+        });
+
         this.collectionItems.forEach((item) => {
             item.addEventListener('click', () => {
                 this.collectionTrigger.value = item.textContent.trim();
