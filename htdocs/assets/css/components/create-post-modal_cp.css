@@ -21,8 +21,8 @@
     position: relative;
     width: min(1300px, calc(100vw - 40px));
     max-width: 85%;
-    height: 650px;
-    max-height: 2000px;
+    height: 665px;
+    max-height: 75%;
     background: #fff;
     border-radius: 20px;
     box-shadow: 0 2px 3px rgba(0, 0, 0, 0.07);
@@ -60,7 +60,7 @@
     width: 630px;
     height: 50px;
     font-family: 'MC_caps', Arial, sans-serif;
-    font-size: 24px;
+    font-size: 26px;
     font-weight: normal;
     color: #333;
     text-align: center;
@@ -124,7 +124,7 @@
     margin: 0;
     padding: 20px 0 10px;
     list-style: none;
-    background: #F0F0F0;
+    background: #ffffff;
     border-radius: 0 0 10px 10px;
     border: 1.5px solid #e0e0e0;
     overflow-y: auto;
@@ -162,7 +162,7 @@
 .create-post-modal__actions {
     position: relative;
     right: 60px;
-    top: 540px;
+    top: 555px;
     width: 630px;
     height: 50px;
     display: flex;
@@ -207,14 +207,14 @@
     height: 450px;
     left: 30px;
     top: 30px;
-    max-height: 660px;
+    max-height: 575px;
     border: 2px dashed #c9c9c9;
     border-radius: 10px;
     background: #e0e0e0;
     color: #c9c9c9;
     cursor: pointer;
     overflow: hidden;
-    transition: border-color 0.3s ease;
+    transition: border-color 0.3s ease-in-out;
 }
 
 .create-post-modal__upload-dropzone:hover,
