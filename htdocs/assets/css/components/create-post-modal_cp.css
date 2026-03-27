@@ -52,9 +52,10 @@
     color: #333;
 }
 
-.create-post-modal__caption-input {
+/* --------------------------- Поля формы ------------------------------------- */
+
+.create-post-modal__input {
     width: 630px;
-    height: 50px;
     padding: 0 14px;
     box-sizing: border-box;
     outline: none;
@@ -67,12 +68,83 @@
     transition: border-color 0.2s ease;
 }
 
-.create-post-modal__caption-input::placeholder {
+.create-post-modal__input:focus {
+    border-color: rgb(100, 100, 200);
+}
+
+.create-post-modal__input::placeholder {
     color: #bbb;
 }
 
-.create-post-modal__caption-input:focus {
+.create-post-modal__input--description {
+    height: 150px;
+    padding-top: 14px;
+    resize: none;
+}
+
+.create-post-modal__collection {
+    position: relative;
+    width: 630px;
+    margin-top: 20px;
+}
+
+.create-post-modal__input--collection {
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    cursor: pointer;
+    text-align: left;
+}
+
+.create-post-modal__input--collection:hover,
+.create-post-modal__input--collection:focus-visible,
+.create-post-modal__input--collection[aria-expanded='true'] {
     border-color: rgb(100, 100, 200);
+}
+
+.create-post-modal__collection-list {
+    position: absolute;
+    top: calc(100% - 25px);
+    left: 0;
+    z-index: 1;
+    width: 630px;
+    max-height: 145px;
+    margin: 0;
+    padding: 35px 0 10px;
+    list-style: none;
+    background: #fff;
+    border: 1.5px solid #e0e0e0;
+    border-top: none;
+    border-radius: 0 0 10px 10px;
+    overflow-y: auto;
+    display: none;
+}
+
+.create-post-modal__collection-list--open {
+    display: block;
+}
+
+.create-post-modal__collection-list button {
+    width: 100%;
+    height: 34px;
+    padding: 0 14px;
+    border: none;
+    background: transparent;
+    text-align: left;
+    font-family: 'SF_def', Arial, sans-serif;
+    font-size: 14px;
+    color: #333;
+    cursor: pointer;
+}
+
+.create-post-modal__collection-list button:hover {
+    background: rgba(100, 100, 200, 0.1);
+}
+
+.create-post-modal__input--tags {
+    height: 50px;
+    margin-top: 170px;
 }
 
 /* --------------------------- Зона загрузки ---------------------------------- */
@@ -81,8 +153,7 @@
     position: relative;
     width: 520px;
     height: 450px;
-    margin-top: 30px;
-    margin-left: 30px;
+    max-height: 660px;
     border: 2px dashed #c9c9c9;
     border-radius: 10px;
     background: #e0e0e0;
@@ -95,14 +166,19 @@
 .create-post-modal__upload-dropzone::before {
     content: '';
     position: absolute;
-    inset: -2px;
-    border: 2px dashed rgb(100, 100, 200);
+    inset: 0;
     border-radius: 10px;
+    background:
+        repeating-linear-gradient(90deg, rgb(100, 100, 200) 0 10px, transparent 10px 20px) top / 200% 2px no-repeat,
+        repeating-linear-gradient(180deg, rgb(100, 100, 200) 0 10px, transparent 10px 20px) right / 2px 200% no-repeat,
+        repeating-linear-gradient(270deg, rgb(100, 100, 200) 0 10px, transparent 10px 20px) bottom / 200% 2px no-repeat,
+        repeating-linear-gradient(0deg, rgb(100, 100, 200) 0 10px, transparent 10px 20px) left / 2px 200% no-repeat;
     opacity: 0;
     pointer-events: none;
 }
 
-.create-post-modal__upload-dropzone:hover {
+.create-post-modal__upload-dropzone:hover,
+.create-post-modal__upload-dropzone--dragover {
     border-color: rgb(100, 100, 200);
     color: rgb(100, 100, 200);
 }
@@ -110,12 +186,7 @@
 .create-post-modal__upload-dropzone:hover::before,
 .create-post-modal__upload-dropzone--dragover::before {
     opacity: 1;
-    animation: create-post-modal-dash-spin 6s linear infinite;
-}
-
-.create-post-modal__upload-dropzone--dragover {
-    border-color: rgb(100, 100, 200);
-    color: rgb(100, 100, 200);
+    animation: create-post-modal-dash-flow 2.8s linear infinite;
 }
 
 .create-post-modal__upload-dropzone--filled {
@@ -128,12 +199,20 @@
     display: none;
 }
 
-@keyframes create-post-modal-dash-spin {
+@keyframes create-post-modal-dash-flow {
     from {
-        transform: rotate(0deg);
+        background-position:
+            0 0,
+            100% 0,
+            100% 100%,
+            0 100%;
     }
     to {
-        transform: rotate(360deg);
+        background-position:
+            -40px 0,
+            100% -40px,
+            140px 100%,
+            0 140px;
     }
 }
 
@@ -179,7 +258,6 @@
 }
 
 .create-post-modal__hint {
-    margin-left: 30px;
     font-family: 'SF_def', Arial, sans-serif;
     font-size: 14px;
     color: #666;

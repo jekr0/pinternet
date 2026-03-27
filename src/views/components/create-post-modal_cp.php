@@ -28,11 +28,37 @@
 
         <div class="create-post-modal__meta-column">
             <h2 class="create-post-modal__title" id="create-post-modal-title">Новый пост</h2>
+
+            <textarea
+                class="create-post-modal__input create-post-modal__input--description"
+                name="post-description"
+                placeholder="Добавьте описание к посту"
+                autocomplete="off"
+            ></textarea>
+
+            <div class="create-post-modal__collection" data-component="post-collection">
+                <button
+                    class="create-post-modal__input create-post-modal__input--collection"
+                    type="button"
+                    data-component="post-collection-trigger"
+                >
+                    Добавьте коллекцию
+                </button>
+
+                <ul class="create-post-modal__collection-list" data-component="post-collection-list">
+                    <li><button type="button" data-component="post-collection-item">Коллекция 1</button></li>
+                    <li><button type="button" data-component="post-collection-item">Коллекция 2</button></li>
+                    <li><button type="button" data-component="post-collection-item">Коллекция 3</button></li>
+                    <li><button type="button" data-component="post-collection-item">Коллекция 4</button></li>
+                    <li><button type="button" data-component="post-collection-item">Коллекция 5</button></li>
+                </ul>
+            </div>
+
             <input
-                class="create-post-modal__caption-input"
+                class="create-post-modal__input create-post-modal__input--tags"
                 type="text"
-                name="post-title"
-                placeholder="Введите заголовок поста"
+                name="post-tags"
+                placeholder="Добавьте теги"
                 autocomplete="off"
             >
         </div>
