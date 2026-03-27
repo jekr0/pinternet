@@ -1,0 +1,244 @@
+-- =====================================================================
+-- GRINDEREST — финальная схема
+-- =====================================================================
+
+-- ---------------------------------------------------------------------
+-- Users
+-- ---------------------------------------------------------------------
+
+CREATE TABLE Users (
+    id            INT AUTO_INCREMENT PRIMARY KEY,
+    username      VARCHAR(12)  NOT NULL UNIQUE,
+    email         VARCHAR(255) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    avatar        VARCHAR(255),
+    bio           VARCHAR(256),
+    exp           INT NOT NULL DEFAULT 0,
+    level         INT NOT NULL DEFAULT 1,
+    role          ENUM('user', 'moderator', 'admin') NOT NULL DEFAULT 'user',
+    is_banned     TINYINT(1) NOT NULL DEFAULT 0,
+    is_deleted    TINYINT(1) NOT NULL DEFAULT 0,
+    timeout_until DATETIME DEFAULT NULL,
+    created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ---------------------------------------------------------------------
+-- Hashtags
+-- ---------------------------------------------------------------------
+
+CREATE TABLE Hashtags (
+    id   INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL UNIQUE
+);
+
+-- ---------------------------------------------------------------------
+-- Posts
+-- ---------------------------------------------------------------------
+
+CREATE TABLE Posts (
+    id           INT AUTO_INCREMENT PRIMARY KEY,
+    user_id      INT NOT NULL,
+    image_path   VARCHAR(255) NOT NULL,
+    description  VARCHAR(256),
+    report_count INT NOT NULL DEFAULT 0,
+    created_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE NO ACTION
+);
+
+CREATE TABLE Post_Hashtags (
+    post_id    INT NOT NULL,
+    hashtag_id INT NOT NULL,
+    PRIMARY KEY (post_id, hashtag_id),
+
+    FOREIGN KEY (post_id) REFERENCES Posts(id) ON DELETE CASCADE,
+    FOREIGN KEY (hashtag_id) REFERENCES Hashtags(id) ON DELETE CASCADE
+);
+
+CREATE TABLE Post_Likes (
+    id      INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    post_id INT NOT NULL,
+
+    UNIQUE KEY uq_like (user_id, post_id),
+
+    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE,
+    FOREIGN KEY (post_id) REFERENCES Posts(id) ON DELETE CASCADE
+);
+
+CREATE TABLE Post_Reports (
+    id         INT AUTO_INCREMENT PRIMARY KEY,
+    user_id    INT NULL,
+    post_id    INT NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    UNIQUE KEY uq_post_report (user_id, post_id),
+
+    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE SET NULL,
+    FOREIGN KEY (post_id) REFERENCES Posts(id) ON DELETE CASCADE
+);
+
+-- Триггер для report_count
+DELIMITER $$
+
+CREATE TRIGGER trg_post_reports_insert
+AFTER INSERT ON Post_Reports
+FOR EACH ROW
+BEGIN
+    UPDATE Posts
+    SET report_count = report_count + 1
+    WHERE id = NEW.post_id;
+END$$
+
+CREATE TRIGGER trg_post_reports_delete
+AFTER DELETE ON Post_Reports
+FOR EACH ROW
+BEGIN
+    UPDATE Posts
+    SET report_count = report_count - 1
+    WHERE id = OLD.post_id;
+END$$
+
+DELIMITER ;
+
+-- ---------------------------------------------------------------------
+-- Boards
+-- ---------------------------------------------------------------------
+
+CREATE TABLE Boards (
+    id          INT AUTO_INCREMENT PRIMARY KEY,
+    user_id     INT NOT NULL,
+    name        VARCHAR(50) NOT NULL,
+    description VARCHAR(256),
+    created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE NO ACTION
+);
+
+CREATE TABLE Board_Hashtags (
+    board_id   INT NOT NULL,
+    hashtag_id INT NOT NULL,
+    PRIMARY KEY (board_id, hashtag_id),
+
+    FOREIGN KEY (board_id) REFERENCES Boards(id) ON DELETE CASCADE,
+    FOREIGN KEY (hashtag_id) REFERENCES Hashtags(id) ON DELETE CASCADE
+);
+
+-- ---------------------------------------------------------------------
+-- Saved Posts
+-- ---------------------------------------------------------------------
+
+CREATE TABLE Saved_Posts (
+    id       INT AUTO_INCREMENT PRIMARY KEY,
+    user_id  INT NOT NULL,
+    post_id  INT NOT NULL,
+    board_id INT NULL,
+
+    UNIQUE KEY uq_saved (user_id, post_id, board_id),
+
+    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE,
+    FOREIGN KEY (post_id) REFERENCES Posts(id) ON DELETE CASCADE,
+    FOREIGN KEY (board_id) REFERENCES Boards(id) ON DELETE CASCADE
+);
+
+-- ---------------------------------------------------------------------
+-- Comments
+-- ---------------------------------------------------------------------
+
+CREATE TABLE Comments (
+    id                INT AUTO_INCREMENT PRIMARY KEY,
+    user_id           INT NOT NULL,
+    post_id           INT NOT NULL,
+    parent_comment_id INT DEFAULT NULL,
+    content           VARCHAR(256) NOT NULL,
+    is_deleted        TINYINT(1) NOT NULL DEFAULT 0,
+    created_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE NO ACTION,
+    FOREIGN KEY (post_id) REFERENCES Posts(id) ON DELETE CASCADE,
+    FOREIGN KEY (parent_comment_id) REFERENCES Comments(id)
+);
+
+CREATE TABLE Comment_Likes (
+    id         INT AUTO_INCREMENT PRIMARY KEY,
+    user_id    INT NULL,
+    comment_id INT NOT NULL,
+
+    UNIQUE KEY uq_comment_like (user_id, comment_id),
+
+    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE SET NULL,
+    FOREIGN KEY (comment_id) REFERENCES Comments(id) ON DELETE CASCADE
+);
+
+CREATE TABLE Comment_Reports (
+    id         INT AUTO_INCREMENT PRIMARY KEY,
+    user_id    INT NULL,
+    comment_id INT NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    UNIQUE KEY uq_comment_report (user_id, comment_id),
+
+    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE SET NULL,
+    FOREIGN KEY (comment_id) REFERENCES Comments(id) ON DELETE CASCADE
+);
+
+-- ---------------------------------------------------------------------
+-- Social
+-- ---------------------------------------------------------------------
+
+CREATE TABLE Follows (
+    id           INT AUTO_INCREMENT PRIMARY KEY,
+    follower_id  INT NOT NULL,
+    following_id INT NOT NULL,
+
+    UNIQUE KEY uq_follow (follower_id, following_id),
+    CHECK (follower_id != following_id),
+
+    FOREIGN KEY (follower_id) REFERENCES Users(id) ON DELETE CASCADE,
+    FOREIGN KEY (following_id) REFERENCES Users(id) ON DELETE CASCADE
+);
+
+-- ---------------------------------------------------------------------
+-- Moderation
+-- ---------------------------------------------------------------------
+
+CREATE TABLE Warnings (
+    id           INT AUTO_INCREMENT PRIMARY KEY,
+    user_id      INT NOT NULL,
+    moderator_id INT NULL,
+    reason       VARCHAR(256),
+    created_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE NO ACTION,
+    FOREIGN KEY (moderator_id) REFERENCES Users(id) ON DELETE SET NULL
+);
+
+CREATE TABLE Moderation_Log (
+    id             INT AUTO_INCREMENT PRIMARY KEY,
+    moderator_id   INT NULL,
+    post_id        INT NULL,
+    comment_id     INT NULL,
+    reason         VARCHAR(256),
+    warning_issued TINYINT(1) NOT NULL DEFAULT 0,
+    timeout_issued TINYINT(1) NOT NULL DEFAULT 0,
+    created_at     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (moderator_id) REFERENCES Users(id) ON DELETE SET NULL,
+    FOREIGN KEY (post_id) REFERENCES Posts(id) ON DELETE SET NULL,
+    FOREIGN KEY (comment_id) REFERENCES Comments(id) ON DELETE SET NULL
+);
+
+-- ---------------------------------------------------------------------
+-- Notifications
+-- ---------------------------------------------------------------------
+
+CREATE TABLE Notifications (
+    id      INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    type    VARCHAR(50) NOT NULL,
+    data    JSON NOT NULL,
+    is_read TINYINT(1) NOT NULL DEFAULT 0,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE
+);
