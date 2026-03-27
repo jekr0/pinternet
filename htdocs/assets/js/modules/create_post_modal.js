@@ -109,13 +109,6 @@ class CreatePostModalComponent {
         });
     }
 
-    toggleCollectionList(shouldOpen) {
-        if (!this.collectionList || !this.collectionTrigger) return;
-
-        this.collectionList.classList.toggle('create-post-modal__collection-list--open', shouldOpen);
-        this.collectionTrigger.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
-    }
-
     open() {
         this.modal.classList.remove('create-post-modal--hidden');
         this.modal.setAttribute('aria-hidden', 'false');
@@ -124,7 +117,6 @@ class CreatePostModalComponent {
     close() {
         this.modal.classList.add('create-post-modal--hidden');
         this.modal.setAttribute('aria-hidden', 'true');
-        this.toggleCollectionList(false);
     }
 
     handleFile(file) {

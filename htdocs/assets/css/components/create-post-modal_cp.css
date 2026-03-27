@@ -128,10 +128,6 @@
     border-radius: 0 0 10px 10px;
     border: 1.5px solid #e0e0e0;
     overflow-y: auto;
-    display: none;
-}
-
-.create-post-modal__collection-list--open {
     display: block;
 }
 
@@ -311,6 +307,7 @@
 }
 
 /* ---------------------- Слои страницы относительно модалки ------------------ */
+
 .header {
     z-index: 1300;
 }
