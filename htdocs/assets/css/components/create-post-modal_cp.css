@@ -76,7 +76,7 @@
     box-sizing: border-box;
     outline: none;
     font-family: 'SF_def', Arial, sans-serif;
-    font-size: 14px;
+    font-size: 16px;
     color: #333;
     background: #fff;
     border: 1.5px solid #e0e0e0;
@@ -112,34 +112,37 @@
     width: 100%;
     height: 50px;
     z-index: 2;
+    border-bottom-left-radius: 0px;
+    border-bottom-right-radius: 0px;
 }
 
 .create-post-modal__collection-list {
     position: absolute;
-    top: 40px;
+    top: 50px;
     left: 0;
     z-index: 1;
     width: 630px;
-    max-height: 100px;
+    max-height: 90px;
     margin: 0;
-    padding: 20px 0 10px;
+    padding: 0 0 30px;
     list-style: none;
     background: #ffffff;
     border-radius: 0 0 10px 10px;
     border: 1.5px solid #e0e0e0;
+    border-top: none;
     overflow-y: auto;
     display: block;
 }
 
 .create-post-modal__collection-list button {
     width: 100%;
-    height: 24px;
+    height: 30px;
     padding: 0 14px;
     border: none;
     background: transparent;
     text-align: left;
     font-family: 'SF_def', Arial, sans-serif;
-    font-size: 14px;
+    font-size: 16px;
     color: #333;
     cursor: pointer;
 }
@@ -171,7 +174,7 @@
     border: none;
     border-radius: 10px;
     font-family: 'SF_def', Arial, sans-serif;
-    font-size: 14px;
+    font-size: 16px;
     cursor: pointer;
     transition: border-color 0.2s ease, opacity 0.2s ease;
 }
@@ -198,11 +201,10 @@
 /* --------------------------- Зона загрузки ---------------------------------- */
 
 .create-post-modal__upload-dropzone {
-    position: absolute;
+    position: relative;
     width: 520px;
     height: 450px;
-    left: 30px;
-    top: 30px;
+    margin: 30px 0 0 30px;
     max-height: 575px;
     border: 2px dashed #c9c9c9;
     border-radius: 10px;
@@ -215,7 +217,6 @@
 
 .create-post-modal__upload-dropzone:hover,
 .create-post-modal__upload-dropzone--dragover {
-    border-style: solid;
     border-color: rgb(100, 100, 200);
 }
 
@@ -281,12 +282,13 @@
 .create-post-modal__upload-icon {
     width: 52px;
     height: 52px;
+    color: #555;
 }
 
 .create-post-modal__upload-label {
     font-family: 'SF_def', Arial, sans-serif;
     font-size: 16px;
-    color: #444;
+    color: #555;
 }
 
 .create-post-modal__preview {
@@ -301,9 +303,13 @@
 }
 
 .create-post-modal__hint {
+    margin: 0 0 0 30px;
+    width: 520px;
+    height: 10px;
     font-family: 'SF_def', Arial, sans-serif;
+    text-align: center;
     font-size: 14px;
-    color: #555;
+    color: #999999;
 }
 
 /* ---------------------- Слои страницы относительно модалки ------------------ */

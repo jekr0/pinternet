@@ -84,7 +84,7 @@
     box-sizing: border-box;
     outline: none;
     font-family: 'SF_def', Arial, sans-serif;
-    font-size: 14px;
+    font-size: 16px;
     color: #333;
     background: #fff;
     border: 1.5px solid #e0e0e0;
@@ -169,7 +169,7 @@
     border: none;
     border-radius: 10px;
     font-family: 'SF_def', Arial, sans-serif;
-    font-size: 14px;
+    font-size: 16px;
     cursor: pointer;
     transition: border-color 0.2s ease, opacity 0.2s ease;
 }
@@ -200,7 +200,7 @@
     margin-bottom: 20px;
     text-align: center;
     font-family: 'SF_def', Arial, sans-serif;
-    font-size: 16px;
+    font-size: 14px;
     color: #999;
 }
 
