@@ -78,7 +78,7 @@
 /* --------------------------- Поля ввода -------------------------------- */
 
 .auth__input {
-    width: 75%;
+    width: 380px;
     height: 50px;
     padding: 0 14px;
     box-sizing: border-box;
@@ -102,7 +102,7 @@
 
 .auth__password-row {
     position: relative;
-    width: 75%;
+    width: 380px;
 }
 
 .auth__input--password {
@@ -156,7 +156,7 @@
 /* --------------------------- Кнопки ------------------------------------ */
 
 .auth__actions {
-    width: 75%;
+    width: 380px;
     margin-top: 10px;
     display: flex;
     justify-content: center;
