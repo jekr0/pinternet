@@ -20,8 +20,9 @@
 .create-post-modal__panel {
     position: relative;
     width: min(1300px, calc(100vw - 40px));
-    height: 750px;
-    min-height: 750px;
+    max-width: 85%;
+    height: 650px;
+    max-height: 2000px;
     background: #fff;
     border-radius: 20px;
     box-shadow: 0 2px 3px rgba(0, 0, 0, 0.07);
@@ -55,8 +56,9 @@
 .create-post-modal__title {
     position: absolute;
     right: 60px;
-    top: 85px;
+    top: 30px;
     width: 630px;
+    height: 50px;
     font-family: 'MC_caps', Arial, sans-serif;
     font-size: 24px;
     font-weight: normal;
@@ -91,7 +93,7 @@
 }
 
 .create-post-modal__input--description {
-    top: 140px;
+    top: 100px;
     height: 150px;
     padding-top: 14px;
     resize: none;
@@ -99,7 +101,7 @@
 
 .create-post-modal__collection {
     position: absolute;
-    top: 310px;
+    top: 270px;
     right: 60px;
     width: 630px;
 }
@@ -118,7 +120,7 @@
     left: 0;
     z-index: 1;
     width: 630px;
-    max-height: 130px;
+    max-height: 100px;
     margin: 0;
     padding: 20px 0 10px;
     list-style: none;
@@ -151,16 +153,16 @@
 }
 
 .create-post-modal__input--tags {
-    top: 500px;
+    top: 430px;
     height: 50px;
 }
 
 /* ------------------------------ Кнопки -------------------------------------- */
 
 .create-post-modal__actions {
-    position: absolute;
+    position: relative;
     right: 60px;
-    bottom: 60px;
+    top: 540px;
     width: 630px;
     height: 50px;
     display: flex;
@@ -212,14 +214,13 @@
     color: #c9c9c9;
     cursor: pointer;
     overflow: hidden;
-    transition: border-color 0.2s ease, color 0.2s ease;
+    transition: border-color 0.3s ease;
 }
 
 .create-post-modal__upload-dropzone:hover,
 .create-post-modal__upload-dropzone--dragover {
     border-style: solid;
     border-color: rgb(100, 100, 200);
-    color: rgb(100, 100, 200);
 }
 
 .create-post-modal__upload-dropzone--filled {
