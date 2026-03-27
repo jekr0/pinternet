@@ -210,6 +210,40 @@
     height: auto;
     border-style: solid;
     border-color: rgb(100, 100, 200);
+    color: rgb(100, 100, 200);
+}
+
+.create-post-modal__upload-dropzone:hover::before,
+.create-post-modal__upload-dropzone--dragover::before {
+    opacity: 1;
+    animation: create-post-modal-dash-flow 2.8s linear infinite;
+}
+
+.create-post-modal__upload-dropzone--filled {
+    height: auto;
+    border-style: solid;
+    border-color: rgb(100, 100, 200);
+}
+
+.create-post-modal__upload-dropzone--filled::before {
+    display: none;
+}
+
+@keyframes create-post-modal-dash-flow {
+    from {
+        background-position:
+            0 0,
+            100% 0,
+            100% 100%,
+            0 100%;
+    }
+    to {
+        background-position:
+            -40px 0,
+            100% -40px,
+            140px 100%,
+            0 140px;
+    }
 }
 
 .create-post-modal__file-input {
