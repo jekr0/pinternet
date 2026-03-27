@@ -1,12 +1,20 @@
 class CreatePostModalComponent {
     constructor() {
+        // Modal and upload elements
         this.modal = null;
         this.dropzone = null;
         this.fileInput = null;
         this.placeholder = null;
         this.preview = null;
+
+        // Collection field elements
+        this.collectionTrigger = null;
+        this.collectionItems = [];
+
+        // Upload constraints/state
         this.maxFileSize = 20 * 1024 * 1024;
         this.allowedMimeTypes = ['image/png', 'image/jpeg', 'image/gif'];
+        this.objectUrl = null;
     }
 
     init() {
@@ -17,11 +25,14 @@ class CreatePostModalComponent {
         this.fileInput = this.modal.querySelector('[data-component="post-upload-input"]');
         this.placeholder = this.modal.querySelector('[data-component="post-upload-placeholder"]');
         this.preview = this.modal.querySelector('[data-component="post-upload-preview"]');
+        this.collectionTrigger = this.modal.querySelector('[data-component="post-collection-trigger"]');
+        this.collectionItems = Array.from(this.modal.querySelectorAll('[data-component="post-collection-item"]'));
 
         if (!this.dropzone || !this.fileInput || !this.placeholder || !this.preview) return;
 
         this.bindOpenHandlers();
         this.bindUploadHandlers();
+        this.bindCollectionHandlers();
         this.bindCloseHandlers();
     }
 
@@ -67,9 +78,26 @@ class CreatePostModalComponent {
         });
     }
 
+    bindCollectionHandlers() {
+        if (!this.collectionTrigger || this.collectionItems.length === 0) return;
+
+        this.collectionItems.forEach((item) => {
+            item.addEventListener('click', () => {
+                this.collectionTrigger.value = item.textContent.trim();
+            });
+        });
+    }
+
     bindCloseHandlers() {
         this.modal.addEventListener('click', (event) => {
             if (event.target === this.modal) {
+                this.close();
+            }
+        });
+
+        document.addEventListener('click', (event) => {
+            const cancelButton = event.target.closest('[data-component="create-post-cancel"]');
+            if (cancelButton) {
                 this.close();
             }
         });
@@ -106,10 +134,15 @@ class CreatePostModalComponent {
             return;
         }
 
-        const previewUrl = URL.createObjectURL(file);
-        this.preview.src = previewUrl;
+        if (this.objectUrl) {
+            URL.revokeObjectURL(this.objectUrl);
+        }
+
+        this.objectUrl = URL.createObjectURL(file);
+        this.preview.src = this.objectUrl;
         this.preview.classList.remove('create-post-modal__preview--hidden');
         this.placeholder.style.display = 'none';
+        this.dropzone.classList.add('create-post-modal__upload-dropzone--filled');
     }
 }
 
