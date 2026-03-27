@@ -38,14 +38,15 @@
 
 .create-post-modal__meta-column {
     width: 630px;
+    min-height: 660px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding-top: 120px;
+    padding-top: 0;
 }
 
 .create-post-modal__title {
-    margin-bottom: 20px;
+    margin-bottom: 12px;
     font-family: 'MC_caps', Arial, sans-serif;
     font-size: 24px;
     font-weight: normal;
@@ -85,37 +86,32 @@
 .create-post-modal__collection {
     position: relative;
     width: 630px;
-    margin-top: 20px;
+    margin-top: 140px;
 }
 
 .create-post-modal__input--collection {
     height: 50px;
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
     cursor: pointer;
-    text-align: left;
 }
 
+.create-post-modal__input--collection[aria-expanded='true'],
 .create-post-modal__input--collection:hover,
-.create-post-modal__input--collection:focus-visible,
-.create-post-modal__input--collection[aria-expanded='true'] {
+.create-post-modal__input--collection:focus-visible {
     border-color: rgb(100, 100, 200);
 }
 
 .create-post-modal__collection-list {
     position: absolute;
-    top: calc(100% - 25px);
+    top: calc(100% + 8px);
     left: 0;
-    z-index: 1;
+    z-index: 3;
     width: 630px;
     max-height: 145px;
     margin: 0;
-    padding: 35px 0 10px;
+    padding: 10px 0;
     list-style: none;
     background: #fff;
     border: 1.5px solid #e0e0e0;
-    border-top: none;
     border-radius: 0 0 10px 10px;
     overflow-y: auto;
     display: none;
@@ -144,7 +140,47 @@
 
 .create-post-modal__input--tags {
     height: 50px;
-    margin-top: 170px;
+    margin-top: 110px;
+}
+
+/* ------------------------------ Кнопки -------------------------------------- */
+
+.create-post-modal__actions {
+    width: 630px;
+    margin-top: auto;
+    margin-bottom: 60px;
+    display: flex;
+    gap: 10px;
+}
+
+.create-post-modal__button {
+    flex: 1;
+    height: 50px;
+    border: none;
+    border-radius: 10px;
+    font-family: 'SF_def', Arial, sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    transition: border-color 0.2s ease, opacity 0.2s ease;
+}
+
+.create-post-modal__button--cancel {
+    background: #ffffff;
+    border: 1.5px solid #e0e0e0;
+    color: #555;
+}
+
+.create-post-modal__button--cancel:hover {
+    border-color: rgb(100, 100, 200);
+}
+
+.create-post-modal__button--submit {
+    background: rgb(100, 100, 200);
+    color: #ffffff;
+}
+
+.create-post-modal__button--submit:hover {
+    opacity: 0.8;
 }
 
 /* --------------------------- Зона загрузки ---------------------------------- */
@@ -163,22 +199,16 @@
     transition: border-color 0.2s ease, color 0.2s ease;
 }
 
-.create-post-modal__upload-dropzone::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: 10px;
-    background:
-        repeating-linear-gradient(90deg, rgb(100, 100, 200) 0 10px, transparent 10px 20px) top / 200% 2px no-repeat,
-        repeating-linear-gradient(180deg, rgb(100, 100, 200) 0 10px, transparent 10px 20px) right / 2px 200% no-repeat,
-        repeating-linear-gradient(270deg, rgb(100, 100, 200) 0 10px, transparent 10px 20px) bottom / 200% 2px no-repeat,
-        repeating-linear-gradient(0deg, rgb(100, 100, 200) 0 10px, transparent 10px 20px) left / 2px 200% no-repeat;
-    opacity: 0;
-    pointer-events: none;
-}
-
 .create-post-modal__upload-dropzone:hover,
 .create-post-modal__upload-dropzone--dragover {
+    border-style: solid;
+    border-color: rgb(100, 100, 200);
+    color: rgb(100, 100, 200);
+}
+
+.create-post-modal__upload-dropzone--filled {
+    height: auto;
+    border-style: solid;
     border-color: rgb(100, 100, 200);
     color: rgb(100, 100, 200);
 }

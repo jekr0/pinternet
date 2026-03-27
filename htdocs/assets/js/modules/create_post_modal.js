@@ -78,8 +78,6 @@ class CreatePostModalComponent {
     bindCollectionHandlers() {
         if (!this.collectionTrigger || !this.collectionList) return;
 
-        this.collectionTrigger.setAttribute('aria-expanded', 'false');
-
         this.collectionTrigger.addEventListener('click', () => {
             const isOpen = this.collectionList.classList.contains('create-post-modal__collection-list--open');
             this.toggleCollectionList(!isOpen);
@@ -87,7 +85,7 @@ class CreatePostModalComponent {
 
         this.collectionItems.forEach((item) => {
             item.addEventListener('click', () => {
-                this.collectionTrigger.textContent = item.textContent;
+                this.collectionTrigger.value = item.textContent.trim();
                 this.toggleCollectionList(false);
             });
         });
@@ -102,6 +100,13 @@ class CreatePostModalComponent {
     bindCloseHandlers() {
         this.modal.addEventListener('click', (event) => {
             if (event.target === this.modal) {
+                this.close();
+            }
+        });
+
+        document.addEventListener('click', (event) => {
+            const cancelButton = event.target.closest('[data-component="create-post-cancel"]');
+            if (cancelButton) {
                 this.close();
             }
         });

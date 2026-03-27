@@ -37,13 +37,14 @@
             ></textarea>
 
             <div class="create-post-modal__collection" data-component="post-collection">
-                <button
+                <input
                     class="create-post-modal__input create-post-modal__input--collection"
-                    type="button"
+                    type="text"
+                    value="Добавить в коллекцию"
+                    readonly
                     data-component="post-collection-trigger"
+                    aria-expanded="false"
                 >
-                    Добавьте коллекцию
-                </button>
 
                 <ul class="create-post-modal__collection-list" data-component="post-collection-list">
                     <li><button type="button" data-component="post-collection-item">Коллекция 1</button></li>
@@ -58,9 +59,14 @@
                 class="create-post-modal__input create-post-modal__input--tags"
                 type="text"
                 name="post-tags"
-                placeholder="Добавьте теги"
+                placeholder="Добавить теги"
                 autocomplete="off"
             >
+
+            <div class="create-post-modal__actions">
+                <button class="create-post-modal__button create-post-modal__button--submit" type="button">Создать пост</button>
+                <button class="create-post-modal__button create-post-modal__button--cancel" type="button" data-component="create-post-cancel">Отмена</button>
+            </div>
         </div>
     </div>
 </div>
