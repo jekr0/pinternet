@@ -69,6 +69,11 @@ switch ($path) {
         require_once '../src/controllers/auth_ctrl.php';
         exit;
 
+        case '/posts/create':
+        case '/boards/list':
+        require_once '../src/controllers/post_ctrl.php';
+        exit;
+
         case '/registration':
         $page = 'registration_pg.php';
         $pageTitle = 'Регистрация';

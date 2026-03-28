@@ -33,12 +33,21 @@
             <h2 class="create-post-modal__title" id="create-post-modal-title">Новый пост</h2>
 
             <!-- Описание -->
-            <textarea
-                class="create-post-modal__input create-post-modal__input--description"
-                name="post-description"
-                placeholder="Добавьте описание к посту"
-                autocomplete="off"
-            ></textarea>
+            <div style="position:absolute; top:100px; right:60px; width:630px; height:150px;">
+                <textarea
+                    class="create-post-modal__input create-post-modal__input--description"
+                    name="post-description"
+                    placeholder="Добавьте описание к посту"
+                    autocomplete="off"
+                    maxlength="255"
+                    data-component="post-description"
+                    style="position:relative; top:0; right:0; width:100%; height:100%;"
+                ></textarea>
+                <span
+                    data-component="post-description-counter"
+                    style="position:absolute; right:5px; bottom:5px; font-size:14px; color:#bbb; pointer-events:none;"
+                >0/255</span>
+            </div>
 
             <!-- Коллекция и список выбора -->
             <div class="create-post-modal__collection" data-component="post-collection">
@@ -47,14 +56,11 @@
                     type="text"
                     placeholder="Добавить в коллекцию"
                     data-component="post-collection-trigger"
+                    value="Профиль"
                 >
 
                 <ul class="create-post-modal__collection-list" data-component="post-collection-list">
-                    <li><button type="button" data-component="post-collection-item">Коллекция 1</button></li>
-                    <li><button type="button" data-component="post-collection-item">Коллекция 2</button></li>
-                    <li><button type="button" data-component="post-collection-item">Коллекция 3</button></li>
-                    <li><button type="button" data-component="post-collection-item">Коллекция 4</button></li>
-                    <li><button type="button" data-component="post-collection-item">Коллекция 5</button></li>
+                    <li><button type="button" data-component="post-collection-item">Профиль</button></li>
                 </ul>
             </div>
 
@@ -70,7 +76,7 @@
             <!-- Действия -->
             <div class="create-post-modal__actions">
                 <button class="create-post-modal__button create-post-modal__button--cancel" type="button" data-component="create-post-cancel">Отмена</button>
-                <button class="create-post-modal__button create-post-modal__button--submit" type="button">Создать пост</button>
+                <button class="create-post-modal__button create-post-modal__button--submit" type="button" data-component="create-post-submit">Создать пост</button>
             </div>
         </div>
     </div>

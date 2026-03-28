@@ -116,7 +116,7 @@ function handleRegistration(PDO $pdo): void
             INSERT INTO Boards (user_id, name, description)
             VALUES (?, ?, ?)
         ');
-        $stmt->execute([$userId, 'Сохранённое', 'Доска по умолчанию']);
+        $stmt->execute([$userId, 'Profile', 'Системная коллекция профиля']);
 
         $pdo->commit();
     } catch (PDOException $e) {
