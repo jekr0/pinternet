@@ -234,15 +234,20 @@
 
 .create-post-modal__tags-list {
     display: flex;
-    flex-wrap: wrap;
-    align-content: flex-start;
-    column-gap: 5px;
+    flex-direction: column;
     row-gap: 5px;
-    justify-content: flex-start;
     width: 630px;
-    max-height: 107px;
+    max-height: 79px;
     margin-top: 8px;
     overflow: hidden;
+}
+
+.create-post-modal__tags-row {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    column-gap: 5px;
+    width: 100%;
 }
 
 .create-post-modal__tags-suggest-list {
@@ -265,8 +270,7 @@
 }
 
 .create-post-modal__tags-input-row:focus-within .create-post-modal__input--tags,
-.create-post-modal__tags-input-row:focus-within .create-post-modal__tags-suggest-list,
-.create-post-modal__tags-input-row--suggest-open .create-post-modal__tags-suggest-list {
+.create-post-modal__tags-input-row:focus-within .create-post-modal__tags-suggest-list {
     border-color: rgb(100, 100, 200);
 }
 
@@ -298,6 +302,7 @@
 .create-post-modal__tag-item {
     position: relative;
     display: inline-flex;
+    flex: 0 0 auto;
     align-items: center;
     justify-content: center;
     height: 23px;
@@ -338,7 +343,6 @@
 }
 
 .create-post-modal__tag-item--more {
-    margin-left: auto;
     cursor: default;
 }
 
