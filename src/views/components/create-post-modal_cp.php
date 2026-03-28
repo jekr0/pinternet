@@ -54,13 +54,13 @@
                 <input
                     class="create-post-modal__input create-post-modal__input--collection"
                     type="text"
-                    placeholder="Добавить в коллекцию"
+                    placeholder="Добавить в коллекцию (&quot;Профиль&quot; по умолчанию)"
                     data-component="post-collection-trigger"
-                    value="Профиль"
+                    maxlength="32"
                 >
 
                 <ul class="create-post-modal__collection-list" data-component="post-collection-list">
-                    <li><button type="button" data-component="post-collection-item">Профиль</button></li>
+                    <li><button type="button" data-component="post-collection-item" data-is-profile="1">Профиль</button></li>
                 </ul>
             </div>
 
@@ -83,8 +83,18 @@
 
             <!-- Действия -->
             <div class="create-post-modal__actions">
-                <button class="create-post-modal__button create-post-modal__button--cancel" type="button" data-component="create-post-cancel">Отмена</button>
+                <button class="create-post-modal__button create-post-modal__button--cancel" type="button" data-component="create-post-cancel">Назад</button>
                 <button class="create-post-modal__button create-post-modal__button--submit" type="button" data-component="create-post-submit">Создать пост</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="create-post-modal__confirm create-post-modal__confirm--hidden" data-component="create-collection-confirm" aria-hidden="true">
+        <div class="create-post-modal__confirm-panel" role="dialog" aria-modal="true">
+            <p class="create-post-modal__confirm-text" data-component="create-collection-confirm-text"></p>
+            <div class="create-post-modal__confirm-actions">
+                <button class="create-post-modal__button create-post-modal__button--submit" type="button" data-component="create-collection-confirm-yes">Создать</button>
+                <button class="create-post-modal__button create-post-modal__button--cancel" type="button" data-component="create-collection-confirm-no">Назад</button>
             </div>
         </div>
     </div>

@@ -58,7 +58,7 @@ switch ($path) {
         $pageTitle = 'Вход';
         $PHP = [];
         $CSS = ['auth_pg.css'];
-        $JS  = ['password_toggle.js'];
+        $JS  = ['password_toggle.js', 'auth_form_guard.js'];
         break;
 
         case '/logout':
@@ -79,7 +79,7 @@ switch ($path) {
         $pageTitle = 'Регистрация';
         $PHP = [];
         $CSS = ['auth_pg.css'];
-        $JS  = ['password_toggle.js'];
+        $JS  = ['password_toggle.js', 'auth_form_guard.js'];
         break;
 
     default:

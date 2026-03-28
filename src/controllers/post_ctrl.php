@@ -48,6 +48,7 @@ function handleCreatePost(PDO $pdo, int $userId): never
     $description = trim((string) ($_POST['description'] ?? ''));
     $collectionInput = trim((string) ($_POST['collection'] ?? 'Профиль'));
     $tagsInput = trim((string) ($_POST['tags'] ?? ''));
+    $confirmCreateCollection = (string) ($_POST['confirm_create_collection'] ?? '') === '1';
 
     if (mb_strlen($description) > 255) {
         jsonResponse(['success' => false, 'error' => 'Описание не должно превышать 255 символов.'], 422);
@@ -99,7 +100,23 @@ function handleCreatePost(PDO $pdo, int $userId): never
         $insertPost->execute([$userId, $publicPath, $description !== '' ? $description : null]);
         $postId = (int) $pdo->lastInsertId();
 
-        $boardId = getOrCreateBoardId($pdo, $userId, $collectionName);
+        $boardId = findBoardId($pdo, $userId, $collectionName);
+        if ($boardId === null) {
+            if (!$confirmCreateCollection) {
+                $pdo->rollBack();
+                if (is_file($fullPath)) {
+                    @unlink($fullPath);
+                }
+                jsonResponse([
+                    'success' => false,
+                    'requires_collection_creation' => true,
+                    'collection_name' => $collectionName,
+                    'error' => sprintf('Коллекции "%s" не существует.', $collectionName),
+                ], 409);
+            }
+
+            $boardId = createBoard($pdo, $userId, $collectionName);
+        }
 
         $savePost = $pdo->prepare('INSERT IGNORE INTO Saved_Posts (user_id, post_id, board_id) VALUES (?, ?, ?)');
         $savePost->execute([$userId, $postId, $boardId]);
@@ -129,7 +146,7 @@ function handleCreatePost(PDO $pdo, int $userId): never
     jsonResponse(['success' => true, 'post_id' => $postId, 'image_path' => $publicPath]);
 }
 
-function getOrCreateBoardId(PDO $pdo, int $userId, string $collectionName): int
+function findBoardId(PDO $pdo, int $userId, string $collectionName): ?int
 {
     $select = $pdo->prepare('SELECT id FROM Boards WHERE user_id = ? AND name = ? LIMIT 1');
     $select->execute([$userId, $collectionName]);
@@ -139,6 +156,11 @@ function getOrCreateBoardId(PDO $pdo, int $userId, string $collectionName): int
         return (int) $existingId;
     }
 
+    return null;
+}
+
+function createBoard(PDO $pdo, int $userId, string $collectionName): int
+{
     $insert = $pdo->prepare('INSERT INTO Boards (user_id, name, description) VALUES (?, ?, ?)');
     $insert->execute([$userId, $collectionName, 'Создано автоматически при публикации поста']);
 
