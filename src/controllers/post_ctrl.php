@@ -20,6 +20,10 @@ if ($path === '/boards/list') {
     handleBoardsList($pdo, $userId);
 }
 
+if ($path === '/hashtags/suggest') {
+    handleHashtagsSuggest($pdo);
+}
+
 if ($path === '/posts/create') {
     handleCreatePost($pdo, $userId);
 }
@@ -37,6 +41,30 @@ function handleBoardsList(PDO $pdo, int $userId): never
     }
 
     jsonResponse(['success' => true, 'boards' => $boards]);
+}
+
+function handleHashtagsSuggest(PDO $pdo): never
+{
+    $query = mb_strtolower(trim((string) ($_GET['q'] ?? '')));
+    $query = preg_replace('/[^A-Za-zА-Яа-яЁё0-9_]/u', '', $query) ?: '';
+
+    if ($query === '') {
+        jsonResponse(['success' => true, 'tags' => []]);
+    }
+
+    $stmt = $pdo->prepare('
+        SELECT h.name, COUNT(ph.post_id) AS post_count
+        FROM Hashtags h
+        LEFT JOIN Post_Hashtags ph ON ph.hashtag_id = h.id
+        WHERE h.name LIKE ?
+        GROUP BY h.id, h.name
+        ORDER BY post_count DESC, h.name ASC
+        LIMIT 10
+    ');
+    $stmt->execute([$query . '%']);
+    $tags = array_map(static fn(array $row) => (string) $row['name'], $stmt->fetchAll());
+
+    jsonResponse(['success' => true, 'tags' => $tags]);
 }
 
 function handleCreatePost(PDO $pdo, int $userId): never

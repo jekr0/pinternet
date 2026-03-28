@@ -28,6 +28,29 @@
     box-shadow: 0 2px 3px rgba(0, 0, 0, 0.07);
 }
 
+.create-post-modal__alert {
+    position: absolute;
+    top: -45px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    width: fit-content;
+    max-width: calc(100% - 20px);
+    padding: 8px 12px;
+    box-sizing: border-box;
+    font-family: 'SF_def', Arial, sans-serif;
+    font-size: 14px;
+    color: #555;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.create-post-modal__alert--hidden {
+    display: none;
+}
+
 .create-post-modal__upload-column {
     position: absolute;
     left: 0;
@@ -188,10 +211,10 @@
     width: 30px;
     height: 30px;
     transform: translateY(-50%);
-    border: none;
+    border: 1.5px solid #e0e0e0;
     border-radius: 5px;
-    background: rgb(100, 100, 200);
-    color: #fff;
+    background: #fff;
+    color: #bbb;
     font-family: 'SF_def', Arial, sans-serif;
     font-size: 22px;
     line-height: 1;
@@ -199,8 +222,14 @@
     transition: border-color 0.2s ease, opacity 0.2s ease;
 }
 
+.create-post-modal__tags-input-row:focus-within .create-post-modal__tags-add-button {
+    border-color: rgb(100, 100, 200);
+    background: rgb(100, 100, 200);
+    color: #fff;
+}
+
 .create-post-modal__tags-add-button:hover {
-    opacity: 0.8;
+    border-color: rgb(100, 100, 200);
 }
 
 .create-post-modal__tags-list {
@@ -214,6 +243,49 @@
     height: 50px;
     margin-top: 8px;
     overflow: hidden;
+}
+
+.create-post-modal__tags-suggest-list {
+    position: absolute;
+    top: 40px;
+    left: 0;
+    z-index: 3;
+    width: 630px;
+    height: 70px;
+    margin: 0;
+    padding: 0 0 29px;
+    list-style: none;
+    background: #fff;
+    border: 1.5px solid #e0e0e0;
+    border-top: none;
+    border-radius: 0 0 10px 10px;
+    overflow-y: auto;
+}
+
+.create-post-modal__tags-suggest-list--hidden {
+    display: none;
+}
+
+.create-post-modal__tags-input-row--suggest-open .create-post-modal__input--tags {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.create-post-modal__tags-suggest-list button {
+    width: 100%;
+    height: 28px;
+    border: none;
+    background: transparent;
+    text-align: left;
+    padding: 0 14px;
+    font-family: 'SF_def', Arial, sans-serif;
+    font-size: 14px;
+    color: #555;
+    cursor: pointer;
+}
+
+.create-post-modal__tags-suggest-list button:hover {
+    background: rgba(100, 100, 200, 0.1);
 }
 
 .create-post-modal__tag-item {
@@ -342,6 +414,7 @@
     font-family: 'SF_def', Arial, sans-serif;
     font-size: 18px;
     color: #333;
+    white-space: pre-line;
 }
 
 .create-post-modal__confirm-actions {

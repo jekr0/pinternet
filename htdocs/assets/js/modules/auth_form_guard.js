@@ -24,7 +24,7 @@ class AuthFormGuardComponent {
     bindFormValidation(form) {
         form.setAttribute('novalidate', 'novalidate');
 
-        form.addEventListener('submit', (event) => {
+        form.addEventListener('submit', async (event) => {
             const action = form.querySelector('input[name="action"]')?.value;
             const email = form.querySelector('input[name="email"]')?.value.trim() || '';
             const password = form.querySelector('input[name="password"]')?.value || '';
@@ -53,6 +53,34 @@ class AuthFormGuardComponent {
             if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
                 event.preventDefault();
                 this.showBanner(form, 'Некорректный формат почты');
+                return;
+            }
+
+            if (action === 'registration') {
+                event.preventDefault();
+                const payload = new URLSearchParams({
+                    action: 'registration_validate',
+                    username,
+                    email,
+                    password
+                });
+
+                try {
+                    const response = await fetch('/auth', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+                        body: payload.toString()
+                    });
+                    const data = await response.json();
+                    if (!response.ok || !data.success) {
+                        this.showBanner(form, data.error || 'Ошибка проверки регистрации');
+                        return;
+                    }
+
+                    form.submit();
+                } catch (error) {
+                    this.showBanner(form, 'Ошибка сети. Попробуйте ещё раз');
+                }
             }
         });
     }
