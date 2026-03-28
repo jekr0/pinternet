@@ -66,7 +66,7 @@
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 14px;
+    gap: 15px;
 }
 
 .create-post-modal__meta-column {
@@ -95,7 +95,7 @@
     position: absolute;
     right: 60px;
     width: 630px;
-    padding: 0 14px;
+    padding: 0 15px;
     box-sizing: border-box;
     outline: none;
     font-family: 'SF_def', Arial, sans-serif;
@@ -125,7 +125,7 @@
 .create-post-modal__input--description {
     top: 100px;
     height: 150px;
-    padding-top: 14px;
+    padding-top: 15px;
     resize: none;
 }
 
@@ -147,7 +147,7 @@
     width: 630px;
     max-height: 90px;
     margin: 0;
-    padding: 0 0 30px;
+    padding: 0 0 29px;
     list-style: none;
     background: #ffffff;
     border-radius: 0 0 10px 10px;
@@ -166,7 +166,7 @@
 .create-post-modal__collection-list button {
     width: 100%;
     height: 30px;
-    padding: 0 14px;
+    padding: 0 15px;
     border: none;
     background: transparent;
     text-align: left;
@@ -240,7 +240,7 @@
     row-gap: 5px;
     justify-content: space-between;
     width: 630px;
-    height: 51px;
+    height: 50px;
     margin-top: 8px;
     overflow: hidden;
 }
@@ -253,7 +253,7 @@
     width: 630px;
     height: 70px;
     margin: 0;
-    padding: 0;
+    padding: 0 0 29px;
     list-style: none;
     background: #fff;
     border: 1.5px solid #e0e0e0;
@@ -304,11 +304,11 @@
 }
 
 .create-post-modal__tag-label {
-    transition: filter 0.2s ease;
+    transition: filter 0.1s ease;
 }
 
 .create-post-modal__tag-item::after {
-    content: '✕';
+    content: '×';
     position: absolute;
     inset: 0;
     display: flex;
@@ -317,12 +317,13 @@
     font-size: 16px;
     color: #555;
     opacity: 0;
-    transition: opacity 0.2s ease;
+    transition: opacity 0.1s ease, color 0.1s;
     pointer-events: none;
 }
 
 .create-post-modal__tag-item:hover .create-post-modal__tag-label {
-    filter: blur(10px);
+    filter: blur(2px);
+    color: #999999;
 }
 
 .create-post-modal__tag-item:hover::after {

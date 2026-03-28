@@ -200,6 +200,20 @@ class CreatePostModalComponent {
 
             await this.submitPost(payload, true);
         });
+
+        this.confirmYesButton.addEventListener('click', async () => {
+            if (!this.pendingCreatePayload) return;
+            const payload = new FormData();
+            payload.append('image', this.pendingCreatePayload.image);
+            payload.append('description', this.pendingCreatePayload.description);
+            payload.append('collection', this.pendingCreatePayload.collection);
+            payload.append('tags', this.pendingCreatePayload.tags);
+            payload.append('confirm_create_collection', '1');
+
+            await this.submitPost(payload, true);
+        });
+
+        this.tagsAddButton.addEventListener('click', () => this.addTagFromInput());
     }
 
     bindCloseHandlers() {
