@@ -238,9 +238,9 @@
     align-content: flex-start;
     column-gap: 5px;
     row-gap: 5px;
-    justify-content: space-between;
+    justify-content: flex-start;
     width: 630px;
-    height: 50px;
+    max-height: 107px;
     margin-top: 8px;
     overflow: hidden;
 }
@@ -264,8 +264,9 @@
     transition: border-color 0.2s ease;
 }
 
-.create-post-modal__collection:focus-within .create-post-modal__input--tags,
-.create-post-modal__collection:focus-within .create-post-modal__tags-suggest-list {
+.create-post-modal__tags-input-row:focus-within .create-post-modal__input--tags,
+.create-post-modal__tags-input-row:focus-within .create-post-modal__tags-suggest-list,
+.create-post-modal__tags-input-row--suggest-open .create-post-modal__tags-suggest-list {
     border-color: rgb(100, 100, 200);
 }
 

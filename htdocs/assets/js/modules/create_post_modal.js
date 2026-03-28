@@ -19,7 +19,7 @@ class CreatePostModalComponent {
         this.tagsList = null;
         this.tags = [];
         this.maxTags = 24;
-        this.maxVisibleTagRowsHeight = 51;
+        this.maxVisibleTagRowsHeight = 107;
         this.confirmOverlay = null;
         this.confirmText = null;
         this.confirmYesButton = null;
@@ -151,10 +151,6 @@ class CreatePostModalComponent {
         });
 
         this.tagsField.addEventListener('input', () => this.loadTagSuggestions());
-        this.tagsField.addEventListener('blur', () => {
-            setTimeout(() => this.hideTagSuggestions(), 120);
-        });
-
         this.tagsAddButton.addEventListener('click', () => this.addTagFromInput());
     }
 
