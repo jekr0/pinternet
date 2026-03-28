@@ -33,8 +33,8 @@ unset($_SESSION['auth_error']);
                 autocomplete="username"
                 minlength="3"
                 maxlength="12"
-                pattern="[A-Za-z0-9_]{3,12}"
-                title="Имя 3-12 символов: латинские буквы, цифры и _"
+                pattern="[A-Za-zА-Яа-яЁё0-9_]{3,12}"
+                title="Только латиница, кириллица, цифры и _"
                 required
             >
             <input
