@@ -189,6 +189,8 @@ class CreatePostModalComponent {
 
             await this.submitPost(payload, true);
         });
+
+        this.tagsAddButton.addEventListener('click', () => this.addTagFromInput());
     }
 
     bindCloseHandlers() {
