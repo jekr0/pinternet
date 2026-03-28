@@ -21,7 +21,7 @@
     position: relative;
     width: min(1300px, calc(100vw - 40px));
     max-width: 85%;
-    height: 670px;
+    height: 700px;
     max-height: 75%;
     background: #fff;
     border-radius: 20px;
@@ -216,10 +216,10 @@
     background: #fff;
     color: #bbb;
     font-family: 'SF_def', Arial, sans-serif;
-    font-size: 22px;
+    font-size: 16px;
     line-height: 1;
     cursor: pointer;
-    transition: border-color 0.2s ease, opacity 0.2s ease;
+    transition: border-color 0.2s ease, opacity 0.2s ease, background 0.2s ease, color 0.2s ease;
 }
 
 .create-post-modal__tags-input-row:focus-within .create-post-modal__tags-add-button {
@@ -229,7 +229,7 @@
 }
 
 .create-post-modal__tags-add-button:hover {
-    border-color: rgb(100, 100, 200);
+    opacity: 0.8;
 }
 
 .create-post-modal__tags-list {
@@ -247,19 +247,26 @@
 
 .create-post-modal__tags-suggest-list {
     position: absolute;
-    top: 40px;
+    top: 50px;
     left: 0;
-    z-index: 3;
+    z-index: 1;
     width: 630px;
-    height: 70px;
+    height: 90px;
     margin: 0;
     padding: 0 0 29px;
     list-style: none;
     background: #fff;
+    border-radius: 0 0 10px 10px;
     border: 1.5px solid #e0e0e0;
     border-top: none;
-    border-radius: 0 0 10px 10px;
+    display: block;
     overflow-y: auto;
+    transition: border-color 0.2s ease;
+}
+
+.create-post-modal__collection:focus-within .create-post-modal__input--tags,
+.create-post-modal__collection:focus-within .create-post-modal__tags-suggest-list {
+    border-color: rgb(100, 100, 200);
 }
 
 .create-post-modal__tags-suggest-list--hidden {
@@ -273,14 +280,13 @@
 
 .create-post-modal__tags-suggest-list button {
     width: 100%;
-    height: 28px;
+    height: 30px;
     border: none;
     background: transparent;
     text-align: left;
-    padding: 0 14px;
+    padding: 0 15px;
     font-family: 'SF_def', Arial, sans-serif;
-    font-size: 14px;
-    color: #555;
+    font-size: 16px;
     cursor: pointer;
 }
 
@@ -315,14 +321,14 @@
     align-items: center;
     justify-content: center;
     font-size: 16px;
-    color: #555;
+    color: rgb(100, 100, 200);
     opacity: 0;
     transition: opacity 0.1s ease, color 0.1s;
     pointer-events: none;
 }
 
 .create-post-modal__tag-item:hover .create-post-modal__tag-label {
-    filter: blur(2px);
+    filter: blur(1px);
     color: #999999;
 }
 
@@ -348,7 +354,7 @@
 .create-post-modal__actions {
     position: relative;
     right: 60px;
-    top: 560px;
+    top: 590px;
     width: 630px;
     height: 50px;
     display: flex;
