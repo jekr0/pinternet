@@ -70,9 +70,9 @@ function handleRegistration(PDO $pdo): void
         redirectTo('/registration', 'Заполните все поля');
     }
     
-    // Валидация имени пользователя: 3-12 символов, только латиница, цифры и _
-    if (!preg_match('/^[A-Za-z0-9_]{3,12}$/', $username)) {
-        redirectTo('/registration', 'Имя пользователя: 3–12 символов, только латинские буквы, цифры и _');
+    // Валидация имени пользователя: 3-12 символов, только кириллица/латиница, цифры и _
+    if (!preg_match('/^[A-Za-zА-Яа-яЁё0-9_]{3,12}$/u', $username)) {
+        redirectTo('/registration', 'Только латиница, кириллица, цифры и "_"');
     }
 
     // Валидация формата почты
@@ -116,7 +116,7 @@ function handleRegistration(PDO $pdo): void
             INSERT INTO Boards (user_id, name, description)
             VALUES (?, ?, ?)
         ');
-        $stmt->execute([$userId, 'Сохранённое', 'Доска по умолчанию']);
+        $stmt->execute([$userId, 'Profile', 'Системная коллекция профиля']);
 
         $pdo->commit();
     } catch (PDOException $e) {

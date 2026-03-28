@@ -21,7 +21,7 @@
     position: relative;
     width: min(1300px, calc(100vw - 40px));
     max-width: 85%;
-    height: 665px;
+    height: 670px;
     max-height: 75%;
     background: #fff;
     border-radius: 20px;
@@ -49,7 +49,7 @@
 .create-post-modal__meta-column {
     position: relative;
     width: 630px;
-    min-height: 660px;
+    min-height: 665px;
     margin-left: auto;
 }
 
@@ -157,9 +157,117 @@
     background: rgba(100, 100, 200, 0.1);
 }
 
-.create-post-modal__input--tags {
+.create-post-modal__collection-list button[data-is-profile="1"] {
+    color: rgb(100, 100, 200);
+}
+
+.create-post-modal__tags-wrap {
+    position: absolute;
     top: 430px;
+    right: 60px;
+    width: 630px;
+}
+
+.create-post-modal__tags-input-row {
+    position: relative;
+    width: 630px;
+}
+
+.create-post-modal__input--tags {
+    position: relative;
+    right: 0;
+    width: 100%;
     height: 50px;
+    padding-right: 56px;
+}
+
+.create-post-modal__tags-add-button {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    width: 30px;
+    height: 30px;
+    transform: translateY(-50%);
+    border: none;
+    border-radius: 5px;
+    background: rgb(100, 100, 200);
+    color: #fff;
+    font-family: 'SF_def', Arial, sans-serif;
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+    transition: border-color 0.2s ease, opacity 0.2s ease;
+}
+
+.create-post-modal__tags-add-button:hover {
+    opacity: 0.8;
+}
+
+.create-post-modal__tags-list {
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    column-gap: 5px;
+    row-gap: 5px;
+    justify-content: space-between;
+    width: 630px;
+    height: 51px;
+    margin-top: 8px;
+    overflow: hidden;
+}
+
+.create-post-modal__tag-item {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 23px;
+    padding: 0 8px;
+    font-family: 'SF_def', Arial, sans-serif;
+    font-size: 14px;
+    color: #555;
+    background: #efefef;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.create-post-modal__tag-label {
+    transition: filter 0.2s ease;
+}
+
+.create-post-modal__tag-item::after {
+    content: '✕';
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: #555;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+}
+
+.create-post-modal__tag-item:hover .create-post-modal__tag-label {
+    filter: blur(10px);
+}
+
+.create-post-modal__tag-item:hover::after {
+    opacity: 1;
+}
+
+.create-post-modal__tag-item--more {
+    margin-left: auto;
+    cursor: default;
+}
+
+.create-post-modal__tag-item--more::after {
+    content: none;
+}
+
+.create-post-modal__tag-item--more:hover {
+    filter: none;
 }
 
 /* ------------------------------ Кнопки -------------------------------------- */
@@ -167,7 +275,7 @@
 .create-post-modal__actions {
     position: relative;
     right: 60px;
-    top: 555px;
+    top: 560px;
     width: 630px;
     height: 50px;
     display: flex;
@@ -202,6 +310,42 @@
 
 .create-post-modal__button--submit:hover {
     opacity: 0.8;
+}
+
+.create-post-modal__confirm {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(15px);
+}
+
+.create-post-modal__confirm--hidden {
+    display: none;
+}
+
+.create-post-modal__confirm-panel {
+    width: min(520px, calc(100% - 80px));
+    padding: 30px;
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.07);
+}
+
+.create-post-modal__confirm-text {
+    margin: 0 0 24px;
+    text-align: center;
+    font-family: 'SF_def', Arial, sans-serif;
+    font-size: 18px;
+    color: #333;
+}
+
+.create-post-modal__confirm-actions {
+    display: flex;
+    gap: 10px;
 }
 
 /* --------------------------- Зона загрузки ---------------------------------- */

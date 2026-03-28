@@ -58,7 +58,7 @@ switch ($path) {
         $pageTitle = 'Вход';
         $PHP = [];
         $CSS = ['auth_pg.css'];
-        $JS  = ['password_toggle.js'];
+        $JS  = ['password_toggle.js', 'auth_form_guard.js'];
         break;
 
         case '/logout':
@@ -69,12 +69,17 @@ switch ($path) {
         require_once '../src/controllers/auth_ctrl.php';
         exit;
 
+        case '/posts/create':
+        case '/boards/list':
+        require_once '../src/controllers/post_ctrl.php';
+        exit;
+
         case '/registration':
         $page = 'registration_pg.php';
         $pageTitle = 'Регистрация';
         $PHP = [];
         $CSS = ['auth_pg.css'];
-        $JS  = ['password_toggle.js'];
+        $JS  = ['password_toggle.js', 'auth_form_guard.js'];
         break;
 
     default:
