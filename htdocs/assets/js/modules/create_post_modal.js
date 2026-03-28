@@ -15,6 +15,11 @@ class CreatePostModalComponent {
         this.descriptionCounter = null;
         this.tagsField = null;
         this.submitButton = null;
+        this.tagsAddButton = null;
+        this.tagsList = null;
+        this.tags = [];
+        this.maxTags = 24;
+        this.maxVisibleTagRowsHeight = 51;
 
         // Upload constraints/state
         this.maxFileSize = 20 * 1024 * 1024;
@@ -38,6 +43,8 @@ class CreatePostModalComponent {
         this.descriptionCounter = this.modal.querySelector('[data-component="post-description-counter"]');
         this.tagsField = this.modal.querySelector('.create-post-modal__input--tags');
         this.submitButton = this.modal.querySelector('[data-component="create-post-submit"]');
+        this.tagsAddButton = this.modal.querySelector('[data-component="post-tags-add-button"]');
+        this.tagsList = this.modal.querySelector('[data-component="post-tags-list"]');
 
         if (!this.dropzone || !this.fileInput || !this.placeholder || !this.preview) return;
 
@@ -45,6 +52,7 @@ class CreatePostModalComponent {
         this.bindUploadHandlers();
         this.bindDescriptionHandlers();
         this.bindCollectionHandlers();
+        this.bindTagsHandlers();
         this.bindSubmitHandlers();
         this.bindCloseHandlers();
     }
@@ -113,6 +121,19 @@ class CreatePostModalComponent {
         if (!this.submitButton) return;
 
         this.submitButton.addEventListener('click', () => this.submitPost());
+    }
+
+    bindTagsHandlers() {
+        if (!this.tagsField || !this.tagsAddButton) return;
+
+        this.tagsField.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                this.addTagFromInput();
+            }
+        });
+
+        this.tagsAddButton.addEventListener('click', () => this.addTagFromInput());
     }
 
     bindCloseHandlers() {
@@ -196,7 +217,11 @@ class CreatePostModalComponent {
             const payload = await response.json();
             if (!payload.success || !Array.isArray(payload.boards) || payload.boards.length === 0) return;
 
-            this.collectionList.innerHTML = payload.boards.map((board) => (
+            const localizedBoards = payload.boards.map((board) => (
+                board === 'Profile' ? 'Профиль' : board
+            ));
+
+            this.collectionList.innerHTML = localizedBoards.map((board) => (
                 `<li><button type="button" data-component="post-collection-item">${board}</button></li>`
             )).join('');
 
@@ -204,7 +229,7 @@ class CreatePostModalComponent {
             this.attachCollectionItemHandlers();
 
             if (!this.collectionTrigger.value) {
-                this.collectionTrigger.value = payload.boards[0];
+                this.collectionTrigger.value = localizedBoards[0];
             }
         } catch (error) {
             console.warn('Unable to load boards list', error);
@@ -220,6 +245,8 @@ class CreatePostModalComponent {
         this.dropzone.classList.remove('create-post-modal__upload-dropzone--filled');
         this.descriptionField.value = '';
         this.tagsField.value = '';
+        this.tags = [];
+        this.renderTags();
         this.collectionTrigger.value = 'Профиль';
         this.descriptionCounter.textContent = '0/255';
     }
@@ -234,7 +261,7 @@ class CreatePostModalComponent {
         formData.append('image', this.currentFile);
         formData.append('description', this.descriptionField?.value.trim() ?? '');
         formData.append('collection', this.collectionTrigger?.value.trim() || 'Профиль');
-        formData.append('tags', this.tagsField?.value.trim() ?? '');
+        formData.append('tags', this.tags.join(' '));
 
         this.submitButton.disabled = true;
 
@@ -256,6 +283,65 @@ class CreatePostModalComponent {
             alert(error.message || 'Ошибка при создании поста.');
         } finally {
             this.submitButton.disabled = false;
+        }
+    }
+
+    normalizeTag(rawTag) {
+        const lowered = rawTag.trim().replace(/^#+/, '').toLowerCase();
+        if (!lowered) return '';
+
+        const normalized = lowered.replace(/[^a-zа-яё0-9_]/gi, '');
+        return normalized.slice(0, 16);
+    }
+
+    addTagFromInput() {
+        if (!this.tagsField) return;
+
+        if (this.tags.length >= this.maxTags) {
+            alert('Можно добавить не больше 24 тегов.');
+            return;
+        }
+
+        const candidate = this.normalizeTag(this.tagsField.value);
+        if (!candidate) {
+            this.tagsField.value = '';
+            return;
+        }
+
+        if (!this.tags.includes(candidate)) {
+            this.tags.push(candidate);
+        }
+
+        this.tagsField.value = '';
+        this.renderTags();
+    }
+
+    renderTags() {
+        if (!this.tagsList) return;
+        this.tagsList.innerHTML = '';
+
+        const visibleTags = [];
+        let hiddenCount = 0;
+
+        this.tags.forEach((tag) => {
+            const tagEl = document.createElement('span');
+            tagEl.className = 'create-post-modal__tag-item';
+            tagEl.textContent = `#${tag}`;
+            this.tagsList.appendChild(tagEl);
+
+            if (this.tagsList.scrollHeight > this.maxVisibleTagRowsHeight) {
+                this.tagsList.removeChild(tagEl);
+                hiddenCount += 1;
+            } else {
+                visibleTags.push(tag);
+            }
+        });
+
+        if (hiddenCount > 0) {
+            const moreEl = document.createElement('span');
+            moreEl.className = 'create-post-modal__tag-item create-post-modal__tag-item--more';
+            moreEl.textContent = '...';
+            this.tagsList.appendChild(moreEl);
         }
     }
 }

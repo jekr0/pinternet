@@ -87,7 +87,10 @@ function handleCreatePost(PDO $pdo, int $userId): never
         jsonResponse(['success' => false, 'error' => 'Не удалось сохранить изображение.'], 500);
     }
 
-    $collectionName = normalizeCollectionName($collectionInput);
+    $collectionName = validateAndNormalizeCollectionName($collectionInput);
+    if ($collectionName === null) {
+        jsonResponse(['success' => false, 'error' => 'Название коллекции: до 32 символов, только латиница, кириллица, цифры, пробел и "_"'], 422);
+    }
 
     try {
         $pdo->beginTransaction();
@@ -148,7 +151,26 @@ function normalizeCollectionName(string $value): string
         return 'Profile';
     }
 
-    return mb_substr($value, 0, 50);
+    return $value;
+}
+
+function validateAndNormalizeCollectionName(string $value): ?string
+{
+    $normalized = trim(normalizeCollectionName($value));
+
+    if ($normalized === '') {
+        return 'Profile';
+    }
+
+    if (mb_strlen($normalized) > 32) {
+        return null;
+    }
+
+    if (!preg_match('/^[A-Za-zА-Яа-яЁё0-9_ ]+$/u', $normalized)) {
+        return null;
+    }
+
+    return $normalized;
 }
 
 function parseHashtags(string $tagsInput): array
@@ -175,13 +197,23 @@ function parseHashtags(string $tagsInput): array
         }
 
         $tag = mb_strtolower($tag);
-        $tag = preg_replace('/[^\p{L}\p{N}_-]/u', '', $tag) ?: '';
 
         if ($tag === '') {
             continue;
         }
 
+        if (mb_strlen($tag) > 16) {
+            $tag = mb_substr($tag, 0, 16);
+        }
+
+        if (!preg_match('/^[A-Za-zА-Яа-яЁё0-9_]+$/u', $tag)) {
+            continue;
+        }
+
         $normalized[$tag] = $tag;
+        if (count($normalized) >= 24) {
+            break;
+        }
     }
 
     return array_values($normalized);

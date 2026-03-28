@@ -65,13 +65,21 @@
             </div>
 
             <!-- Теги -->
-            <input
-                class="create-post-modal__input create-post-modal__input--tags"
-                type="text"
-                name="post-tags"
-                placeholder="Добавить теги"
-                autocomplete="off"
-            >
+            <div class="create-post-modal__tags-wrap">
+                <div class="create-post-modal__tags-input-row">
+                    <input
+                        class="create-post-modal__input create-post-modal__input--tags"
+                        type="text"
+                        name="post-tags"
+                        placeholder="Добавить теги"
+                        autocomplete="off"
+                        maxlength="16"
+                        data-component="post-tags-input"
+                    >
+                    <button type="button" class="create-post-modal__tags-add-button" data-component="post-tags-add-button">+</button>
+                </div>
+                <div class="create-post-modal__tags-list" data-component="post-tags-list" aria-live="polite"></div>
+            </div>
 
             <!-- Действия -->
             <div class="create-post-modal__actions">
