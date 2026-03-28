@@ -12,6 +12,7 @@ $action = $_POST['action'] ?? '';
 
 match ($action) {
     'login'        => handleLogin($pdo),
+    'registration_validate' => handleRegistrationValidate($pdo),
     'registration' => handleRegistration($pdo),
     default        => redirectTo('/login')
 };
@@ -65,38 +66,9 @@ function handleRegistration(PDO $pdo): void
     $email    = trim($_POST['email']    ?? '');
     $password = trim($_POST['password'] ?? '');
 
-    // Валидация на пустоту
-    if (!$username || !$email || !$password) {
-        redirectTo('/registration', 'Заполните все поля');
-    }
-    
-    // Валидация имени пользователя: 3-12 символов, только латиница, цифры и _
-    if (!preg_match('/^[A-Za-z0-9_]{3,12}$/', $username)) {
-        redirectTo('/registration', 'Имя пользователя: 3–12 символов, только латинские буквы, цифры и _');
-    }
-
-    // Валидация формата почты
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        redirectTo('/registration', 'Некорректный формат почты');
-    }
-
-    // Минимальная длина пароля
-    if (strlen($password) < 6) {
-        redirectTo('/registration', 'Пароль должен быть не короче 6 символов');
-    }
-
-    // Проверяем, занята ли почта
-    $stmt = $pdo->prepare('SELECT id FROM Users WHERE email = ?');
-    $stmt->execute([$email]);
-    if ($stmt->fetch()) {
-        redirectTo('/registration', 'Эта почта уже зарегистрирована');
-    }
-
-    // Проверяем, занят ли никнейм
-    $stmt = $pdo->prepare('SELECT id FROM Users WHERE username = ?');
-    $stmt->execute([$username]);
-    if ($stmt->fetch()) {
-        redirectTo('/registration', 'Это имя пользователя уже занято');
+    $validationError = validateRegistrationFields($pdo, $username, $email, $password);
+    if ($validationError !== null) {
+        redirectTo('/registration', $validationError);
     }
 
     $passwordHash = password_hash($password, PASSWORD_BCRYPT);
@@ -116,7 +88,7 @@ function handleRegistration(PDO $pdo): void
             INSERT INTO Boards (user_id, name, description)
             VALUES (?, ?, ?)
         ');
-        $stmt->execute([$userId, 'Сохранённое', 'Доска по умолчанию']);
+        $stmt->execute([$userId, 'Profile', 'Системная коллекция профиля']);
 
         $pdo->commit();
     } catch (PDOException $e) {
@@ -126,6 +98,58 @@ function handleRegistration(PDO $pdo): void
     }
 
     redirectTo('/login', 'Аккаунт создан! Совершите повторный вход');
+}
+
+function handleRegistrationValidate(PDO $pdo): never
+{
+    $username = trim($_POST['username'] ?? '');
+    $email    = trim($_POST['email'] ?? '');
+    $password = trim($_POST['password'] ?? '');
+
+    $error = validateRegistrationFields($pdo, $username, $email, $password);
+
+    header('Content-Type: application/json; charset=utf-8');
+    if ($error !== null) {
+        http_response_code(422);
+        echo json_encode(['success' => false, 'error' => $error], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    echo json_encode(['success' => true], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+function validateRegistrationFields(PDO $pdo, string $username, string $email, string $password): ?string
+{
+    if (!$username || !$email || !$password) {
+        return 'Заполните все поля';
+    }
+
+    if (!preg_match('/^[A-Za-zА-Яа-яЁё0-9_]{3,12}$/u', $username)) {
+        return 'Только латиница, кириллица, цифры и "_"';
+    }
+
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        return 'Некорректный формат почты';
+    }
+
+    if (strlen($password) < 6) {
+        return 'Пароль должен быть не короче 6 символов';
+    }
+
+    $stmt = $pdo->prepare('SELECT id FROM Users WHERE email = ?');
+    $stmt->execute([$email]);
+    if ($stmt->fetch()) {
+        return 'Эта почта уже зарегистрирована';
+    }
+
+    $stmt = $pdo->prepare('SELECT id FROM Users WHERE username = ?');
+    $stmt->execute([$username]);
+    if ($stmt->fetch()) {
+        return 'Это имя пользователя уже занято';
+    }
+
+    return null;
 }
 
 // ---------------------------------------------------------------------
