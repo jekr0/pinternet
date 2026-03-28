@@ -19,7 +19,7 @@ class CreatePostModalComponent {
         this.tagsList = null;
         this.tags = [];
         this.maxTags = 24;
-        this.maxVisibleTagRowsHeight = 51;
+        this.maxVisibleTagRows = 3;
         this.confirmOverlay = null;
         this.confirmText = null;
         this.confirmYesButton = null;
@@ -151,10 +151,6 @@ class CreatePostModalComponent {
         });
 
         this.tagsField.addEventListener('input', () => this.loadTagSuggestions());
-        this.tagsField.addEventListener('blur', () => {
-            setTimeout(() => this.hideTagSuggestions(), 120);
-        });
-
         this.tagsAddButton.addEventListener('click', () => this.addTagFromInput());
     }
 
@@ -427,29 +423,46 @@ class CreatePostModalComponent {
     renderTags() {
         if (!this.tagsList) return;
         this.tagsList.innerHTML = '';
+        const availableWidth = this.tagsList.clientWidth || 630;
+        const rows = [this.createTagRow()];
         let hiddenCount = 0;
 
         this.tags.forEach((tag, index) => {
+            const currentRow = rows[rows.length - 1];
             const tagEl = document.createElement('span');
             tagEl.className = 'create-post-modal__tag-item';
             tagEl.innerHTML = `<span class="create-post-modal__tag-label">#${tag}</span>`;
             tagEl.addEventListener('click', () => this.removeTag(index));
-            this.tagsList.appendChild(tagEl);
+            currentRow.appendChild(tagEl);
+            this.adjustTagsSpacing(currentRow, availableWidth);
 
-            if (this.tagsList.scrollHeight > this.maxVisibleTagRowsHeight) {
-                this.tagsList.removeChild(tagEl);
+            if (currentRow.scrollWidth <= availableWidth) {
+                return;
+            }
+
+            currentRow.removeChild(tagEl);
+            this.adjustTagsSpacing(currentRow, availableWidth);
+
+            if (rows.length >= this.maxVisibleTagRows) {
+                hiddenCount += 1;
+                return;
+            }
+
+            const nextRow = this.createTagRow();
+            rows.push(nextRow);
+            nextRow.appendChild(tagEl);
+            this.adjustTagsSpacing(nextRow, availableWidth);
+
+            if (nextRow.scrollWidth > availableWidth) {
+                nextRow.removeChild(tagEl);
+                this.adjustTagsSpacing(nextRow, availableWidth);
                 hiddenCount += 1;
             }
         });
 
         if (hiddenCount > 0) {
-            const moreEl = document.createElement('span');
-            moreEl.className = 'create-post-modal__tag-item create-post-modal__tag-item--more';
-            moreEl.textContent = '...';
-            this.tagsList.appendChild(moreEl);
+            this.appendHiddenMoreChip(hiddenCount, availableWidth);
         }
-
-        this.adjustTagsSpacing();
     }
 
     removeTag(index) {
@@ -457,20 +470,54 @@ class CreatePostModalComponent {
         this.renderTags();
     }
 
-    adjustTagsSpacing() {
-        if (!this.tagsList) return;
-        const chipElements = Array.from(this.tagsList.querySelectorAll('.create-post-modal__tag-item:not(.create-post-modal__tag-item--more)'));
+    createTagRow() {
+        const rowEl = document.createElement('div');
+        rowEl.className = 'create-post-modal__tags-row';
+        this.tagsList.appendChild(rowEl);
+        return rowEl;
+    }
+
+    appendHiddenMoreChip(hiddenCount, availableWidth) {
+        if (!this.tagsList || hiddenCount <= 0) return;
+        const rows = Array.from(this.tagsList.querySelectorAll('.create-post-modal__tags-row'));
+        const lastRow = rows[rows.length - 1];
+        if (!lastRow) return;
+
+        const moreEl = document.createElement('span');
+        moreEl.className = 'create-post-modal__tag-item create-post-modal__tag-item--more';
+        moreEl.textContent = `+${hiddenCount}`;
+
+        lastRow.appendChild(moreEl);
+        this.adjustTagsSpacing(lastRow, availableWidth);
+
+        while (lastRow.scrollWidth > availableWidth) {
+            const regularChips = Array.from(lastRow.querySelectorAll('.create-post-modal__tag-item:not(.create-post-modal__tag-item--more)'));
+            const chipToHide = regularChips.pop();
+            if (!chipToHide) {
+                break;
+            }
+
+            lastRow.removeChild(chipToHide);
+            hiddenCount += 1;
+            moreEl.textContent = `+${hiddenCount}`;
+            this.adjustTagsSpacing(lastRow, availableWidth);
+        }
+    }
+
+    adjustTagsSpacing(rowEl, availableWidth = 630) {
+        if (!rowEl) return;
+        const chipElements = Array.from(rowEl.querySelectorAll('.create-post-modal__tag-item:not(.create-post-modal__tag-item--more)'));
 
         if (chipElements.length <= 1) {
-            this.tagsList.style.columnGap = '5px';
+            rowEl.style.columnGap = '5px';
             return;
         }
 
         const totalChipWidth = chipElements.reduce((sum, el) => sum + el.offsetWidth, 0);
-        const available = 630 - totalChipWidth;
+        const available = availableWidth - totalChipWidth;
         const computedGap = Math.floor(available / (chipElements.length - 1));
         const normalizedGap = Math.max(5, Math.min(30, computedGap));
-        this.tagsList.style.columnGap = `${normalizedGap}px`;
+        rowEl.style.columnGap = `${normalizedGap}px`;
     }
 
     showCollectionConfirm(collectionName) {
