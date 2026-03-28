@@ -89,7 +89,7 @@ function handleCreatePost(PDO $pdo, int $userId): never
 
     $collectionName = validateAndNormalizeCollectionName($collectionInput);
     if ($collectionName === null) {
-        jsonResponse(['success' => false, 'error' => 'Название коллекции: до 32 символов, только латиница, кириллица, цифры, пробел и _.'], 422);
+        jsonResponse(['success' => false, 'error' => 'Название коллекции: до 32 символов, только латиница, кириллица, цифры, пробел и "_"'], 422);
     }
 
     try {
