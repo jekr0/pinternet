@@ -252,8 +252,8 @@ function parseHashtags(string $tagsInput): array
             continue;
         }
 
-        if (mb_strlen($tag) > 16) {
-            $tag = mb_substr($tag, 0, 16);
+        if (mb_strlen($tag) > 20) {
+            $tag = mb_substr($tag, 0, 20);
         }
 
         if (!preg_match('/^[A-Za-zА-Яа-яЁё0-9_]+$/u', $tag)) {

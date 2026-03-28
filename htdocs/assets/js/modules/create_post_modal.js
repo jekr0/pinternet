@@ -170,7 +170,7 @@ class CreatePostModalComponent {
             this.tagsField.addEventListener('input', () => {
                 const normalized = this.tagsField.value
                     .replace(/[^a-zа-яё0-9_#]/gi, '')
-                    .slice(0, 16);
+                    .slice(0, 20);
                 if (normalized !== this.tagsField.value) {
                     this.tagsField.value = normalized;
                 }
@@ -394,7 +394,7 @@ class CreatePostModalComponent {
         if (!lowered) return '';
 
         const normalized = lowered.replace(/[^a-zа-яё0-9_]/gi, '');
-        return normalized.slice(0, 16);
+        return normalized.slice(0, 20);
     }
 
     addTagFromInput() {

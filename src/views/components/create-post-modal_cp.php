@@ -74,7 +74,7 @@
                         name="post-tags"
                         placeholder="Добавить теги"
                         autocomplete="off"
-                        maxlength="16"
+                        maxlength="20"
                         data-component="post-tags-input"
                     >
                     <button type="button" class="create-post-modal__tags-add-button" data-component="post-tags-add-button">+</button>
