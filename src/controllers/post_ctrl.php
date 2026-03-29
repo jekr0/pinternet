@@ -8,13 +8,16 @@ if (session_status() === PHP_SESSION_NONE) {
 
 header('Content-Type: application/json; charset=utf-8');
 
-if (empty($_SESSION['user_id'])) {
+$path = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?: '';
+$path = rtrim($path, '/');
+
+$isPublicEndpoint = $path === '/posts/list';
+
+if (!$isPublicEndpoint && empty($_SESSION['user_id'])) {
     jsonResponse(['success' => false, 'error' => 'Требуется авторизация.'], 401);
 }
 
-$userId = (int) $_SESSION['user_id'];
-$path = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?: '';
-$path = rtrim($path, '/');
+$userId = (int) ($_SESSION['user_id'] ?? 0);
 
 if ($path === '/boards/list') {
     handleBoardsList($pdo, $userId);
@@ -26,6 +29,10 @@ if ($path === '/hashtags/suggest') {
 
 if ($path === '/posts/create') {
     handleCreatePost($pdo, $userId);
+}
+
+if ($path === '/posts/list') {
+    handlePostsList($pdo);
 }
 
 jsonResponse(['success' => false, 'error' => 'Неизвестный метод.'], 404);
@@ -65,6 +72,19 @@ function handleHashtagsSuggest(PDO $pdo): never
     $tags = array_map(static fn(array $row) => (string) $row['name'], $stmt->fetchAll());
 
     jsonResponse(['success' => true, 'tags' => $tags]);
+}
+
+
+function handlePostsList(PDO $pdo): never
+{
+    $stmt = $pdo->query('SELECT id, image_path, created_at FROM Posts ORDER BY created_at DESC, id DESC LIMIT 50');
+    $posts = array_map(static fn(array $row) => [
+        'id' => (int) $row['id'],
+        'image_path' => (string) $row['image_path'],
+        'created_at' => (string) $row['created_at'],
+    ], $stmt->fetchAll());
+
+    jsonResponse(['success' => true, 'posts' => $posts]);
 }
 
 function handleCreatePost(PDO $pdo, int $userId): never

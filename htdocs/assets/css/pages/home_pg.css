@@ -1,25 +1,11 @@
 /* =========================== Главная страница ========================== */
 
-/* --------------------------- Демо шрифтов ------------------------------ */
-
-.font-demo {
-    margin: 2rem 0;
-    text-align: center;
-}
-
-.font-1 {
-    font-family: 'MC_caps', Arial, sans-serif;
-    font-size: 40px;
-}
-
-.font-2 {
-    font-family: 'SF_def', Arial, sans-serif;
-    font-size: 32px;
-}
-
-.font-3 {
-    font-family: 'SF_def', Arial, sans-serif;
-    font-size: 24px;
+.home-post-card-wrapper {
+    min-height: calc(100vh - 90px - 80px);
+    padding: 32px 16px 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 /* ------------------------ Кнопка создания поста ------------------------ */

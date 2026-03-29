@@ -1,0 +1,22 @@
+/* ------------------------------ Модуль карточки поста ------------------------------ */
+
+.post-card {
+    width: 256px;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 20px;
+    background: #fff;
+    overflow: hidden;
+    transition: border-width 0.2s ease, box-shadow 0.2s ease;
+}
+
+.post-card:hover {
+    border-width: 0;
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.07);
+}
+
+.post-card__image {
+    display: block;
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+}

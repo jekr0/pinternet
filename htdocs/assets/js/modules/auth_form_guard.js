@@ -1,4 +1,9 @@
 class AuthFormGuardComponent {
+    constructor() {
+        this.hideTimers = new WeakMap();
+        this.fadeTimers = new WeakMap();
+    }
+
     init() {
         const forms = Array.from(document.querySelectorAll('.auth__form'));
         if (forms.length === 0) return;
@@ -6,6 +11,7 @@ class AuthFormGuardComponent {
         forms.forEach((form) => {
             this.bindFieldRestrictions(form);
             this.bindFormValidation(form);
+            this.autoHideExistingBanner(form);
         });
     }
 
@@ -85,6 +91,17 @@ class AuthFormGuardComponent {
         });
     }
 
+
+    autoHideExistingBanner(form) {
+        const container = form.closest('.auth__container');
+        if (!container) return;
+
+        const banner = container.querySelector('.auth__error');
+        if (!banner || !banner.textContent.trim()) return;
+
+        this.startBannerHideTimer(banner);
+    }
+
     showBanner(form, message) {
         const container = form.closest('.auth__container');
         if (!container) return;
@@ -95,7 +112,30 @@ class AuthFormGuardComponent {
             banner.className = 'auth__error';
             container.insertBefore(banner, form);
         }
+        banner.classList.remove('auth__error--hidden', 'auth__error--fade-out');
         banner.textContent = message;
+        this.startBannerHideTimer(banner);
+    }
+
+    startBannerHideTimer(banner) {
+        const oldFadeTimer = this.fadeTimers.get(banner);
+        const oldHideTimer = this.hideTimers.get(banner);
+
+        if (oldFadeTimer) clearTimeout(oldFadeTimer);
+        if (oldHideTimer) clearTimeout(oldHideTimer);
+
+        const fadeTimer = setTimeout(() => {
+            banner.classList.add('auth__error--fade-out');
+        }, 2500);
+
+        const hideTimer = setTimeout(() => {
+            banner.classList.add('auth__error--hidden');
+            banner.classList.remove('auth__error--fade-out');
+            banner.textContent = '';
+        }, 3000);
+
+        this.fadeTimers.set(banner, fadeTimer);
+        this.hideTimers.set(banner, hideTimer);
     }
 }
 
