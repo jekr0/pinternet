@@ -1,4 +1,5 @@
 <!-- src/views/layouts/header.php -->
+<div class="header-background" aria-hidden="true"></div>
 <header class="header">
     <a href="/" class="header__logo">grinderest</a>
 

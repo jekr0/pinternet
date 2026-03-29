@@ -1,10 +1,5 @@
-<?php
-    // ЗАГЛУШКА (временное отображение трёх шрифтов)
-?>
-<div class="font-demo">
-    <p class="font-1">Can you fly? Летать умеешь?</p>
-    <p class="font-2">Can you fly? Летать умеешь?</p>
-    <p class="font-3">Can you fly? Летать умеешь?</p>
-</div>
+<section class="home-post-card-wrapper" aria-label="Превью модуля поста">
+    <?php include '../src/views/components/post-card_cp.php'; ?>
+</section>
 
 <button class="create-post-open-button" data-component="create-post-open" aria-label="Создать пост">+</button>
