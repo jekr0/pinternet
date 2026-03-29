@@ -78,8 +78,8 @@ function handleCreatePost(PDO $pdo, int $userId): never
     $tagsInput = trim((string) ($_POST['tags'] ?? ''));
     $confirmCreateCollection = (string) ($_POST['confirm_create_collection'] ?? '') === '1';
 
-    if (mb_strlen($description) > 255) {
-        jsonResponse(['success' => false, 'error' => 'Описание не должно превышать 255 символов.'], 422);
+    if (mb_strlen($description) > 256) {
+        jsonResponse(['success' => false, 'error' => 'Описание не должно превышать 256 символов.'], 422);
     }
 
     if (!isset($_FILES['image']) || !is_array($_FILES['image'])) {
