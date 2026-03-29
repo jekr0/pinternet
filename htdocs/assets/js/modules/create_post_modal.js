@@ -309,10 +309,6 @@ class CreatePostModalComponent {
 
             this.collectionItems = Array.from(this.modal.querySelectorAll('[data-component="post-collection-item"]'));
             this.attachCollectionItemHandlers();
-
-            if (!this.collectionTrigger.value) {
-                this.collectionTrigger.value = localizedBoards[0];
-            }
         } catch (error) {
             console.warn('Unable to load boards list', error);
         }
@@ -339,7 +335,7 @@ class CreatePostModalComponent {
         const formData = new FormData();
         formData.append('image', this.currentFile);
         formData.append('description', this.descriptionField?.value.trim() ?? '');
-        formData.append('collection', this.collectionTrigger?.value.trim() || 'Профиль');
+        formData.append('collection', this.collectionTrigger?.value.trim() || '');
         formData.append('tags', this.tags.join(' '));
         return formData;
     }
@@ -366,7 +362,7 @@ class CreatePostModalComponent {
                     this.pendingCreatePayload = {
                         image: this.currentFile,
                         description: this.descriptionField?.value.trim() ?? '',
-                        collection: this.collectionTrigger?.value.trim() || 'Профиль',
+                        collection: this.collectionTrigger?.value.trim() || '',
                         tags: this.tags.join(' ')
                     };
                     this.showCollectionConfirm(payload.collection_name || this.pendingCreatePayload.collection);
@@ -569,7 +565,7 @@ class CreatePostModalComponent {
             }
 
             this.tagsSuggestList.innerHTML = payload.tags.map((tag) => (
-                `<li><button type="button" data-tag="${tag}">#${tag}</button></li>`
+                `<li><button type="button" data-tag="${this.escapeHtml(tag)}">#${this.highlightSuggestionMatch(tag, query)}</button></li>`
             )).join('');
 
             this.tagsSuggestList.querySelectorAll('button').forEach((button) => {
@@ -591,6 +587,30 @@ class CreatePostModalComponent {
         this.tagsSuggestList.classList.add('create-post-modal__tags-suggest-list--hidden');
         this.tagsSuggestList.innerHTML = '';
         this.tagsInputRow.classList.remove('create-post-modal__tags-input-row--suggest-open');
+    }
+
+    highlightSuggestionMatch(tag, query) {
+        const escapedTag = this.escapeHtml(tag);
+        const normalizedQuery = this.escapeRegex(query);
+        if (!normalizedQuery) return escapedTag;
+
+        return escapedTag.replace(
+            new RegExp(`(${normalizedQuery})`, 'ig'),
+            '<span class="create-post-modal__tags-suggest-match">$1</span>'
+        );
+    }
+
+    escapeHtml(value) {
+        return value
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    escapeRegex(value) {
+        return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     }
 }
 
