@@ -174,10 +174,11 @@
     font-size: 16px;
     color: #333;
     cursor: pointer;
+    transition: background 0.2s ease;
 }
 
 .create-post-modal__collection-list button:hover {
-    background: rgba(100, 100, 200, 0.1);
+    background: rgba(100, 100, 200, 0.07);
 }
 
 .create-post-modal__collection-list button[data-is-profile="1"] {
@@ -293,10 +294,11 @@
     font-family: 'SF_def', Arial, sans-serif;
     font-size: 16px;
     cursor: pointer;
+    transition: background 0.2s ease;
 }
 
 .create-post-modal__tags-suggest-list button:hover {
-    background: rgba(100, 100, 200, 0.1);
+    background: rgba(100, 100, 200, 0.07);
 }
 
 .create-post-modal__tags-suggest-match {
