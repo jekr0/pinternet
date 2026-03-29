@@ -66,8 +66,16 @@ class CreatePostModalComponent {
         this.tagsSuggestList = this.modal.querySelector('[data-component="post-tags-suggest-list"]');
         this.tagsInputRow = this.modal.querySelector('.create-post-modal__tags-input-row');
         this.successToast = document.querySelector('[data-component="create-post-success-toast"]');
+        this.uploadIcon = this.modal.querySelector('[data-component="post-upload-icon"]');
 
         if (!this.dropzone || !this.fileInput || !this.placeholder || !this.preview) return;
+
+        if (this.uploadIcon) {
+            const svgSrc = this.uploadIcon.getAttribute('data-svg-src');
+            if (svgSrc) {
+                App.utils.loadSVG(svgSrc, this.uploadIcon);
+            }
+        }
 
         this.bindOpenHandlers();
         this.bindUploadHandlers();
