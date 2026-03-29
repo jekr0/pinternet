@@ -147,6 +147,19 @@ class CreatePostModalComponent {
             if (event.key === 'Enter') {
                 event.preventDefault();
                 this.addTagFromInput();
+                return;
+            }
+
+            if (event.key === 'Tab' && !event.shiftKey) {
+                const topSuggestionButton = this.tagsSuggestList?.querySelector('button');
+                const isSuggestOpen = this.tagsSuggestList && !this.tagsSuggestList.classList.contains('create-post-modal__tags-suggest-list--hidden');
+                if (!isSuggestOpen || !topSuggestionButton) {
+                    return;
+                }
+
+                event.preventDefault();
+                this.tagsField.value = topSuggestionButton.dataset.tag || '';
+                this.addTagFromInput();
             }
         });
 
@@ -512,7 +525,7 @@ class CreatePostModalComponent {
         const totalChipWidth = chipElements.reduce((sum, el) => sum + el.offsetWidth, 0);
         const available = availableWidth - totalChipWidth;
         const computedGap = Math.floor(available / (chipElements.length - 1));
-        const normalizedGap = Math.max(5, Math.min(30, computedGap));
+        const normalizedGap = Math.max(5, Math.min(35, computedGap));
         rowEl.style.columnGap = `${normalizedGap}px`;
     }
 
@@ -565,7 +578,7 @@ class CreatePostModalComponent {
             }
 
             this.tagsSuggestList.innerHTML = payload.tags.map((tag) => (
-                `<li><button type="button" data-tag="${this.escapeHtml(tag)}">#${this.highlightSuggestionMatch(tag, query)}</button></li>`
+                `<li><button type="button" data-tag="${this.escapeHtml(tag)}"><span class="create-post-modal__tags-suggest-match">#</span>${this.highlightSuggestionMatch(tag, query)}</button></li>`
             )).join('');
 
             this.tagsSuggestList.querySelectorAll('button').forEach((button) => {
@@ -595,7 +608,7 @@ class CreatePostModalComponent {
         if (!normalizedQuery) return escapedTag;
 
         return escapedTag.replace(
-            new RegExp(`(${normalizedQuery})`, 'ig'),
+            new RegExp(`(${normalizedQuery})`, 'i'),
             '<span class="create-post-modal__tags-suggest-match">$1</span>'
         );
     }
