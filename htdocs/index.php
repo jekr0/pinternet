@@ -72,6 +72,7 @@ switch ($path) {
         exit;
 
         case '/posts/create':
+        case '/posts/list':
         case '/boards/list':
         case '/hashtags/suggest':
         require_once '../src/controllers/post_ctrl.php';
