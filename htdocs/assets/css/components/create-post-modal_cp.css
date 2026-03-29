@@ -46,7 +46,7 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     text-align: center;
     opacity: 1;
-    transition: opacity 0.5s ease;
+    transition: opacity 1s ease;
 }
 
 .create-post-modal__alert--fade-out {
@@ -72,7 +72,7 @@
     border-radius: 10px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
     opacity: 1;
-    transition: opacity 0.5s ease;
+    transition: opacity 1s ease;
     pointer-events: none;
 }
 
