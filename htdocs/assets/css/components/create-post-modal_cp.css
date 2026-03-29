@@ -236,7 +236,7 @@
 .create-post-modal__tags-list {
     display: flex;
     flex-direction: column;
-    row-gap: 5px;
+    row-gap: 3px;
     width: 630px;
     max-height: 79px;
     margin-top: 8px;
@@ -319,6 +319,7 @@
     background: #efefef;
     border-radius: 5px;
     cursor: pointer;
+    user-select: none;
 }
 
 .create-post-modal__tag-label {

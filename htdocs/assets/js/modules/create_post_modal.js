@@ -525,7 +525,7 @@ class CreatePostModalComponent {
         const totalChipWidth = chipElements.reduce((sum, el) => sum + el.offsetWidth, 0);
         const available = availableWidth - totalChipWidth;
         const computedGap = Math.floor(available / (chipElements.length - 1));
-        const normalizedGap = Math.max(5, Math.min(30, computedGap));
+        const normalizedGap = Math.max(5, Math.min(35, computedGap));
         rowEl.style.columnGap = `${normalizedGap}px`;
     }
 
