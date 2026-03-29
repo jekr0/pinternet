@@ -595,7 +595,7 @@ class CreatePostModalComponent {
         if (!normalizedQuery) return escapedTag;
 
         return escapedTag.replace(
-            new RegExp(`(${normalizedQuery})`, 'ig'),
+            new RegExp(`(${normalizedQuery})`, 'i'),
             '<span class="create-post-modal__tags-suggest-match">$1</span>'
         );
     }

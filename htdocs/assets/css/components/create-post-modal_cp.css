@@ -8,7 +8,7 @@
     align-items: center;
     justify-content: center;
     background: rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(25px);
+    backdrop-filter: blur(15px);
 }
 
 .create-post-modal--hidden {
