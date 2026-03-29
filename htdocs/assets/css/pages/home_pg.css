@@ -1,51 +1,11 @@
 /* =========================== Главная страница ========================== */
 
-.posts-feed {
-    width: min(100%, 1180px);
-    margin: 24px auto 0;
-    padding: 0 16px 80px;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(256px, 256px));
+.home-post-card-wrapper {
+    min-height: calc(100vh - 90px - 80px);
+    padding: 32px 16px 80px;
+    display: flex;
+    align-items: center;
     justify-content: center;
-    gap: 16px;
-}
-
-.post-card {
-    width: 256px;
-    border: 1.5px solid #e0e0e0;
-    border-radius: 20px;
-    background: #fff;
-    overflow: hidden;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.post-card:hover {
-    border-color: transparent;
-    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.07);
-}
-
-.post-card__image {
-    display: block;
-    width: 100%;
-    height: auto;
-    object-fit: cover;
-}
-
-.post-card__content {
-    padding: 12px 14px 14px;
-}
-
-.post-card__title {
-    margin-bottom: 6px;
-    font-size: 16px;
-    font-weight: 600;
-    color: #202020;
-}
-
-.post-card__description {
-    font-size: 14px;
-    line-height: 1.35;
-    color: #4d4d4d;
 }
 
 /* ------------------------ Кнопка создания поста ------------------------ */
