@@ -299,6 +299,10 @@
     background: rgba(100, 100, 200, 0.1);
 }
 
+.create-post-modal__tags-suggest-match {
+    color: rgb(100, 100, 200);
+}
+
 .create-post-modal__tag-item {
     position: relative;
     display: inline-flex;
