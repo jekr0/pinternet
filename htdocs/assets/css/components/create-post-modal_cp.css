@@ -236,7 +236,7 @@
 .create-post-modal__tags-list {
     display: flex;
     flex-direction: column;
-    row-gap: 3px;
+    row-gap: 5px;
     width: 630px;
     max-height: 79px;
     margin-top: 8px;
