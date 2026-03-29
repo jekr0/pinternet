@@ -1,25 +1,51 @@
 /* =========================== Главная страница ========================== */
 
-/* --------------------------- Демо шрифтов ------------------------------ */
-
-.font-demo {
-    margin: 2rem 0;
-    text-align: center;
+.posts-feed {
+    width: min(100%, 1180px);
+    margin: 24px auto 0;
+    padding: 0 16px 80px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(256px, 256px));
+    justify-content: center;
+    gap: 16px;
 }
 
-.font-1 {
-    font-family: 'MC_caps', Arial, sans-serif;
-    font-size: 40px;
+.post-card {
+    width: 256px;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 20px;
+    background: #fff;
+    overflow: hidden;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.font-2 {
-    font-family: 'SF_def', Arial, sans-serif;
-    font-size: 32px;
+.post-card:hover {
+    border-color: transparent;
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.07);
 }
 
-.font-3 {
-    font-family: 'SF_def', Arial, sans-serif;
-    font-size: 24px;
+.post-card__image {
+    display: block;
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+}
+
+.post-card__content {
+    padding: 12px 14px 14px;
+}
+
+.post-card__title {
+    margin-bottom: 6px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #202020;
+}
+
+.post-card__description {
+    font-size: 14px;
+    line-height: 1.35;
+    color: #4d4d4d;
 }
 
 /* ------------------------ Кнопка создания поста ------------------------ */
