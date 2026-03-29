@@ -28,6 +28,11 @@ class CreatePostModalComponent {
         this.alertBox = null;
         this.tagsSuggestList = null;
         this.tagsInputRow = null;
+        this.successToast = null;
+        this.alertHideTimer = null;
+        this.alertFadeTimer = null;
+        this.successHideTimer = null;
+        this.successFadeTimer = null;
 
         // Upload constraints/state
         this.maxFileSize = 20 * 1024 * 1024;
@@ -60,8 +65,17 @@ class CreatePostModalComponent {
         this.alertBox = this.modal.querySelector('[data-component="create-post-alert"]');
         this.tagsSuggestList = this.modal.querySelector('[data-component="post-tags-suggest-list"]');
         this.tagsInputRow = this.modal.querySelector('.create-post-modal__tags-input-row');
+        this.successToast = document.querySelector('[data-component="create-post-success-toast"]');
+        this.uploadIcon = this.modal.querySelector('[data-component="post-upload-icon"]');
 
         if (!this.dropzone || !this.fileInput || !this.placeholder || !this.preview) return;
+
+        if (this.uploadIcon) {
+            const svgSrc = this.uploadIcon.getAttribute('data-svg-src');
+            if (svgSrc) {
+                App.utils.loadSVG(svgSrc, this.uploadIcon);
+            }
+        }
 
         this.bindOpenHandlers();
         this.bindUploadHandlers();
@@ -209,20 +223,6 @@ class CreatePostModalComponent {
 
             await this.submitPost(payload, true);
         });
-
-        this.confirmYesButton.addEventListener('click', async () => {
-            if (!this.pendingCreatePayload) return;
-            const payload = new FormData();
-            payload.append('image', this.pendingCreatePayload.image);
-            payload.append('description', this.pendingCreatePayload.description);
-            payload.append('collection', this.pendingCreatePayload.collection);
-            payload.append('tags', this.pendingCreatePayload.tags);
-            payload.append('confirm_create_collection', '1');
-
-            await this.submitPost(payload, true);
-        });
-
-        this.tagsAddButton.addEventListener('click', () => this.addTagFromInput());
     }
 
     bindCloseHandlers() {
@@ -258,6 +258,7 @@ class CreatePostModalComponent {
     close() {
         this.hideCollectionConfirm();
         this.hideAlert();
+        this.hideSuccessToast();
         this.hideTagSuggestions();
         this.modal.classList.add('create-post-modal--hidden');
         this.modal.setAttribute('aria-hidden', 'true');
@@ -341,6 +342,7 @@ class CreatePostModalComponent {
         this.collectionTrigger.value = '';
         this.descriptionCounter.textContent = '0/256';
         this.hideAlert();
+        this.hideSuccessToast();
         this.hideTagSuggestions();
     }
 
@@ -386,11 +388,11 @@ class CreatePostModalComponent {
 
             this.resetForm();
             this.close();
+            this.showSuccessToast('Пост создан');
             if (redirectToHomeOnSuccess) {
                 window.location.href = '/';
                 return;
             }
-            this.showAlert('Пост создан!');
         } catch (error) {
             this.showAlert(error.message || 'Ошибка при создании поста.');
         } finally {
@@ -545,14 +547,56 @@ class CreatePostModalComponent {
 
     showAlert(message) {
         if (!this.alertBox) return;
+
+        clearTimeout(this.alertHideTimer);
+        clearTimeout(this.alertFadeTimer);
+
         this.alertBox.textContent = message;
-        this.alertBox.classList.remove('create-post-modal__alert--hidden');
+        this.alertBox.classList.remove('create-post-modal__alert--hidden', 'create-post-modal__alert--fade-out');
+
+        this.alertHideTimer = setTimeout(() => {
+            this.alertBox.classList.add('create-post-modal__alert--fade-out');
+        }, 2500);
+
+        this.alertFadeTimer = setTimeout(() => {
+            this.hideAlert();
+        }, 3000);
     }
 
     hideAlert() {
         if (!this.alertBox) return;
+        clearTimeout(this.alertHideTimer);
+        clearTimeout(this.alertFadeTimer);
         this.alertBox.classList.add('create-post-modal__alert--hidden');
+        this.alertBox.classList.remove('create-post-modal__alert--fade-out');
         this.alertBox.textContent = '';
+    }
+
+    showSuccessToast(message) {
+        if (!this.successToast) return;
+
+        clearTimeout(this.successHideTimer);
+        clearTimeout(this.successFadeTimer);
+
+        this.successToast.textContent = message;
+        this.successToast.classList.remove('create-post-success-toast--hidden', 'create-post-success-toast--fade-out');
+
+        this.successHideTimer = setTimeout(() => {
+            this.successToast.classList.add('create-post-success-toast--fade-out');
+        }, 500);
+
+        this.successFadeTimer = setTimeout(() => {
+            this.hideSuccessToast();
+        }, 1000);
+    }
+
+    hideSuccessToast() {
+        if (!this.successToast) return;
+        clearTimeout(this.successHideTimer);
+        clearTimeout(this.successFadeTimer);
+        this.successToast.classList.add('create-post-success-toast--hidden');
+        this.successToast.classList.remove('create-post-success-toast--fade-out');
+        this.successToast.textContent = '';
     }
 
     async loadTagSuggestions() {

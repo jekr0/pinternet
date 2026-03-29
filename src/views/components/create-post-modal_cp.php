@@ -19,7 +19,7 @@
                 >
 
                 <div class="create-post-modal__upload-placeholder" data-component="post-upload-placeholder">
-                    <img src="assets/images/icons/upload.svg" alt="Upload" class="create-post-modal__upload-icon">
+                    <span class="create-post-modal__upload-icon" data-component="post-upload-icon" data-svg-src="assets/images/icons/upload.svg" aria-hidden="true"></span>
                     <span class="create-post-modal__upload-label">Загрузить*</span>
                 </div>
 
@@ -101,3 +101,5 @@
         </div>
     </div>
 </div>
+
+<div class="create-post-success-toast create-post-success-toast--hidden" data-component="create-post-success-toast" aria-live="polite"></div>
