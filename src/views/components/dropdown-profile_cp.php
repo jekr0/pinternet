@@ -1,5 +1,5 @@
 <?php
-// src/views/components/dropdown-menu_cp.php
+// src/views/components/dropdown-profile_cp.php
 
 if (session_status() === PHP_SESSION_NONE) session_start();
 
@@ -29,38 +29,38 @@ $isLoggedIn = !empty($_SESSION['user_id']);
     $unreadCount = (int) $stmt->fetchColumn();
     ?>
 
-    <div class="dropdown dropdown--hidden" id="header-dropdown-menu">
-        <ul class="dropdown__list">
+    <div class="dropdown-profile dropdown-profile--hidden" id="header-dropdown-profile">
+        <ul class="dropdown-profile__list">
 
-            <li class="dropdown__item dropdown__item--title">
+            <li class="dropdown-profile__item dropdown-profile__item--title">
                 Текущий аккаунт:
             </li>
 
-            <li class="dropdown__item dropdown__item--info">
+            <li class="dropdown-profile__item dropdown-profile__item--info">
                 <?= htmlspecialchars($user['email']) ?>
             </li>
 
-            <li class="dropdown__item dropdown__item--info">
+            <li class="dropdown-profile__item dropdown-profile__item--info">
                     <?= $progress['current'] ?>/<?= $progress['needed'] ?> exp до <?= $progress['next_level'] ?> уровня
             </li>
 
-            <li class="dropdown__divider"></li>
+            <li class="dropdown-profile__divider"></li>
 
-            <li class="dropdown__item">
-                <a href="/profile?tab=notifications" class="dropdown__link">
+            <li class="dropdown-profile__item">
+                <a href="/profile?tab=notifications" class="dropdown-profile__link">
                     Уведомления
-                    <span class="dropdown__badge <?= $unreadCount === 0 ? 'dropdown__badge--empty' : '' ?>">
+                    <span class="dropdown-profile__badge <?= $unreadCount === 0 ? 'dropdown-profile__badge--empty' : '' ?>">
                         <?= $unreadCount ?>
                     </span>
                 </a>
             </li>
 
-            <li class="dropdown__item">
-                <a href="/profile?tab=settings" class="dropdown__link">Настройки</a>
+            <li class="dropdown-profile__item">
+                <a href="/profile?tab=settings" class="dropdown-profile__link">Настройки</a>
             </li>
 
-            <li class="dropdown__item">
-                <a href="/logout" class="dropdown__link dropdown__link--logout">Выйти из аккаунта</a>
+            <li class="dropdown-profile__item">
+                <a href="/logout" class="dropdown-profile__link dropdown-profile__link--logout">Выйти из аккаунта</a>
             </li>
 
         </ul>
@@ -68,9 +68,9 @@ $isLoggedIn = !empty($_SESSION['user_id']);
 
 <?php else: ?>
 
-    <div class="dropdown dropdown--hidden dropdown--guest" id="header-dropdown-menu">
-        <ul class="dropdown__list">
-            <li class="dropdown__item dropdown__item--guest">
+    <div class="dropdown-profile dropdown-profile--hidden dropdown-profile--guest" id="header-dropdown-profile">
+        <ul class="dropdown-profile__list">
+            <li class="dropdown-profile__item dropdown-profile__item--guest">
                 Для доступа к этим функциям необходимо авторизироваться
             </li>
         </ul>

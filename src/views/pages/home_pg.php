@@ -6,13 +6,7 @@
     }
 
     $viewerId = (int) ($_SESSION['user_id'] ?? 0);
-
-    $postId = 0;
-    $postImagePath = 'uploads/avatars/avatar.jpg';
-    $authorUsername = 'unknown';
-    $isLiked = false;
-    $isBookmarked = false;
-    $isOwner = false;
+    $posts = [];
 
     if ($viewerId > 0) {
         $stmt = $pdo->prepare('
@@ -25,37 +19,37 @@
             LEFT JOIN Post_Likes pl ON pl.post_id = p.id AND pl.user_id = ?
             LEFT JOIN Saved_Posts sp ON sp.post_id = p.id AND sp.user_id = ?
             ORDER BY p.created_at DESC, p.id DESC
-            LIMIT 1
         ');
         $stmt->execute([$viewerId, $viewerId, $viewerId]);
     } else {
         $stmt = $pdo->query('
-            SELECT p.id, p.image_path, u.username
+            SELECT p.id, p.image_path, u.username,
+                   0 AS is_liked,
+                   0 AS is_bookmarked,
+                   0 AS is_owner
             FROM Posts p
             INNER JOIN Users u ON u.id = p.user_id
             ORDER BY p.created_at DESC, p.id DESC
-            LIMIT 1
         ');
     }
 
-    $latestPost = $stmt->fetch();
-
-    if (is_array($latestPost)) {
-        $postId = (int) ($latestPost['id'] ?? 0);
-        $dbImagePath = (string) ($latestPost['image_path'] ?? '');
-        $authorUsername = (string) ($latestPost['username'] ?? 'unknown');
-        $isLiked = !empty($latestPost['is_liked']);
-        $isBookmarked = !empty($latestPost['is_bookmarked']);
-        $isOwner = !empty($latestPost['is_owner']);
-
-        if ($dbImagePath !== '') {
-            $postImagePath = $dbImagePath;
-        }
-    }
+    $posts = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
 ?>
 
-<section class="home-post-card-wrapper" aria-label="Превью модуля поста">
-    <?php include '../src/views/components/post-card_cp.php'; ?>
+<section class="home-post-masonry" data-component="masonry-feed" aria-label="Лента постов">
+    <?php foreach ($posts as $row): ?>
+        <?php
+            $postId = (int) ($row['id'] ?? 0);
+            $dbImagePath = (string) ($row['image_path'] ?? '');
+            $postImagePath = $dbImagePath !== '' ? $dbImagePath : 'uploads/avatars/avatar.jpg';
+            $authorUsername = (string) ($row['username'] ?? 'unknown');
+            $isLiked = !empty($row['is_liked']);
+            $isBookmarked = !empty($row['is_bookmarked']);
+            $isOwner = !empty($row['is_owner']);
+
+            include '../src/views/components/post-card_cp.php';
+        ?>
+    <?php endforeach; ?>
 </section>
 
 <button class="create-post-open-button" data-component="create-post-open" aria-label="Создать пост">+</button>
