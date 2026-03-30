@@ -8,13 +8,16 @@ if (session_status() === PHP_SESSION_NONE) {
 
 header('Content-Type: application/json; charset=utf-8');
 
-if (empty($_SESSION['user_id'])) {
+$path = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?: '';
+$path = rtrim($path, '/');
+
+$isPublicEndpoint = $path === '/posts/list';
+
+if (!$isPublicEndpoint && empty($_SESSION['user_id'])) {
     jsonResponse(['success' => false, 'error' => 'Требуется авторизация.'], 401);
 }
 
-$userId = (int) $_SESSION['user_id'];
-$path = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?: '';
-$path = rtrim($path, '/');
+$userId = (int) ($_SESSION['user_id'] ?? 0);
 
 if ($path === '/boards/list') {
     handleBoardsList($pdo, $userId);
@@ -26,6 +29,18 @@ if ($path === '/hashtags/suggest') {
 
 if ($path === '/posts/create') {
     handleCreatePost($pdo, $userId);
+}
+
+if ($path === '/posts/like') {
+    handleToggleLike($pdo, $userId);
+}
+
+if ($path === '/posts/bookmark') {
+    handleBookmarkPost($pdo, $userId);
+}
+
+if ($path === '/posts/list') {
+    handlePostsList($pdo);
 }
 
 jsonResponse(['success' => false, 'error' => 'Неизвестный метод.'], 404);
@@ -65,6 +80,127 @@ function handleHashtagsSuggest(PDO $pdo): never
     $tags = array_map(static fn(array $row) => (string) $row['name'], $stmt->fetchAll());
 
     jsonResponse(['success' => true, 'tags' => $tags]);
+}
+
+
+
+function handleToggleLike(PDO $pdo, int $userId): never
+{
+    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+        jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод.'], 405);
+    }
+
+    $postId = (int) ($_POST['post_id'] ?? 0);
+    if ($postId <= 0) {
+        jsonResponse(['success' => false, 'error' => 'Некорректный post_id.'], 422);
+    }
+
+    $selectPost = $pdo->prepare('SELECT id, user_id FROM Posts WHERE id = ? LIMIT 1');
+    $selectPost->execute([$postId]);
+    $post = $selectPost->fetch();
+    if (!$post) {
+        jsonResponse(['success' => false, 'error' => 'Пост не найден.'], 404);
+    }
+
+    $postOwnerId = (int) $post['user_id'];
+
+    try {
+        $pdo->beginTransaction();
+
+        $selectLike = $pdo->prepare('SELECT id FROM Post_Likes WHERE user_id = ? AND post_id = ? LIMIT 1');
+        $selectLike->execute([$userId, $postId]);
+        $likeId = $selectLike->fetchColumn();
+
+        if ($likeId !== false) {
+            $deleteLike = $pdo->prepare('DELETE FROM Post_Likes WHERE id = ?');
+            $deleteLike->execute([(int) $likeId]);
+            $pdo->commit();
+            jsonResponse(['success' => true, 'liked' => false]);
+        }
+
+        $insertLike = $pdo->prepare('INSERT INTO Post_Likes (user_id, post_id) VALUES (?, ?)');
+        $insertLike->execute([$userId, $postId]);
+
+        if ($userId !== $postOwnerId) {
+            $insertAward = $pdo->prepare('INSERT IGNORE INTO Post_Like_Exp_Awards (liker_user_id, post_id, post_owner_id) VALUES (?, ?, ?)');
+            $insertAward->execute([$userId, $postId, $postOwnerId]);
+
+            if ($insertAward->rowCount() > 0) {
+                $addExp = $pdo->prepare('UPDATE Users SET exp = exp + 5 WHERE id = ?');
+                $addExp->execute([$postOwnerId]);
+            }
+        }
+
+        $pdo->commit();
+    } catch (Throwable $e) {
+        $pdo->rollBack();
+        error_log('Like toggle error: ' . $e->getMessage());
+        jsonResponse(['success' => false, 'error' => 'Не удалось обработать лайк.'], 500);
+    }
+
+    jsonResponse(['success' => true, 'liked' => true]);
+}
+
+
+function handleBookmarkPost(PDO $pdo, int $userId): never
+{
+    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+        jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод.'], 405);
+    }
+
+    $postId = (int) ($_POST['post_id'] ?? 0);
+    if ($postId <= 0) {
+        jsonResponse(['success' => false, 'error' => 'Некорректный post_id.'], 422);
+    }
+
+    $postStmt = $pdo->prepare('SELECT user_id FROM Posts WHERE id = ? LIMIT 1');
+    $postStmt->execute([$postId]);
+    $postOwnerId = $postStmt->fetchColumn();
+
+    if ($postOwnerId === false) {
+        jsonResponse(['success' => false, 'error' => 'Пост не найден.'], 404);
+    }
+
+    if ((int) $postOwnerId === $userId) {
+        jsonResponse(['success' => true, 'bookmarked' => false, 'is_owner' => true]);
+    }
+
+    try {
+        $pdo->beginTransaction();
+
+        $boardStmt = $pdo->prepare('SELECT id FROM Boards WHERE user_id = ? AND name = ? LIMIT 1');
+        $boardStmt->execute([$userId, 'Profile']);
+        $boardId = $boardStmt->fetchColumn();
+
+        if ($boardId === false) {
+            $createBoard = $pdo->prepare('INSERT INTO Boards (user_id, name, description) VALUES (?, ?, ?)');
+            $createBoard->execute([$userId, 'Profile', 'Системная коллекция профиля']);
+            $boardId = (int) $pdo->lastInsertId();
+        }
+
+        $saveStmt = $pdo->prepare('INSERT IGNORE INTO Saved_Posts (user_id, post_id, board_id) VALUES (?, ?, ?)');
+        $saveStmt->execute([$userId, $postId, (int) $boardId]);
+
+        $pdo->commit();
+    } catch (Throwable $e) {
+        $pdo->rollBack();
+        error_log('Bookmark error: ' . $e->getMessage());
+        jsonResponse(['success' => false, 'error' => 'Не удалось сохранить пост.'], 500);
+    }
+
+    jsonResponse(['success' => true, 'bookmarked' => true]);
+}
+
+function handlePostsList(PDO $pdo): never
+{
+    $stmt = $pdo->query('SELECT id, image_path, created_at FROM Posts ORDER BY created_at DESC, id DESC LIMIT 50');
+    $posts = array_map(static fn(array $row) => [
+        'id' => (int) $row['id'],
+        'image_path' => (string) $row['image_path'],
+        'created_at' => (string) $row['created_at'],
+    ], $stmt->fetchAll());
+
+    jsonResponse(['success' => true, 'posts' => $posts]);
 }
 
 function handleCreatePost(PDO $pdo, int $userId): never

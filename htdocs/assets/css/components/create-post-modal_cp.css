@@ -9,10 +9,16 @@
     justify-content: center;
     background: rgba(0, 0, 0, 0.3);
     backdrop-filter: blur(15px);
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
 }
 
 .create-post-modal--hidden {
-    display: none;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
 }
 
 /* --------------------------- Контент панели -------------------------------- */
@@ -33,7 +39,7 @@
     top: -45px;
     left: 50%;
     transform: translateX(-50%);
-    z-index: 10;
+    z-index: 3;
     width: fit-content;
     max-width: calc(100% - 20px);
     padding: 8px 12px;
@@ -45,9 +51,42 @@
     border-radius: 10px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     text-align: center;
+    opacity: 1;
+    transition: opacity 0.5s ease;
+}
+
+.create-post-modal__alert--fade-out {
+    opacity: 0;
 }
 
 .create-post-modal__alert--hidden {
+    display: none;
+}
+
+
+.create-post-success-toast {
+    position: fixed;
+    left: 50%;
+    bottom: 45px;
+    z-index: 1400;
+    transform: translateX(-50%);
+    padding: 10px 16px;
+    font-family: 'SF_def', Arial, sans-serif;
+    font-size: 16px;
+    color: #555;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    opacity: 1;
+    transition: opacity 0.5s ease;
+    pointer-events: none;
+}
+
+.create-post-success-toast--fade-out {
+    opacity: 0;
+}
+
+.create-post-success-toast--hidden {
     display: none;
 }
 
@@ -406,16 +445,22 @@
 .create-post-modal__confirm {
     position: absolute;
     inset: 0;
-    z-index: 5;
+    z-index: 6;
     display: flex;
     align-items: center;
     justify-content: center;
     background: rgba(0, 0, 0, 0.3);
     backdrop-filter: blur(15px);
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
 }
 
 .create-post-modal__confirm--hidden {
-    display: none;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
 }
 
 .create-post-modal__confirm-panel {
@@ -524,13 +569,12 @@
 .create-post-modal__upload-icon {
     width: 52px;
     height: 52px;
-    color: #555;
 }
 
 .create-post-modal__upload-label {
     font-family: 'SF_def', Arial, sans-serif;
     font-size: 16px;
-    color: #555;
+    color: #999;
 }
 
 .create-post-modal__preview {

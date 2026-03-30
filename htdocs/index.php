@@ -34,6 +34,7 @@ switch ($path) {
             'profile-container_cp.css',
             'dropdown-menu_cp.css',
             'create-post-modal_cp.css',
+            'post-card_cp.css',
             'home_pg.css',
             'footer_lo.css'
         ];
@@ -41,6 +42,7 @@ switch ($path) {
             'profile_button.js',
             'dropdown_menu.js',
             'create_post_modal.js',
+            'post_card.js',
             'adaptive_text.js'
         ];
         break;
@@ -70,6 +72,9 @@ switch ($path) {
         exit;
 
         case '/posts/create':
+        case '/posts/list':
+        case '/posts/like':
+        case '/posts/bookmark':
         case '/boards/list':
         case '/hashtags/suggest':
         require_once '../src/controllers/post_ctrl.php';
@@ -103,6 +108,7 @@ switch ($path) {
             'profile_button.js',
             'dropdown_menu.js',
             'create_post_modal.js',
+            'post_card.js',
             'adaptive_text.js'
         ];
         break;

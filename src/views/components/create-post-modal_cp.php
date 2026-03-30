@@ -101,3 +101,5 @@
         </div>
     </div>
 </div>
+
+<div class="create-post-success-toast create-post-success-toast--hidden" data-component="create-post-success-toast" aria-live="polite"></div>
