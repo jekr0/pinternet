@@ -264,8 +264,13 @@ function handleCreatePost(PDO $pdo, int $userId): never
         $insertPost->execute([$userId, $publicPath, $description !== '' ? $description : null]);
         $postId = (int) $pdo->lastInsertId();
 
-        $boardId = findBoardId($pdo, $userId, $collectionName);
-        if ($boardId === null) {
+        $profileBoardId = findBoardId($pdo, $userId, 'Profile');
+        if ($profileBoardId === null) {
+            $profileBoardId = createBoard($pdo, $userId, 'Profile');
+        }
+
+        $targetBoardId = findBoardId($pdo, $userId, $collectionName);
+        if ($targetBoardId === null) {
             if (!$confirmCreateCollection) {
                 $pdo->rollBack();
                 if (is_file($fullPath)) {
@@ -279,11 +284,14 @@ function handleCreatePost(PDO $pdo, int $userId): never
                 ], 409);
             }
 
-            $boardId = createBoard($pdo, $userId, $collectionName);
+            $targetBoardId = createBoard($pdo, $userId, $collectionName);
         }
 
         $savePost = $pdo->prepare('INSERT IGNORE INTO Saved_Posts (user_id, post_id, board_id) VALUES (?, ?, ?)');
-        $savePost->execute([$userId, $postId, $boardId]);
+        $savePost->execute([$userId, $postId, $profileBoardId]);
+        if ($targetBoardId !== $profileBoardId) {
+            $savePost->execute([$userId, $postId, $targetBoardId]);
+        }
 
         $hashtags = parseHashtags($tagsInput);
         if (!empty($hashtags)) {
