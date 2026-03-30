@@ -1,11 +1,15 @@
 /* =========================== Главная страница ========================== */
 
-.home-post-card-wrapper {
+.home-post-masonry {
+    position: relative;
     min-height: calc(100vh - 90px - 80px);
-    padding: 32px 16px 80px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    padding: 32px 25px 80px;
+}
+
+.home-post-masonry .post-card {
+    position: absolute;
+    margin: 0;
+    will-change: transform;
 }
 
 /* ------------------------ Кнопка создания поста ------------------------ */

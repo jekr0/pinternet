@@ -9,7 +9,7 @@
     <button class="header__dropdown-button" data-component="dropdown_button" data-svg-src="assets/images/icons/vertical-dots.svg">
     </button>
 
-    <?php include '../src/views/components/dropdown-menu_cp.php'; ?>
+    <?php include '../src/views/components/dropdown-profile_cp.php'; ?>
 </header>
 
 <?php include '../src/views/components/create-post-modal_cp.php'; ?>

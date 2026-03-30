@@ -1,19 +1,19 @@
-/* =========================== Выпадающее меню ========================== */
+/* =========================== Выпадающее меню профиля ========================== */
 
-.dropdown {
+.dropdown-profile {
     position: absolute;
     top: 100%;
     right: 56px;
     width: 290px;
     margin-top: 10px;
-    z-index: 1000;
+    z-index: 0;
     background: white;
     border-radius: 10px;
     box-shadow: 0 2px 3px rgba(0,0,0,0.07);
     transition: opacity 0.1s ease, visibility 0.1s ease, transform 0.1s ease;
 }
 
-.dropdown--hidden {
+.dropdown-profile--hidden {
     transform: translateY(-10px);
     opacity: 0;
     visibility: hidden;
@@ -21,24 +21,22 @@
 }
 
 /* Компактная версия для гостя */
-.dropdown--guest {
+.dropdown-profile--guest {
     width: 290px;
     box-shadow: 0 2px 3px rgba(0,0,0,0.07);
 }
 
-.dropdown__list {
+.dropdown-profile__list {
     margin: 0;
     padding: 8px 0;
     list-style: none;
 }
 
-.dropdown__item {
+.dropdown-profile__item {
     padding: 0;
 }
 
-/* --------------------------- Заголовок "сейчас:" ----------------------- */
- 
-.dropdown__item--title {
+.dropdown-profile__item--title {
     padding: 10px 16px 10px;
     cursor: default;
     user-select: none;
@@ -48,9 +46,7 @@
     color: #555;
 }
 
-/* --------------------------- Информационные строки (email, exp) -------- */
-
-.dropdown__item--info {
+.dropdown-profile__item--info {
     padding: 3px 15px;
     cursor: default;
     user-select: none;
@@ -59,9 +55,7 @@
     color: #999;
 }
 
-/* --------------------------- Счётчик уведомлений ----------------------- */
- 
-.dropdown__badge {
+.dropdown-profile__badge {
     min-width: 14px;
     margin-right: 5px;
     text-align: right;
@@ -69,23 +63,19 @@
     font-size: 14px;
     color: rgb(100, 100, 200);
 }
- 
-.dropdown__badge--empty {
+
+.dropdown-profile__badge--empty {
     color: #999;
 }
 
-/* --------------------------- Разделитель ------------------------------- */
-
-.dropdown__divider {
+.dropdown-profile__divider {
     width: 90%;
     height: 1px;
     margin: 6px auto;
     background: #E0E0E0;
 }
 
-/* --------------------------- Ссылки ------------------------------------ */
-
-.dropdown__link {
+.dropdown-profile__link {
     display: block;
     padding: 5px 15px;
     font-family: 'MC_caps';
@@ -95,17 +85,15 @@
     transition: background 0.2s ease;
 }
 
-.dropdown__link:hover {
+.dropdown-profile__link:hover {
     background: rgba(100, 100, 200, 0.075);
 }
 
-.dropdown__link--logout {
+.dropdown-profile__link--logout {
     color: rgb(100, 100, 200);
 }
 
-/* --------------------------- Гостевое сообщение ------------------------ */
-
-.dropdown__item--guest {
+.dropdown-profile__item--guest {
     padding: 1px 16px;
     cursor: default;
     text-align: center;

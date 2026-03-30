@@ -1,11 +1,11 @@
-/* --------------------------- Выпадающее меню (независимый компонент) -------------------- */
+/* --------------------------- Выпадающее меню профиля (независимый компонент) -------------------- */
 
-class DropdownMenuComponent {
+class DropdownProfileComponent {
     constructor() {
-        this.buttons = [];               // все кнопки с data-component="dropdown_button"
-        this.menuMap = new Map();        // связь кнопка → меню
-        this.globalHandler = null;       // ссылка на обработчик документа
-        this.activeMenu = null;          // текущее открытое меню
+        this.buttons = [];
+        this.menuMap = new Map();
+        this.globalHandler = null;
+        this.activeMenu = null;
     }
 
     init() {
@@ -15,18 +15,17 @@ class DropdownMenuComponent {
         this.buttons.forEach(button => {
             const svgSrc = button.dataset.svgSrc;
             if (svgSrc) App.utils.loadSVG(svgSrc, button);
-            // Определяем связанное меню: либо по data-dropdown-target, либо по умолчанию
+
             let menu = null;
             const targetSelector = button.dataset.dropdownTarget;
             if (targetSelector) {
                 menu = document.querySelector(targetSelector);
             } else {
-                // fallback – меню с id "header-dropdown-menu"
-                menu = document.getElementById('header-dropdown-menu');
+                menu = document.getElementById('header-dropdown-profile');
             }
 
             if (!menu) {
-                console.warn('Dropdown menu not found for button:', button);
+                console.warn('Dropdown profile not found for button:', button);
                 return;
             }
 
@@ -36,14 +35,13 @@ class DropdownMenuComponent {
     }
 
     toggleMenu(button, event) {
-        event.stopPropagation(); // чтобы клик по кнопке не сработал как клик вне
+        event.stopPropagation();
 
         const menu = this.menuMap.get(button);
         if (!menu) return;
 
-        const isHidden = menu.classList.contains('dropdown--hidden');
+        const isHidden = menu.classList.contains('dropdown-profile--hidden');
 
-        // Если уже открыто другое меню, закрываем его
         if (this.activeMenu && this.activeMenu !== menu) {
             this.closeMenu(this.activeMenu);
         }
@@ -56,10 +54,9 @@ class DropdownMenuComponent {
     }
 
     openMenu(menu) {
-        menu.classList.remove('dropdown--hidden');
+        menu.classList.remove('dropdown-profile--hidden');
         this.activeMenu = menu;
 
-        // Добавляем глобальный обработчик, если ещё не добавлен
         if (!this.globalHandler) {
             this.globalHandler = (e) => this.handleOutsideClick(e);
             document.addEventListener('click', this.globalHandler);
@@ -67,26 +64,18 @@ class DropdownMenuComponent {
     }
 
     closeMenu(menu) {
-        menu.classList.add('dropdown--hidden');
+        menu.classList.add('dropdown-profile--hidden');
         if (this.activeMenu === menu) {
             this.activeMenu = null;
         }
 
-        // Если нет открытых меню, удаляем глобальный обработчик
         if (!this.activeMenu && this.globalHandler) {
             document.removeEventListener('click', this.globalHandler);
             this.globalHandler = null;
         }
     }
 
-    closeAllMenus() {
-        if (this.activeMenu) {
-            this.closeMenu(this.activeMenu);
-        }
-    }
-
     handleOutsideClick(event) {
-        // Если клик был вне активного меню и не по кнопке, закрываем меню
         if (!this.activeMenu) return;
 
         const target = event.target;
@@ -99,5 +88,4 @@ class DropdownMenuComponent {
     }
 }
 
-// Регистрация компонента
-App.register('dropdown_menu.js', DropdownMenuComponent);
+App.register('dropdown_profile.js', DropdownProfileComponent);
