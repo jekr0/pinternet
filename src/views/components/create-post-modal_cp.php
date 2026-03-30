@@ -19,14 +19,14 @@
                 >
 
                 <div class="create-post-modal__upload-placeholder" data-component="post-upload-placeholder">
-                    <img src="assets/images/icons/upload.svg" alt="Upload" class="create-post-modal__upload-icon">
+                    <span class="create-post-modal__upload-icon" data-component="post-upload-icon" data-svg-src="assets/images/icons/upload.svg" aria-hidden="true"></span>
                     <span class="create-post-modal__upload-label">Загрузить*</span>
                 </div>
 
                 <img class="create-post-modal__preview create-post-modal__preview--hidden" data-component="post-upload-preview" alt="Предпросмотр изображения">
             </div>
 
-            <p class="create-post-modal__hint">Поддерживаются только PNG, JPEG и GIF изображения до 20МБ.</p>
+            <p class="create-post-modal__hint">*Поддерживаются только PNG, JPEG и GIF изображения до 20МБ.</p>
         </div>
 
         <!-- Правая колонка: метаданные поста -->

@@ -69,6 +69,13 @@ class CreatePostModalComponent {
 
         if (!this.dropzone || !this.fileInput || !this.placeholder || !this.preview) return;
 
+        if (this.uploadIcon) {
+            const svgSrc = this.uploadIcon.getAttribute('data-svg-src');
+            if (svgSrc) {
+                App.utils.loadSVG(svgSrc, this.uploadIcon);
+            }
+        }
+
         this.bindOpenHandlers();
         this.bindUploadHandlers();
         this.bindDescriptionHandlers();
