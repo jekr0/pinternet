@@ -35,6 +35,10 @@ if ($path === '/posts/like') {
     handleToggleLike($pdo, $userId);
 }
 
+if ($path === '/posts/bookmark') {
+    handleBookmarkPost($pdo, $userId);
+}
+
 if ($path === '/posts/list') {
     handlePostsList($pdo);
 }
@@ -135,6 +139,56 @@ function handleToggleLike(PDO $pdo, int $userId): never
     }
 
     jsonResponse(['success' => true, 'liked' => true]);
+}
+
+
+function handleBookmarkPost(PDO $pdo, int $userId): never
+{
+    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+        jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод.'], 405);
+    }
+
+    $postId = (int) ($_POST['post_id'] ?? 0);
+    if ($postId <= 0) {
+        jsonResponse(['success' => false, 'error' => 'Некорректный post_id.'], 422);
+    }
+
+    $postStmt = $pdo->prepare('SELECT user_id FROM Posts WHERE id = ? LIMIT 1');
+    $postStmt->execute([$postId]);
+    $postOwnerId = $postStmt->fetchColumn();
+
+    if ($postOwnerId === false) {
+        jsonResponse(['success' => false, 'error' => 'Пост не найден.'], 404);
+    }
+
+    if ((int) $postOwnerId === $userId) {
+        jsonResponse(['success' => true, 'bookmarked' => false, 'is_owner' => true]);
+    }
+
+    try {
+        $pdo->beginTransaction();
+
+        $boardStmt = $pdo->prepare('SELECT id FROM Boards WHERE user_id = ? AND name = ? LIMIT 1');
+        $boardStmt->execute([$userId, 'Profile']);
+        $boardId = $boardStmt->fetchColumn();
+
+        if ($boardId === false) {
+            $createBoard = $pdo->prepare('INSERT INTO Boards (user_id, name, description) VALUES (?, ?, ?)');
+            $createBoard->execute([$userId, 'Profile', 'Системная коллекция профиля']);
+            $boardId = (int) $pdo->lastInsertId();
+        }
+
+        $saveStmt = $pdo->prepare('INSERT IGNORE INTO Saved_Posts (user_id, post_id, board_id) VALUES (?, ?, ?)');
+        $saveStmt->execute([$userId, $postId, (int) $boardId]);
+
+        $pdo->commit();
+    } catch (Throwable $e) {
+        $pdo->rollBack();
+        error_log('Bookmark error: ' . $e->getMessage());
+        jsonResponse(['success' => false, 'error' => 'Не удалось сохранить пост.'], 500);
+    }
+
+    jsonResponse(['success' => true, 'bookmarked' => true]);
 }
 
 function handlePostsList(PDO $pdo): never

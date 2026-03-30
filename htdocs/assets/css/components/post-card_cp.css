@@ -1,6 +1,7 @@
 /* ------------------------------ Модуль карточки поста ------------------------------ */
 
 .post-card {
+    position: relative;
     width: 256px;
     border-radius: 20px;
     background: #fff;
@@ -11,6 +12,24 @@
 .post-card:hover {
     box-shadow: 0 5px 3px rgba(0, 0, 0, 0.2);
     transform: translateY(-5px);
+
+.post-card__author-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 2;
+    height: 23px;
+    padding: 0 10px;
+    display: inline-flex;
+    align-items: center;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(1px);
+    -webkit-backdrop-filter: blur(1px);
+    font-family: 'SF_def', Arial, sans-serif;
+    font-size: 13px;
+    color: #fff;
+    white-space: nowrap;
 }
 
 .post-card__image {
@@ -51,11 +70,26 @@
     border: none;
     border-radius: 10px;
     background: #fff;
-    color: #555;
+    color: #bbb;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: color 0.2s ease;
+}
+
+.post-card__action-button[data-action="share"] {
+    transition: color 0.5s ease;
+}
+
+.post-card__action-button[data-action="share"]:hover {
+    color: rgb(100, 100, 200);
+}
+
+.post-card__action-button:disabled {
+    cursor: not-allowed;
+    color: #bbb;
+    opacity: 0.9;
 }
 
 .post-card__icon {
@@ -71,7 +105,7 @@
     height: 100%;
 }
 
-.post-card__action-button svg * {
+.post-card__icon svg * {
     fill: currentColor;
     stroke: currentColor;
     transition: fill 0.2s ease, stroke 0.2s ease;

@@ -3,11 +3,16 @@
 class PostCardComponent {
     constructor() {
         this.cards = [];
+        this.toast = null;
+        this.toastFadeTimer = null;
+        this.toastHideTimer = null;
     }
 
     init() {
         this.cards = Array.from(document.querySelectorAll('[data-component="post-card"]'));
         if (this.cards.length === 0) return;
+
+        this.toast = document.querySelector('[data-component="create-post-success-toast"]');
 
         this.cards.forEach((card) => {
             this.prepareCard(card);
@@ -20,14 +25,21 @@ class PostCardComponent {
 
         const likeButton = card.querySelector('[data-action="like"]');
         const bookmarkButton = card.querySelector('[data-action="bookmark"]');
+        const isOwner = card.dataset.owner === '1';
 
         if (likeButton && card.dataset.liked === '1') {
             likeButton.classList.add('is-active');
         }
 
-        if (bookmarkButton && card.dataset.bookmarked === '1') {
-            bookmarkButton.classList.add('is-active');
-            this.setBookmarkIcon(bookmarkButton, true);
+        if (bookmarkButton) {
+            if (isOwner) {
+                bookmarkButton.disabled = true;
+                bookmarkButton.classList.remove('is-active');
+                this.setBookmarkIcon(bookmarkButton, 'block');
+            } else if (card.dataset.bookmarked === '1') {
+                bookmarkButton.classList.add('is-active');
+                this.setBookmarkIcon(bookmarkButton, 'plus');
+            }
         }
     }
 
@@ -43,7 +55,7 @@ class PostCardComponent {
     bindActions(card) {
         card.addEventListener('click', async (event) => {
             const button = event.target.closest('.post-card__action-button');
-            if (!button) return;
+            if (!button || button.disabled) return;
 
             const action = button.dataset.action;
             if (action === 'like') {
@@ -52,12 +64,12 @@ class PostCardComponent {
             }
 
             if (action === 'bookmark') {
-                this.toggleBookmark(card, button);
+                await this.handleBookmark(card, button);
                 return;
             }
 
             if (action === 'share') {
-                this.sharePost(card);
+                await this.sharePost(card);
             }
         });
     }
@@ -77,9 +89,7 @@ class PostCardComponent {
             });
 
             const payload = await response.json();
-            if (!response.ok || !payload.success) {
-                return;
-            }
+            if (!response.ok || !payload.success) return;
 
             const isLiked = !!payload.liked;
             card.dataset.liked = isLiked ? '1' : '0';
@@ -89,19 +99,54 @@ class PostCardComponent {
         }
     }
 
-    toggleBookmark(card, button) {
-        const isActive = !button.classList.contains('is-active');
-        button.classList.toggle('is-active', isActive);
-        card.dataset.bookmarked = isActive ? '1' : '0';
-        this.setBookmarkIcon(button, isActive);
+    async handleBookmark(card, button) {
+        if (card.dataset.owner === '1') return;
+
+        if (card.dataset.bookmarked === '1') {
+            this.openBookmarkDropdownPlaceholder();
+            return;
+        }
+
+        const postId = Number(card.dataset.postId || 0);
+        if (!postId) return;
+
+        try {
+            const response = await fetch('/posts/bookmark', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                    'Accept': 'application/json'
+                },
+                body: new URLSearchParams({ post_id: String(postId) }).toString()
+            });
+
+            const payload = await response.json();
+            if (!response.ok || !payload.success) return;
+
+            card.dataset.bookmarked = '1';
+            button.classList.add('is-active');
+            this.setBookmarkIcon(button, 'plus');
+        } catch (error) {
+            console.warn('Unable to bookmark post', error);
+        }
     }
 
-    setBookmarkIcon(button, isPlus) {
+    setBookmarkIcon(button, type) {
         const icon = button.querySelector('[data-icon="bookmark"]');
         if (!icon) return;
-        const iconPath = isPlus ? 'assets/images/icons/bookmark-plus.svg' : 'assets/images/icons/bookmark.svg';
+
+        const iconPath = type === 'block'
+            ? 'assets/images/icons/bookmark-block.svg'
+            : type === 'plus'
+                ? 'assets/images/icons/bookmark-plus.svg'
+                : 'assets/images/icons/bookmark.svg';
+
         icon.setAttribute('data-svg-src', iconPath);
         App.utils.loadSVG(iconPath, icon);
+    }
+
+    openBookmarkDropdownPlaceholder() {
+        console.info('Bookmark dropdown menu will be added in a future task.');
     }
 
     async sharePost(card) {
@@ -112,9 +157,30 @@ class PostCardComponent {
 
         try {
             await navigator.clipboard.writeText(shareUrl);
+            this.showToast('Ссылка скопирована!');
         } catch (error) {
             console.warn('Unable to copy post link', error);
         }
+    }
+
+    showToast(message) {
+        if (!this.toast) return;
+
+        clearTimeout(this.toastFadeTimer);
+        clearTimeout(this.toastHideTimer);
+
+        this.toast.textContent = message;
+        this.toast.classList.remove('create-post-success-toast--hidden', 'create-post-success-toast--fade-out');
+
+        this.toastFadeTimer = setTimeout(() => {
+            this.toast.classList.add('create-post-success-toast--fade-out');
+        }, 500);
+
+        this.toastHideTimer = setTimeout(() => {
+            this.toast.classList.add('create-post-success-toast--hidden');
+            this.toast.classList.remove('create-post-success-toast--fade-out');
+            this.toast.textContent = '';
+        }, 1000);
     }
 }
 
