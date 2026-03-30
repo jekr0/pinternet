@@ -569,6 +569,17 @@
 .create-post-modal__upload-icon {
     width: 52px;
     height: 52px;
+    color: #555;
+}
+
+.create-post-modal__upload-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+.create-post-modal__upload-icon svg * {
+    fill: currentColor;
+    stroke: currentColor;
 }
 
 .create-post-modal__upload-label {

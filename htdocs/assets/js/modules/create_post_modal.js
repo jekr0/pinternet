@@ -6,6 +6,7 @@ class CreatePostModalComponent {
         this.fileInput = null;
         this.placeholder = null;
         this.preview = null;
+        this.uploadIcon = null;
 
         // Collection field elements
         this.collectionTrigger = null;
@@ -49,6 +50,7 @@ class CreatePostModalComponent {
         this.fileInput = this.modal.querySelector('[data-component="post-upload-input"]');
         this.placeholder = this.modal.querySelector('[data-component="post-upload-placeholder"]');
         this.preview = this.modal.querySelector('[data-component="post-upload-preview"]');
+        this.uploadIcon = this.modal.querySelector('[data-component="post-upload-icon"]');
         this.collectionTrigger = this.modal.querySelector('[data-component="post-collection-trigger"]');
         this.collectionList = this.modal.querySelector('[data-component="post-collection-list"]');
         this.collectionItems = Array.from(this.modal.querySelectorAll('[data-component="post-collection-item"]'));
