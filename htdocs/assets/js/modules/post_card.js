@@ -6,6 +6,7 @@ class PostCardComponent {
         this.toast = null;
         this.toastFadeTimer = null;
         this.toastHideTimer = null;
+        this.shareActiveTimers = new WeakMap();
     }
 
     init() {
@@ -154,11 +155,52 @@ class PostCardComponent {
         if (!postId) return;
 
         const shareUrl = `${window.location.origin}/post/${postId}`;
+        const shareButton = card.querySelector('[data-action="share"]');
+        const markShared = () => {
+            if (!shareButton) return;
+
+            const existingTimer = this.shareActiveTimers.get(shareButton);
+            if (existingTimer) {
+                clearTimeout(existingTimer);
+            }
+
+            shareButton.classList.add('is-copied');
+            const timer = setTimeout(() => {
+                shareButton.classList.remove('is-copied');
+                this.shareActiveTimers.delete(shareButton);
+            }, 1000);
+
+            this.shareActiveTimers.set(shareButton, timer);
+        };
 
         try {
             await navigator.clipboard.writeText(shareUrl);
+            markShared();
             this.showToast('Ссылка скопирована!');
         } catch (error) {
+            const fallbackTextarea = document.createElement('textarea');
+            fallbackTextarea.value = shareUrl;
+            fallbackTextarea.setAttribute('readonly', '');
+            fallbackTextarea.style.position = 'absolute';
+            fallbackTextarea.style.left = '-9999px';
+            document.body.appendChild(fallbackTextarea);
+            fallbackTextarea.select();
+
+            let copied = false;
+            try {
+                copied = document.execCommand('copy');
+            } catch (fallbackError) {
+                console.warn('Unable to copy post link', fallbackError);
+            } finally {
+                document.body.removeChild(fallbackTextarea);
+            }
+
+            if (copied) {
+                markShared();
+                this.showToast('Ссылка скопирована!');
+                return;
+            }
+
             console.warn('Unable to copy post link', error);
         }
     }

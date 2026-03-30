@@ -20,7 +20,7 @@
     data-owner="<?php echo $isOwner ? '1' : '0'; ?>"
     aria-label="Модуль поста"
 >
-    <div class="post-card__author-badge"><?php echo htmlspecialchars($authorUsername, ENT_QUOTES, 'UTF-8'); ?></div>
+    <div class="post-card__author-badge">@<?php echo htmlspecialchars(ltrim($authorUsername, '@'), ENT_QUOTES, 'UTF-8'); ?></div>
 
     <img
         class="post-card__image"
