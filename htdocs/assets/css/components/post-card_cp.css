@@ -151,3 +151,15 @@
 .post-card__action-button[data-action="share"].is-copied {
     color: rgb(100, 100, 200);
 }
+
+.post-card__action-button[data-action="bookmark"]:disabled {
+    color: #bbb;
+}
+
+.post-card__action-button[data-action="share"] {
+    transition: color 0.3s ease;
+}
+
+.post-card__action-button[data-action="share"].is-copied {
+    color: rgb(100, 100, 200);
+}
