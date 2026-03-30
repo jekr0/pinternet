@@ -10,10 +10,14 @@
     background: white;
     border-radius: 10px;
     box-shadow: 0 2px 3px rgba(0,0,0,0.07);
+    transition: opacity 0.1s ease, visibility 0.1s ease, transform 0.1s ease;
 }
 
 .dropdown--hidden {
-    display: none;
+    transform: translateY(-10px);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
 }
 
 /* Компактная версия для гостя */

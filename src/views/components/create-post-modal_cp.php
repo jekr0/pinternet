@@ -26,7 +26,7 @@
                 <img class="create-post-modal__preview create-post-modal__preview--hidden" data-component="post-upload-preview" alt="Предпросмотр изображения">
             </div>
 
-            <p class="create-post-modal__hint">Поддерживаются только PNG, JPEG и GIF изображения до 20МБ.</p>
+            <p class="create-post-modal__hint">*Поддерживаются только PNG, JPEG и GIF изображения до 20МБ.</p>
         </div>
 
         <!-- Правая колонка: метаданные поста -->
