@@ -7,7 +7,7 @@ class MasonryFeedComponent {
         this.columns = 7;
         this.edgeGap = 25;
         this.verticalGap = 20;
-        this.topOffset = 130;
+        this.topOffset = 120;
         this.minHorizontalGap = 12;
         this.resizeHandler = null;
         this.imageLoadHandler = null;
