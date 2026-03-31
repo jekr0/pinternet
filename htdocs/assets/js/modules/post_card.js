@@ -14,9 +14,6 @@ class PostCardComponent {
         this.activeBookmarkButton = null;
         this.activeBookmarkCard = null;
         this.activeBookmarkPostId = 0;
-        this.handleOutsideBookmarkDropdownClick = this.handleOutsideBookmarkDropdownClick.bind(this);
-        this.handleBookmarkDropdownEscape = this.handleBookmarkDropdownEscape.bind(this);
-        this.repositionBookmarkDropdown = this.repositionBookmarkDropdown.bind(this);
     }
 
     init() {
@@ -133,7 +130,7 @@ class PostCardComponent {
         if (!postId) return;
 
         if (card.dataset.bookmarked === '1') {
-            document.dispatchEvent(new CustomEvent('dropdown-board:open', {
+            document.dispatchEvent(new CustomEvent('dropdown-collections:open', {
                 detail: { postId, card, button }
             }));
             return;

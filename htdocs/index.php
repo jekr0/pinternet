@@ -35,7 +35,7 @@ switch ($path) {
             'dropdown-profile_cp.css',
             'create-post-modal_cp.css',
             'post-card_cp.css',
-            'dropdown-board_cp.css',
+            'dropdown-collections_cp.css',
             'home_pg.css',
             'footer_lo.css'
         ];
@@ -44,7 +44,7 @@ switch ($path) {
             'dropdown_profile.js',
             'create_post_modal.js',
             'post_card.js',
-            'dropdown_board.js',
+            'dropdown_collections.js',
             'masonry_feed.js',
             'adaptive_text.js'
         ];
@@ -85,8 +85,9 @@ switch ($path) {
 
         case '/posts/bookmark/boards':
         case '/posts/bookmark/board-toggle':
+        case '/posts/bookmark/board-create':
         case '/posts/bookmark/clear':
-        require_once '../src/controllers/dropdown_board_ctrl.php';
+        require_once '../src/controllers/dropdown_collections_ctrl.php';
         exit;
 
         case '/registration':
