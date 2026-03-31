@@ -12,12 +12,15 @@
         $stmt = $pdo->prepare('
             SELECT p.id, p.image_path, u.username,
                    (pl.id IS NOT NULL) AS is_liked,
-                   (sp.id IS NOT NULL) AS is_bookmarked,
+                   EXISTS(
+                       SELECT 1
+                       FROM Saved_Posts sp
+                       WHERE sp.post_id = p.id AND sp.user_id = ?
+                   ) AS is_bookmarked,
                    (p.user_id = ?) AS is_owner
             FROM Posts p
             INNER JOIN Users u ON u.id = p.user_id
             LEFT JOIN Post_Likes pl ON pl.post_id = p.id AND pl.user_id = ?
-            LEFT JOIN Saved_Posts sp ON sp.post_id = p.id AND sp.user_id = ?
             ORDER BY p.created_at DESC, p.id DESC
         ');
         $stmt->execute([$viewerId, $viewerId, $viewerId]);
@@ -51,5 +54,3 @@
         ?>
     <?php endforeach; ?>
 </section>
-
-<button class="create-post-open-button" data-component="create-post-open" aria-label="Создать пост">+</button>

@@ -18,11 +18,13 @@
 
 /*  Сама панель */
 .header {
-    position: relative;
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
     z-index: 1;
     width: 90%;
     height: 90px;
-    margin: 0 auto;
     display: flex;
     align-items: center;
     justify-content: center;
