@@ -7,6 +7,11 @@ class PostCardComponent {
         this.toastFadeTimer = null;
         this.toastHideTimer = null;
         this.shareActiveTimers = new WeakMap();
+        this.bookmarkDropdown = null;
+        this.bookmarkDropdownTitle = null;
+        this.activeBookmarkButton = null;
+        this.handleOutsideBookmarkDropdownClick = this.handleOutsideBookmarkDropdownClick.bind(this);
+        this.handleBookmarkDropdownEscape = this.handleBookmarkDropdownEscape.bind(this);
     }
 
     init() {
@@ -19,6 +24,8 @@ class PostCardComponent {
             this.prepareCard(card);
             this.bindActions(card);
         });
+
+        this.createBookmarkDropdown();
     }
 
     prepareCard(card) {
@@ -104,7 +111,7 @@ class PostCardComponent {
         if (card.dataset.owner === '1') return;
 
         if (card.dataset.bookmarked === '1') {
-            this.openBookmarkDropdownPlaceholder();
+            this.openBookmarkDropdown(button);
             return;
         }
 
@@ -146,8 +153,96 @@ class PostCardComponent {
         App.utils.loadSVG(iconPath, icon);
     }
 
-    openBookmarkDropdownPlaceholder() {
-        console.info('Bookmark dropdown menu will be added in a future task.');
+    createBookmarkDropdown() {
+        if (this.bookmarkDropdown) return;
+
+        this.bookmarkDropdown = document.createElement('div');
+        this.bookmarkDropdown.className = 'dropdown-board';
+        this.bookmarkDropdown.setAttribute('aria-hidden', 'true');
+
+        this.bookmarkDropdownTitle = document.createElement('h3');
+        this.bookmarkDropdownTitle.className = 'dropdown-board__title';
+        this.bookmarkDropdownTitle.textContent = 'Сохранить в коллекцию';
+
+        this.bookmarkDropdown.appendChild(this.bookmarkDropdownTitle);
+        document.body.appendChild(this.bookmarkDropdown);
+    }
+
+    openBookmarkDropdown(button) {
+        if (!button) return;
+        this.createBookmarkDropdown();
+        if (!this.bookmarkDropdown) return;
+
+        this.activeBookmarkButton = button;
+        this.positionBookmarkDropdown(button);
+        this.bookmarkDropdown.classList.add('is-open');
+        this.bookmarkDropdown.setAttribute('aria-hidden', 'false');
+
+        document.addEventListener('click', this.handleOutsideBookmarkDropdownClick);
+        document.addEventListener('keydown', this.handleBookmarkDropdownEscape);
+        window.addEventListener('resize', this.repositionBookmarkDropdown);
+        window.addEventListener('scroll', this.repositionBookmarkDropdown, true);
+    }
+
+    closeBookmarkDropdown() {
+        if (!this.bookmarkDropdown) return;
+
+        this.bookmarkDropdown.classList.remove('is-open');
+        this.bookmarkDropdown.setAttribute('aria-hidden', 'true');
+        this.activeBookmarkButton = null;
+
+        document.removeEventListener('click', this.handleOutsideBookmarkDropdownClick);
+        document.removeEventListener('keydown', this.handleBookmarkDropdownEscape);
+        window.removeEventListener('resize', this.repositionBookmarkDropdown);
+        window.removeEventListener('scroll', this.repositionBookmarkDropdown, true);
+    }
+
+    repositionBookmarkDropdown = () => {
+        if (!this.activeBookmarkButton || !this.bookmarkDropdown || !this.bookmarkDropdown.classList.contains('is-open')) {
+            return;
+        }
+
+        this.positionBookmarkDropdown(this.activeBookmarkButton);
+    };
+
+    positionBookmarkDropdown(button) {
+        if (!this.bookmarkDropdown) return;
+
+        const buttonRect = button.getBoundingClientRect();
+        const dropdownWidth = this.bookmarkDropdown.offsetWidth || 240;
+        const dropdownHeight = this.bookmarkDropdown.offsetHeight || 300;
+        const spacing = 5;
+        const viewportPadding = 10;
+
+        let left = buttonRect.right + spacing;
+        let top = buttonRect.top + (buttonRect.height / 2) - (dropdownHeight / 2);
+
+        const maxLeft = window.innerWidth - dropdownWidth - viewportPadding;
+        const maxTop = window.innerHeight - dropdownHeight - viewportPadding;
+
+        left = Math.min(Math.max(left, viewportPadding), maxLeft);
+        top = Math.min(Math.max(top, viewportPadding), maxTop);
+
+        this.bookmarkDropdown.style.left = `${left}px`;
+        this.bookmarkDropdown.style.top = `${top}px`;
+    }
+
+    handleOutsideBookmarkDropdownClick(event) {
+        if (!this.bookmarkDropdown || !this.activeBookmarkButton) return;
+
+        const target = event.target;
+        if (!target) return;
+
+        if (this.bookmarkDropdown.contains(target) || this.activeBookmarkButton.contains(target)) {
+            return;
+        }
+
+        this.closeBookmarkDropdown();
+    }
+
+    handleBookmarkDropdownEscape(event) {
+        if (event.key !== 'Escape') return;
+        this.closeBookmarkDropdown();
     }
 
     async sharePost(card) {
