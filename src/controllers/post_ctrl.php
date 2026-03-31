@@ -23,6 +23,10 @@ if ($path === '/boards/list') {
     handleBoardsList($pdo, $userId);
 }
 
+if ($path === '/posts/bookmark/boards') {
+    handleBookmarkBoards($pdo, $userId);
+}
+
 if ($path === '/hashtags/suggest') {
     handleHashtagsSuggest($pdo);
 }
@@ -37,6 +41,14 @@ if ($path === '/posts/like') {
 
 if ($path === '/posts/bookmark') {
     handleBookmarkPost($pdo, $userId);
+}
+
+if ($path === '/posts/bookmark/board-toggle') {
+    handleBookmarkBoardToggle($pdo, $userId);
+}
+
+if ($path === '/posts/bookmark/clear') {
+    handleBookmarkClear($pdo, $userId);
 }
 
 if ($path === '/posts/list') {
@@ -187,6 +199,81 @@ function handleBookmarkPost(PDO $pdo, int $userId): never
     }
 
     jsonResponse(['success' => true, 'bookmarked' => true]);
+}
+
+function handleBookmarkBoardToggle(PDO $pdo, int $userId): never
+{
+    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+        jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод.'], 405);
+    }
+
+    $postId = (int) ($_POST['post_id'] ?? 0);
+    $boardName = trim((string) ($_POST['board'] ?? ''));
+
+    if ($postId <= 0 || $boardName === '') {
+        jsonResponse(['success' => false, 'error' => 'Некорректные параметры.'], 422);
+    }
+
+    $normalizedBoardName = $boardName === 'Профиль' ? 'Profile' : $boardName;
+    $boardId = findBoardId($pdo, $userId, $normalizedBoardName);
+    if ($boardId === null && $normalizedBoardName === 'Profile') {
+        $boardId = createBoard($pdo, $userId, 'Profile');
+    }
+    if ($boardId === null) {
+        jsonResponse(['success' => false, 'error' => 'Коллекция не найдена.'], 404);
+    }
+
+    try {
+        $pdo->beginTransaction();
+
+        $savedStmt = $pdo->prepare('SELECT id FROM Saved_Posts WHERE user_id = ? AND post_id = ? AND board_id = ? LIMIT 1');
+        $savedStmt->execute([$userId, $postId, $boardId]);
+        $savedId = $savedStmt->fetchColumn();
+
+        $isSaved = false;
+        if ($savedId !== false) {
+            $deleteStmt = $pdo->prepare('DELETE FROM Saved_Posts WHERE id = ?');
+            $deleteStmt->execute([(int) $savedId]);
+        } else {
+            $insertStmt = $pdo->prepare('INSERT INTO Saved_Posts (user_id, post_id, board_id) VALUES (?, ?, ?)');
+            $insertStmt->execute([$userId, $postId, $boardId]);
+            $isSaved = true;
+        }
+
+        $hasAnyStmt = $pdo->prepare('SELECT 1 FROM Saved_Posts WHERE user_id = ? AND post_id = ? LIMIT 1');
+        $hasAnyStmt->execute([$userId, $postId]);
+        $hasAny = $hasAnyStmt->fetchColumn() !== false;
+
+        $pdo->commit();
+    } catch (Throwable $e) {
+        $pdo->rollBack();
+        error_log('Bookmark board toggle error: ' . $e->getMessage());
+        jsonResponse(['success' => false, 'error' => 'Не удалось обновить коллекцию.'], 500);
+    }
+
+    jsonResponse(['success' => true, 'saved' => $isSaved, 'has_any' => $hasAny]);
+}
+
+function handleBookmarkClear(PDO $pdo, int $userId): never
+{
+    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+        jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод.'], 405);
+    }
+
+    $postId = (int) ($_POST['post_id'] ?? 0);
+    if ($postId <= 0) {
+        jsonResponse(['success' => false, 'error' => 'Некорректный post_id.'], 422);
+    }
+
+    try {
+        $deleteStmt = $pdo->prepare('DELETE FROM Saved_Posts WHERE user_id = ? AND post_id = ?');
+        $deleteStmt->execute([$userId, $postId]);
+    } catch (Throwable $e) {
+        error_log('Bookmark clear error: ' . $e->getMessage());
+        jsonResponse(['success' => false, 'error' => 'Не удалось удалить пост из коллекций.'], 500);
+    }
+
+    jsonResponse(['success' => true]);
 }
 
 function handlePostsList(PDO $pdo): never

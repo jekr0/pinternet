@@ -7,6 +7,16 @@ class PostCardComponent {
         this.toastFadeTimer = null;
         this.toastHideTimer = null;
         this.shareActiveTimers = new WeakMap();
+        this.bookmarkDropdown = null;
+        this.bookmarkDropdownTitle = null;
+        this.bookmarkDropdownList = null;
+        this.bookmarkDropdownClearButton = null;
+        this.activeBookmarkButton = null;
+        this.activeBookmarkCard = null;
+        this.activeBookmarkPostId = 0;
+        this.handleOutsideBookmarkDropdownClick = this.handleOutsideBookmarkDropdownClick.bind(this);
+        this.handleBookmarkDropdownEscape = this.handleBookmarkDropdownEscape.bind(this);
+        this.repositionBookmarkDropdown = this.repositionBookmarkDropdown.bind(this);
     }
 
     init() {
