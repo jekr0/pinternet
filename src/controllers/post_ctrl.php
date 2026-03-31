@@ -82,8 +82,6 @@ function handleHashtagsSuggest(PDO $pdo): never
     jsonResponse(['success' => true, 'tags' => $tags]);
 }
 
-
-
 function handleToggleLike(PDO $pdo, int $userId): never
 {
     if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {

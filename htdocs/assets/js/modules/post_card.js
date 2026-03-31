@@ -19,6 +19,22 @@ class PostCardComponent {
             this.prepareCard(card);
             this.bindActions(card);
         });
+
+        document.addEventListener('post-card:bookmark-updated', (event) => {
+            const postId = Number(event.detail?.postId || 0);
+            const isBookmarked = !!event.detail?.bookmarked;
+            if (!postId) return;
+
+            this.cards.forEach((card) => {
+                if (Number(card.dataset.postId || 0) !== postId) return;
+                const button = card.querySelector('[data-action="bookmark"]');
+                if (!button) return;
+
+                card.dataset.bookmarked = isBookmarked ? '1' : '0';
+                button.classList.toggle('is-active', isBookmarked);
+                this.setBookmarkIcon(button, isBookmarked ? 'plus' : 'default');
+            });
+        });
     }
 
     prepareCard(card) {
@@ -103,13 +119,15 @@ class PostCardComponent {
     async handleBookmark(card, button) {
         if (card.dataset.owner === '1') return;
 
-        if (card.dataset.bookmarked === '1') {
-            this.openBookmarkDropdownPlaceholder();
-            return;
-        }
-
         const postId = Number(card.dataset.postId || 0);
         if (!postId) return;
+
+        if (card.dataset.bookmarked === '1') {
+            document.dispatchEvent(new CustomEvent('dropdown-board:open', {
+                detail: { postId, card, button }
+            }));
+            return;
+        }
 
         try {
             const response = await fetch('/posts/bookmark', {
@@ -144,10 +162,6 @@ class PostCardComponent {
 
         icon.setAttribute('data-svg-src', iconPath);
         App.utils.loadSVG(iconPath, icon);
-    }
-
-    openBookmarkDropdownPlaceholder() {
-        console.info('Bookmark dropdown menu will be added in a future task.');
     }
 
     async sharePost(card) {
