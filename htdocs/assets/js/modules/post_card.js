@@ -7,6 +7,16 @@ class PostCardComponent {
         this.toastFadeTimer = null;
         this.toastHideTimer = null;
         this.shareActiveTimers = new WeakMap();
+        this.bookmarkDropdown = null;
+        this.bookmarkDropdownTitle = null;
+        this.bookmarkDropdownList = null;
+        this.bookmarkDropdownClearButton = null;
+        this.activeBookmarkButton = null;
+        this.activeBookmarkCard = null;
+        this.activeBookmarkPostId = 0;
+        this.handleOutsideBookmarkDropdownClick = this.handleOutsideBookmarkDropdownClick.bind(this);
+        this.handleBookmarkDropdownEscape = this.handleBookmarkDropdownEscape.bind(this);
+        this.repositionBookmarkDropdown = this.repositionBookmarkDropdown.bind(this);
     }
 
     init() {
@@ -19,6 +29,8 @@ class PostCardComponent {
             this.prepareCard(card);
             this.bindActions(card);
         });
+
+        this.createBookmarkDropdown();
     }
 
     prepareCard(card) {
@@ -104,7 +116,7 @@ class PostCardComponent {
         if (card.dataset.owner === '1') return;
 
         if (card.dataset.bookmarked === '1') {
-            this.openBookmarkDropdownPlaceholder();
+            this.openBookmarkDropdown(button);
             return;
         }
 
@@ -146,8 +158,266 @@ class PostCardComponent {
         App.utils.loadSVG(iconPath, icon);
     }
 
-    openBookmarkDropdownPlaceholder() {
-        console.info('Bookmark dropdown menu will be added in a future task.');
+    createBookmarkDropdown() {
+        if (this.bookmarkDropdown) return;
+
+        this.bookmarkDropdown = document.createElement('div');
+        this.bookmarkDropdown.className = 'dropdown-board';
+        this.bookmarkDropdown.setAttribute('aria-hidden', 'true');
+
+        this.bookmarkDropdownTitle = document.createElement('h3');
+        this.bookmarkDropdownTitle.className = 'dropdown-board__title';
+        this.bookmarkDropdownTitle.textContent = 'Сохранить в коллекцию';
+
+        this.bookmarkDropdownList = document.createElement('ul');
+        this.bookmarkDropdownList.className = 'dropdown-board__collection-list';
+
+        this.bookmarkDropdownClearButton = document.createElement('button');
+        this.bookmarkDropdownClearButton.type = 'button';
+        this.bookmarkDropdownClearButton.className = 'dropdown-board__clear-button';
+        this.bookmarkDropdownClearButton.textContent = 'удалить';
+        this.bookmarkDropdownClearButton.addEventListener('click', () => this.clearPostFromBoards());
+
+        this.bookmarkDropdown.appendChild(this.bookmarkDropdownTitle);
+        this.bookmarkDropdown.appendChild(this.bookmarkDropdownList);
+        this.bookmarkDropdown.appendChild(this.bookmarkDropdownClearButton);
+        document.body.appendChild(this.bookmarkDropdown);
+    }
+
+    async openBookmarkDropdown(button) {
+        if (!button) return;
+        this.createBookmarkDropdown();
+        if (!this.bookmarkDropdown) return;
+
+        const card = button.closest('[data-component="post-card"]');
+        const postId = Number(card?.dataset.postId || 0);
+        if (!postId) return;
+
+        this.activeBookmarkButton = button;
+        this.activeBookmarkCard = card;
+        this.activeBookmarkPostId = postId;
+        this.activeBookmarkCard?.classList.add('post-card--dropdown-open');
+        await this.loadBoardsForPost(postId);
+        this.positionBookmarkDropdown(button);
+        this.bookmarkDropdown.classList.add('is-open');
+        this.bookmarkDropdown.setAttribute('aria-hidden', 'false');
+
+        document.addEventListener('click', this.handleOutsideBookmarkDropdownClick);
+        document.addEventListener('keydown', this.handleBookmarkDropdownEscape);
+        window.addEventListener('resize', this.repositionBookmarkDropdown);
+        window.addEventListener('scroll', this.repositionBookmarkDropdown, true);
+    }
+
+    closeBookmarkDropdown() {
+        if (!this.bookmarkDropdown) return;
+
+        this.bookmarkDropdown.classList.remove('is-open');
+        this.bookmarkDropdown.setAttribute('aria-hidden', 'true');
+        this.activeBookmarkCard?.classList.remove('post-card--dropdown-open');
+        this.activeBookmarkButton = null;
+        this.activeBookmarkCard = null;
+        this.activeBookmarkPostId = 0;
+
+        document.removeEventListener('click', this.handleOutsideBookmarkDropdownClick);
+        document.removeEventListener('keydown', this.handleBookmarkDropdownEscape);
+        window.removeEventListener('resize', this.repositionBookmarkDropdown);
+        window.removeEventListener('scroll', this.repositionBookmarkDropdown, true);
+    }
+
+    repositionBookmarkDropdown() {
+        if (!this.activeBookmarkButton || !this.bookmarkDropdown || !this.bookmarkDropdown.classList.contains('is-open')) {
+            return;
+        }
+
+        this.positionBookmarkDropdown(this.activeBookmarkButton);
+    }
+
+    positionBookmarkDropdown(button) {
+        if (!this.bookmarkDropdown) return;
+
+        const buttonRect = button.getBoundingClientRect();
+        const dropdownWidth = this.bookmarkDropdown.offsetWidth || 200;
+        const dropdownHeight = this.bookmarkDropdown.offsetHeight || 300;
+        const spacing = 5;
+        const viewportPadding = 10;
+
+        const hasSpaceOnRight = (buttonRect.right + spacing + dropdownWidth) <= (window.innerWidth - viewportPadding);
+        let left = hasSpaceOnRight
+            ? buttonRect.right + spacing
+            : buttonRect.left - spacing - dropdownWidth;
+        let top = buttonRect.top;
+
+        const maxLeft = window.innerWidth - dropdownWidth - viewportPadding;
+        const maxTop = window.innerHeight - dropdownHeight - viewportPadding;
+
+        left = Math.min(Math.max(left, viewportPadding), maxLeft);
+        top = Math.min(Math.max(top, viewportPadding), maxTop);
+
+        this.bookmarkDropdown.style.left = `${left}px`;
+        this.bookmarkDropdown.style.top = `${top}px`;
+    }
+
+    async loadBoardsForPost(postId) {
+        if (!this.bookmarkDropdownList) return;
+
+        try {
+            const response = await fetch(`/posts/bookmark/boards?post_id=${encodeURIComponent(String(postId))}`, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+            const payload = await response.json();
+
+            if (response.ok && payload.success && Array.isArray(payload.boards)) {
+                this.renderBoardsList(payload.boards);
+                return;
+            }
+        } catch (error) {
+            console.warn('Unable to load board states', error);
+        }
+
+        try {
+            const fallbackResponse = await fetch('/boards/list', {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+            const fallbackPayload = await fallbackResponse.json();
+            if (!fallbackResponse.ok || !fallbackPayload.success || !Array.isArray(fallbackPayload.boards)) {
+                this.renderBoardsList([]);
+                return;
+            }
+            this.renderBoardsList(fallbackPayload.boards);
+        } catch (fallbackError) {
+            console.warn('Unable to load fallback boards list', fallbackError);
+            this.renderBoardsList([]);
+        }
+    }
+
+    renderBoardsList(boards) {
+        if (!this.bookmarkDropdownList) return;
+
+        this.bookmarkDropdownList.innerHTML = '';
+        boards.forEach((boardData) => {
+            const boardName = typeof boardData === 'string'
+                ? boardData
+                : typeof boardData?.name === 'string'
+                    ? boardData.name
+                    : '';
+            if (!boardName) return;
+            const isSaved = typeof boardData === 'string' ? true : !!boardData?.is_saved;
+
+            const item = document.createElement('li');
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'dropdown-board__collection-item';
+            button.textContent = boardName;
+            button.dataset.board = boardName;
+            button.dataset.selected = isSaved ? '1' : '0';
+            button.classList.toggle('is-selected', isSaved);
+            button.addEventListener('click', () => this.togglePostInBoard(button));
+            item.appendChild(button);
+            this.bookmarkDropdownList.appendChild(item);
+        });
+
+        const addItem = document.createElement('li');
+        const addButton = document.createElement('button');
+        addButton.type = 'button';
+        addButton.className = 'dropdown-board__collection-item dropdown-board__collection-item--add';
+        addButton.textContent = '+';
+        addItem.appendChild(addButton);
+        this.bookmarkDropdownList.appendChild(addItem);
+    }
+
+    async togglePostInBoard(boardButton) {
+        if (!boardButton || !this.activeBookmarkPostId) return;
+
+        const boardName = boardButton.dataset.board || '';
+        if (!boardName) return;
+
+        try {
+            const response = await fetch('/posts/bookmark/board-toggle', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                    'Accept': 'application/json'
+                },
+                body: new URLSearchParams({
+                    post_id: String(this.activeBookmarkPostId),
+                    board: boardName
+                }).toString()
+            });
+
+            const payload = await response.json();
+            if (!response.ok || !payload.success) return;
+
+            const isSelected = !!payload.saved;
+            boardButton.dataset.selected = isSelected ? '1' : '0';
+            boardButton.classList.toggle('is-selected', isSelected);
+
+            if (!payload.has_any) {
+                this.unbookmarkActivePost();
+            }
+        } catch (error) {
+            console.warn('Unable to toggle post in board', error);
+        }
+    }
+
+    async clearPostFromBoards() {
+        if (!this.activeBookmarkPostId) return;
+
+        try {
+            const response = await fetch('/posts/bookmark/clear', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                    'Accept': 'application/json'
+                },
+                body: new URLSearchParams({
+                    post_id: String(this.activeBookmarkPostId)
+                }).toString()
+            });
+
+            const payload = await response.json();
+            if (!response.ok || !payload.success) return;
+
+            this.unbookmarkActivePost();
+        } catch (error) {
+            console.warn('Unable to clear boards for post', error);
+        }
+    }
+
+    unbookmarkActivePost() {
+        if (!this.activeBookmarkButton) return;
+
+        const card = this.activeBookmarkButton.closest('[data-component="post-card"]');
+        if (card) {
+            card.dataset.bookmarked = '0';
+        }
+
+        this.activeBookmarkButton.classList.remove('is-active');
+        this.setBookmarkIcon(this.activeBookmarkButton, 'default');
+        this.closeBookmarkDropdown();
+    }
+
+    handleOutsideBookmarkDropdownClick(event) {
+        if (!this.bookmarkDropdown || !this.activeBookmarkButton) return;
+
+        const target = event.target;
+        if (!target) return;
+
+        if (this.bookmarkDropdown.contains(target) || this.activeBookmarkButton.contains(target)) {
+            return;
+        }
+
+        this.closeBookmarkDropdown();
+    }
+
+    handleBookmarkDropdownEscape(event) {
+        if (event.key !== 'Escape') return;
+        this.closeBookmarkDropdown();
     }
 
     async sharePost(card) {
