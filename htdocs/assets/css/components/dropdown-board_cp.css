@@ -1,0 +1,130 @@
+/* ------------------------------ Dropdown board ------------------------------ */
+
+.post-card--dropdown-open {
+    box-shadow: 0 4px 2px rgba(0, 0, 0, 0.07);
+    transform: translateY(-5px);
+}
+
+.post-card--dropdown-open .post-card__author-badge {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.post-card--dropdown-open .post-card__actions {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.dropdown-board {
+    position: fixed;
+    z-index: 50;
+    width: 200px;
+    height: 300px;
+    padding: 14px 10px 10px;
+    box-sizing: border-box;
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 2px 3px rgba(0,0,0,0.07);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(-10px);
+    transition: opacity 0.1s ease, visibility 0.1s ease, transform 0.1s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.dropdown-board.is-open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+
+.dropdown-board--closing {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(-5px);
+    transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease;
+}
+
+.dropdown-board__title {
+    margin: 0;
+    text-align: center;
+    font-family: 'SF_def', Arial, sans-serif;
+    font-size: 14px;
+    color: #555;
+    border-radius: 5px;
+}
+
+.dropdown-board__collection-list {
+    width: 180px;
+    height: 120px;
+    margin: 10px 0 0;
+    padding: 0;
+    list-style: none;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 5px;
+    overflow-y: auto;
+    transition: border-color 0.2s ease;
+}
+
+.dropdown-board__collection-list:hover {
+    border-color: rgb(100, 100, 200);
+}
+
+.dropdown-board__collection-list li {
+    margin: 0;
+    padding: 0;
+    border-radius: 5px;
+}
+
+.dropdown-board__collection-item {
+    width: 100%;
+    min-height: 30px;
+    padding: 0 10px;
+    border: none;
+    border-radius: 5px;
+    background: transparent;
+    text-align: left;
+    font-family: 'SF_def', Arial, sans-serif;
+    font-size: 14px;
+    color: #333;
+    cursor: pointer;
+    transition: background 0.1s ease, color 0.1s ease;
+}
+
+.dropdown-board__collection-item:hover {
+    background: rgba(100, 100, 200, 0.07);
+}
+
+.dropdown-board__collection-item.is-selected {
+    color: rgb(100, 100, 200);
+}
+
+.dropdown-board__collection-item--add {
+    text-align: center;
+    font-size: 20px;
+    color: #bbb;
+}
+
+.dropdown-board__clear-button {
+    width: 180px;
+    height: 40px;
+    margin-top: auto;
+    margin-bottom: 4px;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 5px;
+    background: #fff;
+    font-family: 'SF_def', Arial, sans-serif;
+    font-size: 16px;
+    color: #555;
+    cursor: pointer;
+    transition: border-color 0.2s ease, opacity 0.2s ease;
+}
+
+.dropdown-board__clear-button:hover {
+    border-color: rgb(100, 100, 200);
+}

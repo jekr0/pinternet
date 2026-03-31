@@ -94,38 +94,6 @@ function handleHashtagsSuggest(PDO $pdo): never
     jsonResponse(['success' => true, 'tags' => $tags]);
 }
 
-function handleBookmarkBoards(PDO $pdo, int $userId): never
-{
-    $postId = (int) ($_GET['post_id'] ?? 0);
-    if ($postId <= 0) {
-        jsonResponse(['success' => false, 'error' => 'Некорректный post_id.'], 422);
-    }
-
-    $boardsStmt = $pdo->prepare('
-        SELECT b.name, CASE WHEN sp.id IS NULL THEN 0 ELSE 1 END AS is_saved
-        FROM Boards b
-        LEFT JOIN Saved_Posts sp ON sp.board_id = b.id AND sp.user_id = b.user_id AND sp.post_id = ?
-        WHERE b.user_id = ?
-        ORDER BY b.created_at ASC
-    ');
-    $boardsStmt->execute([$postId, $userId]);
-    $rows = $boardsStmt->fetchAll();
-
-    if (empty($rows)) {
-        $profileBoardId = createBoard($pdo, $userId, 'Profile');
-        $rows = [['name' => 'Профиль', 'is_saved' => 0, 'id' => $profileBoardId]];
-    }
-
-    $boards = array_map(static fn(array $row) => [
-        'name' => ((string) $row['name']) === 'Profile' ? 'Профиль' : (string) $row['name'],
-        'is_saved' => ((int) $row['is_saved']) === 1,
-    ], $rows);
-
-    jsonResponse(['success' => true, 'boards' => $boards]);
-}
-
-
-
 function handleToggleLike(PDO $pdo, int $userId): never
 {
     if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
