@@ -14,9 +14,6 @@ class PostCardComponent {
         this.activeBookmarkButton = null;
         this.activeBookmarkCard = null;
         this.activeBookmarkPostId = 0;
-        this.handleOutsideBookmarkDropdownClick = this.handleOutsideBookmarkDropdownClick.bind(this);
-        this.handleBookmarkDropdownEscape = this.handleBookmarkDropdownEscape.bind(this);
-        this.repositionBookmarkDropdown = this.repositionBookmarkDropdown.bind(this);
     }
 
     init() {
