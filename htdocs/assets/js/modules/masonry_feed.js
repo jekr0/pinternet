@@ -7,6 +7,7 @@ class MasonryFeedComponent {
         this.columns = 7;
         this.edgeGap = 25;
         this.verticalGap = 20;
+        this.topOffset = 130;
         this.minHorizontalGap = 12;
         this.resizeHandler = null;
         this.imageLoadHandler = null;
@@ -50,7 +51,7 @@ class MasonryFeedComponent {
         const computedHorizontalGap = (availableWidth - cardWidth * this.columns) / (this.columns - 1);
         const horizontalGap = Math.max(this.minHorizontalGap, computedHorizontalGap);
 
-        const columnHeights = Array(this.columns).fill(0);
+        const columnHeights = Array(this.columns).fill(this.topOffset);
 
         this.cards.forEach((card) => {
             card.style.setProperty('--post-card-width', `${cardWidth}px`);
@@ -73,7 +74,7 @@ class MasonryFeedComponent {
         });
 
         const maxHeight = Math.max(...columnHeights);
-        this.container.style.height = `${Math.max(0, maxHeight - this.verticalGap)}px`;
+        this.container.style.height = `${Math.max(this.topOffset, maxHeight - this.verticalGap)}px`;
     }
 }
 
