@@ -152,6 +152,33 @@
     color: rgb(100, 100, 200);
 }
 
+.dropdown-board {
+    position: fixed;
+    z-index: 50;
+    width: 240px;
+    height: 300px;
+    padding: 14px 16px;
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.12s ease;
+}
+
+.dropdown-board.is-open {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.dropdown-board__title {
+    margin: 0;
+    text-align: center;
+    font-family: 'SF_def', Arial, sans-serif;
+    font-size: 14px;
+    color: #555;
+}
+
 .post-card__action-button[data-action="bookmark"]:disabled {
     color: #bbb;
 }
