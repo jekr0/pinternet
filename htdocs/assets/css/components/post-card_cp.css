@@ -155,20 +155,28 @@
 .dropdown-board {
     position: fixed;
     z-index: 50;
-    width: 240px;
+    width: 200px;
     height: 300px;
-    padding: 14px 16px;
+    padding: 14px 10px 10px;
+    box-sizing: border-box;
     border-radius: 10px;
     background: #fff;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+    box-shadow: 0 2px 3px rgba(0,0,0,0.07);
     opacity: 0;
+    visibility: hidden;
     pointer-events: none;
-    transition: opacity 0.12s ease;
+    transform: translateY(-10px);
+    transition: opacity 0.1s ease, visibility 0.1s ease, transform 0.1s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .dropdown-board.is-open {
     opacity: 1;
+    visibility: visible;
     pointer-events: auto;
+    transform: translateY(0);
 }
 
 .dropdown-board__title {
@@ -179,14 +187,65 @@
     color: #555;
 }
 
-.post-card__action-button[data-action="bookmark"]:disabled {
+.dropdown-board__collection-list {
+    width: 180px;
+    height: 120px;
+    margin: 10px 0 0;
+    padding: 0;
+    list-style: none;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 10px;
+    overflow-y: auto;
+}
+
+.dropdown-board__collection-list li {
+    margin: 0;
+    padding: 0;
+}
+
+.dropdown-board__collection-item {
+    width: 100%;
+    min-height: 30px;
+    padding: 0 10px;
+    border: none;
+    background: transparent;
+    text-align: left;
+    font-family: 'SF_def', Arial, sans-serif;
+    font-size: 14px;
+    color: #333;
+    cursor: pointer;
+    transition: background 0.1s ease, color 0.1s ease;
+}
+
+.dropdown-board__collection-item:hover {
+    background: rgba(100, 100, 200, 0.07);
+}
+
+.dropdown-board__collection-item.is-selected {
+    color: rgb(100, 100, 200);
+}
+
+.dropdown-board__add-button {
+    margin-top: 8px;
+    border: none;
+    background: transparent;
+    font-family: 'SF_def', Arial, sans-serif;
+    font-size: 18px;
     color: #bbb;
+    cursor: pointer;
 }
 
-.post-card__action-button[data-action="share"] {
-    transition: color 0.3s ease;
+.dropdown-board__clear-button {
+    margin-top: auto;
+    margin-bottom: 4px;
+    border: none;
+    background: transparent;
+    font-family: 'SF_def', Arial, sans-serif;
+    font-size: 14px;
+    color: #555;
+    cursor: pointer;
 }
 
-.post-card__action-button[data-action="share"].is-copied {
+.dropdown-board__clear-button:hover {
     color: rgb(100, 100, 200);
 }
