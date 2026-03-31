@@ -14,6 +14,11 @@
     transform: translateY(-5px);
 }
 
+.post-card--dropdown-open {
+    box-shadow: 0 4px 2px rgba(0, 0, 0, 0.07);
+    transform: translateY(-5px);
+}
+
 .post-card__author-badge {
     position: absolute;
     top: 10px;
@@ -39,6 +44,11 @@
 }
 
 .post-card:hover .post-card__author-badge {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.post-card--dropdown-open .post-card__author-badge {
     opacity: 1;
     pointer-events: auto;
 }
@@ -75,6 +85,11 @@
 }
 
 .post-card:hover .post-card__actions {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.post-card--dropdown-open .post-card__actions {
     opacity: 1;
     pointer-events: auto;
 }
@@ -225,27 +240,27 @@
     color: rgb(100, 100, 200);
 }
 
-.dropdown-board__add-button {
-    margin-top: 8px;
-    border: none;
-    background: transparent;
-    font-family: 'SF_def', Arial, sans-serif;
-    font-size: 18px;
+.dropdown-board__collection-item--add {
+    text-align: center;
+    font-size: 20px;
     color: #bbb;
-    cursor: pointer;
 }
 
 .dropdown-board__clear-button {
+    width: 180px;
+    height: 40px;
     margin-top: auto;
     margin-bottom: 4px;
-    border: none;
-    background: transparent;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 10px;
+    background: #fff;
     font-family: 'SF_def', Arial, sans-serif;
-    font-size: 14px;
+    font-size: 16px;
     color: #555;
     cursor: pointer;
+    transition: border-color 0.2s ease, opacity 0.2s ease;
 }
 
 .dropdown-board__clear-button:hover {
-    color: rgb(100, 100, 200);
+    opacity: 0.85;
 }

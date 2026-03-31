@@ -10,9 +10,9 @@ class PostCardComponent {
         this.bookmarkDropdown = null;
         this.bookmarkDropdownTitle = null;
         this.bookmarkDropdownList = null;
-        this.bookmarkDropdownAddButton = null;
         this.bookmarkDropdownClearButton = null;
         this.activeBookmarkButton = null;
+        this.activeBookmarkCard = null;
         this.activeBookmarkPostId = 0;
         this.handleOutsideBookmarkDropdownClick = this.handleOutsideBookmarkDropdownClick.bind(this);
         this.handleBookmarkDropdownEscape = this.handleBookmarkDropdownEscape.bind(this);
@@ -172,20 +172,14 @@ class PostCardComponent {
         this.bookmarkDropdownList = document.createElement('ul');
         this.bookmarkDropdownList.className = 'dropdown-board__collection-list';
 
-        this.bookmarkDropdownAddButton = document.createElement('button');
-        this.bookmarkDropdownAddButton.type = 'button';
-        this.bookmarkDropdownAddButton.className = 'dropdown-board__add-button';
-        this.bookmarkDropdownAddButton.textContent = '+';
-
         this.bookmarkDropdownClearButton = document.createElement('button');
         this.bookmarkDropdownClearButton.type = 'button';
         this.bookmarkDropdownClearButton.className = 'dropdown-board__clear-button';
-        this.bookmarkDropdownClearButton.textContent = 'удалить из всех';
+        this.bookmarkDropdownClearButton.textContent = 'удалить';
         this.bookmarkDropdownClearButton.addEventListener('click', () => this.clearPostFromBoards());
 
         this.bookmarkDropdown.appendChild(this.bookmarkDropdownTitle);
         this.bookmarkDropdown.appendChild(this.bookmarkDropdownList);
-        this.bookmarkDropdown.appendChild(this.bookmarkDropdownAddButton);
         this.bookmarkDropdown.appendChild(this.bookmarkDropdownClearButton);
         document.body.appendChild(this.bookmarkDropdown);
     }
@@ -200,7 +194,9 @@ class PostCardComponent {
         if (!postId) return;
 
         this.activeBookmarkButton = button;
+        this.activeBookmarkCard = card;
         this.activeBookmarkPostId = postId;
+        this.activeBookmarkCard?.classList.add('post-card--dropdown-open');
         await this.loadBoardsForPost(postId);
         this.positionBookmarkDropdown(button);
         this.bookmarkDropdown.classList.add('is-open');
@@ -217,7 +213,9 @@ class PostCardComponent {
 
         this.bookmarkDropdown.classList.remove('is-open');
         this.bookmarkDropdown.setAttribute('aria-hidden', 'true');
+        this.activeBookmarkCard?.classList.remove('post-card--dropdown-open');
         this.activeBookmarkButton = null;
+        this.activeBookmarkCard = null;
         this.activeBookmarkPostId = 0;
 
         document.removeEventListener('click', this.handleOutsideBookmarkDropdownClick);
@@ -271,13 +269,30 @@ class PostCardComponent {
             });
             const payload = await response.json();
 
-            if (!response.ok || !payload.success || !Array.isArray(payload.boards)) {
+            if (response.ok && payload.success && Array.isArray(payload.boards)) {
+                this.renderBoardsList(payload.boards);
                 return;
             }
-
-            this.renderBoardsList(payload.boards);
         } catch (error) {
             console.warn('Unable to load board states', error);
+        }
+
+        try {
+            const fallbackResponse = await fetch('/boards/list', {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+            const fallbackPayload = await fallbackResponse.json();
+            if (!fallbackResponse.ok || !fallbackPayload.success || !Array.isArray(fallbackPayload.boards)) {
+                this.renderBoardsList([]);
+                return;
+            }
+            this.renderBoardsList(fallbackPayload.boards);
+        } catch (fallbackError) {
+            console.warn('Unable to load fallback boards list', fallbackError);
+            this.renderBoardsList([]);
         }
     }
 
@@ -286,9 +301,13 @@ class PostCardComponent {
 
         this.bookmarkDropdownList.innerHTML = '';
         boards.forEach((boardData) => {
-            const boardName = typeof boardData?.name === 'string' ? boardData.name : '';
+            const boardName = typeof boardData === 'string'
+                ? boardData
+                : typeof boardData?.name === 'string'
+                    ? boardData.name
+                    : '';
             if (!boardName) return;
-            const isSaved = !!boardData?.is_saved;
+            const isSaved = typeof boardData === 'string' ? true : !!boardData?.is_saved;
 
             const item = document.createElement('li');
             const button = document.createElement('button');
@@ -302,6 +321,14 @@ class PostCardComponent {
             item.appendChild(button);
             this.bookmarkDropdownList.appendChild(item);
         });
+
+        const addItem = document.createElement('li');
+        const addButton = document.createElement('button');
+        addButton.type = 'button';
+        addButton.className = 'dropdown-board__collection-item dropdown-board__collection-item--add';
+        addButton.textContent = '+';
+        addItem.appendChild(addButton);
+        this.bookmarkDropdownList.appendChild(addItem);
     }
 
     async togglePostInBoard(boardButton) {
