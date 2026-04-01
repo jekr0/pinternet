@@ -37,7 +37,7 @@ class CreateCollectionComponent {
 
         this.input = document.createElement('input');
         this.input.type = 'text';
-        this.input.className = 'auth__input create-collection__input';
+        this.input.className = 'create-collection__input';
         this.input.placeholder = 'Создать коллекцию';
 
         const actions = document.createElement('div');
@@ -45,7 +45,7 @@ class CreateCollectionComponent {
 
         this.cancelButton = document.createElement('button');
         this.cancelButton.type = 'button';
-        this.cancelButton.className = 'auth__button auth__button--back';
+        this.cancelButton.className = 'create-collection__button create-collection__button--cancel';
         this.cancelButton.textContent = 'Отмена';
         this.cancelButton.addEventListener('click', () => {
             this.close();
@@ -53,7 +53,7 @@ class CreateCollectionComponent {
 
         this.createButton = document.createElement('button');
         this.createButton.type = 'button';
-        this.createButton.className = 'auth__button auth__button--submit';
+        this.createButton.className = 'create-collection__button create-collection__button--create';
         this.createButton.textContent = 'Создать';
         this.createButton.addEventListener('click', async () => {
             await this.createCollection();
