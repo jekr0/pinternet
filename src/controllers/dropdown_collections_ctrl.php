@@ -24,6 +24,10 @@ if ($path === '/posts/bookmark/board-toggle') {
     handleBookmarkBoardToggle($pdo, $userId);
 }
 
+if ($path === '/posts/bookmark/board-create') {
+    handleBookmarkBoardCreate($pdo, $userId);
+}
+
 if ($path === '/posts/bookmark/clear') {
     handleBookmarkClear($pdo, $userId);
 }
@@ -132,6 +136,47 @@ function handleBookmarkClear(PDO $pdo, int $userId): never
     }
 
     jsonResponse(['success' => true]);
+}
+
+function handleBookmarkBoardCreate(PDO $pdo, int $userId): never
+{
+    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+        jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод.'], 405);
+    }
+
+    $postId = (int) ($_POST['post_id'] ?? 0);
+    $boardName = normalizeBoardName(trim((string) ($_POST['board'] ?? '')));
+    if ($postId <= 0 || $boardName === '') {
+        jsonResponse(['success' => false, 'error' => 'Некорректные параметры.'], 422);
+    }
+
+    try {
+        $pdo->beginTransaction();
+
+        $boardId = findBoardId($pdo, $userId, $boardName);
+        if ($boardId === null) {
+            $boardId = createBoard($pdo, $userId, $boardName);
+        }
+
+        $existsStmt = $pdo->prepare('SELECT id FROM Saved_Posts WHERE user_id = ? AND post_id = ? AND board_id = ? LIMIT 1');
+        $existsStmt->execute([$userId, $postId, $boardId]);
+        $savedId = $existsStmt->fetchColumn();
+
+        if ($savedId === false) {
+            $insertStmt = $pdo->prepare('INSERT INTO Saved_Posts (user_id, post_id, board_id) VALUES (?, ?, ?)');
+            $insertStmt->execute([$userId, $postId, $boardId]);
+        }
+
+        $pdo->commit();
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        error_log('Bookmark board create error: ' . $e->getMessage());
+        jsonResponse(['success' => false, 'error' => 'Не удалось создать коллекцию.'], 500);
+    }
+
+    jsonResponse(['success' => true, 'board' => $boardName]);
 }
 
 function normalizeBoardName(string $name): string

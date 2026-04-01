@@ -1,0 +1,84 @@
+/* ---------------------------- Create collection ---------------------------- */
+
+.create-collection {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(17, 17, 17, 0.14);
+    backdrop-filter: blur(6px);
+}
+
+.create-collection--hidden {
+    display: none;
+}
+
+.create-collection__panel {
+    width: 420px;
+    padding: 20px;
+    box-sizing: border-box;
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 2px 3px rgba(0,0,0,0.07);
+}
+
+.create-collection__input {
+    width: 100%;
+    height: 50px;
+    padding: 0 14px;
+    box-sizing: border-box;
+    outline: none;
+    font-family: 'SF_def', Arial, sans-serif;
+    font-size: 16px;
+    color: #333;
+    background: #fff;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 10px;
+    transition: border-color 0.2s ease;
+}
+
+.create-collection__input::placeholder {
+    color: #bbb;
+}
+
+.create-collection__input:focus {
+    border-color: rgb(100, 100, 200);
+}
+
+.create-collection__actions {
+    margin-top: 10px;
+    display: flex;
+    gap: 10px;
+}
+
+.create-collection__button {
+    flex: 1 1 auto;
+    height: 50px;
+    border: none;
+    border-radius: 10px;
+    font-family: 'SF_def', Arial, sans-serif;
+    font-size: 16px;
+    cursor: pointer;
+    transition: border-color 0.2s ease, opacity 0.2s ease;
+}
+
+.create-collection__button--cancel {
+    background: #fff;
+    border: 1.5px solid #e0e0e0;
+    color: #555;
+}
+
+.create-collection__button--cancel:hover {
+    border-color: rgb(100, 100, 200);
+}
+
+.create-collection__button--create {
+    background: rgb(100, 100, 200);
+    color: #fff;
+}
+
+.create-collection__button--create:hover {
+    opacity: 0.8;
+}
