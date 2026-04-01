@@ -1,8 +1,9 @@
-/* --------------------------- Модуль dropdown-board --------------------------- */
+/* ------------------------ Модуль dropdown-collections ------------------------ */
 
-class DropdownBoardComponent {
+class DropdownCollectionsComponent {
     constructor() {
         this.dropdown = null;
+        this.title = null;
         this.list = null;
         this.clearButton = null;
         this.activeButton = null;
@@ -17,7 +18,7 @@ class DropdownBoardComponent {
     init() {
         this.createDropdown();
 
-        document.addEventListener('dropdown-board:open', async (event) => {
+        document.addEventListener('dropdown-collections:open', async (event) => {
             const button = event.detail?.button;
             const card = event.detail?.card;
             const postId = Number(event.detail?.postId || 0);
@@ -32,31 +33,42 @@ class DropdownBoardComponent {
             this.positionToButton(button);
             this.open();
         });
+
+        document.addEventListener('create-collection:created', async (event) => {
+            const postId = Number(event.detail?.postId || 0);
+            if (!postId || postId !== this.activePostId) return;
+
+            await this.loadBoards();
+            document.dispatchEvent(new CustomEvent('post-card:bookmark-updated', {
+                detail: { postId: this.activePostId, bookmarked: true }
+            }));
+            this.reposition();
+        });
     }
 
     createDropdown() {
         if (this.dropdown) return;
 
         this.dropdown = document.createElement('div');
-        this.dropdown.className = 'dropdown-board';
+        this.dropdown.className = 'dropdown-collections';
         this.dropdown.setAttribute('aria-hidden', 'true');
 
-        const title = document.createElement('h3');
-        title.className = 'dropdown-board__title';
-        title.textContent = 'Сохранить в коллекцию';
+        this.title = document.createElement('h3');
+        this.title.className = 'dropdown-collections__title';
+        this.title.textContent = 'Сохранить пост';
 
         this.list = document.createElement('ul');
-        this.list.className = 'dropdown-board__collection-list';
+        this.list.className = 'dropdown-collections__collection-list';
 
         this.clearButton = document.createElement('button');
         this.clearButton.type = 'button';
-        this.clearButton.className = 'dropdown-board__clear-button';
-        this.clearButton.textContent = 'удалить';
+        this.clearButton.className = 'dropdown-collections__clear-button';
+        this.clearButton.textContent = 'Удалить';
         this.clearButton.addEventListener('click', async () => {
             await this.clearPost();
         });
 
-        this.dropdown.appendChild(title);
+        this.dropdown.appendChild(this.title);
         this.dropdown.appendChild(this.list);
         this.dropdown.appendChild(this.clearButton);
         document.body.appendChild(this.dropdown);
@@ -64,7 +76,7 @@ class DropdownBoardComponent {
 
     open() {
         if (!this.dropdown) return;
-        this.dropdown.classList.remove('dropdown-board--closing');
+        this.dropdown.classList.remove('dropdown-collections--closing');
         this.dropdown.classList.add('is-open');
         this.dropdown.setAttribute('aria-hidden', 'false');
 
@@ -78,7 +90,7 @@ class DropdownBoardComponent {
         if (!this.dropdown) return;
 
         this.dropdown.classList.remove('is-open');
-        this.dropdown.classList.add('dropdown-board--closing');
+        this.dropdown.classList.add('dropdown-collections--closing');
         this.dropdown.setAttribute('aria-hidden', 'true');
 
         this.activeCard?.classList.remove('post-card--dropdown-open');
@@ -101,8 +113,8 @@ class DropdownBoardComponent {
         if (!this.dropdown) return;
 
         const rect = button.getBoundingClientRect();
-        const width = this.dropdown.offsetWidth || 200;
-        const height = this.dropdown.offsetHeight || 300;
+        const width = this.dropdown.offsetWidth || 220;
+        const height = this.dropdown.offsetHeight || 170;
         const spacing = 5;
         const viewportPadding = 10;
 
@@ -148,7 +160,7 @@ class DropdownBoardComponent {
             const item = document.createElement('li');
             const button = document.createElement('button');
             button.type = 'button';
-            button.className = 'dropdown-board__collection-item';
+            button.className = 'dropdown-collections__collection-item';
             button.textContent = boardName === 'Profile' ? 'Профиль' : boardName;
             button.dataset.board = boardName;
             button.classList.toggle('is-selected', !!boardData?.is_saved);
@@ -163,8 +175,14 @@ class DropdownBoardComponent {
         const addItem = document.createElement('li');
         const addButton = document.createElement('button');
         addButton.type = 'button';
-        addButton.className = 'dropdown-board__collection-item dropdown-board__collection-item--add';
+        addButton.className = 'dropdown-collections__collection-item dropdown-collections__collection-item--add';
         addButton.textContent = '+';
+        addButton.addEventListener('click', () => {
+            if (!this.activePostId) return;
+            document.dispatchEvent(new CustomEvent('create-collection:open', {
+                detail: { postId: this.activePostId }
+            }));
+        });
         addItem.appendChild(addButton);
         this.list.appendChild(addItem);
     }
@@ -196,7 +214,10 @@ class DropdownBoardComponent {
                 document.dispatchEvent(new CustomEvent('post-card:bookmark-updated', {
                     detail: { postId: this.activePostId, bookmarked: false }
                 }));
-                this.close();
+            } else {
+                document.dispatchEvent(new CustomEvent('post-card:bookmark-updated', {
+                    detail: { postId: this.activePostId, bookmarked: true }
+                }));
             }
         } catch (error) {
             console.warn('Unable to toggle board', error);
@@ -242,4 +263,4 @@ class DropdownBoardComponent {
     }
 }
 
-App.register('dropdown_board.js', DropdownBoardComponent);
+App.register('dropdown_collections.js', DropdownCollectionsComponent);
