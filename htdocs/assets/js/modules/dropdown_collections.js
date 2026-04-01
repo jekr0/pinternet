@@ -6,10 +6,6 @@ class DropdownCollectionsComponent {
         this.title = null;
         this.list = null;
         this.clearButton = null;
-        this.addCollectionPanel = null;
-        this.addCollectionInput = null;
-        this.addCollectionCancelButton = null;
-        this.addCollectionCreateButton = null;
         this.activeButton = null;
         this.activeCard = null;
         this.activePostId = 0;
@@ -33,10 +29,20 @@ class DropdownCollectionsComponent {
             this.activePostId = postId;
             this.activeCard.classList.add('post-card--dropdown-open');
 
-            this.hideAddCollectionPanel();
             await this.loadBoards();
             this.positionToButton(button);
             this.open();
+        });
+
+        document.addEventListener('create-collection:created', async (event) => {
+            const postId = Number(event.detail?.postId || 0);
+            if (!postId || postId !== this.activePostId) return;
+
+            await this.loadBoards();
+            document.dispatchEvent(new CustomEvent('post-card:bookmark-updated', {
+                detail: { postId: this.activePostId, bookmarked: true }
+            }));
+            this.reposition();
         });
     }
 
@@ -49,7 +55,7 @@ class DropdownCollectionsComponent {
 
         this.title = document.createElement('h3');
         this.title.className = 'dropdown-collections__title';
-        this.title.textContent = 'Сохранить в коллекцию';
+        this.title.textContent = 'Сохранить пост';
 
         this.list = document.createElement('ul');
         this.list.className = 'dropdown-collections__collection-list';
@@ -62,57 +68,8 @@ class DropdownCollectionsComponent {
             await this.clearPost();
         });
 
-        this.addCollectionPanel = document.createElement('div');
-        this.addCollectionPanel.className = 'dropdown-collections__add-collection dropdown-collections__add-collection--hidden';
-
-        this.addCollectionInput = document.createElement('input');
-        this.addCollectionInput.type = 'text';
-        this.addCollectionInput.className = 'create-post-modal__input create-post-modal__input--collection dropdown-collections__add-input';
-        this.addCollectionInput.placeholder = 'Новая коллекция';
-
-        this.addCollectionCancelButton = document.createElement('button');
-        this.addCollectionCancelButton.type = 'button';
-        this.addCollectionCancelButton.className = 'create-post-modal__button create-post-modal__button--cancel';
-        this.addCollectionCancelButton.textContent = 'Отмена';
-        this.addCollectionCancelButton.addEventListener('click', () => {
-            this.hideAddCollectionPanel();
-        });
-
-        this.addCollectionCreateButton = document.createElement('button');
-        this.addCollectionCreateButton.type = 'button';
-        this.addCollectionCreateButton.className = 'create-post-modal__button create-post-modal__button--submit';
-        this.addCollectionCreateButton.textContent = 'Создать';
-        this.addCollectionCreateButton.addEventListener('click', async () => {
-            await this.createCollection();
-        });
-
-        this.addCollectionInput.addEventListener('input', () => {
-            const normalized = this.addCollectionInput.value
-                .replace(/[^a-zа-яё0-9_ ]/gi, '')
-                .slice(0, 32);
-            if (normalized !== this.addCollectionInput.value) {
-                this.addCollectionInput.value = normalized;
-            }
-        });
-
-        this.addCollectionInput.addEventListener('keydown', async (event) => {
-            if (event.key === 'Enter') {
-                event.preventDefault();
-                await this.createCollection();
-            }
-        });
-
-        const addActions = document.createElement('div');
-        addActions.className = 'dropdown-collections__add-actions';
-        addActions.appendChild(this.addCollectionCancelButton);
-        addActions.appendChild(this.addCollectionCreateButton);
-
-        this.addCollectionPanel.appendChild(this.addCollectionInput);
-        this.addCollectionPanel.appendChild(addActions);
-
         this.dropdown.appendChild(this.title);
         this.dropdown.appendChild(this.list);
-        this.dropdown.appendChild(this.addCollectionPanel);
         this.dropdown.appendChild(this.clearButton);
         document.body.appendChild(this.dropdown);
     }
@@ -136,7 +93,6 @@ class DropdownCollectionsComponent {
         this.dropdown.classList.add('dropdown-collections--closing');
         this.dropdown.setAttribute('aria-hidden', 'true');
 
-        this.hideAddCollectionPanel();
         this.activeCard?.classList.remove('post-card--dropdown-open');
         this.activeButton = null;
         this.activeCard = null;
@@ -222,7 +178,10 @@ class DropdownCollectionsComponent {
         addButton.className = 'dropdown-collections__collection-item dropdown-collections__collection-item--add';
         addButton.textContent = '+';
         addButton.addEventListener('click', () => {
-            this.showAddCollectionPanel();
+            if (!this.activePostId) return;
+            document.dispatchEvent(new CustomEvent('create-collection:open', {
+                detail: { postId: this.activePostId }
+            }));
         });
         addItem.appendChild(addButton);
         this.list.appendChild(addItem);
@@ -265,69 +224,6 @@ class DropdownCollectionsComponent {
         }
     }
 
-    async createCollection() {
-        if (!this.activePostId || !this.addCollectionInput) return;
-
-        const boardName = this.addCollectionInput.value.trim();
-        if (!boardName) return;
-
-        this.addCollectionCreateButton.disabled = true;
-
-        try {
-            const response = await fetch('/posts/bookmark/board-create', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
-                    'Accept': 'application/json'
-                },
-                body: new URLSearchParams({
-                    post_id: String(this.activePostId),
-                    board: boardName
-                }).toString()
-            });
-
-            const payload = await response.json();
-            if (!response.ok || !payload.success) return;
-
-            await this.loadBoards();
-            this.hideAddCollectionPanel();
-            document.dispatchEvent(new CustomEvent('post-card:bookmark-updated', {
-                detail: { postId: this.activePostId, bookmarked: true }
-            }));
-        } catch (error) {
-            console.warn('Unable to create board', error);
-        } finally {
-            this.addCollectionCreateButton.disabled = false;
-        }
-    }
-
-    showAddCollectionPanel() {
-        if (!this.addCollectionPanel || !this.list || !this.clearButton || !this.title) return;
-
-        this.addCollectionInput.value = '';
-        this.list.classList.add('dropdown-collections__collection-list--hidden');
-        this.clearButton.classList.add('dropdown-collections__clear-button--hidden');
-        this.title.textContent = 'Новая коллекция';
-        this.addCollectionPanel.classList.remove('dropdown-collections__add-collection--hidden');
-
-        requestAnimationFrame(() => {
-            this.addCollectionInput?.focus();
-            this.reposition();
-        });
-    }
-
-    hideAddCollectionPanel() {
-        if (!this.addCollectionPanel || !this.list || !this.clearButton || !this.title) return;
-
-        this.title.textContent = 'Сохранить в коллекцию';
-        this.addCollectionPanel.classList.add('dropdown-collections__add-collection--hidden');
-        this.list.classList.remove('dropdown-collections__collection-list--hidden');
-        this.clearButton.classList.remove('dropdown-collections__clear-button--hidden');
-        if (this.addCollectionInput) {
-            this.addCollectionInput.value = '';
-        }
-    }
-
     async clearPost() {
         if (!this.activePostId) return;
 
@@ -362,10 +258,6 @@ class DropdownCollectionsComponent {
 
     handleEscape(event) {
         if (event.key === 'Escape') {
-            if (!this.addCollectionPanel?.classList.contains('dropdown-collections__add-collection--hidden')) {
-                this.hideAddCollectionPanel();
-                return;
-            }
             this.close();
         }
     }

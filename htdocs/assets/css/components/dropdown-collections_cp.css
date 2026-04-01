@@ -119,8 +119,8 @@
 .dropdown-collections__clear-button {
     width: 100%;
     height: 40px;
-    margin-top: 10px;
-    margin-bottom: 10px;
+    margin-top: 5px;
+    margin-bottom: 5px;
     border: 1.5px solid #e0e0e0;
     border-radius: 5px;
     background: #fff;
@@ -131,32 +131,6 @@
     transition: border-color 0.2s ease, opacity 0.2s ease;
 }
 
-.dropdown-collections__clear-button--hidden {
-    display: none;
-}
-
 .dropdown-collections__clear-button:hover {
     border-color: rgb(100, 100, 200);
-}
-
-.dropdown-collections__add-collection {
-    width: 100%;
-    margin: 10px 0;
-}
-
-.dropdown-collections__add-collection--hidden {
-    display: none;
-}
-
-.dropdown-collections__add-input {
-    margin-bottom: 10px;
-}
-
-.dropdown-collections__add-actions {
-    display: flex;
-    gap: 8px;
-}
-
-.dropdown-collections__add-actions .create-post-modal__button {
-    flex: 1 1 auto;
 }

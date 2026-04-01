@@ -36,6 +36,7 @@ switch ($path) {
             'create-post-modal_cp.css',
             'post-card_cp.css',
             'dropdown-collections_cp.css',
+            'create-collection_cp.css',
             'home_pg.css',
             'footer_lo.css'
         ];
@@ -45,6 +46,7 @@ switch ($path) {
             'create_post_modal.js',
             'post_card.js',
             'dropdown_collections.js',
+            'create_collection.js',
             'masonry_feed.js',
             'adaptive_text.js'
         ];
