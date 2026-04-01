@@ -63,7 +63,7 @@ class DropdownCollectionsComponent {
         this.clearButton = document.createElement('button');
         this.clearButton.type = 'button';
         this.clearButton.className = 'dropdown-collections__clear-button';
-        this.clearButton.textContent = 'Удалить';
+        this.clearButton.textContent = 'удалить';
         this.clearButton.addEventListener('click', async () => {
             await this.clearPost();
         });

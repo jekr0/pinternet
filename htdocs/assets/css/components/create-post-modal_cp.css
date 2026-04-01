@@ -454,7 +454,7 @@
     opacity: 1;
     visibility: visible;
     pointer-events: auto;
-    transition: opacity 0.5s ease, visibility 0.5s ease;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
 }
 
 .create-post-modal__confirm--hidden {
