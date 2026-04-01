@@ -38,7 +38,7 @@
                 <textarea
                     class="create-post-modal__input create-post-modal__input--description"
                     name="post-description"
-                    placeholder="Добавьте описание к посту"
+                    placeholder="Добавить описание к посту"
                     autocomplete="off"
                     maxlength="256"
                     data-component="post-description"
