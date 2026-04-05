@@ -200,8 +200,10 @@ class PostCardComponent {
             }
 
             shareButton.classList.add('is-copied');
+            this.setShareIcon(shareButton, true);
             const timer = setTimeout(() => {
                 shareButton.classList.remove('is-copied');
+                this.setShareIcon(shareButton, false);
                 this.shareActiveTimers.delete(shareButton);
             }, 1000);
 
@@ -238,6 +240,18 @@ class PostCardComponent {
 
             console.warn('Unable to copy post link', error);
         }
+    }
+
+    setShareIcon(button, isFilled) {
+        const icon = button.querySelector('[data-icon="share"]');
+        if (!icon) return;
+
+        const iconPath = isFilled
+            ? 'assets/images/icons/share-fill.svg'
+            : 'assets/images/icons/share.svg';
+
+        icon.setAttribute('data-svg-src', iconPath);
+        App.utils.loadSVG(iconPath, icon);
     }
 
     showToast(message) {

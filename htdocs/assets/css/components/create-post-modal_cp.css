@@ -176,6 +176,7 @@
     z-index: 2;
     border-bottom-left-radius: 0px;
     border-bottom-right-radius: 0px;
+    cursor: default;
 }
 
 .create-post-modal__collection-list {
@@ -213,7 +214,7 @@
     font-size: 16px;
     color: #333;
     cursor: pointer;
-    transition: background 0.2s ease;
+    transition: background 0.1s ease, color 0.1s ease;
 }
 
 .create-post-modal__collection-list button:hover {
@@ -222,10 +223,19 @@
 
 .create-post-modal__collection-list button.is-selected {
     color: rgb(100, 100, 200);
+    background: rgba(100, 100, 200, 0.07);
 }
 
 .create-post-modal__collection-list button[data-is-profile="1"] {
-    color: rgb(100, 100, 200);
+    color: #999;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.create-post-modal__collection-add-button {
+    text-align: center !important;
+    font-size: 20px !important;
+    color: #bbb !important;
 }
 
 .create-post-modal__collection-add-button {

@@ -34,7 +34,7 @@ class CreatePostModalComponent {
         this.alertFadeTimer = null;
         this.successHideTimer = null;
         this.successFadeTimer = null;
-        this.selectedCollectionName = '';
+        this.selectedCollections = [];
 
         // Upload constraints/state
         this.maxFileSize = 20 * 1024 * 1024;
@@ -140,7 +140,6 @@ class CreatePostModalComponent {
 
     bindCollectionHandlers() {
         if (!this.collectionTrigger) return;
-
         this.attachCollectionItemHandlers();
 
         this.collectionTrigger.addEventListener('input', () => {
@@ -314,22 +313,37 @@ class CreatePostModalComponent {
     attachCollectionItemHandlers() {
         this.collectionItems.forEach((item) => {
             item.addEventListener('click', () => {
-                this.selectCollection(item.textContent.trim());
+                const collectionName = item.textContent.trim();
+                if (!collectionName || collectionName === 'Профиль') return;
+                this.toggleCollection(collectionName);
             });
         });
     }
 
-    selectCollection(collectionName) {
-        this.selectedCollectionName = collectionName;
-        if (this.collectionTrigger) {
-            this.collectionTrigger.value = collectionName;
+    toggleCollection(collectionName) {
+        const collectionIndex = this.selectedCollections.indexOf(collectionName);
+        if (collectionIndex === -1) {
+            this.selectedCollections.push(collectionName);
+        } else {
+            this.selectedCollections.splice(collectionIndex, 1);
         }
+        this.updateCollectionFieldValue();
         this.updateCollectionSelectionUI();
+    }
+
+    updateCollectionFieldValue() {
+        if (!this.collectionTrigger) return;
+        if (this.selectedCollections.length === 0) {
+            this.collectionTrigger.value = '';
+            return;
+        }
+        this.collectionTrigger.value = ['Профиль', ...this.selectedCollections].join(', ');
     }
 
     updateCollectionSelectionUI() {
         this.collectionItems.forEach((item) => {
-            item.classList.toggle('is-selected', item.textContent.trim() === this.selectedCollectionName);
+            const collectionName = item.textContent.trim();
+            item.classList.toggle('is-selected', this.selectedCollections.includes(collectionName));
         });
     }
 
@@ -363,6 +377,13 @@ class CreatePostModalComponent {
 
             this.collectionItems = Array.from(this.modal.querySelectorAll('[data-component="post-collection-item"]'));
             this.attachCollectionItemHandlers();
+            if (boardToSelect) {
+                const normalizedBoard = boardToSelect === 'Profile' ? 'Профиль' : boardToSelect;
+                if (normalizedBoard !== 'Профиль' && !this.selectedCollections.includes(normalizedBoard)) {
+                    this.selectedCollections.push(normalizedBoard);
+                }
+            }
+            this.updateCollectionFieldValue();
             this.updateCollectionSelectionUI();
 
             const addButton = this.modal.querySelector('[data-component="post-collection-add-button"]');
@@ -374,10 +395,6 @@ class CreatePostModalComponent {
                 });
             }
 
-            const targetBoard = boardToSelect.trim();
-            if (targetBoard) {
-                this.selectCollection(targetBoard === 'Profile' ? 'Профиль' : targetBoard);
-            }
         } catch (error) {
             console.warn('Unable to load boards list', error);
         }
@@ -395,7 +412,8 @@ class CreatePostModalComponent {
         this.tags = [];
         this.renderTags();
         this.collectionTrigger.value = '';
-        this.selectedCollectionName = '';
+        this.selectedCollections = [];
+        this.updateCollectionFieldValue();
         this.updateCollectionSelectionUI();
         this.descriptionCounter.textContent = '0/256';
         this.hideAlert();
@@ -407,7 +425,7 @@ class CreatePostModalComponent {
         const formData = new FormData();
         formData.append('image', this.currentFile);
         formData.append('description', this.descriptionField?.value.trim() ?? '');
-        formData.append('collection', this.selectedCollectionName || this.collectionTrigger?.value.trim() || '');
+        formData.append('collection', this.selectedCollections.join(','));
         formData.append('tags', this.tags.join(' '));
         return formData;
     }
