@@ -577,11 +577,6 @@
     height: 100%;
 }
 
-.create-post-modal__upload-icon svg * {
-    fill: currentColor;
-    stroke: currentColor;
-}
-
 .create-post-modal__upload-label {
     font-family: 'SF_def', Arial, sans-serif;
     font-size: 16px;

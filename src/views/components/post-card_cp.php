@@ -35,7 +35,11 @@
 
     <div class="post-card__actions" aria-label="Действия с постом">
         <button class="post-card__action-button" type="button" data-action="like" aria-label="Лайк">
-            <span class="post-card__icon" data-icon="heart" data-svg-src="assets/images/icons/heart.svg"></span>
+            <span
+                class="post-card__icon"
+                data-icon="heart"
+                data-svg-src="<?php echo $isLiked ? 'assets/images/icons/heart-fill.svg' : 'assets/images/icons/heart.svg'; ?>"
+            ></span>
         </button>
 
         <button
