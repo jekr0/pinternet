@@ -238,6 +238,12 @@
     color: #bbb !important;
 }
 
+.create-post-modal__collection-add-button {
+    text-align: center !important;
+    font-size: 20px !important;
+    color: #bbb !important;
+}
+
 .create-post-modal__tags-wrap {
     position: absolute;
     top: 430px;
@@ -583,7 +589,7 @@
 .create-post-modal__upload-icon {
     width: 52px;
     height: 52px;
-    color: #555;
+    color: #999;
 }
 
 .create-post-modal__upload-icon svg {

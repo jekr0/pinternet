@@ -141,6 +141,14 @@ class CreatePostModalComponent {
     bindCollectionHandlers() {
         if (!this.collectionTrigger) return;
         this.attachCollectionItemHandlers();
+
+        this.collectionTrigger.addEventListener('input', () => {
+            const typedValue = this.collectionTrigger.value.trim();
+            if (typedValue !== this.selectedCollectionName) {
+                this.selectedCollectionName = '';
+                this.updateCollectionSelectionUI();
+            }
+        });
     }
 
     bindDescriptionHandlers() {
