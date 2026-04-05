@@ -53,6 +53,7 @@ class PostCardComponent {
 
         if (likeButton && card.dataset.liked === '1') {
             likeButton.classList.add('is-active');
+            this.setLikeIcon(likeButton, true);
         }
 
         if (bookmarkButton) {
@@ -118,9 +119,22 @@ class PostCardComponent {
             const isLiked = !!payload.liked;
             card.dataset.liked = isLiked ? '1' : '0';
             button.classList.toggle('is-active', isLiked);
+            this.setLikeIcon(button, isLiked);
         } catch (error) {
             console.warn('Unable to toggle like', error);
         }
+    }
+
+    setLikeIcon(button, isLiked) {
+        const icon = button.querySelector('[data-icon="heart"]');
+        if (!icon) return;
+
+        const iconPath = isLiked
+            ? 'assets/images/icons/heart-fill.svg'
+            : 'assets/images/icons/heart.svg';
+
+        icon.setAttribute('data-svg-src', iconPath);
+        App.utils.loadSVG(iconPath, icon);
     }
 
     async handleBookmark(card, button) {
