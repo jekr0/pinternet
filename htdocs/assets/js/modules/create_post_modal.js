@@ -34,6 +34,7 @@ class CreatePostModalComponent {
         this.alertFadeTimer = null;
         this.successHideTimer = null;
         this.successFadeTimer = null;
+        this.selectedCollections = [];
 
         // Upload constraints/state
         this.maxFileSize = 20 * 1024 * 1024;
@@ -87,6 +88,12 @@ class CreatePostModalComponent {
         this.bindCollectionConfirmHandlers();
         this.bindSubmitHandlers();
         this.bindCloseHandlers();
+
+        document.addEventListener('create-collection:created', async (event) => {
+            if (event.detail?.source !== 'create-post-modal') return;
+            const createdBoard = String(event.detail?.board || '').trim();
+            await this.loadBoards(createdBoard);
+        });
     }
 
     bindOpenHandlers() {
@@ -133,7 +140,6 @@ class CreatePostModalComponent {
 
     bindCollectionHandlers() {
         if (!this.collectionTrigger) return;
-
         this.attachCollectionItemHandlers();
     }
 
@@ -251,18 +257,22 @@ class CreatePostModalComponent {
     }
 
     open() {
+        if (!this.modal.classList.contains('create-post-modal--hidden')) return;
         this.modal.classList.remove('create-post-modal--hidden');
         this.modal.setAttribute('aria-hidden', 'false');
+        App.utils.lockBodyScroll();
         this.loadBoards();
     }
 
     close() {
+        if (this.modal.classList.contains('create-post-modal--hidden')) return;
         this.hideCollectionConfirm();
         this.hideAlert();
         this.hideSuccessToast();
         this.hideTagSuggestions();
         this.modal.classList.add('create-post-modal--hidden');
         this.modal.setAttribute('aria-hidden', 'true');
+        App.utils.unlockBodyScroll();
     }
 
     handleFile(file) {
@@ -295,12 +305,41 @@ class CreatePostModalComponent {
     attachCollectionItemHandlers() {
         this.collectionItems.forEach((item) => {
             item.addEventListener('click', () => {
-                this.collectionTrigger.value = item.textContent.trim();
+                const collectionName = item.textContent.trim();
+                if (!collectionName || collectionName === 'Профиль') return;
+                this.toggleCollection(collectionName);
             });
         });
     }
 
-    async loadBoards() {
+    toggleCollection(collectionName) {
+        const collectionIndex = this.selectedCollections.indexOf(collectionName);
+        if (collectionIndex === -1) {
+            this.selectedCollections.push(collectionName);
+        } else {
+            this.selectedCollections.splice(collectionIndex, 1);
+        }
+        this.updateCollectionFieldValue();
+        this.updateCollectionSelectionUI();
+    }
+
+    updateCollectionFieldValue() {
+        if (!this.collectionTrigger) return;
+        if (this.selectedCollections.length === 0) {
+            this.collectionTrigger.value = '';
+            return;
+        }
+        this.collectionTrigger.value = ['Профиль', ...this.selectedCollections].join(', ');
+    }
+
+    updateCollectionSelectionUI() {
+        this.collectionItems.forEach((item) => {
+            const collectionName = item.textContent.trim();
+            item.classList.toggle('is-selected', this.selectedCollections.includes(collectionName));
+        });
+    }
+
+    async loadBoards(boardToSelect = '') {
         if (!this.collectionList || !this.collectionTrigger) return;
 
         try {
@@ -312,18 +351,42 @@ class CreatePostModalComponent {
             if (!response.ok) return;
 
             const payload = await response.json();
-            if (!payload.success || !Array.isArray(payload.boards) || payload.boards.length === 0) return;
+            if (!payload.success || !Array.isArray(payload.boards)) return;
 
             const localizedBoards = payload.boards.map((board) => (
                 board === 'Profile' ? 'Профиль' : board
             ));
+            const hasProfileBoard = localizedBoards.includes('Профиль');
+            if (!hasProfileBoard) {
+                localizedBoards.unshift('Профиль');
+            }
 
             this.collectionList.innerHTML = localizedBoards.map((board) => (
                 `<li><button type="button" data-component="post-collection-item" ${board === 'Профиль' ? 'data-is-profile="1"' : ''}>${board}</button></li>`
-            )).join('');
+            )).join('') + `
+                <li><button type="button" class="create-post-modal__collection-add-button" data-component="post-collection-add-button">+</button></li>
+            `;
 
             this.collectionItems = Array.from(this.modal.querySelectorAll('[data-component="post-collection-item"]'));
             this.attachCollectionItemHandlers();
+            if (boardToSelect) {
+                const normalizedBoard = boardToSelect === 'Profile' ? 'Профиль' : boardToSelect;
+                if (normalizedBoard !== 'Профиль' && !this.selectedCollections.includes(normalizedBoard)) {
+                    this.selectedCollections.push(normalizedBoard);
+                }
+            }
+            this.updateCollectionFieldValue();
+            this.updateCollectionSelectionUI();
+
+            const addButton = this.modal.querySelector('[data-component="post-collection-add-button"]');
+            if (addButton) {
+                addButton.addEventListener('click', () => {
+                    document.dispatchEvent(new CustomEvent('create-collection:open', {
+                        detail: { source: 'create-post-modal' }
+                    }));
+                });
+            }
+
         } catch (error) {
             console.warn('Unable to load boards list', error);
         }
@@ -341,6 +404,9 @@ class CreatePostModalComponent {
         this.tags = [];
         this.renderTags();
         this.collectionTrigger.value = '';
+        this.selectedCollections = [];
+        this.updateCollectionFieldValue();
+        this.updateCollectionSelectionUI();
         this.descriptionCounter.textContent = '0/256';
         this.hideAlert();
         this.hideSuccessToast();
@@ -351,7 +417,7 @@ class CreatePostModalComponent {
         const formData = new FormData();
         formData.append('image', this.currentFile);
         formData.append('description', this.descriptionField?.value.trim() ?? '');
-        formData.append('collection', this.collectionTrigger?.value.trim() || '');
+        formData.append('collection', this.selectedCollections.join(','));
         formData.append('tags', this.tags.join(' '));
         return formData;
     }

@@ -53,6 +53,7 @@ class PostCardComponent {
 
         if (likeButton && card.dataset.liked === '1') {
             likeButton.classList.add('is-active');
+            this.setLikeIcon(likeButton, true);
         }
 
         if (bookmarkButton) {
@@ -118,9 +119,22 @@ class PostCardComponent {
             const isLiked = !!payload.liked;
             card.dataset.liked = isLiked ? '1' : '0';
             button.classList.toggle('is-active', isLiked);
+            this.setLikeIcon(button, isLiked);
         } catch (error) {
             console.warn('Unable to toggle like', error);
         }
+    }
+
+    setLikeIcon(button, isLiked) {
+        const icon = button.querySelector('[data-icon="heart"]');
+        if (!icon) return;
+
+        const iconPath = isLiked
+            ? 'assets/images/icons/heart-fill.svg'
+            : 'assets/images/icons/heart.svg';
+
+        icon.setAttribute('data-svg-src', iconPath);
+        App.utils.loadSVG(iconPath, icon);
     }
 
     async handleBookmark(card, button) {
@@ -186,8 +200,10 @@ class PostCardComponent {
             }
 
             shareButton.classList.add('is-copied');
+            this.setShareIcon(shareButton, true);
             const timer = setTimeout(() => {
                 shareButton.classList.remove('is-copied');
+                this.setShareIcon(shareButton, false);
                 this.shareActiveTimers.delete(shareButton);
             }, 1000);
 
@@ -224,6 +240,18 @@ class PostCardComponent {
 
             console.warn('Unable to copy post link', error);
         }
+    }
+
+    setShareIcon(button, isFilled) {
+        const icon = button.querySelector('[data-icon="share"]');
+        if (!icon) return;
+
+        const iconPath = isFilled
+            ? 'assets/images/icons/share-fill.svg'
+            : 'assets/images/icons/share.svg';
+
+        icon.setAttribute('data-svg-src', iconPath);
+        App.utils.loadSVG(iconPath, icon);
     }
 
     showToast(message) {

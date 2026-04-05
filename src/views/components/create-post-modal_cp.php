@@ -58,6 +58,7 @@
                     placeholder="Добавить в коллекцию (&quot;Профиль&quot; по умолчанию)"
                     data-component="post-collection-trigger"
                     maxlength="32"
+                    readonly
                 >
 
                 <ul class="create-post-modal__collection-list" data-component="post-collection-list">

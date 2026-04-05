@@ -127,10 +127,9 @@
     height: 100%;
 }
 
+.post-card__icon svg,
 .post-card__icon svg * {
-    fill: currentColor;
-    stroke: currentColor;
-    transition: fill 0.1s ease, stroke 0.1s ease;
+    transition: fill 0.1s ease;
 }
 
 .post-card__action-button[data-action="like"]:not(.is-active),

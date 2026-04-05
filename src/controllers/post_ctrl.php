@@ -23,6 +23,10 @@ if ($path === '/boards/list') {
     handleBoardsList($pdo, $userId);
 }
 
+if ($path === '/boards/create') {
+    handleBoardsCreate($pdo, $userId);
+}
+
 if ($path === '/posts/bookmark/boards') {
     handleBookmarkBoards($pdo, $userId);
 }
@@ -68,6 +72,34 @@ function handleBoardsList(PDO $pdo, int $userId): never
     }
 
     jsonResponse(['success' => true, 'boards' => $boards]);
+}
+
+function handleBoardsCreate(PDO $pdo, int $userId): never
+{
+    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+        jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод.'], 405);
+    }
+
+    $boardName = trim((string) ($_POST['board'] ?? ''));
+    $boardName = $boardName === 'Профиль' ? 'Profile' : $boardName;
+
+    $validatedBoardName = validateAndNormalizeCollectionName($boardName);
+    if ($validatedBoardName === null) {
+        jsonResponse(['success' => false, 'error' => 'Название коллекции: до 32 символов, только латиница, кириллица, цифры, пробел и "_"'], 422);
+    }
+
+    try {
+        $boardId = findBoardId($pdo, $userId, $validatedBoardName);
+        if ($boardId === null) {
+            createBoard($pdo, $userId, $validatedBoardName);
+        }
+    } catch (Throwable $e) {
+        error_log('Board create error: ' . $e->getMessage());
+        jsonResponse(['success' => false, 'error' => 'Не удалось создать коллекцию.'], 500);
+    }
+
+    $responseBoardName = $validatedBoardName === 'Profile' ? 'Профиль' : $validatedBoardName;
+    jsonResponse(['success' => true, 'board' => $responseBoardName]);
 }
 
 function handleHashtagsSuggest(PDO $pdo): never
@@ -295,7 +327,7 @@ function handleCreatePost(PDO $pdo, int $userId): never
     }
 
     $description = trim((string) ($_POST['description'] ?? ''));
-    $collectionInput = trim((string) ($_POST['collection'] ?? 'Профиль'));
+    $collectionInput = trim((string) ($_POST['collection'] ?? ''));
     $tagsInput = trim((string) ($_POST['tags'] ?? ''));
     $confirmCreateCollection = (string) ($_POST['confirm_create_collection'] ?? '') === '1';
 
@@ -337,8 +369,8 @@ function handleCreatePost(PDO $pdo, int $userId): never
         jsonResponse(['success' => false, 'error' => 'Не удалось сохранить изображение.'], 500);
     }
 
-    $collectionName = validateAndNormalizeCollectionName($collectionInput);
-    if ($collectionName === null) {
+    $collectionNames = parseCollectionNames($collectionInput);
+    if ($collectionNames === null) {
         jsonResponse(['success' => false, 'error' => 'Название коллекции: до 32 символов, только латиница, кириллица, цифры, пробел и "_"'], 422);
     }
 
@@ -354,28 +386,40 @@ function handleCreatePost(PDO $pdo, int $userId): never
             $profileBoardId = createBoard($pdo, $userId, 'Profile');
         }
 
-        $targetBoardId = findBoardId($pdo, $userId, $collectionName);
-        if ($targetBoardId === null) {
-            if (!$confirmCreateCollection) {
-                $pdo->rollBack();
-                if (is_file($fullPath)) {
-                    @unlink($fullPath);
-                }
-                jsonResponse([
-                    'success' => false,
-                    'requires_collection_creation' => true,
-                    'collection_name' => $collectionName,
-                    'error' => sprintf('Коллекции "%s" не существует.', $collectionName),
-                ], 409);
-            }
-
-            $targetBoardId = createBoard($pdo, $userId, $collectionName);
-        }
-
         $savePost = $pdo->prepare('INSERT IGNORE INTO Saved_Posts (user_id, post_id, board_id) VALUES (?, ?, ?)');
         $savePost->execute([$userId, $postId, $profileBoardId]);
-        if ($targetBoardId !== $profileBoardId) {
-            $savePost->execute([$userId, $postId, $targetBoardId]);
+
+        $missingCollectionName = '';
+        foreach ($collectionNames as $collectionName) {
+            if ($collectionName === 'Profile') {
+                continue;
+            }
+
+            $targetBoardId = findBoardId($pdo, $userId, $collectionName);
+            if ($targetBoardId === null) {
+                if (!$confirmCreateCollection) {
+                    $missingCollectionName = $collectionName;
+                    break;
+                }
+                $targetBoardId = createBoard($pdo, $userId, $collectionName);
+            }
+
+            if ($targetBoardId !== $profileBoardId) {
+                $savePost->execute([$userId, $postId, $targetBoardId]);
+            }
+        }
+
+        if ($missingCollectionName !== '') {
+            $pdo->rollBack();
+            if (is_file($fullPath)) {
+                @unlink($fullPath);
+            }
+            jsonResponse([
+                'success' => false,
+                'requires_collection_creation' => true,
+                'collection_name' => $missingCollectionName,
+                'error' => sprintf('Коллекции "%s" не существует.', $missingCollectionName),
+            ], 409);
         }
 
         $hashtags = parseHashtags($tagsInput);
@@ -447,6 +491,33 @@ function validateAndNormalizeCollectionName(string $value): ?string
 
     if (!preg_match('/^[A-Za-zА-Яа-яЁё0-9_ ]+$/u', $normalized)) {
         return null;
+    }
+
+    return $normalized;
+}
+
+function parseCollectionNames(string $collectionsInput): ?array
+{
+    $rawParts = preg_split('/\s*,\s*/u', $collectionsInput);
+    if (!is_array($rawParts)) {
+        return null;
+    }
+
+    $normalized = ['Profile'];
+    foreach ($rawParts as $rawPart) {
+        $name = trim($rawPart);
+        if ($name === '') {
+            continue;
+        }
+
+        $validatedName = validateAndNormalizeCollectionName($name);
+        if ($validatedName === null) {
+            return null;
+        }
+
+        if (!in_array($validatedName, $normalized, true)) {
+            $normalized[] = $validatedName;
+        }
     }
 
     return $normalized;

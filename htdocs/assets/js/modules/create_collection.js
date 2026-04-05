@@ -7,6 +7,7 @@ class CreateCollectionComponent {
         this.cancelButton = null;
         this.createButton = null;
         this.activePostId = 0;
+        this.openSource = '';
 
         this.handleEscape = this.handleEscape.bind(this);
     }
@@ -16,9 +17,8 @@ class CreateCollectionComponent {
 
         document.addEventListener('create-collection:open', (event) => {
             const postId = Number(event.detail?.postId || 0);
-            if (!postId) return;
-
             this.activePostId = postId;
+            this.openSource = String(event.detail?.source || '');
             this.open();
         });
     }
@@ -91,9 +91,11 @@ class CreateCollectionComponent {
 
     open() {
         if (!this.overlay) return;
+        if (!this.overlay.classList.contains('create-collection--hidden')) return;
 
         this.overlay.classList.remove('create-collection--hidden');
         this.overlay.setAttribute('aria-hidden', 'false');
+        App.utils.lockBodyScroll();
         document.addEventListener('keydown', this.handleEscape);
 
         this.input.value = '';
@@ -104,11 +106,15 @@ class CreateCollectionComponent {
 
     close() {
         if (!this.overlay) return;
+        if (this.overlay.classList.contains('create-collection--hidden')) return;
 
         this.overlay.classList.add('create-collection--hidden');
         this.overlay.setAttribute('aria-hidden', 'true');
+        App.utils.unlockBodyScroll();
         document.removeEventListener('keydown', this.handleEscape);
         this.input.value = '';
+        this.activePostId = 0;
+        this.openSource = '';
     }
 
     handleEscape(event) {
@@ -119,28 +125,37 @@ class CreateCollectionComponent {
 
     async createCollection() {
         const boardName = this.input?.value.trim() || '';
-        if (!boardName || !this.activePostId) return;
+        if (!boardName) return;
 
         this.createButton.disabled = true;
 
         try {
-            const response = await fetch('/posts/bookmark/board-create', {
+            const endpoint = this.activePostId > 0
+                ? '/posts/bookmark/board-create'
+                : '/boards/create';
+            const bodyData = new URLSearchParams({ board: boardName });
+            if (this.activePostId > 0) {
+                bodyData.append('post_id', String(this.activePostId));
+            }
+
+            const response = await fetch(endpoint, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
                     'Accept': 'application/json'
                 },
-                body: new URLSearchParams({
-                    post_id: String(this.activePostId),
-                    board: boardName
-                }).toString()
+                body: bodyData.toString()
             });
 
             const payload = await response.json();
             if (!response.ok || !payload.success) return;
 
             document.dispatchEvent(new CustomEvent('create-collection:created', {
-                detail: { postId: this.activePostId, board: payload.board || boardName }
+                detail: {
+                    postId: this.activePostId,
+                    board: payload.board || boardName,
+                    source: this.openSource
+                }
             }));
             this.close();
         } catch (error) {
