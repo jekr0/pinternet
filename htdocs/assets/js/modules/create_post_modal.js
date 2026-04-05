@@ -34,6 +34,7 @@ class CreatePostModalComponent {
         this.alertFadeTimer = null;
         this.successHideTimer = null;
         this.successFadeTimer = null;
+        this.selectedCollectionName = '';
 
         // Upload constraints/state
         this.maxFileSize = 20 * 1024 * 1024;
@@ -87,6 +88,12 @@ class CreatePostModalComponent {
         this.bindCollectionConfirmHandlers();
         this.bindSubmitHandlers();
         this.bindCloseHandlers();
+
+        document.addEventListener('create-collection:created', async (event) => {
+            if (event.detail?.source !== 'create-post-modal') return;
+            const createdBoard = String(event.detail?.board || '').trim();
+            await this.loadBoards(createdBoard);
+        });
     }
 
     bindOpenHandlers() {
@@ -135,6 +142,14 @@ class CreatePostModalComponent {
         if (!this.collectionTrigger) return;
 
         this.attachCollectionItemHandlers();
+
+        this.collectionTrigger.addEventListener('input', () => {
+            const typedValue = this.collectionTrigger.value.trim();
+            if (typedValue !== this.selectedCollectionName) {
+                this.selectedCollectionName = '';
+                this.updateCollectionSelectionUI();
+            }
+        });
     }
 
     bindDescriptionHandlers() {
@@ -251,18 +266,22 @@ class CreatePostModalComponent {
     }
 
     open() {
+        if (!this.modal.classList.contains('create-post-modal--hidden')) return;
         this.modal.classList.remove('create-post-modal--hidden');
         this.modal.setAttribute('aria-hidden', 'false');
+        App.utils.lockBodyScroll();
         this.loadBoards();
     }
 
     close() {
+        if (this.modal.classList.contains('create-post-modal--hidden')) return;
         this.hideCollectionConfirm();
         this.hideAlert();
         this.hideSuccessToast();
         this.hideTagSuggestions();
         this.modal.classList.add('create-post-modal--hidden');
         this.modal.setAttribute('aria-hidden', 'true');
+        App.utils.unlockBodyScroll();
     }
 
     handleFile(file) {
@@ -295,12 +314,26 @@ class CreatePostModalComponent {
     attachCollectionItemHandlers() {
         this.collectionItems.forEach((item) => {
             item.addEventListener('click', () => {
-                this.collectionTrigger.value = item.textContent.trim();
+                this.selectCollection(item.textContent.trim());
             });
         });
     }
 
-    async loadBoards() {
+    selectCollection(collectionName) {
+        this.selectedCollectionName = collectionName;
+        if (this.collectionTrigger) {
+            this.collectionTrigger.value = collectionName;
+        }
+        this.updateCollectionSelectionUI();
+    }
+
+    updateCollectionSelectionUI() {
+        this.collectionItems.forEach((item) => {
+            item.classList.toggle('is-selected', item.textContent.trim() === this.selectedCollectionName);
+        });
+    }
+
+    async loadBoards(boardToSelect = '') {
         if (!this.collectionList || !this.collectionTrigger) return;
 
         try {
@@ -312,18 +345,39 @@ class CreatePostModalComponent {
             if (!response.ok) return;
 
             const payload = await response.json();
-            if (!payload.success || !Array.isArray(payload.boards) || payload.boards.length === 0) return;
+            if (!payload.success || !Array.isArray(payload.boards)) return;
 
             const localizedBoards = payload.boards.map((board) => (
                 board === 'Profile' ? 'Профиль' : board
             ));
+            const hasProfileBoard = localizedBoards.includes('Профиль');
+            if (!hasProfileBoard) {
+                localizedBoards.unshift('Профиль');
+            }
 
             this.collectionList.innerHTML = localizedBoards.map((board) => (
                 `<li><button type="button" data-component="post-collection-item" ${board === 'Профиль' ? 'data-is-profile="1"' : ''}>${board}</button></li>`
-            )).join('');
+            )).join('') + `
+                <li><button type="button" class="create-post-modal__collection-add-button" data-component="post-collection-add-button">+</button></li>
+            `;
 
             this.collectionItems = Array.from(this.modal.querySelectorAll('[data-component="post-collection-item"]'));
             this.attachCollectionItemHandlers();
+            this.updateCollectionSelectionUI();
+
+            const addButton = this.modal.querySelector('[data-component="post-collection-add-button"]');
+            if (addButton) {
+                addButton.addEventListener('click', () => {
+                    document.dispatchEvent(new CustomEvent('create-collection:open', {
+                        detail: { source: 'create-post-modal' }
+                    }));
+                });
+            }
+
+            const targetBoard = boardToSelect.trim();
+            if (targetBoard) {
+                this.selectCollection(targetBoard === 'Profile' ? 'Профиль' : targetBoard);
+            }
         } catch (error) {
             console.warn('Unable to load boards list', error);
         }
@@ -341,6 +395,8 @@ class CreatePostModalComponent {
         this.tags = [];
         this.renderTags();
         this.collectionTrigger.value = '';
+        this.selectedCollectionName = '';
+        this.updateCollectionSelectionUI();
         this.descriptionCounter.textContent = '0/256';
         this.hideAlert();
         this.hideSuccessToast();
@@ -351,7 +407,7 @@ class CreatePostModalComponent {
         const formData = new FormData();
         formData.append('image', this.currentFile);
         formData.append('description', this.descriptionField?.value.trim() ?? '');
-        formData.append('collection', this.collectionTrigger?.value.trim() || '');
+        formData.append('collection', this.selectedCollectionName || this.collectionTrigger?.value.trim() || '');
         formData.append('tags', this.tags.join(' '));
         return formData;
     }
