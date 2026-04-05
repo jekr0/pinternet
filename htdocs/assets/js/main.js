@@ -59,6 +59,7 @@ const App = {
 
         /* Загрузка SVG из файла и вставка инлайн (с кешированием) */
         _svgCache: {},
+        _bodyScrollLocks: 0,
         loadSVG: function (src, container) {
             if (this._svgCache[src]) {
                 container.innerHTML = this._svgCache[src];
@@ -74,6 +75,18 @@ const App = {
                     container.innerHTML = svg;
                 })
                 .catch(err => console.warn(err));
+        },
+        lockBodyScroll: function () {
+            this._bodyScrollLocks += 1;
+            if (this._bodyScrollLocks === 1) {
+                document.body.classList.add('body--scroll-locked');
+            }
+        },
+        unlockBodyScroll: function () {
+            this._bodyScrollLocks = Math.max(0, this._bodyScrollLocks - 1);
+            if (this._bodyScrollLocks === 0) {
+                document.body.classList.remove('body--scroll-locked');
+            }
         }
     },
 

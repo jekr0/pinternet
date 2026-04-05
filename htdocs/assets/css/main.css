@@ -37,3 +37,7 @@ body {
     font-family: 'SF_def', Arial, sans-serif; /* основной шрифт интерфейса */
     background-color: #f5f5f5;
 }
+
+body.body--scroll-locked {
+    overflow: hidden;
+}

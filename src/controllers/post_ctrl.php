@@ -23,6 +23,10 @@ if ($path === '/boards/list') {
     handleBoardsList($pdo, $userId);
 }
 
+if ($path === '/boards/create') {
+    handleBoardsCreate($pdo, $userId);
+}
+
 if ($path === '/posts/bookmark/boards') {
     handleBookmarkBoards($pdo, $userId);
 }
@@ -68,6 +72,34 @@ function handleBoardsList(PDO $pdo, int $userId): never
     }
 
     jsonResponse(['success' => true, 'boards' => $boards]);
+}
+
+function handleBoardsCreate(PDO $pdo, int $userId): never
+{
+    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+        jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод.'], 405);
+    }
+
+    $boardName = trim((string) ($_POST['board'] ?? ''));
+    $boardName = $boardName === 'Профиль' ? 'Profile' : $boardName;
+
+    $validatedBoardName = validateAndNormalizeCollectionName($boardName);
+    if ($validatedBoardName === null) {
+        jsonResponse(['success' => false, 'error' => 'Название коллекции: до 32 символов, только латиница, кириллица, цифры, пробел и "_"'], 422);
+    }
+
+    try {
+        $boardId = findBoardId($pdo, $userId, $validatedBoardName);
+        if ($boardId === null) {
+            createBoard($pdo, $userId, $validatedBoardName);
+        }
+    } catch (Throwable $e) {
+        error_log('Board create error: ' . $e->getMessage());
+        jsonResponse(['success' => false, 'error' => 'Не удалось создать коллекцию.'], 500);
+    }
+
+    $responseBoardName = $validatedBoardName === 'Profile' ? 'Профиль' : $validatedBoardName;
+    jsonResponse(['success' => true, 'board' => $responseBoardName]);
 }
 
 function handleHashtagsSuggest(PDO $pdo): never
