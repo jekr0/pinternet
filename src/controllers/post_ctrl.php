@@ -329,7 +329,6 @@ function handleCreatePost(PDO $pdo, int $userId): never
     $description = trim((string) ($_POST['description'] ?? ''));
     $collectionInput = trim((string) ($_POST['collection'] ?? ''));
     $tagsInput = trim((string) ($_POST['tags'] ?? ''));
-    $confirmCreateCollection = (string) ($_POST['confirm_create_collection'] ?? '') === '1';
 
     if (mb_strlen($description) > 256) {
         jsonResponse(['success' => false, 'error' => 'Описание не должно превышать 256 символов.'], 422);
@@ -389,7 +388,6 @@ function handleCreatePost(PDO $pdo, int $userId): never
         $savePost = $pdo->prepare('INSERT IGNORE INTO Saved_Posts (user_id, post_id, board_id) VALUES (?, ?, ?)');
         $savePost->execute([$userId, $postId, $profileBoardId]);
 
-        $missingCollectionName = '';
         foreach ($collectionNames as $collectionName) {
             if ($collectionName === 'Profile') {
                 continue;
@@ -397,29 +395,12 @@ function handleCreatePost(PDO $pdo, int $userId): never
 
             $targetBoardId = findBoardId($pdo, $userId, $collectionName);
             if ($targetBoardId === null) {
-                if (!$confirmCreateCollection) {
-                    $missingCollectionName = $collectionName;
-                    break;
-                }
                 $targetBoardId = createBoard($pdo, $userId, $collectionName);
             }
 
             if ($targetBoardId !== $profileBoardId) {
                 $savePost->execute([$userId, $postId, $targetBoardId]);
             }
-        }
-
-        if ($missingCollectionName !== '') {
-            $pdo->rollBack();
-            if (is_file($fullPath)) {
-                @unlink($fullPath);
-            }
-            jsonResponse([
-                'success' => false,
-                'requires_collection_creation' => true,
-                'collection_name' => $missingCollectionName,
-                'error' => sprintf('Коллекции "%s" не существует.', $missingCollectionName),
-            ], 409);
         }
 
         $hashtags = parseHashtags($tagsInput);
