@@ -223,7 +223,6 @@
 
 .create-post-modal__collection-list button.is-selected {
     color: rgb(100, 100, 200);
-    background: rgba(100, 100, 200, 0.07);
 }
 
 .create-post-modal__collection-list button[data-is-profile="1"] {
