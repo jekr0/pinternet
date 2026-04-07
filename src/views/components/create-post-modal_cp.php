@@ -59,6 +59,7 @@
                     data-component="post-collection-trigger"
                     maxlength="32"
                     readonly
+                    tabindex="-1"
                 >
 
                 <ul class="create-post-modal__collection-list" data-component="post-collection-list">
@@ -92,15 +93,6 @@
         </div>
     </div>
 
-    <div class="create-post-modal__confirm create-post-modal__confirm--hidden" data-component="create-collection-confirm" aria-hidden="true">
-        <div class="create-post-modal__confirm-panel" role="dialog" aria-modal="true">
-            <p class="create-post-modal__confirm-text" data-component="create-collection-confirm-text"></p>
-            <div class="create-post-modal__confirm-actions">
-                <button class="create-post-modal__button create-post-modal__button--cancel" type="button" data-component="create-collection-confirm-no">Назад</button>
-                <button class="create-post-modal__button create-post-modal__button--submit" type="button" data-component="create-collection-confirm-yes">Создать</button>
-            </div>
-        </div>
-    </div>
 </div>
 
 <div class="create-post-success-toast create-post-success-toast--hidden" data-component="create-post-success-toast" aria-live="polite"></div>

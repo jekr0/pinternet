@@ -21,11 +21,6 @@ class CreatePostModalComponent {
         this.tags = [];
         this.maxTags = 24;
         this.maxVisibleTagRows = 3;
-        this.confirmOverlay = null;
-        this.confirmText = null;
-        this.confirmYesButton = null;
-        this.confirmNoButton = null;
-        this.pendingCreatePayload = null;
         this.alertBox = null;
         this.tagsSuggestList = null;
         this.tagsInputRow = null;
@@ -61,10 +56,6 @@ class CreatePostModalComponent {
         this.submitButton = this.modal.querySelector('[data-component="create-post-submit"]');
         this.tagsAddButton = this.modal.querySelector('[data-component="post-tags-add-button"]');
         this.tagsList = this.modal.querySelector('[data-component="post-tags-list"]');
-        this.confirmOverlay = this.modal.querySelector('[data-component="create-collection-confirm"]');
-        this.confirmText = this.modal.querySelector('[data-component="create-collection-confirm-text"]');
-        this.confirmYesButton = this.modal.querySelector('[data-component="create-collection-confirm-yes"]');
-        this.confirmNoButton = this.modal.querySelector('[data-component="create-collection-confirm-no"]');
         this.alertBox = this.modal.querySelector('[data-component="create-post-alert"]');
         this.tagsSuggestList = this.modal.querySelector('[data-component="post-tags-suggest-list"]');
         this.tagsInputRow = this.modal.querySelector('.create-post-modal__tags-input-row');
@@ -85,7 +76,6 @@ class CreatePostModalComponent {
         this.bindCollectionHandlers();
         this.bindTagsHandlers();
         this.bindInputRestrictions();
-        this.bindCollectionConfirmHandlers();
         this.bindSubmitHandlers();
         this.bindCloseHandlers();
 
@@ -197,17 +187,6 @@ class CreatePostModalComponent {
     }
 
     bindInputRestrictions() {
-        if (this.collectionTrigger) {
-            this.collectionTrigger.addEventListener('input', () => {
-                const normalized = this.collectionTrigger.value
-                    .replace(/[^a-zа-яё0-9_ ]/gi, '')
-                    .slice(0, 32);
-                if (normalized !== this.collectionTrigger.value) {
-                    this.collectionTrigger.value = normalized;
-                }
-            });
-        }
-
         if (this.tagsField) {
             this.tagsField.addEventListener('input', () => {
                 const normalized = this.tagsField.value
@@ -220,31 +199,8 @@ class CreatePostModalComponent {
         }
     }
 
-    bindCollectionConfirmHandlers() {
-        if (!this.confirmOverlay || !this.confirmYesButton || !this.confirmNoButton) return;
-
-        this.confirmNoButton.addEventListener('click', () => {
-            this.hideCollectionConfirm();
-        });
-
-        this.confirmYesButton.addEventListener('click', async () => {
-            if (!this.pendingCreatePayload) return;
-            const payload = new FormData();
-            payload.append('image', this.pendingCreatePayload.image);
-            payload.append('description', this.pendingCreatePayload.description);
-            payload.append('collection', this.pendingCreatePayload.collection);
-            payload.append('tags', this.pendingCreatePayload.tags);
-            payload.append('confirm_create_collection', '1');
-
-            await this.submitPost(payload, true);
-        });
-    }
-
     bindCloseHandlers() {
         this.modal.addEventListener('click', (event) => {
-            if (!this.confirmOverlay?.classList.contains('create-post-modal__confirm--hidden')) {
-                return;
-            }
             if (event.target === this.modal) {
                 this.close();
             }
@@ -274,7 +230,6 @@ class CreatePostModalComponent {
 
     close() {
         if (this.modal.classList.contains('create-post-modal--hidden')) return;
-        this.hideCollectionConfirm();
         this.hideAlert();
         this.hideSuccessToast();
         this.hideTagSuggestions();
@@ -430,7 +385,7 @@ class CreatePostModalComponent {
         return formData;
     }
 
-    async submitPost(preparedFormData = null, redirectToHomeOnSuccess = false) {
+    async submitPost(preparedFormData = null) {
         if (!this.currentFile && !preparedFormData) {
             this.showAlert('Сначала добавьте изображение.');
             return;
@@ -448,26 +403,12 @@ class CreatePostModalComponent {
             const payload = await response.json();
 
             if (!response.ok || !payload.success) {
-                if (payload.requires_collection_creation) {
-                    this.pendingCreatePayload = {
-                        image: this.currentFile,
-                        description: this.descriptionField?.value.trim() ?? '',
-                        collection: this.collectionTrigger?.value.trim() || '',
-                        tags: this.tags.join(' ')
-                    };
-                    this.showCollectionConfirm(payload.collection_name || this.pendingCreatePayload.collection);
-                    return;
-                }
                 throw new Error(payload.error || 'Не удалось создать пост.');
             }
 
             this.resetForm();
             this.close();
             this.showSuccessToast('Пост создан');
-            if (redirectToHomeOnSuccess) {
-                window.location.href = '/';
-                return;
-            }
         } catch (error) {
             this.showAlert(error.message || 'Ошибка при создании поста.');
         } finally {
@@ -604,20 +545,6 @@ class CreatePostModalComponent {
         const computedGap = Math.floor(available / (chipElements.length - 1));
         const normalizedGap = Math.max(5, Math.min(35, computedGap));
         rowEl.style.columnGap = `${normalizedGap}px`;
-    }
-
-    showCollectionConfirm(collectionName) {
-        if (!this.confirmOverlay || !this.confirmText) return;
-        this.confirmText.textContent = `Коллекции "${collectionName}" не существует.\nХотите создать её?`;
-        this.confirmOverlay.classList.remove('create-post-modal__confirm--hidden');
-        this.confirmOverlay.setAttribute('aria-hidden', 'false');
-    }
-
-    hideCollectionConfirm() {
-        if (!this.confirmOverlay) return;
-        this.confirmOverlay.classList.add('create-post-modal__confirm--hidden');
-        this.confirmOverlay.setAttribute('aria-hidden', 'true');
-        this.pendingCreatePayload = null;
     }
 
     showAlert(message) {

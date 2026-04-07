@@ -177,6 +177,7 @@
     border-bottom-left-radius: 0px;
     border-bottom-right-radius: 0px;
     cursor: default;
+    pointer-events: none;
 }
 
 .create-post-modal__collection-list {
@@ -459,49 +460,6 @@
 
 .create-post-modal__button--submit:hover {
     opacity: 0.8;
-}
-
-.create-post-modal__confirm {
-    position: absolute;
-    inset: 0;
-    z-index: 6;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(15px);
-    opacity: 1;
-    visibility: visible;
-    pointer-events: auto;
-    transition: opacity 0.2s ease, visibility 0.2s ease;
-}
-
-.create-post-modal__confirm--hidden {
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
-}
-
-.create-post-modal__confirm-panel {
-    width: min(520px, calc(100% - 80px));
-    padding: 30px;
-    background: #fff;
-    border-radius: 20px;
-    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.07);
-}
-
-.create-post-modal__confirm-text {
-    margin: 0 0 24px;
-    text-align: center;
-    font-family: 'SF_def', Arial, sans-serif;
-    font-size: 18px;
-    color: #333;
-    white-space: pre-line;
-}
-
-.create-post-modal__confirm-actions {
-    display: flex;
-    gap: 10px;
 }
 
 /* --------------------------- Зона загрузки ---------------------------------- */
