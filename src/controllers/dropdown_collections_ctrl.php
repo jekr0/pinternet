@@ -77,6 +77,10 @@ function handleBookmarkBoardToggle(PDO $pdo, int $userId): never
         jsonResponse(['success' => false, 'error' => 'Некорректные параметры.'], 422);
     }
 
+    if ($boardName === 'Profile') {
+        jsonResponse(['success' => false, 'error' => 'Коллекцию "Профиль" нельзя изменять вручную.'], 403);
+    }
+
     $boardId = findBoardId($pdo, $userId, $boardName);
     if ($boardId === null && $boardName === 'Profile') {
         $boardId = createBoard($pdo, $userId, 'Profile');
@@ -128,14 +132,23 @@ function handleBookmarkClear(PDO $pdo, int $userId): never
     }
 
     try {
-        $deleteStmt = $pdo->prepare('DELETE FROM Saved_Posts WHERE user_id = ? AND post_id = ?');
-        $deleteStmt->execute([$userId, $postId]);
+        $deleteStmt = $pdo->prepare('
+            DELETE sp
+            FROM Saved_Posts sp
+            INNER JOIN Boards b ON b.id = sp.board_id
+            WHERE sp.user_id = ? AND sp.post_id = ? AND LOWER(b.name) <> LOWER(?)
+        ');
+        $deleteStmt->execute([$userId, $postId, 'Profile']);
+
+        $hasAnyStmt = $pdo->prepare('SELECT 1 FROM Saved_Posts WHERE user_id = ? AND post_id = ? LIMIT 1');
+        $hasAnyStmt->execute([$userId, $postId]);
+        $hasAny = $hasAnyStmt->fetchColumn() !== false;
     } catch (Throwable $e) {
         error_log('Bookmark clear error: ' . $e->getMessage());
         jsonResponse(['success' => false, 'error' => 'Не удалось удалить пост из коллекций.'], 500);
     }
 
-    jsonResponse(['success' => true]);
+    jsonResponse(['success' => true, 'has_any' => $hasAny]);
 }
 
 function handleBookmarkBoardCreate(PDO $pdo, int $userId): never
@@ -181,16 +194,22 @@ function handleBookmarkBoardCreate(PDO $pdo, int $userId): never
 
 function normalizeBoardName(string $name): string
 {
-    if ($name === 'Профиль' || $name === 'Profile') {
+    $normalized = trim($name);
+    if ($normalized === '') {
+        return '';
+    }
+
+    $normalizedLower = mb_strtolower($normalized);
+    if ($normalizedLower === 'профиль' || $normalizedLower === 'profile') {
         return 'Profile';
     }
 
-    return $name;
+    return $normalized;
 }
 
 function findBoardId(PDO $pdo, int $userId, string $boardName): ?int
 {
-    $stmt = $pdo->prepare('SELECT id FROM Boards WHERE user_id = ? AND name = ? LIMIT 1');
+    $stmt = $pdo->prepare('SELECT id FROM Boards WHERE user_id = ? AND LOWER(name) = LOWER(?) LIMIT 1');
     $stmt->execute([$userId, $boardName]);
     $id = $stmt->fetchColumn();
 

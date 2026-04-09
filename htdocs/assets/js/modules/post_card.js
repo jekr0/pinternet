@@ -49,22 +49,15 @@ class PostCardComponent {
 
         const likeButton = card.querySelector('[data-action="like"]');
         const bookmarkButton = card.querySelector('[data-action="bookmark"]');
-        const isOwner = card.dataset.owner === '1';
 
         if (likeButton && card.dataset.liked === '1') {
             likeButton.classList.add('is-active');
             this.setLikeIcon(likeButton, true);
         }
 
-        if (bookmarkButton) {
-            if (isOwner) {
-                bookmarkButton.disabled = true;
-                bookmarkButton.classList.remove('is-active');
-                this.setBookmarkIcon(bookmarkButton, 'block');
-            } else if (card.dataset.bookmarked === '1') {
-                bookmarkButton.classList.add('is-active');
-                this.setBookmarkIcon(bookmarkButton, 'plus');
-            }
+        if (bookmarkButton && card.dataset.bookmarked === '1') {
+            bookmarkButton.classList.add('is-active');
+            this.setBookmarkIcon(bookmarkButton, 'plus');
         }
     }
 
@@ -138,8 +131,6 @@ class PostCardComponent {
     }
 
     async handleBookmark(card, button) {
-        if (card.dataset.owner === '1') return;
-
         const postId = Number(card.dataset.postId || 0);
         if (!postId) return;
 
@@ -175,11 +166,9 @@ class PostCardComponent {
         const icon = button.querySelector('[data-icon="bookmark"]');
         if (!icon) return;
 
-        const iconPath = type === 'block'
-            ? 'assets/images/icons/bookmark-block.svg'
-            : type === 'plus'
-                ? 'assets/images/icons/S-bookmark-plus.svg'
-                : 'assets/images/icons/S-bookmark.svg';
+        const iconPath = type === 'plus'
+            ? 'assets/images/icons/S-bookmark-plus.svg'
+            : 'assets/images/icons/S-bookmark.svg';
 
         icon.setAttribute('data-svg-src', iconPath);
         App.utils.loadSVG(iconPath, icon);
