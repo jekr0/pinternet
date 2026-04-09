@@ -146,6 +146,11 @@ class DropdownCollectionsComponent {
         this.renderBoards(boards);
     }
 
+    isProfileBoardName(boardName) {
+        return String(boardName || '').trim().toLowerCase() === 'profile'
+            || String(boardName || '').trim().toLowerCase() === 'профиль';
+    }
+
     renderBoards(boards) {
         if (!this.list) return;
 
@@ -161,8 +166,13 @@ class DropdownCollectionsComponent {
             const button = document.createElement('button');
             button.type = 'button';
             button.className = 'dropdown-collections__collection-item';
-            button.textContent = boardName === 'Profile' ? 'Профиль' : boardName;
+            const isProfileBoard = this.isProfileBoardName(boardName);
+            button.textContent = isProfileBoard ? 'Профиль' : boardName;
             button.dataset.board = boardName;
+            if (isProfileBoard) {
+                button.dataset.isProfile = '1';
+                button.setAttribute('aria-disabled', 'true');
+            }
             button.classList.toggle('is-selected', !!boardData?.is_saved);
             button.addEventListener('click', async () => {
                 await this.toggleBoard(button);
@@ -191,7 +201,7 @@ class DropdownCollectionsComponent {
         if (!button || !this.activePostId) return;
 
         const boardName = button.dataset.board || '';
-        if (!boardName) return;
+        if (!boardName || button.dataset.isProfile === '1' || this.isProfileBoardName(boardName)) return;
 
         try {
             const response = await fetch('/posts/bookmark/board-toggle', {
