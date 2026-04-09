@@ -207,11 +207,6 @@
     transition: border-color 0.2s ease;
 }
 
-.create-post-modal__collection:focus-within .create-post-modal__input--collection,
-.create-post-modal__collection:focus-within .create-post-modal__collection-list {
-    border-color: rgb(100, 100, 200);
-}
-
 .create-post-modal__collection:hover .create-post-modal__input--collection,
 .create-post-modal__collection:hover .create-post-modal__collection-list {
     border-color: rgb(150, 150, 250);
@@ -287,7 +282,7 @@
     border: 1.5px solid #e0e0e0;
     border-radius: 5px;
     background: #fff;
-    color: #bbb;
+    color: #e0e0e0;
     font-family: 'SF_def', Arial, sans-serif;
     font-size: 16px;
     line-height: 1;
@@ -298,6 +293,16 @@
 .create-post-modal__tags-input-row:focus-within .create-post-modal__tags-add-button {
     border-color: rgb(100, 100, 200);
     background: rgb(100, 100, 200);
+    color: #fff;
+}
+
+.create-post-modal__tags-input-row:hover .create-post-modal__tags-add-button {
+    border-color: rgb(150, 150, 250);
+    color: rgb(150, 150, 250);
+}
+
+.create-post-modal__tags-input-row:focus-within .create-post-modal__tags-add-button {
+    border-color: rgb(100, 100, 200);
     color: #fff;
 }
 
@@ -340,17 +345,6 @@
     display: block;
     overflow-y: auto;
     transition: border-color 0.2s ease;
-}
-
-.create-post-modal__tags-input-row:focus-within .create-post-modal__input--tags,
-.create-post-modal__tags-input-row:focus-within .create-post-modal__tags-suggest-list {
-    border-color: rgb(100, 100, 200);
-}
-
-.create-post-modal__tags-input-row:hover .create-post-modal__input--tags,
-.create-post-modal__tags-input-row:hover .create-post-modal__tags-suggest-list,
-.create-post-modal__tags-input-row:hover .create-post-modal__tags-add-button {
-    border-color: rgb(150, 150, 250);
 }
 
 .create-post-modal__tags-suggest-list--hidden {
@@ -506,8 +500,7 @@
 .create-post-modal__upload-dropzone--filled {
     height: auto;
     border-style: solid;
-    border-color: rgb(100, 100, 200);
-    color: rgb(100, 100, 200);
+    border-color: rgb(150, 150, 250);
 }
 
 .create-post-modal__upload-dropzone:hover::before,
@@ -519,6 +512,10 @@
 .create-post-modal__upload-dropzone--filled {
     height: auto;
     border-style: solid;
+    border-color: rgb(150, 150, 250);
+}
+
+.create-post-modal__upload-dropzone--filled:hover {
     border-color: rgb(100, 100, 200);
 }
 
