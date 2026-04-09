@@ -38,7 +38,7 @@
             <span
                 class="post-card__icon"
                 data-icon="heart"
-                data-svg-src="<?php echo $isLiked ? 'assets/images/icons/heart-fill.svg' : 'assets/images/icons/heart.svg'; ?>"
+                data-svg-src="<?php echo $isLiked ? 'assets/images/icons/S-heart-fill.svg' : 'assets/images/icons/S-heart.svg'; ?>"
             ></span>
         </button>
 
@@ -52,12 +52,12 @@
             <span
                 class="post-card__icon"
                 data-icon="bookmark"
-                data-svg-src="<?php echo $isOwner ? 'assets/images/icons/bookmark-block.svg' : ($isBookmarked ? 'assets/images/icons/bookmark-plus.svg' : 'assets/images/icons/bookmark.svg'); ?>"
+                data-svg-src="<?php echo $isOwner ? 'assets/images/icons/bookmark-block.svg' : ($isBookmarked ? 'assets/images/icons/S-bookmark-plus.svg' : 'assets/images/icons/S-bookmark.svg'); ?>"
             ></span>
         </button>
 
         <button class="post-card__action-button" type="button" data-action="share" aria-label="Поделиться">
-            <span class="post-card__icon" data-icon="share" data-svg-src="assets/images/icons/share.svg"></span>
+            <span class="post-card__icon" data-icon="share" data-svg-src="assets/images/icons/S-share.svg"></span>
         </button>
     </div>
 </article>

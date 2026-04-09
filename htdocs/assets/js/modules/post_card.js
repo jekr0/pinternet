@@ -130,8 +130,8 @@ class PostCardComponent {
         if (!icon) return;
 
         const iconPath = isLiked
-            ? 'assets/images/icons/heart-fill.svg'
-            : 'assets/images/icons/heart.svg';
+            ? 'assets/images/icons/S-heart-fill.svg'
+            : 'assets/images/icons/S-heart.svg';
 
         icon.setAttribute('data-svg-src', iconPath);
         App.utils.loadSVG(iconPath, icon);
@@ -178,8 +178,8 @@ class PostCardComponent {
         const iconPath = type === 'block'
             ? 'assets/images/icons/bookmark-block.svg'
             : type === 'plus'
-                ? 'assets/images/icons/bookmark-plus.svg'
-                : 'assets/images/icons/bookmark.svg';
+                ? 'assets/images/icons/S-bookmark-plus.svg'
+                : 'assets/images/icons/S-bookmark.svg';
 
         icon.setAttribute('data-svg-src', iconPath);
         App.utils.loadSVG(iconPath, icon);
@@ -247,8 +247,8 @@ class PostCardComponent {
         if (!icon) return;
 
         const iconPath = isFilled
-            ? 'assets/images/icons/share-fill.svg'
-            : 'assets/images/icons/share.svg';
+            ? 'assets/images/icons/S-share-fill.svg'
+            : 'assets/images/icons/S-share.svg';
 
         icon.setAttribute('data-svg-src', iconPath);
         App.utils.loadSVG(iconPath, icon);

@@ -450,7 +450,7 @@
 }
 
 .create-post-modal__button--cancel:hover {
-    border-color: rgb(100, 100, 200);
+    border-color: rgb(150, 150, 250);
 }
 
 .create-post-modal__button--submit {
@@ -481,7 +481,7 @@
 
 .create-post-modal__upload-dropzone:hover,
 .create-post-modal__upload-dropzone--dragover {
-    border-color: rgb(100, 100, 200);
+    border-color: rgb(150, 150, 250);
 }
 
 .create-post-modal__upload-dropzone--filled {

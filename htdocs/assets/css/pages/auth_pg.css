@@ -191,7 +191,7 @@
 }
 
 .auth__button--back:hover {
-    border: 1.5px solid rgb(100, 100, 200);
+    border: 1.5px solid rgb(150, 150, 250);
 }
 
 .auth__button--submit {

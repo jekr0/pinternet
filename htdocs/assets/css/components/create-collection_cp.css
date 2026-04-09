@@ -77,7 +77,7 @@
 }
 
 .create-collection__button--cancel:hover {
-    border-color: rgb(100, 100, 200);
+    border-color: rgb(150, 150, 250);
 }
 
 .create-collection__button--create {
