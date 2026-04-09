@@ -78,7 +78,7 @@
 }
 
 .dropdown-collections__collection-list:hover {
-    border-color: rgb(100, 100, 200);
+    border-color: rgb(150, 150, 250);
 }
 
 .dropdown-collections__collection-list li {
@@ -132,5 +132,5 @@
 }
 
 .dropdown-collections__clear-button:hover {
-    border-color: rgb(100, 100, 200);
+    border-color: rgb(150, 150, 250);
 }
