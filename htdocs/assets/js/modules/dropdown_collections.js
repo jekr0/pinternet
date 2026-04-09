@@ -249,8 +249,9 @@ class DropdownCollectionsComponent {
             const payload = await response.json();
             if (!response.ok || !payload.success) return;
 
+            const hasAny = !!payload.has_any;
             document.dispatchEvent(new CustomEvent('post-card:bookmark-updated', {
-                detail: { postId: this.activePostId, bookmarked: false }
+                detail: { postId: this.activePostId, bookmarked: hasAny }
             }));
             this.close();
         } catch (error) {

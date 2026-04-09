@@ -81,7 +81,7 @@ function handleBoardsCreate(PDO $pdo, int $userId): never
     }
 
     $boardName = trim((string) ($_POST['board'] ?? ''));
-    $boardName = $boardName === 'Профиль' ? 'Profile' : $boardName;
+    $boardName = normalizeCollectionName($boardName);
 
     $validatedBoardName = validateAndNormalizeCollectionName($boardName);
     if ($validatedBoardName === null) {
@@ -246,7 +246,10 @@ function handleBookmarkBoardToggle(PDO $pdo, int $userId): never
         jsonResponse(['success' => false, 'error' => 'Некорректные параметры.'], 422);
     }
 
-    $normalizedBoardName = $boardName === 'Профиль' ? 'Profile' : $boardName;
+    $normalizedBoardName = normalizeCollectionName($boardName);
+    if ($normalizedBoardName === 'Profile') {
+        jsonResponse(['success' => false, 'error' => 'Коллекцию "Профиль" нельзя изменять вручную.'], 403);
+    }
     $boardId = findBoardId($pdo, $userId, $normalizedBoardName);
     if ($boardId === null && $normalizedBoardName === 'Profile') {
         $boardId = createBoard($pdo, $userId, 'Profile');
@@ -298,14 +301,23 @@ function handleBookmarkClear(PDO $pdo, int $userId): never
     }
 
     try {
-        $deleteStmt = $pdo->prepare('DELETE FROM Saved_Posts WHERE user_id = ? AND post_id = ?');
-        $deleteStmt->execute([$userId, $postId]);
+        $deleteStmt = $pdo->prepare('
+            DELETE sp
+            FROM Saved_Posts sp
+            INNER JOIN Boards b ON b.id = sp.board_id
+            WHERE sp.user_id = ? AND sp.post_id = ? AND LOWER(b.name) <> LOWER(?)
+        ');
+        $deleteStmt->execute([$userId, $postId, 'Profile']);
+
+        $hasAnyStmt = $pdo->prepare('SELECT 1 FROM Saved_Posts WHERE user_id = ? AND post_id = ? LIMIT 1');
+        $hasAnyStmt->execute([$userId, $postId]);
+        $hasAny = $hasAnyStmt->fetchColumn() !== false;
     } catch (Throwable $e) {
         error_log('Bookmark clear error: ' . $e->getMessage());
         jsonResponse(['success' => false, 'error' => 'Не удалось удалить пост из коллекций.'], 500);
     }
 
-    jsonResponse(['success' => true]);
+    jsonResponse(['success' => true, 'has_any' => $hasAny]);
 }
 
 function handlePostsList(PDO $pdo): never
@@ -430,7 +442,7 @@ function handleCreatePost(PDO $pdo, int $userId): never
 
 function findBoardId(PDO $pdo, int $userId, string $collectionName): ?int
 {
-    $select = $pdo->prepare('SELECT id FROM Boards WHERE user_id = ? AND name = ? LIMIT 1');
+    $select = $pdo->prepare('SELECT id FROM Boards WHERE user_id = ? AND LOWER(name) = LOWER(?) LIMIT 1');
     $select->execute([$userId, $collectionName]);
     $existingId = $select->fetchColumn();
 
@@ -451,11 +463,12 @@ function createBoard(PDO $pdo, int $userId, string $collectionName): int
 
 function normalizeCollectionName(string $value): string
 {
-    if ($value === '' || mb_strtolower($value) === 'профиль' || mb_strtolower($value) === 'profile') {
+    $normalized = trim($value);
+    if ($normalized === '' || mb_strtolower($normalized) === 'профиль' || mb_strtolower($normalized) === 'profile') {
         return 'Profile';
     }
 
-    return $value;
+    return $normalized;
 }
 
 function validateAndNormalizeCollectionName(string $value): ?string
