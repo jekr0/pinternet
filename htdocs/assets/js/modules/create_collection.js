@@ -127,15 +127,18 @@ class CreateCollectionComponent {
         const boardName = this.input?.value.trim() || '';
         if (!boardName) return;
 
+        const requestPostId = this.activePostId;
+        const requestSource = this.openSource;
+
         this.createButton.disabled = true;
 
         try {
-            const endpoint = this.activePostId > 0
+            const endpoint = requestPostId > 0
                 ? '/posts/bookmark/board-create'
                 : '/boards/create';
             const bodyData = new URLSearchParams({ board: boardName });
-            if (this.activePostId > 0) {
-                bodyData.append('post_id', String(this.activePostId));
+            if (requestPostId > 0) {
+                bodyData.append('post_id', String(requestPostId));
             }
 
             const response = await fetch(endpoint, {
@@ -152,9 +155,9 @@ class CreateCollectionComponent {
 
             document.dispatchEvent(new CustomEvent('create-collection:created', {
                 detail: {
-                    postId: this.activePostId,
+                    postId: requestPostId,
                     board: payload.board || boardName,
-                    source: this.openSource
+                    source: requestSource
                 }
             }));
             this.close();
