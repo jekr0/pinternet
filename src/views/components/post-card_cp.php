@@ -51,7 +51,7 @@
             <span
                 class="post-card__icon"
                 data-icon="bookmark"
-                data-svg-src="<?php echo $isBookmarked ? 'assets/images/icons/S-bookmark-plus.svg' : 'assets/images/icons/S-bookmark.svg'; ?>"
+                data-svg-src="<?php echo $isBookmarked ? 'assets/images/icons/S-bookmark-plus.svg' : ($isOwner ? 'assets/images/icons/U-bookmark-fill.svg' : 'assets/images/icons/S-bookmark.svg'); ?>"
             ></span>
         </button>
 

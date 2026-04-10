@@ -77,7 +77,11 @@ function handleBookmarkBoardToggle(PDO $pdo, int $userId): never
         jsonResponse(['success' => false, 'error' => 'Некорректные параметры.'], 422);
     }
 
-    if ($boardName === 'Profile') {
+    $isOwner = isPostOwner($pdo, $postId, $userId);
+    if ($isOwner === null) {
+        jsonResponse(['success' => false, 'error' => 'Пост не найден.'], 404);
+    }
+    if ($boardName === 'Profile' && $isOwner) {
         jsonResponse(['success' => false, 'error' => 'Коллекцию "Профиль" нельзя изменять вручную.'], 403);
     }
 
@@ -130,15 +134,24 @@ function handleBookmarkClear(PDO $pdo, int $userId): never
     if ($postId <= 0) {
         jsonResponse(['success' => false, 'error' => 'Некорректный post_id.'], 422);
     }
+    $isOwner = isPostOwner($pdo, $postId, $userId);
+    if ($isOwner === null) {
+        jsonResponse(['success' => false, 'error' => 'Пост не найден.'], 404);
+    }
 
     try {
-        $deleteStmt = $pdo->prepare('
-            DELETE sp
-            FROM Saved_Posts sp
-            INNER JOIN Boards b ON b.id = sp.board_id
-            WHERE sp.user_id = ? AND sp.post_id = ? AND LOWER(b.name) <> LOWER(?)
-        ');
-        $deleteStmt->execute([$userId, $postId, 'Profile']);
+        if ($isOwner) {
+            $deleteStmt = $pdo->prepare('
+                DELETE sp
+                FROM Saved_Posts sp
+                INNER JOIN Boards b ON b.id = sp.board_id
+                WHERE sp.user_id = ? AND sp.post_id = ? AND LOWER(b.name) <> LOWER(?)
+            ');
+            $deleteStmt->execute([$userId, $postId, 'Profile']);
+        } else {
+            $deleteStmt = $pdo->prepare('DELETE FROM Saved_Posts WHERE user_id = ? AND post_id = ?');
+            $deleteStmt->execute([$userId, $postId]);
+        }
 
         $hasAnyStmt = $pdo->prepare('SELECT 1 FROM Saved_Posts WHERE user_id = ? AND post_id = ? LIMIT 1');
         $hasAnyStmt->execute([$userId, $postId]);
@@ -222,6 +235,18 @@ function createBoard(PDO $pdo, int $userId, string $boardName): int
     $insert->execute([$userId, $boardName, 'Системная коллекция профиля']);
 
     return (int) $pdo->lastInsertId();
+}
+
+function isPostOwner(PDO $pdo, int $postId, int $userId): ?bool
+{
+    $stmt = $pdo->prepare('SELECT user_id FROM Posts WHERE id = ? LIMIT 1');
+    $stmt->execute([$postId]);
+    $ownerId = $stmt->fetchColumn();
+    if ($ownerId === false) {
+        return null;
+    }
+
+    return (int) $ownerId === $userId;
 }
 
 function jsonResponse(array $payload, int $status = 200): never

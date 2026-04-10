@@ -11,6 +11,7 @@ class MasonryFeedComponent {
         this.minHorizontalGap = 12;
         this.resizeHandler = null;
         this.imageLoadHandler = null;
+        this.postFullToggleHandler = null;
     }
 
     init() {
@@ -24,6 +25,8 @@ class MasonryFeedComponent {
 
         this.resizeHandler = () => this.layout();
         window.addEventListener('resize', this.resizeHandler);
+        this.postFullToggleHandler = () => this.layout();
+        document.addEventListener('post-full:toggle', this.postFullToggleHandler);
 
         this.imageLoadHandler = () => this.layout();
         this.cards.forEach((card) => {
@@ -52,8 +55,18 @@ class MasonryFeedComponent {
         const horizontalGap = Math.max(this.minHorizontalGap, computedHorizontalGap);
 
         const columnHeights = Array(this.columns).fill(this.topOffset);
+        const postFull = this.container.querySelector('[data-component="post-full"]');
+        const isPostFullOpen = !!postFull && postFull.classList.contains('is-open');
+        if (isPostFullOpen) {
+            const reservedHeight = Math.max(postFull.offsetHeight || 0, 800) + this.verticalGap;
+            for (let i = 0; i < Math.min(4, columnHeights.length); i += 1) {
+                columnHeights[i] = this.topOffset + reservedHeight;
+            }
+        }
 
         this.cards.forEach((card) => {
+            if (card.classList.contains('post-card--post-full-active')) return;
+
             card.style.setProperty('--post-card-width', `${cardWidth}px`);
 
             let targetColumn = 0;
