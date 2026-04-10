@@ -2,7 +2,7 @@
 
 .post-full {
     position: absolute;
-    left: 24px;
+    left: 25px;
     top: 120px;
     z-index: 3;
     width: 1045px;
@@ -19,7 +19,7 @@
 
 .post-full__frame {
     position: relative;
-    width: 1005px;
+    width: calc(100% - 40px);
     max-height: 700px;
     margin: 20px 20px 40px;
     border-radius: 10px;

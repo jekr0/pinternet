@@ -58,6 +58,11 @@ class MasonryFeedComponent {
         const postFull = this.container.querySelector('[data-component="post-full"]');
         const isPostFullOpen = !!postFull && postFull.classList.contains('is-open');
         if (isPostFullOpen) {
+            const postFullWidth = cardWidth * 4 + horizontalGap * 3;
+            postFull.style.left = `${this.edgeGap}px`;
+            postFull.style.top = `${this.topOffset}px`;
+            postFull.style.width = `${Math.round(postFullWidth)}px`;
+
             const reservedHeight = Math.max(postFull.offsetHeight || 0, 800) + this.verticalGap;
             for (let i = 0; i < Math.min(4, columnHeights.length); i += 1) {
                 columnHeights[i] = this.topOffset + reservedHeight;

@@ -39,6 +39,14 @@ const App = {
 
     /* Утилиты для работы с DOM */
     utils: {
+        normalizePublicPath: function (src) {
+            if (!src || typeof src !== 'string') return src;
+            if (src.startsWith('/') || src.startsWith('http://') || src.startsWith('https://') || src.startsWith('data:')) {
+                return src;
+            }
+
+            return `/${src.replace(/^\.?\//, '')}`;
+        },
         /* Безопасный поиск элемента */
         getElement: function (selector) {
             const el = document.querySelector(selector);
@@ -51,7 +59,7 @@ const App = {
         /* Загрузка изображения с обработкой ошибок */
         loadImage: function (src, onSuccess, onError) {
             const img = new Image();
-            img.src = src;
+            img.src = this.normalizePublicPath(src);
             img.onload = () => onSuccess?.(img);
             img.onerror = () => onError?.();
             return img;
@@ -63,6 +71,7 @@ const App = {
         _bodyScrollLocks: 0,
         loadSVG: function (src, container) {
             if (!container) return;
+            const normalizedSrc = this.normalizePublicPath(src);
 
             const requestId = (this._svgRequestState.get(container) || 0) + 1;
             this._svgRequestState.set(container, requestId);
@@ -70,21 +79,21 @@ const App = {
             const isLatestRequest = () => {
                 const latestRequestId = this._svgRequestState.get(container);
                 const currentSrc = container.getAttribute('data-svg-src');
-                return latestRequestId === requestId && (!currentSrc || currentSrc === src);
+                return latestRequestId === requestId && (!currentSrc || this.normalizePublicPath(currentSrc) === normalizedSrc);
             };
 
-            if (this._svgCache[src]) {
+            if (this._svgCache[normalizedSrc]) {
                 if (!isLatestRequest()) return;
-                container.innerHTML = this._svgCache[src];
+                container.innerHTML = this._svgCache[normalizedSrc];
                 return;
             }
-            fetch(src)
+            fetch(normalizedSrc)
                 .then(r => {
-                    if (!r.ok) throw new Error(`SVG not found: ${src}`);
+                    if (!r.ok) throw new Error(`SVG not found: ${normalizedSrc}`);
                     return r.text();
                 })
                 .then(svg => {
-                    this._svgCache[src] = svg;
+                    this._svgCache[normalizedSrc] = svg;
                     if (!isLatestRequest()) return;
                     container.innerHTML = svg;
                 })
@@ -107,8 +116,8 @@ const App = {
     /* Хранилище данных приложения */
     store: {
         profile: {
-            avatarPath: 'uploads/avatars/avatar.jpg',
-            defaultIcon: 'assets/images/icons/at-sign.svg'
+            avatarPath: '/uploads/avatars/avatar.jpg',
+            defaultIcon: '/assets/images/icons/at-sign.svg'
         },
         // другие глобальные данные
     }
