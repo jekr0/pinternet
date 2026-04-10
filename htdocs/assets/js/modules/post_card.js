@@ -39,7 +39,7 @@ class PostCardComponent {
 
                 card.dataset.bookmarked = isBookmarked ? '1' : '0';
                 button.classList.toggle('is-active', isBookmarked);
-                this.setBookmarkIcon(button, isBookmarked ? 'plus' : 'default');
+                this.setBookmarkIcon(button, isBookmarked ? 'plus' : 'default', card);
             });
         });
     }
@@ -57,7 +57,9 @@ class PostCardComponent {
 
         if (bookmarkButton && card.dataset.bookmarked === '1') {
             bookmarkButton.classList.add('is-active');
-            this.setBookmarkIcon(bookmarkButton, 'plus');
+            this.setBookmarkIcon(bookmarkButton, 'plus', card);
+        } else if (bookmarkButton) {
+            this.setBookmarkIcon(bookmarkButton, 'default', card);
         }
     }
 
@@ -133,8 +135,10 @@ class PostCardComponent {
     async handleBookmark(card, button) {
         const postId = Number(card.dataset.postId || 0);
         if (!postId) return;
+        const isOwner = card.dataset.owner === '1';
+        const isBookmarked = card.dataset.bookmarked === '1';
 
-        if (card.dataset.bookmarked === '1') {
+        if (isBookmarked || isOwner) {
             document.dispatchEvent(new CustomEvent('dropdown-collections:open', {
                 detail: { postId, card, button }
             }));
@@ -156,19 +160,21 @@ class PostCardComponent {
 
             card.dataset.bookmarked = '1';
             button.classList.add('is-active');
-            this.setBookmarkIcon(button, 'plus');
+            this.setBookmarkIcon(button, 'plus', card);
         } catch (error) {
             console.warn('Unable to bookmark post', error);
         }
     }
 
-    setBookmarkIcon(button, type) {
+    setBookmarkIcon(button, type, card = null) {
         const icon = button.querySelector('[data-icon="bookmark"]');
         if (!icon) return;
 
+        const hostCard = card || button.closest('[data-component="post-card"]');
+        const isOwner = hostCard?.dataset.owner === '1';
         const iconPath = type === 'plus'
             ? 'assets/images/icons/S-bookmark-plus.svg'
-            : 'assets/images/icons/S-bookmark.svg';
+            : (isOwner ? 'assets/images/icons/U-bookmark-fill.svg' : 'assets/images/icons/S-bookmark.svg');
 
         icon.setAttribute('data-svg-src', iconPath);
         App.utils.loadSVG(iconPath, icon);

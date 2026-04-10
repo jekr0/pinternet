@@ -59,9 +59,22 @@ const App = {
 
         /* Загрузка SVG из файла и вставка инлайн (с кешированием) */
         _svgCache: {},
+        _svgRequestState: new WeakMap(),
         _bodyScrollLocks: 0,
         loadSVG: function (src, container) {
+            if (!container) return;
+
+            const requestId = (this._svgRequestState.get(container) || 0) + 1;
+            this._svgRequestState.set(container, requestId);
+
+            const isLatestRequest = () => {
+                const latestRequestId = this._svgRequestState.get(container);
+                const currentSrc = container.getAttribute('data-svg-src');
+                return latestRequestId === requestId && (!currentSrc || currentSrc === src);
+            };
+
             if (this._svgCache[src]) {
+                if (!isLatestRequest()) return;
                 container.innerHTML = this._svgCache[src];
                 return;
             }
@@ -72,6 +85,7 @@ const App = {
                 })
                 .then(svg => {
                     this._svgCache[src] = svg;
+                    if (!isLatestRequest()) return;
                     container.innerHTML = svg;
                 })
                 .catch(err => console.warn(err));
