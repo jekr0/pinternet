@@ -106,6 +106,10 @@
     color: #bbb;
 }
 
+.auth__input:hover {
+    border-color: rgb(150, 150, 250);
+}
+
 .auth__input:focus {
     border-color: rgb(100, 100, 200);
 }
@@ -181,7 +185,7 @@
     font-family: 'SF_def', Arial, sans-serif;
     font-size: 16px;
     cursor: pointer;
-    transition: border-color 0.2s ease, opacity 0.2s ease;
+    transition: border-color 0.2s ease, background 0.2s ease;
 }
 
 .auth__button--back {
@@ -200,7 +204,7 @@
 }
 
 .auth__button--submit:hover {
-    opacity: 0.8;
+    background: rgb(120, 120, 220);
 }
 
 /* --------------------------- Подпись ----------------------------------- */

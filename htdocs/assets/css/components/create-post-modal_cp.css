@@ -500,23 +500,17 @@
 .create-post-modal__upload-dropzone--filled {
     height: auto;
     border-style: solid;
-    border-color: rgb(150, 150, 250);
+    border-color: #333;
+}
+
+.create-post-modal__upload-dropzone--filled:hover {
+    border-color: #555;
 }
 
 .create-post-modal__upload-dropzone:hover::before,
 .create-post-modal__upload-dropzone--dragover::before {
     opacity: 1;
     animation: create-post-modal-dash-flow 2.8s linear infinite;
-}
-
-.create-post-modal__upload-dropzone--filled {
-    height: auto;
-    border-style: solid;
-    border-color: rgb(150, 150, 250);
-}
-
-.create-post-modal__upload-dropzone--filled:hover {
-    border-color: rgb(100, 100, 200);
 }
 
 .create-post-modal__upload-dropzone--filled::before {
