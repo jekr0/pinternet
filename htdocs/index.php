@@ -19,10 +19,17 @@ if (strpos($path, $base) === 0) {
 }
 
 // Определяем, какая страница нужна
+$selectedPostId = 0;
+if (preg_match('#^/post/(\d+)$#', $path, $matches)) {
+    $selectedPostId = (int) $matches[1];
+    $path = '/post/:id';
+}
+
 switch ($path) {
     case '':
     case '/':
     case '/home':
+    case '/post/:id':
         $page = 'home_pg.php';
         $pageTitle = 'Главная';
         $PHP = [

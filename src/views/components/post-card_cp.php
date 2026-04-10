@@ -9,10 +9,11 @@
     $isLiked = !empty($isLiked);
     $isBookmarked = !empty($isBookmarked);
     $isOwner = !empty($isOwner);
+    $isPostFullActive = !empty($isPostFullActive);
 ?>
 
 <article
-    class="post-card"
+    class="post-card<?php echo $isPostFullActive ? ' post-card--post-full-active' : ''; ?>"
     data-component="post-card"
     data-post-id="<?php echo $postId; ?>"
     data-liked="<?php echo $isLiked ? '1' : '0'; ?>"
