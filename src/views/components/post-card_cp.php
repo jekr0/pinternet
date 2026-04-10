@@ -2,17 +2,18 @@
     $postId = isset($postId) ? (int) $postId : 0;
     $postImagePath = isset($postImagePath) && is_string($postImagePath) && $postImagePath !== ''
         ? $postImagePath
-        : 'uploads/avatars/avatar.jpg';
+        : '/uploads/avatars/avatar.jpg';
     $authorUsername = isset($authorUsername) && is_string($authorUsername) && $authorUsername !== ''
         ? $authorUsername
         : 'unknown';
     $isLiked = !empty($isLiked);
     $isBookmarked = !empty($isBookmarked);
     $isOwner = !empty($isOwner);
+    $isPostFullActive = !empty($isPostFullActive);
 ?>
 
 <article
-    class="post-card"
+    class="post-card<?php echo $isPostFullActive ? ' post-card--post-full-active' : ''; ?>"
     data-component="post-card"
     data-post-id="<?php echo $postId; ?>"
     data-liked="<?php echo $isLiked ? '1' : '0'; ?>"
@@ -38,7 +39,7 @@
             <span
                 class="post-card__icon"
                 data-icon="heart"
-                data-svg-src="<?php echo $isLiked ? 'assets/images/icons/S-heart-fill.svg' : 'assets/images/icons/S-heart.svg'; ?>"
+                data-svg-src="<?php echo $isLiked ? '/assets/images/icons/S-heart-fill.svg' : '/assets/images/icons/S-heart.svg'; ?>"
             ></span>
         </button>
 
@@ -51,12 +52,12 @@
             <span
                 class="post-card__icon"
                 data-icon="bookmark"
-                data-svg-src="<?php echo $isBookmarked ? 'assets/images/icons/S-bookmark-plus.svg' : ($isOwner ? 'assets/images/icons/U-bookmark-fill.svg' : 'assets/images/icons/S-bookmark.svg'); ?>"
+                data-svg-src="<?php echo $isBookmarked ? '/assets/images/icons/S-bookmark-plus.svg' : ($isOwner ? '/assets/images/icons/U-bookmark-fill.svg' : '/assets/images/icons/S-bookmark.svg'); ?>"
             ></span>
         </button>
 
         <button class="post-card__action-button" type="button" data-action="share" aria-label="Поделиться">
-            <span class="post-card__icon" data-icon="share" data-svg-src="assets/images/icons/S-share.svg"></span>
+            <span class="post-card__icon" data-icon="share" data-svg-src="/assets/images/icons/S-share.svg"></span>
         </button>
     </div>
 </article>
