@@ -167,9 +167,10 @@ class DropdownCollectionsComponent {
             button.type = 'button';
             button.className = 'dropdown-collections__collection-item';
             const isProfileBoard = this.isProfileBoardName(boardName);
+            const isOwnerPost = this.activeCard?.dataset.owner === '1';
             button.textContent = isProfileBoard ? 'Профиль' : boardName;
             button.dataset.board = boardName;
-            if (isProfileBoard) {
+            if (isProfileBoard && isOwnerPost) {
                 button.dataset.isProfile = '1';
                 button.setAttribute('aria-disabled', 'true');
             }
@@ -201,7 +202,7 @@ class DropdownCollectionsComponent {
         if (!button || !this.activePostId) return;
 
         const boardName = button.dataset.board || '';
-        if (!boardName || button.dataset.isProfile === '1' || this.isProfileBoardName(boardName)) return;
+        if (!boardName || button.dataset.isProfile === '1') return;
 
         try {
             const response = await fetch('/posts/bookmark/board-toggle', {
@@ -244,7 +245,10 @@ class DropdownCollectionsComponent {
                     'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
                     'Accept': 'application/json'
                 },
-                body: new URLSearchParams({ post_id: String(this.activePostId) }).toString()
+                body: new URLSearchParams({
+                    post_id: String(this.activePostId),
+                    is_owner: this.activeCard?.dataset.owner === '1' ? '1' : '0'
+                }).toString()
             });
             const payload = await response.json();
             if (!response.ok || !payload.success) return;
