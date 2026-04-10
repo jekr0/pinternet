@@ -135,8 +135,10 @@ class PostCardComponent {
     async handleBookmark(card, button) {
         const postId = Number(card.dataset.postId || 0);
         if (!postId) return;
+        const isOwner = card.dataset.owner === '1';
+        const isBookmarked = card.dataset.bookmarked === '1';
 
-        if (card.dataset.bookmarked === '1') {
+        if (isBookmarked || isOwner) {
             document.dispatchEvent(new CustomEvent('dropdown-collections:open', {
                 detail: { postId, card, button }
             }));
