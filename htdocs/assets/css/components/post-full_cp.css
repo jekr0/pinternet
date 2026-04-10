@@ -1,0 +1,44 @@
+/* ------------------------------ Модуль post-full ------------------------------ */
+
+.post-full {
+    position: absolute;
+    left: 24px;
+    top: 120px;
+    z-index: 3;
+    width: 1065px;
+    min-height: 800px;
+    border-radius: 20px;
+    background: #fff;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
+    display: none;
+}
+
+.post-full.is-open {
+    display: block;
+}
+
+.post-full__frame {
+    width: 1025px;
+    max-height: 700px;
+    margin: 20px 20px 40px;
+    border-radius: 10px;
+    background: #f5f5f5;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.post-full__image {
+    display: block;
+    width: auto;
+    max-width: 100%;
+    height: auto;
+    max-height: 700px;
+    object-fit: contain;
+}
+
+.post-card--post-full-active {
+    visibility: hidden;
+    pointer-events: none;
+}
