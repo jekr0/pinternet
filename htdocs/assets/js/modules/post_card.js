@@ -125,7 +125,7 @@ class PostCardComponent {
         if (!icon) return;
 
         const iconPath = isLiked
-            ? 'assets/images/icons/S-heart-fill.svg'
+            ? 'assets/images/icons/U-heart-fill.svg'
             : 'assets/images/icons/S-heart.svg';
 
         icon.setAttribute('data-svg-src', iconPath);

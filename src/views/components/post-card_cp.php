@@ -39,7 +39,7 @@
             <span
                 class="post-card__icon"
                 data-icon="heart"
-                data-svg-src="<?php echo $isLiked ? '/assets/images/icons/S-heart-fill.svg' : '/assets/images/icons/S-heart.svg'; ?>"
+                data-svg-src="<?php echo $isLiked ? '/assets/images/icons/U-heart-fill.svg' : '/assets/images/icons/S-heart.svg'; ?>"
             ></span>
         </button>
 
