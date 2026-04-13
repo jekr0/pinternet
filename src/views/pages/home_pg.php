@@ -85,6 +85,27 @@
                     src="<?php echo htmlspecialchars($selectedImagePath, ENT_QUOTES, 'UTF-8'); ?>"
                     alt="Изображение поста"
                 >
+
+                <div class="post-full__actions" aria-label="Действия с изображением">
+                    <button class="post-full__action-button" type="button" aria-label="Пожаловаться">
+                        <span class="post-full__action-icon" data-svg-src="/assets/images/icons/warning.svg" aria-hidden="true"></span>
+                    </button>
+                    <button class="post-full__action-button" type="button" aria-label="Развернуть">
+                        <span class="post-full__action-icon" data-svg-src="/assets/images/icons/maximize.svg" aria-hidden="true"></span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="post-full__bottom-actions" aria-label="Базовые действия с постом">
+                <button class="post-full__meta-button post-full__meta-button--like" type="button" aria-label="Лайк">
+                    <span class="post-full__meta-icon" data-svg-src="/assets/images/icons/L-heart.svg" aria-hidden="true"></span>
+                </button>
+                <button class="post-full__meta-button" type="button" aria-label="Сохранить">
+                    <span class="post-full__meta-icon" data-svg-src="/assets/images/icons/L-bookmark.svg" aria-hidden="true"></span>
+                </button>
+                <button class="post-full__meta-button" type="button" aria-label="Поделиться">
+                    <span class="post-full__meta-icon" data-svg-src="/assets/images/icons/L-share.svg" aria-hidden="true"></span>
+                </button>
             </div>
         </section>
     <?php endif; ?>

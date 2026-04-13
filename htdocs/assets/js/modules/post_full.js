@@ -3,11 +3,17 @@
 class PostFullComponent {
     constructor() {
         this.container = null;
+        this.postFullFrame = null;
+        this.postFullElement = null;
     }
 
     init() {
         this.container = document.querySelector('[data-component="masonry-feed"]');
         if (!this.container) return;
+
+        this.postFullElement = document.querySelector('.post-full');
+        this.postFullFrame = this.postFullElement?.querySelector('.post-full__frame') || null;
+        this.initActionIcons();
 
         const cards = Array.from(this.container.querySelectorAll('[data-component="post-card"]'));
         if (cards.length === 0) return;
@@ -24,6 +30,17 @@ class PostFullComponent {
             if (!postId) return;
 
             window.location.href = `/post/${postId}`;
+        });
+    }
+
+    initActionIcons() {
+        if (!this.postFullElement) return;
+
+        const iconContainers = this.postFullElement.querySelectorAll('[data-svg-src]');
+        iconContainers.forEach((container) => {
+            const src = container.getAttribute('data-svg-src');
+            if (!src) return;
+            App.utils.loadSVG(src, container);
         });
     }
 }
