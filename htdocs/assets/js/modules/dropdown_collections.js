@@ -27,7 +27,9 @@ class DropdownCollectionsComponent {
             this.activeButton = button;
             this.activeCard = card;
             this.activePostId = postId;
-            this.activeCard.classList.add('post-card--dropdown-open');
+            if (this.activeCard.dataset.component !== 'post-full') {
+                this.activeCard.classList.add('post-card--dropdown-open');
+            }
 
             await this.loadBoards();
             this.positionToButton(button);
@@ -93,7 +95,9 @@ class DropdownCollectionsComponent {
         this.dropdown.classList.add('dropdown-collections--closing');
         this.dropdown.setAttribute('aria-hidden', 'true');
 
-        this.activeCard?.classList.remove('post-card--dropdown-open');
+        if (this.activeCard?.dataset.component !== 'post-full') {
+            this.activeCard.classList.remove('post-card--dropdown-open');
+        }
         this.activeButton = null;
         this.activeCard = null;
         this.activePostId = 0;
@@ -115,7 +119,7 @@ class DropdownCollectionsComponent {
         const rect = button.getBoundingClientRect();
         const width = this.dropdown.offsetWidth || 220;
         const height = this.dropdown.offsetHeight || 170;
-        const spacing = 5;
+        const spacing = this.activeCard?.dataset.component === 'post-full' ? 10 : 5;
         const viewportPadding = 10;
 
         const hasSpaceRight = rect.right + spacing + width <= window.innerWidth - viewportPadding;
