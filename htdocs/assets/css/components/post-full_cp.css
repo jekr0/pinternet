@@ -20,7 +20,8 @@
 .post-full__frame {
     position: relative;
     width: calc(100% - 40px);
-    height: 700px;
+    min-height: 500px;
+    max-height: 700px;
     margin: 20px 20px 40px;
     border-radius: 10px;
     background: #f5f5f5;
@@ -67,16 +68,6 @@
     pointer-events: none;
 }
 
-
-.post-full__image.post-full__image--fit-height {
-    height: 100%;
-    width: auto;
-}
-
-.post-full__image.post-full__image--fit-width {
-    width: 100%;
-    height: auto;
-}
 
 .post-full__actions {
     position: absolute;
