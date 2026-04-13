@@ -45,7 +45,7 @@ class ProfileComponent {
     }
 
     setDefaultIcon(button) {
-        button.innerHTML = '<img class="header__profile-icon" src="assets/images/icons/at-sign.svg" alt="Profile">';
+        button.innerHTML = '<img class="header__profile-icon" src="/assets/images/icons/at-sign.svg" alt="Profile">';
     }
 
     handleClick(e, button) {
