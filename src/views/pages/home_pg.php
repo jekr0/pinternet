@@ -76,14 +76,21 @@
         <?php
             $selectedImagePath = (string) ($selectedPost['image_path'] ?? '');
             $selectedImagePath = $normalizePublicPath($selectedImagePath);
+            $selectedIsLiked = !empty($selectedPost['is_liked']);
+            $selectedIsBookmarked = !empty($selectedPost['is_bookmarked']);
+            $selectedIsOwner = !empty($selectedPost['is_owner']);
+            $selectedHeartIcon = $selectedIsLiked ? '/assets/images/icons/U-heart-fill.svg' : '/assets/images/icons/L-heart.svg';
+            $selectedBookmarkIcon = $selectedIsBookmarked
+                ? '/assets/images/icons/L-bookmark-plus.svg'
+                : ($selectedIsOwner ? '/assets/images/icons/U-bookmark-fill.svg' : '/assets/images/icons/L-bookmark.svg');
         ?>
         <section
             class="post-full is-open"
             data-component="post-full"
             data-post-id="<?php echo (int) ($selectedPost['id'] ?? 0); ?>"
-            data-liked="<?php echo !empty($selectedPost['is_liked']) ? '1' : '0'; ?>"
-            data-bookmarked="<?php echo !empty($selectedPost['is_bookmarked']) ? '1' : '0'; ?>"
-            data-owner="<?php echo !empty($selectedPost['is_owner']) ? '1' : '0'; ?>"
+            data-liked="<?php echo $selectedIsLiked ? '1' : '0'; ?>"
+            data-bookmarked="<?php echo $selectedIsBookmarked ? '1' : '0'; ?>"
+            data-owner="<?php echo $selectedIsOwner ? '1' : '0'; ?>"
             aria-hidden="false"
         >
             <div
@@ -108,21 +115,21 @@
 
             <div class="post-full__bottom-actions" aria-label="Базовые действия с постом">
                 <button
-                    class="post-full__meta-button post-full__meta-button--like<?php echo !empty($selectedPost['is_liked']) ? ' is-active' : ''; ?>"
+                    class="post-full__meta-button post-full__meta-button--like<?php echo $selectedIsLiked ? ' is-active' : ''; ?>"
                     type="button"
                     data-action="like"
                     aria-label="Лайк"
                 >
-                    <span class="post-full__meta-icon" data-icon="heart" data-svg-src="/assets/images/icons/L-heart.svg" aria-hidden="true"></span>
+                    <span class="post-full__meta-icon" data-icon="heart" data-svg-src="<?php echo $selectedHeartIcon; ?>" aria-hidden="true"></span>
                     <span class="post-full__likes-count" data-component="post-full-like-count"><?php echo (int) ($selectedPost['likes_count'] ?? 0); ?></span>
                 </button>
                 <button
-                    class="post-full__meta-button<?php echo !empty($selectedPost['is_bookmarked']) ? ' is-active' : ''; ?>"
+                    class="post-full__meta-button<?php echo $selectedIsBookmarked ? ' is-active' : ''; ?>"
                     type="button"
                     data-action="bookmark"
                     aria-label="Сохранить"
                 >
-                    <span class="post-full__meta-icon" data-icon="bookmark" data-svg-src="/assets/images/icons/L-bookmark.svg" aria-hidden="true"></span>
+                    <span class="post-full__meta-icon" data-icon="bookmark" data-svg-src="<?php echo $selectedBookmarkIcon; ?>" aria-hidden="true"></span>
                 </button>
                 <button class="post-full__meta-button" type="button" data-action="share" aria-label="Поделиться">
                     <span class="post-full__meta-icon" data-icon="share" data-svg-src="/assets/images/icons/L-share.svg" aria-hidden="true"></span>

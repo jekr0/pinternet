@@ -142,8 +142,25 @@
     border-color: rgb(150, 150, 250);
 }
 
+.post-full__meta-button[data-action="like"]:not(.is-active),
+.post-full__meta-button[data-action="bookmark"]:not(.is-active),
+.post-full__meta-button[data-action="share"] {
+    color: #bbb;
+}
+
+.post-full__meta-button[data-action="like"]:not(.is-active):hover,
+.post-full__meta-button[data-action="bookmark"]:not(.is-active):not(:disabled):hover,
+.post-full__meta-button[data-action="share"]:hover {
+    color: rgb(150, 150, 250);
+}
+
 .post-full__meta-button.is-active {
     color: rgb(150, 150, 250);
+}
+
+.post-full__meta-button[data-action="like"].is-active:hover,
+.post-full__meta-button[data-action="bookmark"].is-active:hover {
+    color: rgb(100, 100, 200);
 }
 
 .post-full__meta-button--like {
@@ -187,4 +204,16 @@
 
 .post-full__meta-button--like.is-active .post-full__likes-count {
     color: rgb(150, 150, 250);
+}
+
+.post-full__meta-button--like.is-active:hover .post-full__likes-count {
+    color: rgb(100, 100, 200);
+}
+
+.post-full__meta-button[data-action="share"] {
+    transition: color 0.3s ease, border-color 0.2s ease;
+}
+
+.post-full__meta-button[data-action="share"].is-copied {
+    color: rgb(100, 100, 200);
 }
