@@ -113,7 +113,7 @@
                     data-action="like"
                     aria-label="Лайк"
                 >
-                    <span class="post-full__meta-icon" data-icon="heart" data-svg-src="/assets/images/icons/U-heart-fill.svg" aria-hidden="true"></span>
+                    <span class="post-full__meta-icon" data-icon="heart" data-svg-src="/assets/images/icons/L-heart.svg" aria-hidden="true"></span>
                     <span class="post-full__likes-count" data-component="post-full-like-count"><?php echo (int) ($selectedPost['likes_count'] ?? 0); ?></span>
                 </button>
                 <button
@@ -122,10 +122,10 @@
                     data-action="bookmark"
                     aria-label="Сохранить"
                 >
-                    <span class="post-full__meta-icon" data-icon="bookmark" data-svg-src="/assets/images/icons/L-bookmark-plus.svg" aria-hidden="true"></span>
+                    <span class="post-full__meta-icon" data-icon="bookmark" data-svg-src="/assets/images/icons/L-bookmark.svg" aria-hidden="true"></span>
                 </button>
                 <button class="post-full__meta-button" type="button" data-action="share" aria-label="Поделиться">
-                    <span class="post-full__meta-icon" data-icon="share" data-svg-src="/assets/images/icons/L-share-fill.svg" aria-hidden="true"></span>
+                    <span class="post-full__meta-icon" data-icon="share" data-svg-src="/assets/images/icons/L-share.svg" aria-hidden="true"></span>
                 </button>
             </div>
         </section>

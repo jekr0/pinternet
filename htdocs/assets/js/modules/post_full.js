@@ -93,11 +93,49 @@ class PostFullComponent {
 
         if (likeButton) {
             likeButton.classList.toggle('is-active', isLiked);
+            this.setLikeIcon(likeButton, isLiked);
         }
 
         if (bookmarkButton) {
             bookmarkButton.classList.toggle('is-active', isBookmarked);
+            this.setBookmarkIcon(bookmarkButton, isBookmarked);
         }
+    }
+
+    setLikeIcon(button, isLiked) {
+        const icon = button.querySelector('[data-icon="heart"]');
+        if (!icon) return;
+
+        const iconPath = isLiked
+            ? '/assets/images/icons/U-heart-fill.svg'
+            : '/assets/images/icons/L-heart.svg';
+
+        icon.setAttribute('data-svg-src', iconPath);
+        App.utils.loadSVG(iconPath, icon);
+    }
+
+    setBookmarkIcon(button, isBookmarked) {
+        const icon = button.querySelector('[data-icon="bookmark"]');
+        if (!icon) return;
+
+        const iconPath = isBookmarked
+            ? '/assets/images/icons/L-bookmark-plus.svg'
+            : '/assets/images/icons/L-bookmark.svg';
+
+        icon.setAttribute('data-svg-src', iconPath);
+        App.utils.loadSVG(iconPath, icon);
+    }
+
+    setShareIcon(button, isFilled) {
+        const icon = button.querySelector('[data-icon="share"]');
+        if (!icon) return;
+
+        const iconPath = isFilled
+            ? '/assets/images/icons/L-share-fill.svg'
+            : '/assets/images/icons/L-share.svg';
+
+        icon.setAttribute('data-svg-src', iconPath);
+        App.utils.loadSVG(iconPath, icon);
     }
 
     getPostId() {
@@ -124,6 +162,7 @@ class PostFullComponent {
             const isLiked = !!payload.liked;
             this.postFullElement.dataset.liked = isLiked ? '1' : '0';
             button.classList.toggle('is-active', isLiked);
+            this.setLikeIcon(button, isLiked);
             this.updateLikesCount(isLiked);
         } catch (error) {
             console.warn('Unable to toggle like from post-full', error);
@@ -168,6 +207,7 @@ class PostFullComponent {
 
             this.postFullElement.dataset.bookmarked = '1';
             button.classList.add('is-active');
+            this.setBookmarkIcon(button, true);
         } catch (error) {
             console.warn('Unable to bookmark from post-full', error);
         }
@@ -215,8 +255,10 @@ class PostFullComponent {
         }
 
         button.classList.add('is-active');
+        this.setShareIcon(button, true);
         this.shareActiveTimer = setTimeout(() => {
             button.classList.remove('is-active');
+            this.setShareIcon(button, false);
             this.shareActiveTimer = null;
         }, 1000);
     }
