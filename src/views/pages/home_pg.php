@@ -18,6 +18,7 @@
                        FROM Saved_Posts sp
                        WHERE sp.post_id = p.id AND sp.user_id = ?
                    ) AS is_bookmarked,
+                   (SELECT COUNT(*) FROM Post_Likes pl_all WHERE pl_all.post_id = p.id) AS likes_count,
                    (p.user_id = ?) AS is_owner
             FROM Posts p
             INNER JOIN Users u ON u.id = p.user_id
@@ -30,6 +31,7 @@
             SELECT p.id, p.image_path, u.username,
                    0 AS is_liked,
                    0 AS is_bookmarked,
+                   (SELECT COUNT(*) FROM Post_Likes pl_all WHERE pl_all.post_id = p.id) AS likes_count,
                    0 AS is_owner
             FROM Posts p
             INNER JOIN Users u ON u.id = p.user_id
@@ -75,7 +77,15 @@
             $selectedImagePath = (string) ($selectedPost['image_path'] ?? '');
             $selectedImagePath = $normalizePublicPath($selectedImagePath);
         ?>
-        <section class="post-full is-open" data-component="post-full" aria-hidden="false">
+        <section
+            class="post-full is-open"
+            data-component="post-full"
+            data-post-id="<?php echo (int) ($selectedPost['id'] ?? 0); ?>"
+            data-liked="<?php echo !empty($selectedPost['is_liked']) ? '1' : '0'; ?>"
+            data-bookmarked="<?php echo !empty($selectedPost['is_bookmarked']) ? '1' : '0'; ?>"
+            data-owner="<?php echo !empty($selectedPost['is_owner']) ? '1' : '0'; ?>"
+            aria-hidden="false"
+        >
             <div
                 class="post-full__frame"
                 style="--post-full-bg-image: url('<?php echo htmlspecialchars($selectedImagePath, ENT_QUOTES, 'UTF-8'); ?>');"
@@ -97,14 +107,25 @@
             </div>
 
             <div class="post-full__bottom-actions" aria-label="Базовые действия с постом">
-                <button class="post-full__meta-button post-full__meta-button--like" type="button" aria-label="Лайк">
-                    <span class="post-full__meta-icon" data-svg-src="/assets/images/icons/L-heart.svg" aria-hidden="true"></span>
+                <button
+                    class="post-full__meta-button post-full__meta-button--like<?php echo !empty($selectedPost['is_liked']) ? ' is-active' : ''; ?>"
+                    type="button"
+                    data-action="like"
+                    aria-label="Лайк"
+                >
+                    <span class="post-full__meta-icon" data-icon="heart" data-svg-src="/assets/images/icons/U-heart-fill.svg" aria-hidden="true"></span>
+                    <span class="post-full__likes-count" data-component="post-full-like-count"><?php echo (int) ($selectedPost['likes_count'] ?? 0); ?></span>
                 </button>
-                <button class="post-full__meta-button" type="button" aria-label="Сохранить">
-                    <span class="post-full__meta-icon" data-svg-src="/assets/images/icons/L-bookmark.svg" aria-hidden="true"></span>
+                <button
+                    class="post-full__meta-button<?php echo !empty($selectedPost['is_bookmarked']) ? ' is-active' : ''; ?>"
+                    type="button"
+                    data-action="bookmark"
+                    aria-label="Сохранить"
+                >
+                    <span class="post-full__meta-icon" data-icon="bookmark" data-svg-src="/assets/images/icons/L-bookmark-plus.svg" aria-hidden="true"></span>
                 </button>
-                <button class="post-full__meta-button" type="button" aria-label="Поделиться">
-                    <span class="post-full__meta-icon" data-svg-src="/assets/images/icons/L-share.svg" aria-hidden="true"></span>
+                <button class="post-full__meta-button" type="button" data-action="share" aria-label="Поделиться">
+                    <span class="post-full__meta-icon" data-icon="share" data-svg-src="/assets/images/icons/L-share-fill.svg" aria-hidden="true"></span>
                 </button>
             </div>
         </section>
