@@ -5,6 +5,9 @@ class PostFullComponent {
         this.container = null;
         this.postFullFrame = null;
         this.postFullElement = null;
+        this.toast = null;
+        this.toastFadeTimer = null;
+        this.toastHideTimer = null;
         this.shareActiveTimer = null;
     }
 
@@ -14,6 +17,7 @@ class PostFullComponent {
 
         this.postFullElement = document.querySelector('.post-full');
         this.postFullFrame = this.postFullElement?.querySelector('.post-full__frame') || null;
+        this.toast = document.querySelector('[data-component="create-post-success-toast"]');
         if (this.postFullElement) {
             this.initActionIcons();
             this.bindMetaActions();
@@ -118,9 +122,10 @@ class PostFullComponent {
         const icon = button.querySelector('[data-icon="bookmark"]');
         if (!icon) return;
 
+        const isOwner = this.postFullElement?.dataset.owner === '1';
         const iconPath = isBookmarked
             ? '/assets/images/icons/L-bookmark-plus.svg'
-            : '/assets/images/icons/L-bookmark.svg';
+            : (isOwner ? '/assets/images/icons/U-bookmark-fill.svg' : '/assets/images/icons/L-bookmark.svg');
 
         icon.setAttribute('data-svg-src', iconPath);
         App.utils.loadSVG(iconPath, icon);
@@ -222,6 +227,7 @@ class PostFullComponent {
         try {
             await navigator.clipboard.writeText(shareUrl);
             this.markShared(button);
+            this.showToast('Ссылка скопирована!');
         } catch (error) {
             const fallbackTextarea = document.createElement('textarea');
             fallbackTextarea.value = shareUrl;
@@ -242,6 +248,7 @@ class PostFullComponent {
 
             if (copied) {
                 this.markShared(button);
+                this.showToast('Ссылка скопирована!');
                 return;
             }
 
@@ -254,12 +261,32 @@ class PostFullComponent {
             clearTimeout(this.shareActiveTimer);
         }
 
-        button.classList.add('is-active');
+        button.classList.add('is-copied');
         this.setShareIcon(button, true);
         this.shareActiveTimer = setTimeout(() => {
-            button.classList.remove('is-active');
+            button.classList.remove('is-copied');
             this.setShareIcon(button, false);
             this.shareActiveTimer = null;
+        }, 1000);
+    }
+
+    showToast(message) {
+        if (!this.toast) return;
+
+        clearTimeout(this.toastFadeTimer);
+        clearTimeout(this.toastHideTimer);
+
+        this.toast.textContent = message;
+        this.toast.classList.remove('create-post-success-toast--hidden', 'create-post-success-toast--fade-out');
+
+        this.toastFadeTimer = setTimeout(() => {
+            this.toast.classList.add('create-post-success-toast--fade-out');
+        }, 500);
+
+        this.toastHideTimer = setTimeout(() => {
+            this.toast.classList.add('create-post-success-toast--hidden');
+            this.toast.classList.remove('create-post-success-toast--fade-out');
+            this.toast.textContent = '';
         }, 1000);
     }
 }
