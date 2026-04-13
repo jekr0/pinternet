@@ -115,7 +115,6 @@
     fill: rgba(255, 255, 255, 1);
 }
 
-
 .post-full__bottom-actions {
     width: calc(100% - 40px);
     margin: 15px 20px 40px;
@@ -138,10 +137,20 @@
     cursor: pointer;
 }
 
+.post-full__meta-button:hover {
+    border-color: rgb(150, 150, 250);
+}
+
+.post-full__meta-button.is-active {
+    color: rgb(150, 150, 250);
+    border-color: rgb(150, 150, 250);
+}
+
 .post-full__meta-button--like {
     width: 80px;
     justify-content: flex-start;
     padding-left: 6px;
+    gap: 6px;
 }
 
 .post-full__meta-icon {
@@ -161,4 +170,20 @@
 .post-full__meta-icon svg,
 .post-full__meta-icon svg * {
     fill: currentColor;
+}
+
+.post-full__likes-count {
+    width: 40px;
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: SF_def, sans-serif;
+    color: #bbb;
+    font-size: 16px;
+    line-height: 1;
+}
+
+.post-full__meta-button--like.is-active .post-full__likes-count {
+    color: rgb(150, 150, 250);
 }
