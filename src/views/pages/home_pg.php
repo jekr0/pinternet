@@ -85,6 +85,15 @@
                     src="<?php echo htmlspecialchars($selectedImagePath, ENT_QUOTES, 'UTF-8'); ?>"
                     alt="Изображение поста"
                 >
+
+                <div class="post-full__actions" aria-label="Действия с изображением">
+                    <button class="post-full__action-button" type="button" aria-label="Пожаловаться">
+                        <span class="post-full__action-icon" data-svg-src="/assets/images/icons/warning.svg" aria-hidden="true"></span>
+                    </button>
+                    <button class="post-full__action-button" type="button" aria-label="Развернуть">
+                        <span class="post-full__action-icon" data-svg-src="/assets/images/icons/maximize.svg" aria-hidden="true"></span>
+                    </button>
+                </div>
             </div>
         </section>
     <?php endif; ?>
