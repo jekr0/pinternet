@@ -206,10 +206,6 @@
     color: rgb(150, 150, 250);
 }
 
-.post-full__meta-button--like.is-active:hover .post-full__likes-count {
-    color: rgb(100, 100, 200);
-}
-
 .post-full__meta-button[data-action="share"] {
     transition: color 0.3s ease, border-color 0.2s ease;
 }
