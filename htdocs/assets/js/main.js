@@ -33,6 +33,15 @@ const App = {
             }
         });
     },
+    initWithSvgPreload: async function () {
+        const svgNodes = Array.from(document.querySelectorAll('[data-svg-src]'));
+        const svgPaths = svgNodes
+            .map((node) => node.getAttribute('data-svg-src'))
+            .filter(Boolean);
+
+        await this.utils.preloadSVGs(svgPaths);
+        this.init();
+    },
 
     // Хранилище для экземпляров (можно использовать позже)
     components: {},
@@ -69,6 +78,26 @@ const App = {
         _svgCache: {},
         _svgRequestState: new WeakMap(),
         _bodyScrollLocks: 0,
+        preloadSVGs: async function (srcList) {
+            if (!Array.isArray(srcList) || srcList.length === 0) return;
+
+            const uniqueSrcList = [...new Set(srcList.map((src) => this.normalizePublicPath(src)))];
+            const pendingRequests = uniqueSrcList
+                .filter((src) => !this._svgCache[src])
+                .map((src) =>
+                    fetch(src)
+                        .then((response) => {
+                            if (!response.ok) throw new Error(`SVG not found: ${src}`);
+                            return response.text();
+                        })
+                        .then((svg) => {
+                            this._svgCache[src] = svg;
+                        })
+                        .catch((error) => console.warn(error))
+                );
+
+            await Promise.all(pendingRequests);
+        },
         loadSVG: function (src, container) {
             if (!container) return;
             const normalizedSrc = this.normalizePublicPath(src);
@@ -124,4 +153,6 @@ const App = {
 };
 
 // Инициализируем после полной загрузки DOM (все скрипты уже выполнены)
-document.addEventListener('DOMContentLoaded', () => App.init());
+document.addEventListener('DOMContentLoaded', () => {
+    App.initWithSvgPreload();
+});
