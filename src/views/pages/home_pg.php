@@ -56,6 +56,94 @@
 
     $selectedPost = null;
     $selectedPostHashtags = [];
+
+    $normalizeTag = static function (string $tag): string {
+        return mb_strtolower(trim($tag));
+    };
+
+    $metaTags = [
+        '2d', '3d', 'art', 'fanart', 'gif', 'anime', 'meme', 'ai', 'sketch', 'digital',
+        'illustration', 'drawing', 'pixelart', 'render', 'animation', 'edit', 'photo', 'aesthetic', 'design', 'conceptart'
+    ];
+    $metaTagSet = [];
+    foreach ($metaTags as $metaTag) {
+        $metaTagSet[$normalizeTag($metaTag)] = true;
+    }
+
+    $fetchHashtagsByPostIds = static function (PDO $pdo, array $postIds) use ($normalizeTag): array {
+        if (empty($postIds)) {
+            return [];
+        }
+
+        $placeholders = implode(',', array_fill(0, count($postIds), '?'));
+        $tagsStmt = $pdo->prepare("
+            SELECT ph.post_id, h.name
+            FROM Post_Hashtags ph
+            INNER JOIN Hashtags h ON h.id = ph.hashtag_id
+            WHERE ph.post_id IN ($placeholders)
+        ");
+        $tagsStmt->execute(array_values($postIds));
+
+        $tagsByPost = [];
+        foreach ($tagsStmt->fetchAll(PDO::FETCH_ASSOC) ?: [] as $tagRow) {
+            $postId = (int) ($tagRow['post_id'] ?? 0);
+            $tagName = (string) ($tagRow['name'] ?? '');
+            $normalizedTag = $normalizeTag($tagName);
+            if ($postId <= 0 || $normalizedTag === '') {
+                continue;
+            }
+            if (!isset($tagsByPost[$postId])) {
+                $tagsByPost[$postId] = [];
+            }
+            $tagsByPost[$postId][$normalizedTag] = true;
+        }
+
+        return $tagsByPost;
+    };
+
+    $fetchRelatedHashtags = static function (PDO $pdo, array $seedTags, array $excludedTags = []) use ($normalizeTag): array {
+        if (empty($seedTags)) {
+            return [];
+        }
+
+        $seedPlaceholders = implode(',', array_fill(0, count($seedTags), '?'));
+        $params = array_values($seedTags);
+
+        $excludedSql = '';
+        if (!empty($excludedTags)) {
+            $excludedPlaceholders = implode(',', array_fill(0, count($excludedTags), '?'));
+            $excludedSql = " AND LOWER(related_h.name) NOT IN ($excludedPlaceholders)";
+            $params = array_merge($params, array_values($excludedTags));
+        }
+
+        $relatedStmt = $pdo->prepare("
+            SELECT related_h.name AS tag_name, COUNT(*) AS weight
+            FROM Post_Hashtags base_ph
+            INNER JOIN Hashtags base_h ON base_h.id = base_ph.hashtag_id
+            INNER JOIN Post_Hashtags related_ph ON related_ph.post_id = base_ph.post_id
+            INNER JOIN Hashtags related_h ON related_h.id = related_ph.hashtag_id
+            WHERE LOWER(base_h.name) IN ($seedPlaceholders)
+              AND LOWER(related_h.name) <> LOWER(base_h.name)
+              $excludedSql
+            GROUP BY related_h.name
+            ORDER BY weight DESC, related_h.name ASC
+            LIMIT 30
+        ");
+        $relatedStmt->execute($params);
+
+        $relatedTags = [];
+        foreach ($relatedStmt->fetchAll(PDO::FETCH_ASSOC) ?: [] as $relatedRow) {
+            $name = $normalizeTag((string) ($relatedRow['tag_name'] ?? ''));
+            $weight = (int) ($relatedRow['weight'] ?? 0);
+            if ($name === '' || $weight <= 0) {
+                continue;
+            }
+            $relatedTags[$name] = $weight;
+        }
+
+        return $relatedTags;
+    };
+
     if ($selectedPostId > 0) {
         foreach ($posts as $row) {
             if ((int) ($row['id'] ?? 0) !== $selectedPostId) {
@@ -75,10 +163,126 @@
                 ORDER BY h.name ASC
             ');
             $hashtagsStmt->execute([$selectedPostId]);
-            $selectedPostHashtags = array_map(
+            $selectedPostHashtags = array_values(array_filter(array_map(
                 static fn(array $tagRow): string => (string) ($tagRow['name'] ?? ''),
                 $hashtagsStmt->fetchAll(PDO::FETCH_ASSOC) ?: []
-            );
+            )));
+
+            if (!empty($selectedPostHashtags)) {
+                $postIds = array_map(static fn(array $row): int => (int) ($row['id'] ?? 0), $posts);
+                $postTagMap = $fetchHashtagsByPostIds($pdo, $postIds);
+
+                $normalizedSelectedTags = array_values(array_unique(array_filter(array_map($normalizeTag, $selectedPostHashtags))));
+
+                $seedTags = [];
+                foreach ($normalizedSelectedTags as $tagName) {
+                    if (isset($metaTagSet[$tagName])) {
+                        continue;
+                    }
+                    $seedTags[$tagName] = true;
+                }
+
+                if (empty($seedTags)) {
+                    foreach ($normalizedSelectedTags as $tagName) {
+                        $seedTags[$tagName] = true;
+                    }
+                }
+
+                $relatedWeights = [];
+                $frontier = array_keys($seedTags);
+                $visited = $seedTags;
+
+                for ($depth = 1; $depth <= 2 && !empty($frontier); $depth++) {
+                    $relatedBatch = $fetchRelatedHashtags($pdo, $frontier, array_keys($visited));
+                    if (empty($relatedBatch)) {
+                        break;
+                    }
+
+                    $batchCount = 0;
+                    foreach ($relatedBatch as $relatedTag => $weight) {
+                        if (isset($metaTagSet[$relatedTag])) {
+                            continue;
+                        }
+                        if (isset($visited[$relatedTag])) {
+                            continue;
+                        }
+
+                        $visited[$relatedTag] = true;
+                        $score = $weight / $depth;
+                        $relatedWeights[$relatedTag] = ($relatedWeights[$relatedTag] ?? 0.0) + $score;
+                        $frontier[] = $relatedTag;
+                        $batchCount++;
+
+                        if ($batchCount >= 6) {
+                            break;
+                        }
+                    }
+
+                    $frontier = array_slice($frontier, -6);
+                }
+
+                $baseOrder = [];
+                foreach ($posts as $idx => $row) {
+                    $postId = (int) ($row['id'] ?? 0);
+                    if ($postId > 0) {
+                        $baseOrder[$postId] = $idx;
+                    }
+                }
+
+                usort($posts, static function (array $left, array $right) use ($selectedPostId, $seedTags, $relatedWeights, $postTagMap, $baseOrder, $metaTagSet): int {
+                    $leftId = (int) ($left['id'] ?? 0);
+                    $rightId = (int) ($right['id'] ?? 0);
+
+                    $rankPost = static function (int $postId) use ($selectedPostId, $seedTags, $relatedWeights, $postTagMap, $baseOrder, $metaTagSet): array {
+                        if ($postId === $selectedPostId) {
+                            return [-1, 0, 0.0, $baseOrder[$postId] ?? PHP_INT_MAX];
+                        }
+
+                        $tags = $postTagMap[$postId] ?? [];
+                        $overlap = 0;
+                        foreach ($seedTags as $seedTag => $_) {
+                            if (isset($tags[$seedTag])) {
+                                $overlap++;
+                            }
+                        }
+
+                        $isExact = !empty($seedTags) && $overlap === count($seedTags);
+                        $relatedScore = 0.0;
+                        if ($overlap === 0 && !empty($tags)) {
+                            foreach ($tags as $tagName => $_) {
+                                $relatedScore += (float) ($relatedWeights[$tagName] ?? 0.0);
+                                if (isset($metaTagSet[$tagName])) {
+                                    $relatedScore += 0.15;
+                                }
+                            }
+                        }
+
+                        if ($isExact) {
+                            $phase = 0;
+                        } elseif ($overlap > 0) {
+                            $phase = 1;
+                        } elseif ($relatedScore > 0) {
+                            $phase = 2;
+                        } else {
+                            $phase = 3;
+                        }
+
+                        return [$phase, -$overlap, -$relatedScore, $baseOrder[$postId] ?? PHP_INT_MAX];
+                    };
+
+                    $leftRank = $rankPost($leftId);
+                    $rightRank = $rankPost($rightId);
+
+                    foreach ([0, 1, 2, 3] as $index) {
+                        if ($leftRank[$index] === $rightRank[$index]) {
+                            continue;
+                        }
+                        return ($leftRank[$index] <=> $rightRank[$index]);
+                    }
+
+                    return 0;
+                });
+            }
         }
     }
 ?>
@@ -149,7 +353,11 @@
                         data-placeholder-size="28"
                         aria-label="Профиль автора @<?php echo htmlspecialchars($selectedAuthorUsername, ENT_QUOTES, 'UTF-8'); ?>"
                     ></button>
-                    <span class="post-full__author-username">@<?php echo htmlspecialchars($selectedAuthorUsername, ENT_QUOTES, 'UTF-8'); ?></span>
+                    <a
+                        class="post-full__author-username"
+                        href="<?php echo htmlspecialchars($selectedAuthorProfileUrl, ENT_QUOTES, 'UTF-8'); ?>"
+                        aria-label="Профиль автора @<?php echo htmlspecialchars($selectedAuthorUsername, ENT_QUOTES, 'UTF-8'); ?>"
+                    >@<?php echo htmlspecialchars($selectedAuthorUsername, ENT_QUOTES, 'UTF-8'); ?></a>
                 </div>
 
                 <div class="post-full__bottom-actions" aria-label="Базовые действия с постом">
