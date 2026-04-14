@@ -146,7 +146,7 @@ const App = {
     store: {
         profile: {
             avatarPath: '/uploads/avatars/avatar.jpg',
-            defaultIcon: '/assets/images/icons/at-sign.svg'
+            defaultIcon: '/assets/images/icons/planet.svg'
         },
         // другие глобальные данные
     }

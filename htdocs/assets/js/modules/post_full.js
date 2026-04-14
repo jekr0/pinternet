@@ -14,7 +14,6 @@ class PostFullComponent {
         this.zoomBaseWidth = 0;
         this.zoomBaseHeight = 0;
         this.zoomResizeHandler = null;
-        this.zoomScrollHandler = null;
         this.zoomDragMoveHandler = null;
         this.zoomDragEndHandler = null;
         this.zoomDragging = false;
@@ -356,7 +355,6 @@ class PostFullComponent {
             this.zoomScale = Math.min(3, Math.max(0.5, Number(nextScale.toFixed(2))));
             this.applyZoomSize();
             this.adjustZoomScrollForViewportCenter(previousScale, this.zoomScale);
-            this.updateMinimizePosition();
         }, { passive: false });
 
         this.zoomOverlay = overlay;
@@ -364,10 +362,6 @@ class PostFullComponent {
         this.zoomResizeHandler = () => {
             this.calculateZoomBaseSize();
             this.applyZoomSize();
-            this.updateMinimizePosition();
-        };
-        this.zoomScrollHandler = () => {
-            this.updateMinimizePosition();
         };
         this.zoomDragMoveHandler = (event) => {
             if (!this.zoomOverlay || !this.zoomDragging) return;
@@ -384,14 +378,12 @@ class PostFullComponent {
             this.calculateZoomBaseSize();
             this.applyZoomSize();
             this.centerZoomImage();
-            this.updateMinimizePosition();
         }, { once: true });
 
         if (image.complete) {
             this.calculateZoomBaseSize();
             this.applyZoomSize();
             this.centerZoomImage();
-            this.updateMinimizePosition();
         }
 
         overlay.addEventListener('mousedown', (event) => {
@@ -409,7 +401,6 @@ class PostFullComponent {
         window.addEventListener('mousemove', this.zoomDragMoveHandler);
         window.addEventListener('mouseup', this.zoomDragEndHandler);
 
-        overlay.addEventListener('scroll', this.zoomScrollHandler);
         window.addEventListener('resize', this.zoomResizeHandler);
         void overlay.offsetWidth;
         window.setTimeout(() => {
@@ -425,9 +416,6 @@ class PostFullComponent {
 
         clearTimeout(this.zoomHideTimer);
         this.zoomHideTimer = setTimeout(() => {
-            if (this.zoomScrollHandler) {
-                overlay.removeEventListener('scroll', this.zoomScrollHandler);
-            }
             if (this.zoomResizeHandler) {
                 window.removeEventListener('resize', this.zoomResizeHandler);
             }
@@ -447,7 +435,6 @@ class PostFullComponent {
                 this.zoomBaseWidth = 0;
                 this.zoomBaseHeight = 0;
                 this.zoomResizeHandler = null;
-                this.zoomScrollHandler = null;
                 this.zoomDragMoveHandler = null;
                 this.zoomDragEndHandler = null;
             }
@@ -506,31 +493,6 @@ class PostFullComponent {
 
         overlay.scrollLeft = Math.min(maxLeft, Math.max(0, Math.round(targetLeft)));
         overlay.scrollTop = Math.min(maxTop, Math.max(0, Math.round(targetTop)));
-    }
-
-    updateMinimizePosition() {
-        if (!this.zoomOverlay) return;
-
-        const minimizeButton = this.zoomOverlay.querySelector('.post-full-zoom__minimize');
-        if (!minimizeButton || !this.zoomImage) return;
-
-        const imageRect = this.zoomImage.getBoundingClientRect();
-        const buttonWidth = minimizeButton.offsetWidth || 40;
-        const margin = 30;
-
-        const rawLeft = imageRect.right - buttonWidth - 10;
-        const clampedLeft = Math.min(
-            Math.max(margin, rawLeft),
-            window.innerWidth - margin - buttonWidth
-        );
-        const rawTop = imageRect.top + 10;
-        const clampedTop = Math.min(
-            Math.max(margin, rawTop),
-            window.innerHeight - margin - (minimizeButton.offsetHeight || 40)
-        );
-
-        minimizeButton.style.left = `${Math.round(clampedLeft)}px`;
-        minimizeButton.style.top = `${Math.round(clampedTop)}px`;
     }
 
     openReportOverlay() {

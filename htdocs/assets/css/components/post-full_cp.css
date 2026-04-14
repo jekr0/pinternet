@@ -389,7 +389,9 @@
 
 .post-full-zoom__minimize {
     position: fixed;
-    z-index: 1;
+    top: 30px;
+    right: 30px;
+    z-index: 2;
 }
 
 .post-full-report {
