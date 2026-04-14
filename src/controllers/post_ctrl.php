@@ -366,22 +366,8 @@ function handlePostReport(PDO $pdo, int $userId): never
     }
 
     try {
-        $pdo->exec('
-            CREATE TABLE IF NOT EXISTS Post_Reports (
-                id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-                user_id INT UNSIGNED NOT NULL,
-                post_id INT UNSIGNED NOT NULL,
-                status VARCHAR(20) NOT NULL DEFAULT "pending",
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                UNIQUE KEY uniq_post_report (user_id, post_id),
-                INDEX idx_post_reports_post (post_id),
-                INDEX idx_post_reports_status (status)
-            )
-        ');
-
-        $insertStmt = $pdo->prepare('INSERT IGNORE INTO Post_Reports (user_id, post_id, status) VALUES (?, ?, ?)');
-        $insertStmt->execute([$userId, $postId, 'pending']);
+        $insertStmt = $pdo->prepare('INSERT IGNORE INTO Post_Reports (user_id, post_id) VALUES (?, ?)');
+        $insertStmt->execute([$userId, $postId]);
         $alreadyReported = $insertStmt->rowCount() === 0;
     } catch (Throwable $e) {
         error_log('Report post error: ' . $e->getMessage());

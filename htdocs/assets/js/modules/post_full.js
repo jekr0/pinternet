@@ -5,19 +5,12 @@ class PostFullComponent {
         this.container = null;
         this.postFullFrame = null;
         this.postFullElement = null;
-        this.toast = null;
-        this.toastFadeTimer = null;
-        this.toastHideTimer = null;
         this.shareActiveTimer = null;
 
         this.zoomOverlay = null;
         this.zoomImage = null;
         this.zoomScale = 1;
         this.zoomHideTimer = null;
-
-        this.reportOverlay = null;
-        this.reportSubmitButton = null;
-        this.reportHideTimer = null;
     }
 
     init() {
@@ -26,7 +19,6 @@ class PostFullComponent {
 
         this.postFullElement = document.querySelector('.post-full');
         this.postFullFrame = this.postFullElement?.querySelector('.post-full__frame') || null;
-        this.toast = document.querySelector('[data-component="create-post-success-toast"]');
         if (this.postFullElement) {
             this.initActionIcons();
             this.bindMetaActions();
@@ -309,8 +301,8 @@ class PostFullComponent {
         const overlay = document.createElement('div');
         overlay.className = 'post-full-zoom post-full-zoom--hidden';
 
-        const panel = document.createElement('div');
-        panel.className = 'post-full-zoom__panel';
+        const content = document.createElement('div');
+        content.className = 'post-full-zoom__content';
 
         const image = document.createElement('img');
         image.className = 'post-full-zoom__image';
@@ -328,10 +320,11 @@ class PostFullComponent {
         App.utils.loadSVG('/assets/images/icons/minimize.svg', minimizeIcon);
 
         minimizeButton.appendChild(minimizeIcon);
-        panel.appendChild(image);
-        panel.appendChild(minimizeButton);
-        overlay.appendChild(panel);
+        content.appendChild(image);
+        content.appendChild(minimizeButton);
+        overlay.appendChild(content);
         document.body.appendChild(overlay);
+        App.utils.lockBodyScroll();
 
         overlay.addEventListener('click', (event) => {
             if (event.target === overlay) {
@@ -368,6 +361,7 @@ class PostFullComponent {
 
         clearTimeout(this.zoomHideTimer);
         this.zoomHideTimer = setTimeout(() => {
+            App.utils.unlockBodyScroll();
             overlay.remove();
             if (this.zoomOverlay === overlay) {
                 this.zoomOverlay = null;
@@ -378,81 +372,51 @@ class PostFullComponent {
     }
 
     openReportOverlay() {
-        if (this.reportOverlay) return;
+        if (!App.overlay) return;
+        if (App.overlay.get('post-report')) return;
 
-        const overlay = document.createElement('div');
-        overlay.className = 'post-full-report post-full-report--hidden';
+        let reportButton = null;
 
-        const panel = document.createElement('div');
-        panel.className = 'post-full-report__panel';
+        App.overlay.open({
+            key: 'post-report',
+            overlayClass: 'post-full-report',
+            hiddenClass: 'post-full-report--hidden',
+            panelClass: 'post-full-report__panel',
+            buildPanel: (panel, close) => {
+                const text = document.createElement('p');
+                text.className = 'post-full-report__text';
+                text.textContent = 'Вы уверены, что хотите пожаловаться на этот пост?';
 
-        const text = document.createElement('p');
-        text.className = 'post-full-report__text';
-        text.textContent = 'Вы уверены, что хотите пожаловаться на этот пост?';
+                const actions = document.createElement('div');
+                actions.className = 'post-full-report__actions';
 
-        const actions = document.createElement('div');
-        actions.className = 'post-full-report__actions';
+                const cancelButton = document.createElement('button');
+                cancelButton.className = 'post-full-report__button post-full-report__button--cancel';
+                cancelButton.type = 'button';
+                cancelButton.textContent = 'Отмена';
+                cancelButton.addEventListener('click', close);
 
-        const cancelButton = document.createElement('button');
-        cancelButton.className = 'post-full-report__button post-full-report__button--cancel';
-        cancelButton.type = 'button';
-        cancelButton.textContent = 'Отмена';
+                reportButton = document.createElement('button');
+                reportButton.className = 'post-full-report__button post-full-report__button--confirm';
+                reportButton.type = 'button';
+                reportButton.textContent = 'Пожаловаться';
+                reportButton.addEventListener('click', async () => {
+                    await this.submitPostReport(reportButton);
+                });
 
-        const reportButton = document.createElement('button');
-        reportButton.className = 'post-full-report__button post-full-report__button--confirm';
-        reportButton.type = 'button';
-        reportButton.textContent = 'Пожаловаться';
-
-        actions.appendChild(cancelButton);
-        actions.appendChild(reportButton);
-        panel.appendChild(text);
-        panel.appendChild(actions);
-        overlay.appendChild(panel);
-        document.body.appendChild(overlay);
-
-        cancelButton.addEventListener('click', () => {
-            this.closeReportOverlay();
-        });
-
-        reportButton.addEventListener('click', async () => {
-            await this.submitPostReport();
-        });
-
-        overlay.addEventListener('click', (event) => {
-            if (event.target === overlay) {
-                this.closeReportOverlay();
+                actions.appendChild(cancelButton);
+                actions.appendChild(reportButton);
+                panel.appendChild(text);
+                panel.appendChild(actions);
             }
-        });
-
-        this.reportOverlay = overlay;
-        this.reportSubmitButton = reportButton;
-
-        window.requestAnimationFrame(() => {
-            overlay.classList.remove('post-full-report--hidden');
         });
     }
 
-    closeReportOverlay() {
-        if (!this.reportOverlay) return;
-
-        const overlay = this.reportOverlay;
-        overlay.classList.add('post-full-report--hidden');
-
-        clearTimeout(this.reportHideTimer);
-        this.reportHideTimer = setTimeout(() => {
-            overlay.remove();
-            if (this.reportOverlay === overlay) {
-                this.reportOverlay = null;
-                this.reportSubmitButton = null;
-            }
-        }, 200);
-    }
-
-    async submitPostReport() {
+    async submitPostReport(reportButton) {
         const postId = this.getPostId();
-        if (!postId || !this.reportSubmitButton) return;
+        if (!postId || !reportButton) return;
 
-        this.reportSubmitButton.disabled = true;
+        reportButton.disabled = true;
 
         try {
             const response = await fetch('/posts/report', {
@@ -476,35 +440,19 @@ class PostFullComponent {
                 this.showToast('Жалоба отправлена');
             }
 
-            this.closeReportOverlay();
+            App.overlay?.close('post-report');
         } catch (error) {
             console.warn('Unable to report post from post-full', error);
             this.showToast('Не удалось отправить жалобу.');
         } finally {
-            if (this.reportSubmitButton) {
-                this.reportSubmitButton.disabled = false;
-            }
+            reportButton.disabled = false;
         }
     }
 
     showToast(message) {
-        if (!this.toast) return;
-
-        clearTimeout(this.toastFadeTimer);
-        clearTimeout(this.toastHideTimer);
-
-        this.toast.textContent = message;
-        this.toast.classList.remove('create-post-success-toast--hidden', 'create-post-success-toast--fade-out');
-
-        this.toastFadeTimer = setTimeout(() => {
-            this.toast.classList.add('create-post-success-toast--fade-out');
-        }, 500);
-
-        this.toastHideTimer = setTimeout(() => {
-            this.toast.classList.add('create-post-success-toast--hidden');
-            this.toast.classList.remove('create-post-success-toast--fade-out');
-            this.toast.textContent = '';
-        }, 1000);
+        document.dispatchEvent(new CustomEvent('app:toast', {
+            detail: { message }
+        }));
     }
 }
 

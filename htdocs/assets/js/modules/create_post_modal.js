@@ -24,11 +24,8 @@ class CreatePostModalComponent {
         this.alertBox = null;
         this.tagsSuggestList = null;
         this.tagsInputRow = null;
-        this.successToast = null;
         this.alertHideTimer = null;
         this.alertFadeTimer = null;
-        this.successHideTimer = null;
-        this.successFadeTimer = null;
         this.selectedCollections = [];
 
         // Upload constraints/state
@@ -59,7 +56,6 @@ class CreatePostModalComponent {
         this.alertBox = this.modal.querySelector('[data-component="create-post-alert"]');
         this.tagsSuggestList = this.modal.querySelector('[data-component="post-tags-suggest-list"]');
         this.tagsInputRow = this.modal.querySelector('.create-post-modal__tags-input-row');
-        this.successToast = document.querySelector('[data-component="create-post-success-toast"]');
 
         if (!this.dropzone || !this.fileInput || !this.placeholder || !this.preview) return;
 
@@ -575,30 +571,13 @@ class CreatePostModalComponent {
     }
 
     showSuccessToast(message) {
-        if (!this.successToast) return;
-
-        clearTimeout(this.successHideTimer);
-        clearTimeout(this.successFadeTimer);
-
-        this.successToast.textContent = message;
-        this.successToast.classList.remove('create-post-success-toast--hidden', 'create-post-success-toast--fade-out');
-
-        this.successHideTimer = setTimeout(() => {
-            this.successToast.classList.add('create-post-success-toast--fade-out');
-        }, 500);
-
-        this.successFadeTimer = setTimeout(() => {
-            this.hideSuccessToast();
-        }, 1000);
+        document.dispatchEvent(new CustomEvent('app:toast', {
+            detail: { message }
+        }));
     }
 
     hideSuccessToast() {
-        if (!this.successToast) return;
-        clearTimeout(this.successHideTimer);
-        clearTimeout(this.successFadeTimer);
-        this.successToast.classList.add('create-post-success-toast--hidden');
-        this.successToast.classList.remove('create-post-success-toast--fade-out');
-        this.successToast.textContent = '';
+        // Старый single-toast больше не используется.
     }
 
     async loadTagSuggestions() {
