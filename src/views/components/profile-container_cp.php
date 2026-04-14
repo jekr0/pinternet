@@ -34,9 +34,9 @@ $isLoggedIn = !empty($_SESSION['user_id']);
         <?= $_SESSION['level'] ?>
     </div>
 
-        <div class="header__nickname" data-component="adaptive-text">
+        <a href="/profile" class="header__nickname" data-component="adaptive-text">
             @<?= htmlspecialchars($user['username']) ?>
-        </div>
+        </a>
 
         <div class="header__experience-bar">
             <div class="header__experience-fill" style="width: <?= $progress['bar_width'] ?>%;"></div>

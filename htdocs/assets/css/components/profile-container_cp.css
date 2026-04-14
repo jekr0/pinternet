@@ -19,6 +19,7 @@
 /* --------------------------- Никнейм ----------------------------------- */
 
 .header__nickname {
+    text-decoration: none;
     position: absolute;
     bottom: 20px;
     left: 10px;
@@ -31,7 +32,14 @@
     font-size: 16px;
     line-height: 36px;
     color: #333;
+    transition: text-decoration-color 0.2s ease;
 }
+
+.header__nickname:hover {
+    text-decoration: underline;
+    text-decoration-color: #333;
+}
+
 
 /* --------------------------- Уровень ----------------------------------- */
 

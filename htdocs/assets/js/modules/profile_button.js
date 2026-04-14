@@ -40,12 +40,29 @@ class ProfileComponent {
 
     showAvatar(button, img) {
         button.innerHTML = '';
-        img.classList.add('header__profile-avatar');
+        const avatarClass = button.dataset.avatarClass || 'header__profile-avatar';
+        img.classList.add(avatarClass);
         button.appendChild(img);
     }
 
     setDefaultIcon(button) {
-        button.innerHTML = '<img class="header__profile-icon" src="/assets/images/icons/at-sign.svg" alt="Profile">';
+        const placeholderClass = button.dataset.placeholderClass || 'header__profile-icon';
+        const placeholderSrc = button.dataset.placeholderSrc || '/assets/images/icons/planet.svg';
+        const placeholderAlt = button.dataset.placeholderAlt || 'Profile';
+        const placeholderSize = Number(button.dataset.placeholderSize || 0);
+
+        const img = document.createElement('img');
+        img.classList.add(placeholderClass);
+        img.src = placeholderSrc;
+        img.alt = placeholderAlt;
+
+        if (placeholderSize > 0) {
+            img.width = placeholderSize;
+            img.height = placeholderSize;
+        }
+
+        button.innerHTML = '';
+        button.appendChild(img);
     }
 
     handleClick(e, button) {
