@@ -19,8 +19,10 @@ class PostFullComponent {
         this.zoomDragging = false;
         this.zoomDragStartX = 0;
         this.zoomDragStartY = 0;
-        this.zoomDragStartScrollLeft = 0;
-        this.zoomDragStartScrollTop = 0;
+        this.zoomPanX = 0;
+        this.zoomPanY = 0;
+        this.zoomStartPanX = 0;
+        this.zoomStartPanY = 0;
     }
 
     init() {
@@ -307,6 +309,8 @@ class PostFullComponent {
         if (!imageSrc) return;
 
         this.zoomScale = 1;
+        this.zoomPanX = 0;
+        this.zoomPanY = 0;
 
         const overlay = document.createElement('div');
         overlay.className = 'post-full-zoom post-full-zoom--hidden';
@@ -352,21 +356,23 @@ class PostFullComponent {
 
             const previousScale = this.zoomScale;
             const nextScale = this.zoomScale + (event.deltaY < 0 ? 0.1 : -0.1);
-            this.zoomScale = Math.min(3, Math.max(0.5, Number(nextScale.toFixed(2))));
-            this.applyZoomSize();
-            this.adjustZoomScrollForViewportCenter(previousScale, this.zoomScale);
+            this.setZoomScale(nextScale);
         }, { passive: false });
 
         this.zoomOverlay = overlay;
         this.zoomImage = image;
         this.zoomResizeHandler = () => {
             this.calculateZoomBaseSize();
-            this.applyZoomSize();
+            this.clampZoomPan();
+            this.applyZoomTransform();
         };
         this.zoomDragMoveHandler = (event) => {
             if (!this.zoomOverlay || !this.zoomDragging) return;
-            this.zoomOverlay.scrollLeft = this.zoomDragStartScrollLeft - (event.clientX - this.zoomDragStartX);
-            this.zoomOverlay.scrollTop = this.zoomDragStartScrollTop - (event.clientY - this.zoomDragStartY);
+
+            this.zoomPanX = this.zoomStartPanX + (event.clientX - this.zoomDragStartX);
+            this.zoomPanY = this.zoomStartPanY + (event.clientY - this.zoomDragStartY);
+            this.clampZoomPan();
+            this.applyZoomTransform();
         };
         this.zoomDragEndHandler = () => {
             if (!this.zoomOverlay || !this.zoomDragging) return;
@@ -376,14 +382,16 @@ class PostFullComponent {
 
         image.addEventListener('load', () => {
             this.calculateZoomBaseSize();
-            this.applyZoomSize();
-            this.centerZoomImage();
+            this.zoomPanX = 0;
+            this.zoomPanY = 0;
+            this.applyZoomTransform();
         }, { once: true });
 
         if (image.complete) {
             this.calculateZoomBaseSize();
-            this.applyZoomSize();
-            this.centerZoomImage();
+            this.zoomPanX = 0;
+            this.zoomPanY = 0;
+            this.applyZoomTransform();
         }
 
         overlay.addEventListener('mousedown', (event) => {
@@ -393,15 +401,16 @@ class PostFullComponent {
             this.zoomDragging = true;
             this.zoomDragStartX = event.clientX;
             this.zoomDragStartY = event.clientY;
-            this.zoomDragStartScrollLeft = this.zoomOverlay.scrollLeft;
-            this.zoomDragStartScrollTop = this.zoomOverlay.scrollTop;
+            this.zoomStartPanX = this.zoomPanX;
+            this.zoomStartPanY = this.zoomPanY;
             this.zoomOverlay.classList.add('is-dragging');
             event.preventDefault();
         });
+
         window.addEventListener('mousemove', this.zoomDragMoveHandler);
         window.addEventListener('mouseup', this.zoomDragEndHandler);
-
         window.addEventListener('resize', this.zoomResizeHandler);
+
         void overlay.offsetWidth;
         window.setTimeout(() => {
             overlay.classList.remove('post-full-zoom--hidden');
@@ -425,15 +434,19 @@ class PostFullComponent {
             if (this.zoomDragEndHandler) {
                 window.removeEventListener('mouseup', this.zoomDragEndHandler);
             }
+
             this.zoomDragging = false;
             App.utils.unlockBodyScroll();
             overlay.remove();
+
             if (this.zoomOverlay === overlay) {
                 this.zoomOverlay = null;
                 this.zoomImage = null;
                 this.zoomScale = 1;
                 this.zoomBaseWidth = 0;
                 this.zoomBaseHeight = 0;
+                this.zoomPanX = 0;
+                this.zoomPanY = 0;
                 this.zoomResizeHandler = null;
                 this.zoomDragMoveHandler = null;
                 this.zoomDragEndHandler = null;
@@ -454,45 +467,51 @@ class PostFullComponent {
 
         this.zoomBaseWidth = Math.max(1, Math.round(naturalWidth * ratio));
         this.zoomBaseHeight = Math.max(1, Math.round(naturalHeight * ratio));
+
+        this.zoomImage.style.width = `${this.zoomBaseWidth}px`;
+        this.zoomImage.style.height = `${this.zoomBaseHeight}px`;
     }
 
-    applyZoomSize() {
-        if (!this.zoomImage || this.zoomBaseWidth <= 0 || this.zoomBaseHeight <= 0) return;
+    setZoomScale(nextScale) {
+        const previousScale = this.zoomScale;
+        const clampedScale = Math.min(3, Math.max(0.5, Number(nextScale.toFixed(2))));
+        if (Math.abs(clampedScale - previousScale) < 0.001) return;
 
-        this.zoomImage.style.width = `${Math.round(this.zoomBaseWidth * this.zoomScale)}px`;
-        this.zoomImage.style.height = `${Math.round(this.zoomBaseHeight * this.zoomScale)}px`;
+        this.zoomScale = clampedScale;
 
-        if (this.zoomOverlay) {
-            this.zoomOverlay.classList.toggle('can-pan', this.zoomScale > 1);
-        }
+        const viewportCenterX = window.innerWidth / 2;
+        const viewportCenterY = window.innerHeight / 2;
+
+        this.zoomPanX = this.calculateCenteredPanAfterScale(this.zoomPanX, viewportCenterX, previousScale, this.zoomScale);
+        this.zoomPanY = this.calculateCenteredPanAfterScale(this.zoomPanY, viewportCenterY, previousScale, this.zoomScale);
+
+        this.clampZoomPan();
+        this.applyZoomTransform();
     }
 
-    centerZoomImage() {
-        if (!this.zoomOverlay || !this.zoomImage) return;
-
-        const maxLeft = Math.max(0, this.zoomOverlay.scrollWidth - this.zoomOverlay.clientWidth);
-        const maxTop = Math.max(0, this.zoomOverlay.scrollHeight - this.zoomOverlay.clientHeight);
-
-        this.zoomOverlay.scrollLeft = Math.round(maxLeft / 2);
-        this.zoomOverlay.scrollTop = Math.round(maxTop / 2);
+    calculateCenteredPanAfterScale(currentPan, anchor, previousScale, nextScale) {
+        const center = anchor;
+        return center - ((center - currentPan) * (nextScale / previousScale));
     }
 
-    adjustZoomScrollForViewportCenter(previousScale, nextScale) {
-        if (!this.zoomOverlay || !this.zoomImage || previousScale <= 0 || nextScale <= 0) return;
+    clampZoomPan() {
+        if (!this.zoomOverlay || this.zoomBaseWidth <= 0 || this.zoomBaseHeight <= 0) return;
 
-        const overlay = this.zoomOverlay;
-        const centerX = overlay.scrollLeft + overlay.clientWidth / 2;
-        const centerY = overlay.scrollTop + overlay.clientHeight / 2;
-        const scaleRatio = nextScale / previousScale;
+        const scaledWidth = this.zoomBaseWidth * this.zoomScale;
+        const scaledHeight = this.zoomBaseHeight * this.zoomScale;
 
-        const targetLeft = centerX * scaleRatio - overlay.clientWidth / 2;
-        const targetTop = centerY * scaleRatio - overlay.clientHeight / 2;
+        const maxOffsetX = Math.max(0, (scaledWidth - window.innerWidth) / 2);
+        const maxOffsetY = Math.max(0, (scaledHeight - window.innerHeight) / 2);
 
-        const maxLeft = Math.max(0, overlay.scrollWidth - overlay.clientWidth);
-        const maxTop = Math.max(0, overlay.scrollHeight - overlay.clientHeight);
+        this.zoomPanX = Math.max(-maxOffsetX, Math.min(maxOffsetX, this.zoomPanX));
+        this.zoomPanY = Math.max(-maxOffsetY, Math.min(maxOffsetY, this.zoomPanY));
+    }
 
-        overlay.scrollLeft = Math.min(maxLeft, Math.max(0, Math.round(targetLeft)));
-        overlay.scrollTop = Math.min(maxTop, Math.max(0, Math.round(targetTop)));
+    applyZoomTransform() {
+        if (!this.zoomImage || !this.zoomOverlay) return;
+
+        this.zoomImage.style.transform = `translate3d(${Math.round(this.zoomPanX)}px, ${Math.round(this.zoomPanY)}px, 0) scale(${this.zoomScale})`;
+        this.zoomOverlay.classList.toggle('can-pan', this.zoomScale > 1);
     }
 
     openReportOverlay() {

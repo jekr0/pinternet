@@ -351,7 +351,7 @@
     visibility: visible;
     pointer-events: auto;
     transition: opacity 0.2s ease, visibility 0.2s ease;
-    overflow: auto;
+    overflow: hidden;
     padding: 30px;
     box-sizing: border-box;
 }
@@ -374,7 +374,9 @@
     width: auto;
     height: auto;
     border-radius: 20px;
-    transition: width 0.12s ease, height 0.12s ease;
+    transition: transform 0.5s ease;
+    transform-origin: center center;
+    will-change: transform;
     user-select: none;
     -webkit-user-drag: none;
 }
@@ -385,6 +387,10 @@
 
 .post-full-zoom.can-pan:not(.is-dragging) {
     cursor: grab;
+}
+
+.post-full-zoom.is-dragging .post-full-zoom__image {
+    transition: none;
 }
 
 .post-full-zoom__minimize {
