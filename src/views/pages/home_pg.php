@@ -54,6 +54,7 @@
     };
 
     $selectedPost = null;
+    $selectedPostHashtags = [];
     if ($selectedPostId > 0) {
         foreach ($posts as $row) {
             if ((int) ($row['id'] ?? 0) !== $selectedPostId) {
@@ -62,6 +63,21 @@
 
             $selectedPost = $row;
             break;
+        }
+
+        if ($selectedPost) {
+            $hashtagsStmt = $pdo->prepare('
+                SELECT h.name
+                FROM Hashtags h
+                INNER JOIN Post_Hashtags ph ON ph.hashtag_id = h.id
+                WHERE ph.post_id = ?
+                ORDER BY h.name ASC
+            ');
+            $hashtagsStmt->execute([$selectedPostId]);
+            $selectedPostHashtags = array_map(
+                static fn(array $tagRow): string => (string) ($tagRow['name'] ?? ''),
+                $hashtagsStmt->fetchAll(PDO::FETCH_ASSOC) ?: []
+            );
         }
     }
 ?>
@@ -108,7 +124,18 @@
                     alt="Изображение поста"
                 >
 
-                <div class="post-full__author" aria-label="Автор поста">
+                <div class="post-full__actions" aria-label="Действия с изображением">
+                    <button class="post-full__action-button" type="button" aria-label="Пожаловаться">
+                        <span class="post-full__action-icon" data-svg-src="/assets/images/icons/warning.svg" aria-hidden="true"></span>
+                    </button>
+                    <button class="post-full__action-button" type="button" aria-label="Развернуть">
+                        <span class="post-full__action-icon" data-svg-src="/assets/images/icons/maximize.svg" aria-hidden="true"></span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="post-full__meta-row">
+                <div class="post-full__author post-full__author--outside" aria-label="Автор поста">
                     <button
                         class="post-full__author-avatar"
                         type="button"
@@ -121,66 +148,49 @@
                         data-placeholder-size="28"
                         aria-label="Профиль автора @<?php echo htmlspecialchars($selectedAuthorUsername, ENT_QUOTES, 'UTF-8'); ?>"
                     ></button>
-                    <a
-                        class="post-full__author-username"
-                        href="<?php echo htmlspecialchars($selectedAuthorProfileUrl, ENT_QUOTES, 'UTF-8'); ?>"
-                        aria-label="Профиль автора @<?php echo htmlspecialchars($selectedAuthorUsername, ENT_QUOTES, 'UTF-8'); ?>"
-                    >@<?php echo htmlspecialchars($selectedAuthorUsername, ENT_QUOTES, 'UTF-8'); ?></a>
+                    <span class="post-full__author-username">@<?php echo htmlspecialchars($selectedAuthorUsername, ENT_QUOTES, 'UTF-8'); ?></span>
                 </div>
 
-                <div class="post-full__actions" aria-label="Действия с изображением">
-                    <button class="post-full__action-button" type="button" aria-label="Пожаловаться">
-                        <span class="post-full__action-icon" data-svg-src="/assets/images/icons/warning.svg" aria-hidden="true"></span>
+                <div class="post-full__bottom-actions" aria-label="Базовые действия с постом">
+                    <button
+                        class="post-full__meta-button post-full__meta-button--like<?php echo $selectedIsLiked ? ' is-active' : ''; ?>"
+                        type="button"
+                        data-action="like"
+                        aria-label="Лайк"
+                    >
+                        <span class="post-full__meta-icon" data-icon="heart" data-svg-src="<?php echo $selectedHeartIcon; ?>" aria-hidden="true"></span>
+                        <span class="post-full__likes-count" data-component="post-full-like-count"><?php echo (int) ($selectedPost['likes_count'] ?? 0); ?></span>
                     </button>
-                    <button class="post-full__action-button" type="button" aria-label="Развернуть">
-                        <span class="post-full__action-icon" data-svg-src="/assets/images/icons/maximize.svg" aria-hidden="true"></span>
+                    <button
+                        class="post-full__meta-button<?php echo $selectedIsBookmarked ? ' is-active' : ''; ?>"
+                        type="button"
+                        data-action="bookmark"
+                        aria-label="Сохранить"
+                    >
+                        <span class="post-full__meta-icon" data-icon="bookmark" data-svg-src="<?php echo $selectedBookmarkIcon; ?>" aria-hidden="true"></span>
+                    </button>
+                    <button class="post-full__meta-button" type="button" data-action="share" aria-label="Поделиться">
+                        <span class="post-full__meta-icon" data-icon="share" data-svg-src="/assets/images/icons/L-share.svg" aria-hidden="true"></span>
                     </button>
                 </div>
-            </div>
-
-            <div class="post-full__author" aria-label="Автор поста">
-                <button
-                    class="post-full__author-avatar"
-                    type="button"
-                    data-component="profile_button"
-                    data-profile-img="<?php echo $selectedAuthorHasAvatar ? '1' : '0'; ?>"
-                    data-avatar-src="<?php echo htmlspecialchars($selectedAuthorAvatar, ENT_QUOTES, 'UTF-8'); ?>"
-                    data-profile-url="<?php echo htmlspecialchars($selectedAuthorProfileUrl, ENT_QUOTES, 'UTF-8'); ?>"
-                    data-avatar-class="post-full__author-avatar-image"
-                    data-placeholder-class="post-full__author-avatar-placeholder"
-                    data-placeholder-size="28"
-                    aria-label="Профиль автора @<?php echo htmlspecialchars($selectedAuthorUsername, ENT_QUOTES, 'UTF-8'); ?>"
-                ></button>
-                <span class="post-full__author-username">@<?php echo htmlspecialchars($selectedAuthorUsername, ENT_QUOTES, 'UTF-8'); ?></span>
-            </div>
-
-            <div class="post-full__bottom-actions" aria-label="Базовые действия с постом">
-                <button
-                    class="post-full__meta-button post-full__meta-button--like<?php echo $selectedIsLiked ? ' is-active' : ''; ?>"
-                    type="button"
-                    data-action="like"
-                    aria-label="Лайк"
-                >
-                    <span class="post-full__meta-icon" data-icon="heart" data-svg-src="<?php echo $selectedHeartIcon; ?>" aria-hidden="true"></span>
-                    <span class="post-full__likes-count" data-component="post-full-like-count"><?php echo (int) ($selectedPost['likes_count'] ?? 0); ?></span>
-                </button>
-                <button
-                    class="post-full__meta-button<?php echo $selectedIsBookmarked ? ' is-active' : ''; ?>"
-                    type="button"
-                    data-action="bookmark"
-                    aria-label="Сохранить"
-                >
-                    <span class="post-full__meta-icon" data-icon="bookmark" data-svg-src="<?php echo $selectedBookmarkIcon; ?>" aria-hidden="true"></span>
-                </button>
-                <button class="post-full__meta-button" type="button" data-action="share" aria-label="Поделиться">
-                    <span class="post-full__meta-icon" data-icon="share" data-svg-src="/assets/images/icons/L-share.svg" aria-hidden="true"></span>
-                </button>
             </div>
 
             <?php if ($selectedPostDescription !== ''): ?>
                 <div class="post-full__description">
                     <?php echo nl2br(htmlspecialchars($selectedPostDescription, ENT_QUOTES, 'UTF-8')); ?>
                 </div>
+            <?php endif; ?>
+
+            <?php if (!empty($selectedPostHashtags)): ?>
+                <div class="post-full__hashtags" aria-label="Хештеги поста">
+                    <?php foreach ($selectedPostHashtags as $postHashtag): ?>
+                        <span class="post-full__tag-item">#<?php echo htmlspecialchars($postHashtag, ENT_QUOTES, 'UTF-8'); ?></span>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+
+            <?php if ($selectedPostDescription !== '' || !empty($selectedPostHashtags)): ?>
+                <div class="post-full__description-divider" aria-hidden="true"></div>
             <?php endif; ?>
         </section>
     <?php endif; ?>

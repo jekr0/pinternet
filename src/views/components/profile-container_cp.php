@@ -34,9 +34,9 @@ $isLoggedIn = !empty($_SESSION['user_id']);
         <?= $_SESSION['level'] ?>
     </div>
 
-        <a href="/profile" class="header__nickname" data-component="adaptive-text">
+        <span class="header__nickname" data-component="adaptive-text">
             @<?= htmlspecialchars($user['username']) ?>
-        </a>
+        </span>
 
         <div class="header__experience-bar">
             <div class="header__experience-fill" style="width: <?= $progress['bar_width'] ?>%;"></div>
@@ -47,6 +47,7 @@ $isLoggedIn = !empty($_SESSION['user_id']);
             data-component="profile_button"
             data-profile-img="<?= $hasAvatar ? 1 : 0 ?>"
             data-avatar-src="<?= htmlspecialchars($user['avatar'] ?? '') ?>"
+            data-placeholder-size="36"
             data-profile-url="/profile"
         ></button>
 
