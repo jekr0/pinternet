@@ -3,9 +3,6 @@
 class PostCardComponent {
     constructor() {
         this.cards = [];
-        this.toast = null;
-        this.toastFadeTimer = null;
-        this.toastHideTimer = null;
         this.shareActiveTimers = new WeakMap();
         this.bookmarkDropdown = null;
         this.bookmarkDropdownTitle = null;
@@ -19,8 +16,6 @@ class PostCardComponent {
     init() {
         this.cards = Array.from(document.querySelectorAll('[data-component="post-card"]'));
         if (this.cards.length === 0) return;
-
-        this.toast = document.querySelector('[data-component="create-post-success-toast"]');
 
         this.cards.forEach((card) => {
             this.prepareCard(card);
@@ -250,23 +245,9 @@ class PostCardComponent {
     }
 
     showToast(message) {
-        if (!this.toast) return;
-
-        clearTimeout(this.toastFadeTimer);
-        clearTimeout(this.toastHideTimer);
-
-        this.toast.textContent = message;
-        this.toast.classList.remove('create-post-success-toast--hidden', 'create-post-success-toast--fade-out');
-
-        this.toastFadeTimer = setTimeout(() => {
-            this.toast.classList.add('create-post-success-toast--fade-out');
-        }, 500);
-
-        this.toastHideTimer = setTimeout(() => {
-            this.toast.classList.add('create-post-success-toast--hidden');
-            this.toast.classList.remove('create-post-success-toast--fade-out');
-            this.toast.textContent = '';
-        }, 1000);
+        document.dispatchEvent(new CustomEvent('app:toast', {
+            detail: { message }
+        }));
     }
 }
 
