@@ -11,7 +11,7 @@
 
     if ($viewerId > 0) {
         $stmt = $pdo->prepare('
-            SELECT p.id, p.image_path, u.username,
+            SELECT p.id, p.image_path, u.username, u.avatar AS user_avatar,
                    (pl.id IS NOT NULL) AS is_liked,
                    EXISTS(
                        SELECT 1
@@ -28,7 +28,7 @@
         $stmt->execute([$viewerId, $viewerId, $viewerId]);
     } else {
         $stmt = $pdo->query('
-            SELECT p.id, p.image_path, u.username,
+            SELECT p.id, p.image_path, u.username, u.avatar AS user_avatar,
                    0 AS is_liked,
                    0 AS is_bookmarked,
                    (SELECT COUNT(*) FROM Post_Likes pl_all WHERE pl_all.post_id = p.id) AS likes_count,
@@ -83,6 +83,10 @@
             $selectedBookmarkIcon = $selectedIsBookmarked
                 ? '/assets/images/icons/L-bookmark-plus.svg'
                 : ($selectedIsOwner ? '/assets/images/icons/U-bookmark-fill.svg' : '/assets/images/icons/L-bookmark.svg');
+            $selectedAuthorUsername = ltrim((string) ($selectedPost['username'] ?? 'unknown'), '@');
+            $selectedAuthorAvatar = $normalizePublicPath((string) ($selectedPost['user_avatar'] ?? ''));
+            $selectedAuthorHasAvatar = $selectedAuthorAvatar !== '/uploads/avatars/avatar.jpg';
+            $selectedAuthorProfileUrl = '/profile?username=' . urlencode($selectedAuthorUsername);
         ?>
         <section
             class="post-full is-open"
@@ -111,6 +115,22 @@
                         <span class="post-full__action-icon" data-svg-src="/assets/images/icons/maximize.svg" aria-hidden="true"></span>
                     </button>
                 </div>
+            </div>
+
+            <div class="post-full__author" aria-label="Автор поста">
+                <button
+                    class="post-full__author-avatar"
+                    type="button"
+                    data-component="profile_button"
+                    data-profile-img="<?php echo $selectedAuthorHasAvatar ? '1' : '0'; ?>"
+                    data-avatar-src="<?php echo htmlspecialchars($selectedAuthorAvatar, ENT_QUOTES, 'UTF-8'); ?>"
+                    data-profile-url="<?php echo htmlspecialchars($selectedAuthorProfileUrl, ENT_QUOTES, 'UTF-8'); ?>"
+                    data-avatar-class="post-full__author-avatar-image"
+                    data-placeholder-class="post-full__author-avatar-placeholder"
+                    data-placeholder-size="28"
+                    aria-label="Профиль автора @<?php echo htmlspecialchars($selectedAuthorUsername, ENT_QUOTES, 'UTF-8'); ?>"
+                ></button>
+                <span class="post-full__author-username">@<?php echo htmlspecialchars($selectedAuthorUsername, ENT_QUOTES, 'UTF-8'); ?></span>
             </div>
 
             <div class="post-full__bottom-actions" aria-label="Базовые действия с постом">
