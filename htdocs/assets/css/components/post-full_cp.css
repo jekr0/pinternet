@@ -421,7 +421,7 @@
 }
 
 .post-full-report__panel {
-    width: 420px;
+    width: 450px;
     padding: 20px;
     box-sizing: border-box;
     border-radius: 14px;
@@ -434,6 +434,7 @@
     font-family: 'SF_def', Arial, sans-serif;
     font-size: 16px;
     line-height: 1.35;
+    text-align: center;
     color: #333;
 }
 
