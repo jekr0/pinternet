@@ -138,6 +138,22 @@
                 </div>
             </div>
 
+            <div class="post-full__author" aria-label="Автор поста">
+                <button
+                    class="post-full__author-avatar"
+                    type="button"
+                    data-component="profile_button"
+                    data-profile-img="<?php echo $selectedAuthorHasAvatar ? '1' : '0'; ?>"
+                    data-avatar-src="<?php echo htmlspecialchars($selectedAuthorAvatar, ENT_QUOTES, 'UTF-8'); ?>"
+                    data-profile-url="<?php echo htmlspecialchars($selectedAuthorProfileUrl, ENT_QUOTES, 'UTF-8'); ?>"
+                    data-avatar-class="post-full__author-avatar-image"
+                    data-placeholder-class="post-full__author-avatar-placeholder"
+                    data-placeholder-size="28"
+                    aria-label="Профиль автора @<?php echo htmlspecialchars($selectedAuthorUsername, ENT_QUOTES, 'UTF-8'); ?>"
+                ></button>
+                <span class="post-full__author-username">@<?php echo htmlspecialchars($selectedAuthorUsername, ENT_QUOTES, 'UTF-8'); ?></span>
+            </div>
+
             <div class="post-full__bottom-actions" aria-label="Базовые действия с постом">
                 <button
                     class="post-full__meta-button post-full__meta-button--like<?php echo $selectedIsLiked ? ' is-active' : ''; ?>"
