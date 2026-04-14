@@ -354,6 +354,7 @@ class PostFullComponent {
             if (!event.ctrlKey) return;
             event.preventDefault();
 
+            const previousScale = this.zoomScale;
             const nextScale = this.zoomScale + (event.deltaY < 0 ? 0.1 : -0.1);
             this.setZoomScale(nextScale);
         }, { passive: false });
