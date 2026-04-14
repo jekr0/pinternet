@@ -375,11 +375,23 @@
     height: auto;
     border-radius: 20px;
     transition: width 0.12s ease, height 0.12s ease;
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+.post-full-zoom.can-pan.is-dragging {
+    cursor: grabbing;
+}
+
+.post-full-zoom.can-pan:not(.is-dragging) {
+    cursor: grab;
 }
 
 .post-full-zoom__minimize {
     position: fixed;
-    z-index: 1;
+    top: 30px;
+    right: 30px;
+    z-index: 2;
 }
 
 .post-full-report {
