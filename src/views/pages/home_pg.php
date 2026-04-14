@@ -149,7 +149,11 @@
                         data-placeholder-size="28"
                         aria-label="Профиль автора @<?php echo htmlspecialchars($selectedAuthorUsername, ENT_QUOTES, 'UTF-8'); ?>"
                     ></button>
-                    <span class="post-full__author-username">@<?php echo htmlspecialchars($selectedAuthorUsername, ENT_QUOTES, 'UTF-8'); ?></span>
+                    <a
+                        class="post-full__author-username"
+                        href="<?php echo htmlspecialchars($selectedAuthorProfileUrl, ENT_QUOTES, 'UTF-8'); ?>"
+                        aria-label="Профиль автора @<?php echo htmlspecialchars($selectedAuthorUsername, ENT_QUOTES, 'UTF-8'); ?>"
+                    >@<?php echo htmlspecialchars($selectedAuthorUsername, ENT_QUOTES, 'UTF-8'); ?></a>
                 </div>
 
                 <div class="post-full__bottom-actions" aria-label="Базовые действия с постом">

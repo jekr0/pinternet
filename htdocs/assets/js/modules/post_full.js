@@ -15,6 +15,13 @@ class PostFullComponent {
         this.zoomBaseHeight = 0;
         this.zoomResizeHandler = null;
         this.zoomScrollHandler = null;
+        this.zoomDragMoveHandler = null;
+        this.zoomDragEndHandler = null;
+        this.zoomDragging = false;
+        this.zoomDragStartX = 0;
+        this.zoomDragStartY = 0;
+        this.zoomDragStartScrollLeft = 0;
+        this.zoomDragStartScrollTop = 0;
     }
 
     init() {
@@ -344,9 +351,11 @@ class PostFullComponent {
             if (!event.ctrlKey) return;
             event.preventDefault();
 
+            const previousScale = this.zoomScale;
             const nextScale = this.zoomScale + (event.deltaY < 0 ? 0.1 : -0.1);
             this.zoomScale = Math.min(3, Math.max(0.5, Number(nextScale.toFixed(2))));
             this.applyZoomSize();
+            this.adjustZoomScrollForViewportCenter(previousScale, this.zoomScale);
             this.updateMinimizePosition();
         }, { passive: false });
 
@@ -360,18 +369,45 @@ class PostFullComponent {
         this.zoomScrollHandler = () => {
             this.updateMinimizePosition();
         };
+        this.zoomDragMoveHandler = (event) => {
+            if (!this.zoomOverlay || !this.zoomDragging) return;
+            this.zoomOverlay.scrollLeft = this.zoomDragStartScrollLeft - (event.clientX - this.zoomDragStartX);
+            this.zoomOverlay.scrollTop = this.zoomDragStartScrollTop - (event.clientY - this.zoomDragStartY);
+        };
+        this.zoomDragEndHandler = () => {
+            if (!this.zoomOverlay || !this.zoomDragging) return;
+            this.zoomDragging = false;
+            this.zoomOverlay.classList.remove('is-dragging');
+        };
 
         image.addEventListener('load', () => {
             this.calculateZoomBaseSize();
             this.applyZoomSize();
+            this.centerZoomImage();
             this.updateMinimizePosition();
         }, { once: true });
 
         if (image.complete) {
             this.calculateZoomBaseSize();
             this.applyZoomSize();
+            this.centerZoomImage();
             this.updateMinimizePosition();
         }
+
+        overlay.addEventListener('mousedown', (event) => {
+            if (event.button !== 0 || !this.zoomOverlay || this.zoomScale <= 1) return;
+            if (event.target.closest('.post-full-zoom__minimize')) return;
+
+            this.zoomDragging = true;
+            this.zoomDragStartX = event.clientX;
+            this.zoomDragStartY = event.clientY;
+            this.zoomDragStartScrollLeft = this.zoomOverlay.scrollLeft;
+            this.zoomDragStartScrollTop = this.zoomOverlay.scrollTop;
+            this.zoomOverlay.classList.add('is-dragging');
+            event.preventDefault();
+        });
+        window.addEventListener('mousemove', this.zoomDragMoveHandler);
+        window.addEventListener('mouseup', this.zoomDragEndHandler);
 
         overlay.addEventListener('scroll', this.zoomScrollHandler);
         window.addEventListener('resize', this.zoomResizeHandler);
@@ -395,6 +431,13 @@ class PostFullComponent {
             if (this.zoomResizeHandler) {
                 window.removeEventListener('resize', this.zoomResizeHandler);
             }
+            if (this.zoomDragMoveHandler) {
+                window.removeEventListener('mousemove', this.zoomDragMoveHandler);
+            }
+            if (this.zoomDragEndHandler) {
+                window.removeEventListener('mouseup', this.zoomDragEndHandler);
+            }
+            this.zoomDragging = false;
             App.utils.unlockBodyScroll();
             overlay.remove();
             if (this.zoomOverlay === overlay) {
@@ -405,6 +448,8 @@ class PostFullComponent {
                 this.zoomBaseHeight = 0;
                 this.zoomResizeHandler = null;
                 this.zoomScrollHandler = null;
+                this.zoomDragMoveHandler = null;
+                this.zoomDragEndHandler = null;
             }
         }, 200);
     }
@@ -429,6 +474,38 @@ class PostFullComponent {
 
         this.zoomImage.style.width = `${Math.round(this.zoomBaseWidth * this.zoomScale)}px`;
         this.zoomImage.style.height = `${Math.round(this.zoomBaseHeight * this.zoomScale)}px`;
+
+        if (this.zoomOverlay) {
+            this.zoomOverlay.classList.toggle('can-pan', this.zoomScale > 1);
+        }
+    }
+
+    centerZoomImage() {
+        if (!this.zoomOverlay || !this.zoomImage) return;
+
+        const maxLeft = Math.max(0, this.zoomOverlay.scrollWidth - this.zoomOverlay.clientWidth);
+        const maxTop = Math.max(0, this.zoomOverlay.scrollHeight - this.zoomOverlay.clientHeight);
+
+        this.zoomOverlay.scrollLeft = Math.round(maxLeft / 2);
+        this.zoomOverlay.scrollTop = Math.round(maxTop / 2);
+    }
+
+    adjustZoomScrollForViewportCenter(previousScale, nextScale) {
+        if (!this.zoomOverlay || !this.zoomImage || previousScale <= 0 || nextScale <= 0) return;
+
+        const overlay = this.zoomOverlay;
+        const centerX = overlay.scrollLeft + overlay.clientWidth / 2;
+        const centerY = overlay.scrollTop + overlay.clientHeight / 2;
+        const scaleRatio = nextScale / previousScale;
+
+        const targetLeft = centerX * scaleRatio - overlay.clientWidth / 2;
+        const targetTop = centerY * scaleRatio - overlay.clientHeight / 2;
+
+        const maxLeft = Math.max(0, overlay.scrollWidth - overlay.clientWidth);
+        const maxTop = Math.max(0, overlay.scrollHeight - overlay.clientHeight);
+
+        overlay.scrollLeft = Math.min(maxLeft, Math.max(0, Math.round(targetLeft)));
+        overlay.scrollTop = Math.min(maxTop, Math.max(0, Math.round(targetTop)));
     }
 
     updateMinimizePosition() {
