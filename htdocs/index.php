@@ -145,6 +145,7 @@ switch ($path) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $pageTitle; ?> / Grinderest</title>
     <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="icon" type="image/svg+xml" href="/assets/images/icons/planet.svg">
 
     <?php
     // Подключаем CSS-файлы из подпапок layouts/ и components/

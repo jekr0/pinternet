@@ -47,7 +47,7 @@ class ProfileComponent {
 
     setDefaultIcon(button) {
         const placeholderClass = button.dataset.placeholderClass || 'header__profile-icon';
-        const placeholderSrc = button.dataset.placeholderSrc || '/assets/images/icons/at-sign.svg';
+        const placeholderSrc = button.dataset.placeholderSrc || '/assets/images/icons/planet.svg';
         const placeholderAlt = button.dataset.placeholderAlt || 'Profile';
         const placeholderSize = Number(button.dataset.placeholderSize || 0);
 
