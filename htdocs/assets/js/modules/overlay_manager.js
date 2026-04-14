@@ -69,11 +69,12 @@ class OverlayManagerComponent {
             App.utils.lockBodyScroll();
         }
 
-        window.requestAnimationFrame(() => {
-            if (hiddenClass) {
+        if (hiddenClass) {
+            void overlay.offsetWidth;
+            window.setTimeout(() => {
                 overlay.classList.remove(hiddenClass);
-            }
-        });
+            }, 10);
+        }
 
         return instance;
     }

@@ -3,6 +3,7 @@
 class ToastStackComponent {
     constructor() {
         this.container = null;
+        this.maxToasts = 3;
     }
 
     init() {
@@ -28,6 +29,12 @@ class ToastStackComponent {
     show(message) {
         this.ensureContainer();
 
+        while (this.container.children.length >= this.maxToasts) {
+            const oldest = this.container.firstElementChild;
+            if (!oldest) break;
+            oldest.remove();
+        }
+
         const item = document.createElement('div');
         item.className = 'toast-stack__item toast-stack__item--hidden';
         item.textContent = message;
@@ -40,11 +47,11 @@ class ToastStackComponent {
 
         setTimeout(() => {
             item.classList.add('toast-stack__item--hidden');
-        }, 500);
+        }, 2000);
 
         setTimeout(() => {
             item.remove();
-        }, 1000);
+        }, 3000);
     }
 }
 

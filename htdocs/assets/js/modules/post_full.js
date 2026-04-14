@@ -11,6 +11,10 @@ class PostFullComponent {
         this.zoomImage = null;
         this.zoomScale = 1;
         this.zoomHideTimer = null;
+        this.zoomBaseWidth = 0;
+        this.zoomBaseHeight = 0;
+        this.zoomResizeHandler = null;
+        this.zoomScrollHandler = null;
     }
 
     init() {
@@ -341,16 +345,40 @@ class PostFullComponent {
             event.preventDefault();
 
             const nextScale = this.zoomScale + (event.deltaY < 0 ? 0.1 : -0.1);
-            this.zoomScale = Math.min(2, Math.max(0.75, Number(nextScale.toFixed(2))));
-            image.style.transform = `scale(${this.zoomScale})`;
+            this.zoomScale = Math.min(3, Math.max(0.5, Number(nextScale.toFixed(2))));
+            this.applyZoomSize();
+            this.updateMinimizePosition();
         }, { passive: false });
 
         this.zoomOverlay = overlay;
         this.zoomImage = image;
+        this.zoomResizeHandler = () => {
+            this.calculateZoomBaseSize();
+            this.applyZoomSize();
+            this.updateMinimizePosition();
+        };
+        this.zoomScrollHandler = () => {
+            this.updateMinimizePosition();
+        };
 
-        window.requestAnimationFrame(() => {
+        image.addEventListener('load', () => {
+            this.calculateZoomBaseSize();
+            this.applyZoomSize();
+            this.updateMinimizePosition();
+        }, { once: true });
+
+        if (image.complete) {
+            this.calculateZoomBaseSize();
+            this.applyZoomSize();
+            this.updateMinimizePosition();
+        }
+
+        overlay.addEventListener('scroll', this.zoomScrollHandler);
+        window.addEventListener('resize', this.zoomResizeHandler);
+        void overlay.offsetWidth;
+        window.setTimeout(() => {
             overlay.classList.remove('post-full-zoom--hidden');
-        });
+        }, 10);
     }
 
     closeZoomOverlay() {
@@ -361,14 +389,71 @@ class PostFullComponent {
 
         clearTimeout(this.zoomHideTimer);
         this.zoomHideTimer = setTimeout(() => {
+            if (this.zoomScrollHandler) {
+                overlay.removeEventListener('scroll', this.zoomScrollHandler);
+            }
+            if (this.zoomResizeHandler) {
+                window.removeEventListener('resize', this.zoomResizeHandler);
+            }
             App.utils.unlockBodyScroll();
             overlay.remove();
             if (this.zoomOverlay === overlay) {
                 this.zoomOverlay = null;
                 this.zoomImage = null;
                 this.zoomScale = 1;
+                this.zoomBaseWidth = 0;
+                this.zoomBaseHeight = 0;
+                this.zoomResizeHandler = null;
+                this.zoomScrollHandler = null;
             }
         }, 200);
+    }
+
+    calculateZoomBaseSize() {
+        if (!this.zoomImage) return;
+
+        const naturalWidth = this.zoomImage.naturalWidth || 0;
+        const naturalHeight = this.zoomImage.naturalHeight || 0;
+        if (naturalWidth <= 0 || naturalHeight <= 0) return;
+
+        const maxWidth = window.innerWidth * 0.9;
+        const maxHeight = window.innerHeight * 0.9;
+        const ratio = Math.min(maxWidth / naturalWidth, maxHeight / naturalHeight, 1);
+
+        this.zoomBaseWidth = Math.max(1, Math.round(naturalWidth * ratio));
+        this.zoomBaseHeight = Math.max(1, Math.round(naturalHeight * ratio));
+    }
+
+    applyZoomSize() {
+        if (!this.zoomImage || this.zoomBaseWidth <= 0 || this.zoomBaseHeight <= 0) return;
+
+        this.zoomImage.style.width = `${Math.round(this.zoomBaseWidth * this.zoomScale)}px`;
+        this.zoomImage.style.height = `${Math.round(this.zoomBaseHeight * this.zoomScale)}px`;
+    }
+
+    updateMinimizePosition() {
+        if (!this.zoomOverlay) return;
+
+        const minimizeButton = this.zoomOverlay.querySelector('.post-full-zoom__minimize');
+        if (!minimizeButton || !this.zoomImage) return;
+
+        const imageRect = this.zoomImage.getBoundingClientRect();
+        const buttonWidth = minimizeButton.offsetWidth || 40;
+        const margin = 30;
+
+        const rawLeft = imageRect.right - buttonWidth - 10;
+        const clampedLeft = Math.min(
+            Math.max(margin, rawLeft),
+            window.innerWidth - margin - buttonWidth
+        );
+        const rawTop = imageRect.top + 10;
+        const clampedTop = Math.min(
+            Math.max(margin, rawTop),
+            window.innerHeight - margin - (minimizeButton.offsetHeight || 40)
+        );
+
+        minimizeButton.style.left = `${Math.round(clampedLeft)}px`;
+        minimizeButton.style.top = `${Math.round(clampedTop)}px`;
     }
 
     openReportOverlay() {
