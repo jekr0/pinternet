@@ -9,6 +9,15 @@ class PostFullComponent {
         this.toastFadeTimer = null;
         this.toastHideTimer = null;
         this.shareActiveTimer = null;
+
+        this.zoomOverlay = null;
+        this.zoomImage = null;
+        this.zoomScale = 1;
+        this.zoomHideTimer = null;
+
+        this.reportOverlay = null;
+        this.reportSubmitButton = null;
+        this.reportHideTimer = null;
     }
 
     init() {
@@ -21,6 +30,7 @@ class PostFullComponent {
         if (this.postFullElement) {
             this.initActionIcons();
             this.bindMetaActions();
+            this.bindFrameActions();
             this.syncStateFromDataset();
             this.bindBookmarkSync();
         }
@@ -72,6 +82,23 @@ class PostFullComponent {
 
             if (action === 'share') {
                 await this.sharePost(button);
+            }
+        });
+    }
+
+    bindFrameActions() {
+        this.postFullElement.addEventListener('click', async (event) => {
+            const button = event.target.closest('.post-full__action-button');
+            if (!button || button.disabled) return;
+
+            const action = button.dataset.action;
+            if (action === 'maximize') {
+                this.openZoomOverlay();
+                return;
+            }
+
+            if (action === 'warning') {
+                this.openReportOverlay();
             }
         });
     }
@@ -268,6 +295,196 @@ class PostFullComponent {
             this.setShareIcon(button, false);
             this.shareActiveTimer = null;
         }, 1000);
+    }
+
+    openZoomOverlay() {
+        if (this.zoomOverlay) return;
+
+        const imageSource = this.postFullElement?.querySelector('.post-full__image');
+        const imageSrc = imageSource?.getAttribute('src');
+        if (!imageSrc) return;
+
+        this.zoomScale = 1;
+
+        const overlay = document.createElement('div');
+        overlay.className = 'post-full-zoom post-full-zoom--hidden';
+
+        const panel = document.createElement('div');
+        panel.className = 'post-full-zoom__panel';
+
+        const image = document.createElement('img');
+        image.className = 'post-full-zoom__image';
+        image.src = imageSrc;
+        image.alt = imageSource?.getAttribute('alt') || 'Изображение поста';
+
+        const minimizeButton = document.createElement('button');
+        minimizeButton.className = 'post-full__action-button post-full-zoom__minimize';
+        minimizeButton.type = 'button';
+        minimizeButton.setAttribute('aria-label', 'Свернуть');
+
+        const minimizeIcon = document.createElement('span');
+        minimizeIcon.className = 'post-full__action-icon';
+        minimizeIcon.setAttribute('aria-hidden', 'true');
+        App.utils.loadSVG('/assets/images/icons/minimize.svg', minimizeIcon);
+
+        minimizeButton.appendChild(minimizeIcon);
+        panel.appendChild(image);
+        panel.appendChild(minimizeButton);
+        overlay.appendChild(panel);
+        document.body.appendChild(overlay);
+
+        overlay.addEventListener('click', (event) => {
+            if (event.target === overlay) {
+                this.closeZoomOverlay();
+            }
+        });
+
+        minimizeButton.addEventListener('click', () => {
+            this.closeZoomOverlay();
+        });
+
+        overlay.addEventListener('wheel', (event) => {
+            if (!event.ctrlKey) return;
+            event.preventDefault();
+
+            const nextScale = this.zoomScale + (event.deltaY < 0 ? 0.1 : -0.1);
+            this.zoomScale = Math.min(2, Math.max(0.75, Number(nextScale.toFixed(2))));
+            image.style.transform = `scale(${this.zoomScale})`;
+        }, { passive: false });
+
+        this.zoomOverlay = overlay;
+        this.zoomImage = image;
+
+        window.requestAnimationFrame(() => {
+            overlay.classList.remove('post-full-zoom--hidden');
+        });
+    }
+
+    closeZoomOverlay() {
+        if (!this.zoomOverlay) return;
+
+        const overlay = this.zoomOverlay;
+        overlay.classList.add('post-full-zoom--hidden');
+
+        clearTimeout(this.zoomHideTimer);
+        this.zoomHideTimer = setTimeout(() => {
+            overlay.remove();
+            if (this.zoomOverlay === overlay) {
+                this.zoomOverlay = null;
+                this.zoomImage = null;
+                this.zoomScale = 1;
+            }
+        }, 200);
+    }
+
+    openReportOverlay() {
+        if (this.reportOverlay) return;
+
+        const overlay = document.createElement('div');
+        overlay.className = 'post-full-report post-full-report--hidden';
+
+        const panel = document.createElement('div');
+        panel.className = 'post-full-report__panel';
+
+        const text = document.createElement('p');
+        text.className = 'post-full-report__text';
+        text.textContent = 'Вы уверены, что хотите пожаловаться на этот пост?';
+
+        const actions = document.createElement('div');
+        actions.className = 'post-full-report__actions';
+
+        const cancelButton = document.createElement('button');
+        cancelButton.className = 'post-full-report__button post-full-report__button--cancel';
+        cancelButton.type = 'button';
+        cancelButton.textContent = 'Отмена';
+
+        const reportButton = document.createElement('button');
+        reportButton.className = 'post-full-report__button post-full-report__button--confirm';
+        reportButton.type = 'button';
+        reportButton.textContent = 'Пожаловаться';
+
+        actions.appendChild(cancelButton);
+        actions.appendChild(reportButton);
+        panel.appendChild(text);
+        panel.appendChild(actions);
+        overlay.appendChild(panel);
+        document.body.appendChild(overlay);
+
+        cancelButton.addEventListener('click', () => {
+            this.closeReportOverlay();
+        });
+
+        reportButton.addEventListener('click', async () => {
+            await this.submitPostReport();
+        });
+
+        overlay.addEventListener('click', (event) => {
+            if (event.target === overlay) {
+                this.closeReportOverlay();
+            }
+        });
+
+        this.reportOverlay = overlay;
+        this.reportSubmitButton = reportButton;
+
+        window.requestAnimationFrame(() => {
+            overlay.classList.remove('post-full-report--hidden');
+        });
+    }
+
+    closeReportOverlay() {
+        if (!this.reportOverlay) return;
+
+        const overlay = this.reportOverlay;
+        overlay.classList.add('post-full-report--hidden');
+
+        clearTimeout(this.reportHideTimer);
+        this.reportHideTimer = setTimeout(() => {
+            overlay.remove();
+            if (this.reportOverlay === overlay) {
+                this.reportOverlay = null;
+                this.reportSubmitButton = null;
+            }
+        }, 200);
+    }
+
+    async submitPostReport() {
+        const postId = this.getPostId();
+        if (!postId || !this.reportSubmitButton) return;
+
+        this.reportSubmitButton.disabled = true;
+
+        try {
+            const response = await fetch('/posts/report', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                    'Accept': 'application/json'
+                },
+                body: new URLSearchParams({ post_id: String(postId) }).toString()
+            });
+
+            const payload = await response.json();
+            if (!response.ok || !payload.success) {
+                this.showToast(payload?.error || 'Не удалось отправить жалобу.');
+                return;
+            }
+
+            if (payload.already_reported) {
+                this.showToast('Жалоба на рассмотрении');
+            } else {
+                this.showToast('Жалоба отправлена');
+            }
+
+            this.closeReportOverlay();
+        } catch (error) {
+            console.warn('Unable to report post from post-full', error);
+            this.showToast('Не удалось отправить жалобу.');
+        } finally {
+            if (this.reportSubmitButton) {
+                this.reportSubmitButton.disabled = false;
+            }
+        }
     }
 
     showToast(message) {

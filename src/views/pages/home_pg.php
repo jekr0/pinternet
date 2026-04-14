@@ -16,6 +16,7 @@
                    EXISTS(
                        SELECT 1
                        FROM Saved_Posts sp
+                       INNER JOIN Boards b ON b.id = sp.board_id AND b.user_id = sp.user_id
                        WHERE sp.post_id = p.id AND sp.user_id = ?
                    ) AS is_bookmarked,
                    (SELECT COUNT(*) FROM Post_Likes pl_all WHERE pl_all.post_id = p.id) AS likes_count,
@@ -125,10 +126,10 @@
                 >
 
                 <div class="post-full__actions" aria-label="Действия с изображением">
-                    <button class="post-full__action-button" type="button" aria-label="Пожаловаться">
+                    <button class="post-full__action-button" type="button" data-action="warning" aria-label="Пожаловаться">
                         <span class="post-full__action-icon" data-svg-src="/assets/images/icons/warning.svg" aria-hidden="true"></span>
                     </button>
-                    <button class="post-full__action-button" type="button" aria-label="Развернуть">
+                    <button class="post-full__action-button" type="button" data-action="maximize" aria-label="Развернуть">
                         <span class="post-full__action-icon" data-svg-src="/assets/images/icons/maximize.svg" aria-hidden="true"></span>
                     </button>
                 </div>

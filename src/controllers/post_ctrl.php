@@ -55,6 +55,10 @@ if ($path === '/posts/bookmark/clear') {
     handleBookmarkClear($pdo, $userId);
 }
 
+if ($path === '/posts/report') {
+    handlePostReport($pdo, $userId);
+}
+
 if ($path === '/posts/list') {
     handlePostsList($pdo);
 }
@@ -275,7 +279,13 @@ function handleBookmarkBoardToggle(PDO $pdo, int $userId): never
             $isSaved = true;
         }
 
-        $hasAnyStmt = $pdo->prepare('SELECT 1 FROM Saved_Posts WHERE user_id = ? AND post_id = ? LIMIT 1');
+        $hasAnyStmt = $pdo->prepare('
+            SELECT 1
+            FROM Saved_Posts sp
+            INNER JOIN Boards b ON b.id = sp.board_id AND b.user_id = sp.user_id
+            WHERE sp.user_id = ? AND sp.post_id = ?
+            LIMIT 1
+        ');
         $hasAnyStmt->execute([$userId, $postId]);
         $hasAny = $hasAnyStmt->fetchColumn() !== false;
 
@@ -309,7 +319,13 @@ function handleBookmarkClear(PDO $pdo, int $userId): never
         ');
         $deleteStmt->execute([$userId, $postId, 'Profile']);
 
-        $hasAnyStmt = $pdo->prepare('SELECT 1 FROM Saved_Posts WHERE user_id = ? AND post_id = ? LIMIT 1');
+        $hasAnyStmt = $pdo->prepare('
+            SELECT 1
+            FROM Saved_Posts sp
+            INNER JOIN Boards b ON b.id = sp.board_id AND b.user_id = sp.user_id
+            WHERE sp.user_id = ? AND sp.post_id = ?
+            LIMIT 1
+        ');
         $hasAnyStmt->execute([$userId, $postId]);
         $hasAny = $hasAnyStmt->fetchColumn() !== false;
     } catch (Throwable $e) {
@@ -330,6 +346,49 @@ function handlePostsList(PDO $pdo): never
     ], $stmt->fetchAll());
 
     jsonResponse(['success' => true, 'posts' => $posts]);
+}
+
+function handlePostReport(PDO $pdo, int $userId): never
+{
+    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+        jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод.'], 405);
+    }
+
+    $postId = (int) ($_POST['post_id'] ?? 0);
+    if ($postId <= 0) {
+        jsonResponse(['success' => false, 'error' => 'Некорректный post_id.'], 422);
+    }
+
+    $postStmt = $pdo->prepare('SELECT id FROM Posts WHERE id = ? LIMIT 1');
+    $postStmt->execute([$postId]);
+    if ($postStmt->fetchColumn() === false) {
+        jsonResponse(['success' => false, 'error' => 'Пост не найден.'], 404);
+    }
+
+    try {
+        $pdo->exec('
+            CREATE TABLE IF NOT EXISTS Post_Reports (
+                id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                user_id INT UNSIGNED NOT NULL,
+                post_id INT UNSIGNED NOT NULL,
+                status VARCHAR(20) NOT NULL DEFAULT "pending",
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                UNIQUE KEY uniq_post_report (user_id, post_id),
+                INDEX idx_post_reports_post (post_id),
+                INDEX idx_post_reports_status (status)
+            )
+        ');
+
+        $insertStmt = $pdo->prepare('INSERT IGNORE INTO Post_Reports (user_id, post_id, status) VALUES (?, ?, ?)');
+        $insertStmt->execute([$userId, $postId, 'pending']);
+        $alreadyReported = $insertStmt->rowCount() === 0;
+    } catch (Throwable $e) {
+        error_log('Report post error: ' . $e->getMessage());
+        jsonResponse(['success' => false, 'error' => 'Не удалось отправить жалобу.'], 500);
+    }
+
+    jsonResponse(['success' => true, 'already_reported' => $alreadyReported]);
 }
 
 function handleCreatePost(PDO $pdo, int $userId): never
