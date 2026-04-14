@@ -110,7 +110,13 @@ function handleBookmarkBoardToggle(PDO $pdo, int $userId): never
             $isSaved = true;
         }
 
-        $hasAnyStmt = $pdo->prepare('SELECT 1 FROM Saved_Posts WHERE user_id = ? AND post_id = ? LIMIT 1');
+        $hasAnyStmt = $pdo->prepare('
+            SELECT 1
+            FROM Saved_Posts sp
+            INNER JOIN Boards b ON b.id = sp.board_id AND b.user_id = sp.user_id
+            WHERE sp.user_id = ? AND sp.post_id = ?
+            LIMIT 1
+        ');
         $hasAnyStmt->execute([$userId, $postId]);
         $hasAny = $hasAnyStmt->fetchColumn() !== false;
 
@@ -153,7 +159,13 @@ function handleBookmarkClear(PDO $pdo, int $userId): never
             $deleteStmt->execute([$userId, $postId]);
         }
 
-        $hasAnyStmt = $pdo->prepare('SELECT 1 FROM Saved_Posts WHERE user_id = ? AND post_id = ? LIMIT 1');
+        $hasAnyStmt = $pdo->prepare('
+            SELECT 1
+            FROM Saved_Posts sp
+            INNER JOIN Boards b ON b.id = sp.board_id AND b.user_id = sp.user_id
+            WHERE sp.user_id = ? AND sp.post_id = ?
+            LIMIT 1
+        ');
         $hasAnyStmt->execute([$userId, $postId]);
         $hasAny = $hasAnyStmt->fetchColumn() !== false;
     } catch (Throwable $e) {

@@ -5,10 +5,12 @@ class PostFullComponent {
         this.container = null;
         this.postFullFrame = null;
         this.postFullElement = null;
-        this.toast = null;
-        this.toastFadeTimer = null;
-        this.toastHideTimer = null;
         this.shareActiveTimer = null;
+
+        this.zoomOverlay = null;
+        this.zoomImage = null;
+        this.zoomScale = 1;
+        this.zoomHideTimer = null;
     }
 
     init() {
@@ -17,10 +19,10 @@ class PostFullComponent {
 
         this.postFullElement = document.querySelector('.post-full');
         this.postFullFrame = this.postFullElement?.querySelector('.post-full__frame') || null;
-        this.toast = document.querySelector('[data-component="create-post-success-toast"]');
         if (this.postFullElement) {
             this.initActionIcons();
             this.bindMetaActions();
+            this.bindFrameActions();
             this.syncStateFromDataset();
             this.bindBookmarkSync();
         }
@@ -72,6 +74,23 @@ class PostFullComponent {
 
             if (action === 'share') {
                 await this.sharePost(button);
+            }
+        });
+    }
+
+    bindFrameActions() {
+        this.postFullElement.addEventListener('click', async (event) => {
+            const button = event.target.closest('.post-full__action-button');
+            if (!button || button.disabled) return;
+
+            const action = button.dataset.action;
+            if (action === 'maximize') {
+                this.openZoomOverlay();
+                return;
+            }
+
+            if (action === 'warning') {
+                this.openReportOverlay();
             }
         });
     }
@@ -270,24 +289,170 @@ class PostFullComponent {
         }, 1000);
     }
 
+    openZoomOverlay() {
+        if (this.zoomOverlay) return;
+
+        const imageSource = this.postFullElement?.querySelector('.post-full__image');
+        const imageSrc = imageSource?.getAttribute('src');
+        if (!imageSrc) return;
+
+        this.zoomScale = 1;
+
+        const overlay = document.createElement('div');
+        overlay.className = 'post-full-zoom post-full-zoom--hidden';
+
+        const content = document.createElement('div');
+        content.className = 'post-full-zoom__content';
+
+        const image = document.createElement('img');
+        image.className = 'post-full-zoom__image';
+        image.src = imageSrc;
+        image.alt = imageSource?.getAttribute('alt') || 'Изображение поста';
+
+        const minimizeButton = document.createElement('button');
+        minimizeButton.className = 'post-full__action-button post-full-zoom__minimize';
+        minimizeButton.type = 'button';
+        minimizeButton.setAttribute('aria-label', 'Свернуть');
+
+        const minimizeIcon = document.createElement('span');
+        minimizeIcon.className = 'post-full__action-icon';
+        minimizeIcon.setAttribute('aria-hidden', 'true');
+        App.utils.loadSVG('/assets/images/icons/minimize.svg', minimizeIcon);
+
+        minimizeButton.appendChild(minimizeIcon);
+        content.appendChild(image);
+        content.appendChild(minimizeButton);
+        overlay.appendChild(content);
+        document.body.appendChild(overlay);
+        App.utils.lockBodyScroll();
+
+        overlay.addEventListener('click', (event) => {
+            if (event.target === overlay) {
+                this.closeZoomOverlay();
+            }
+        });
+
+        minimizeButton.addEventListener('click', () => {
+            this.closeZoomOverlay();
+        });
+
+        overlay.addEventListener('wheel', (event) => {
+            if (!event.ctrlKey) return;
+            event.preventDefault();
+
+            const nextScale = this.zoomScale + (event.deltaY < 0 ? 0.1 : -0.1);
+            this.zoomScale = Math.min(2, Math.max(0.75, Number(nextScale.toFixed(2))));
+            image.style.transform = `scale(${this.zoomScale})`;
+        }, { passive: false });
+
+        this.zoomOverlay = overlay;
+        this.zoomImage = image;
+
+        window.requestAnimationFrame(() => {
+            overlay.classList.remove('post-full-zoom--hidden');
+        });
+    }
+
+    closeZoomOverlay() {
+        if (!this.zoomOverlay) return;
+
+        const overlay = this.zoomOverlay;
+        overlay.classList.add('post-full-zoom--hidden');
+
+        clearTimeout(this.zoomHideTimer);
+        this.zoomHideTimer = setTimeout(() => {
+            App.utils.unlockBodyScroll();
+            overlay.remove();
+            if (this.zoomOverlay === overlay) {
+                this.zoomOverlay = null;
+                this.zoomImage = null;
+                this.zoomScale = 1;
+            }
+        }, 200);
+    }
+
+    openReportOverlay() {
+        if (!App.overlay) return;
+        if (App.overlay.get('post-report')) return;
+
+        let reportButton = null;
+
+        App.overlay.open({
+            key: 'post-report',
+            overlayClass: 'post-full-report',
+            hiddenClass: 'post-full-report--hidden',
+            panelClass: 'post-full-report__panel',
+            buildPanel: (panel, close) => {
+                const text = document.createElement('p');
+                text.className = 'post-full-report__text';
+                text.textContent = 'Вы уверены, что хотите пожаловаться на этот пост?';
+
+                const actions = document.createElement('div');
+                actions.className = 'post-full-report__actions';
+
+                const cancelButton = document.createElement('button');
+                cancelButton.className = 'post-full-report__button post-full-report__button--cancel';
+                cancelButton.type = 'button';
+                cancelButton.textContent = 'Отмена';
+                cancelButton.addEventListener('click', close);
+
+                reportButton = document.createElement('button');
+                reportButton.className = 'post-full-report__button post-full-report__button--confirm';
+                reportButton.type = 'button';
+                reportButton.textContent = 'Пожаловаться';
+                reportButton.addEventListener('click', async () => {
+                    await this.submitPostReport(reportButton);
+                });
+
+                actions.appendChild(cancelButton);
+                actions.appendChild(reportButton);
+                panel.appendChild(text);
+                panel.appendChild(actions);
+            }
+        });
+    }
+
+    async submitPostReport(reportButton) {
+        const postId = this.getPostId();
+        if (!postId || !reportButton) return;
+
+        reportButton.disabled = true;
+
+        try {
+            const response = await fetch('/posts/report', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                    'Accept': 'application/json'
+                },
+                body: new URLSearchParams({ post_id: String(postId) }).toString()
+            });
+
+            const payload = await response.json();
+            if (!response.ok || !payload.success) {
+                this.showToast(payload?.error || 'Не удалось отправить жалобу.');
+                return;
+            }
+
+            if (payload.already_reported) {
+                this.showToast('Жалоба на рассмотрении');
+            } else {
+                this.showToast('Жалоба отправлена');
+            }
+
+            App.overlay?.close('post-report');
+        } catch (error) {
+            console.warn('Unable to report post from post-full', error);
+            this.showToast('Не удалось отправить жалобу.');
+        } finally {
+            reportButton.disabled = false;
+        }
+    }
+
     showToast(message) {
-        if (!this.toast) return;
-
-        clearTimeout(this.toastFadeTimer);
-        clearTimeout(this.toastHideTimer);
-
-        this.toast.textContent = message;
-        this.toast.classList.remove('create-post-success-toast--hidden', 'create-post-success-toast--fade-out');
-
-        this.toastFadeTimer = setTimeout(() => {
-            this.toast.classList.add('create-post-success-toast--fade-out');
-        }, 500);
-
-        this.toastHideTimer = setTimeout(() => {
-            this.toast.classList.add('create-post-success-toast--hidden');
-            this.toast.classList.remove('create-post-success-toast--fade-out');
-            this.toast.textContent = '';
-        }, 1000);
+        document.dispatchEvent(new CustomEvent('app:toast', {
+            detail: { message }
+        }));
     }
 }
 
