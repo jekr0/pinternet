@@ -11,14 +11,22 @@
 
     if ($viewerId > 0) {
         $stmt = $pdo->prepare('
-            SELECT p.id, p.image_path, p.description, u.username, u.avatar AS user_avatar,
+            SELECT p.id, p.image_path, p.description, p.created_at, u.username, u.avatar AS user_avatar,
                    (pl.id IS NOT NULL) AS is_liked,
                    EXISTS(
                        SELECT 1
                        FROM Saved_Posts sp
                        INNER JOIN Boards b ON b.id = sp.board_id AND b.user_id = sp.user_id
                        WHERE sp.post_id = p.id AND sp.user_id = ?
-                   ) AS is_bookmarked,
+                   ) AS has_any_bookmark,
+                   EXISTS(
+                       SELECT 1
+                       FROM Saved_Posts sp
+                       INNER JOIN Boards b ON b.id = sp.board_id AND b.user_id = sp.user_id
+                       WHERE sp.post_id = p.id
+                         AND sp.user_id = ?
+                         AND LOWER(b.name) <> LOWER(?)
+                   ) AS has_non_profile_bookmark,
                    (SELECT COUNT(*) FROM Post_Likes pl_all WHERE pl_all.post_id = p.id) AS likes_count,
                    (p.user_id = ?) AS is_owner
             FROM Posts p
@@ -26,10 +34,10 @@
             LEFT JOIN Post_Likes pl ON pl.post_id = p.id AND pl.user_id = ?
             ORDER BY p.created_at DESC, p.id DESC
         ');
-        $stmt->execute([$viewerId, $viewerId, $viewerId]);
+        $stmt->execute([$viewerId, $viewerId, 'Profile', $viewerId, $viewerId]);
     } else {
         $stmt = $pdo->query('
-            SELECT p.id, p.image_path, p.description, u.username, u.avatar AS user_avatar,
+            SELECT p.id, p.image_path, p.description, p.created_at, u.username, u.avatar AS user_avatar,
                    0 AS is_liked,
                    0 AS is_bookmarked,
                    (SELECT COUNT(*) FROM Post_Likes pl_all WHERE pl_all.post_id = p.id) AS likes_count,
@@ -54,8 +62,61 @@
         return '/' . ltrim($path, '/');
     };
 
+    $pluralizeRu = static function (int $value, string $one, string $few, string $many): string {
+        $mod100 = $value % 100;
+        if ($mod100 >= 11 && $mod100 <= 14) {
+            return $many;
+        }
+
+        $mod10 = $value % 10;
+        if ($mod10 === 1) {
+            return $one;
+        }
+        if ($mod10 >= 2 && $mod10 <= 4) {
+            return $few;
+        }
+
+        return $many;
+    };
+
+    $formatPostPublishedLabel = static function (?string $createdAtRaw) use ($pluralizeRu): string {
+        if (!is_string($createdAtRaw) || trim($createdAtRaw) === '') {
+            return '';
+        }
+
+        try {
+            $createdAt = new DateTimeImmutable($createdAtRaw);
+            $now = new DateTimeImmutable('now');
+        } catch (Throwable) {
+            return '';
+        }
+
+        $diffSeconds = max(0, $now->getTimestamp() - $createdAt->getTimestamp());
+        if ($diffSeconds <= 59) {
+            return max(1, $diffSeconds) . ' сек. назад';
+        }
+
+        $minutes = (int) floor($diffSeconds / 60);
+        if ($minutes <= 59) {
+            return $minutes . ' мин. назад';
+        }
+
+        $hours = (int) floor($diffSeconds / 3600);
+        if ($hours <= 23) {
+            return $hours . ' ' . $pluralizeRu($hours, 'час', 'часа', 'часов') . ' назад';
+        }
+
+        $days = (int) floor($diffSeconds / 86400);
+        if ($days <= 3) {
+            return $days . ' ' . $pluralizeRu($days, 'день', 'дня', 'дней') . ' назад';
+        }
+
+        return $createdAt->format('d.m.Y');
+    };
+
     $selectedPost = null;
     $selectedPostHashtags = [];
+    $selectedPostCommentsCount = 0;
 
     $normalizeTag = static function (string $tag): string {
         return mb_strtolower(trim($tag));
@@ -144,6 +205,26 @@
         return $relatedTags;
     };
 
+    $countPostComments = static function (PDO $pdo, int $postId): int {
+        if ($postId <= 0) {
+            return 0;
+        }
+
+        try {
+            $tableExistsStmt = $pdo->query("SHOW TABLES LIKE 'Post_Comments'");
+            if ($tableExistsStmt->fetchColumn() === false) {
+                return 0;
+            }
+
+            $countStmt = $pdo->prepare('SELECT COUNT(*) FROM Post_Comments WHERE post_id = ?');
+            $countStmt->execute([$postId]);
+
+            return (int) $countStmt->fetchColumn();
+        } catch (Throwable) {
+            return 0;
+        }
+    };
+
     if ($selectedPostId > 0) {
         foreach ($posts as $row) {
             if ((int) ($row['id'] ?? 0) !== $selectedPostId) {
@@ -155,6 +236,8 @@
         }
 
         if ($selectedPost) {
+            $selectedPostCommentsCount = $countPostComments($pdo, $selectedPostId);
+
             $hashtagsStmt = $pdo->prepare('
                 SELECT h.name
                 FROM Hashtags h
@@ -298,8 +381,10 @@
             $selectedImagePath = (string) ($selectedPost['image_path'] ?? '');
             $selectedImagePath = $normalizePublicPath($selectedImagePath);
             $selectedIsLiked = !empty($selectedPost['is_liked']);
-            $selectedIsBookmarked = !empty($selectedPost['is_bookmarked']);
             $selectedIsOwner = !empty($selectedPost['is_owner']);
+            $selectedHasAnyBookmark = !empty($selectedPost['has_any_bookmark']);
+            $selectedHasNonProfileBookmark = !empty($selectedPost['has_non_profile_bookmark']);
+            $selectedIsBookmarked = $selectedIsOwner ? $selectedHasNonProfileBookmark : $selectedHasAnyBookmark;
             $selectedHeartIcon = $selectedIsLiked ? '/assets/images/icons/U-heart-fill.svg' : '/assets/images/icons/L-heart.svg';
             $selectedBookmarkIcon = $selectedIsBookmarked
                 ? '/assets/images/icons/L-bookmark-plus.svg'
@@ -309,6 +394,8 @@
             $selectedAuthorHasAvatar = $selectedAuthorAvatar !== '/uploads/avatars/avatar.jpg';
             $selectedAuthorProfileUrl = '/profile?username=' . urlencode($selectedAuthorUsername);
             $selectedPostDescription = trim((string) ($selectedPost['description'] ?? ''));
+            $selectedPostPublishedLabel = $formatPostPublishedLabel((string) ($selectedPost['created_at'] ?? ''));
+            $selectedHasComments = $selectedPostCommentsCount > 0;
         ?>
         <section
             class="post-full is-open"
@@ -358,6 +445,10 @@
                         href="<?php echo htmlspecialchars($selectedAuthorProfileUrl, ENT_QUOTES, 'UTF-8'); ?>"
                         aria-label="Профиль автора @<?php echo htmlspecialchars($selectedAuthorUsername, ENT_QUOTES, 'UTF-8'); ?>"
                     >@<?php echo htmlspecialchars($selectedAuthorUsername, ENT_QUOTES, 'UTF-8'); ?></a>
+                    <?php if ($selectedPostPublishedLabel !== ''): ?>
+                        <span class="post-full__author-meta-separator" aria-hidden="true"></span>
+                        <span class="post-full__author-published-at"><?php echo htmlspecialchars($selectedPostPublishedLabel, ENT_QUOTES, 'UTF-8'); ?></span>
+                    <?php endif; ?>
                 </div>
 
                 <div class="post-full__bottom-actions" aria-label="Базовые действия с постом">
@@ -398,9 +489,25 @@
                 </div>
             <?php endif; ?>
 
-            <?php if ($selectedPostDescription !== '' || !empty($selectedPostHashtags)): ?>
-                <div class="post-full__description-divider" aria-hidden="true"></div>
-            <?php endif; ?>
+            <div class="post-full__description-divider" aria-hidden="true"></div>
+
+            <div class="post-full__comments-block">
+                <?php if (!$selectedHasComments): ?>
+                    <p class="post-full__comments-empty">Комментариев пока нет. Будьте первым!</p>
+                <?php endif; ?>
+                <?php if ($viewerId > 0): ?>
+                    <div class="post-full__comment-input-wrap">
+                        <textarea
+                            class="post-full__comment-input"
+                            data-component="post-full-comment-input"
+                            placeholder="Оставить комментарий"
+                            maxlength="256"
+                            aria-label="Оставить комментарий"
+                        ></textarea>
+                        <span class="post-full__comment-counter" data-component="post-full-comment-counter">0/256</span>
+                    </div>
+                <?php endif; ?>
+            </div>
         </section>
     <?php endif; ?>
 
@@ -411,10 +518,11 @@
             $postImagePath = $normalizePublicPath($dbImagePath);
             $authorUsername = (string) ($row['username'] ?? 'unknown');
             $isLiked = !empty($row['is_liked']);
-            $isBookmarked = !empty($row['is_bookmarked']);
             $isOwner = !empty($row['is_owner']);
+            $hasAnyBookmark = !empty($row['has_any_bookmark']);
+            $hasNonProfileBookmark = !empty($row['has_non_profile_bookmark']);
+            $isBookmarked = $isOwner ? $hasNonProfileBookmark : $hasAnyBookmark;
             $isPostFullActive = $selectedPostId > 0 && $postId === $selectedPostId;
-
             include '../src/views/components/post-card_cp.php';
         ?>
     <?php endforeach; ?>

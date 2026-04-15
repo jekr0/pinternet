@@ -225,15 +225,10 @@ class DropdownCollectionsComponent {
             if (!response.ok || !payload.success) return;
 
             button.classList.toggle('is-selected', !!payload.saved);
-            if (!payload.has_any) {
-                document.dispatchEvent(new CustomEvent('post-card:bookmark-updated', {
-                    detail: { postId: this.activePostId, bookmarked: false }
-                }));
-            } else {
-                document.dispatchEvent(new CustomEvent('post-card:bookmark-updated', {
-                    detail: { postId: this.activePostId, bookmarked: true }
-                }));
-            }
+            const isBookmarked = this.resolveBookmarkVisualState(payload);
+            document.dispatchEvent(new CustomEvent('post-card:bookmark-updated', {
+                detail: { postId: this.activePostId, bookmarked: isBookmarked }
+            }));
         } catch (error) {
             console.warn('Unable to toggle board', error);
         }
@@ -257,7 +252,7 @@ class DropdownCollectionsComponent {
             const payload = await response.json();
             if (!response.ok || !payload.success) return;
 
-            const hasAny = !!payload.has_any;
+            const hasAny = this.resolveBookmarkVisualState(payload);
             document.dispatchEvent(new CustomEvent('post-card:bookmark-updated', {
                 detail: { postId: this.activePostId, bookmarked: hasAny }
             }));
@@ -265,6 +260,15 @@ class DropdownCollectionsComponent {
         } catch (error) {
             console.warn('Unable to clear post from boards', error);
         }
+    }
+
+    resolveBookmarkVisualState(payload) {
+        const isOwnerPost = this.activeCard?.dataset.owner === '1';
+        if (isOwnerPost) {
+            return !!payload?.has_non_profile;
+        }
+
+        return !!payload?.has_any;
     }
 
     handleOutsideClick(event) {
