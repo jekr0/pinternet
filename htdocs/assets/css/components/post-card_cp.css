@@ -43,6 +43,28 @@
     transition: opacity 0.1s ease, text-decoration-color 0.1s ease;
 }
 
+.post-card__author-username {
+    line-height: 1;
+}
+
+.post-card__author-meta-separator {
+    width: 4px;
+    height: 4px;
+    margin-left: 12px;
+    margin-right: 12px;
+    border-radius: 50%;
+    background: #bbb;
+    flex: 0 0 auto;
+}
+
+.post-card__author-published-at {
+    font-family: SF_def, Arial, sans-serif;
+    font-size: 12px;
+    line-height: 1;
+    color: #bbb;
+    text-decoration: none;
+}
+
 .post-card:hover .post-card__author-badge {
     opacity: 1;
     pointer-events: auto;
