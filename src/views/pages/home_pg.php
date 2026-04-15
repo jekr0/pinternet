@@ -18,7 +18,15 @@
                        FROM Saved_Posts sp
                        INNER JOIN Boards b ON b.id = sp.board_id AND b.user_id = sp.user_id
                        WHERE sp.post_id = p.id AND sp.user_id = ?
-                   ) AS is_bookmarked,
+                   ) AS has_any_bookmark,
+                   EXISTS(
+                       SELECT 1
+                       FROM Saved_Posts sp
+                       INNER JOIN Boards b ON b.id = sp.board_id AND b.user_id = sp.user_id
+                       WHERE sp.post_id = p.id
+                         AND sp.user_id = ?
+                         AND LOWER(b.name) <> LOWER(?)
+                   ) AS has_non_profile_bookmark,
                    (SELECT COUNT(*) FROM Post_Likes pl_all WHERE pl_all.post_id = p.id) AS likes_count,
                    (p.user_id = ?) AS is_owner
             FROM Posts p
@@ -26,7 +34,7 @@
             LEFT JOIN Post_Likes pl ON pl.post_id = p.id AND pl.user_id = ?
             ORDER BY p.created_at DESC, p.id DESC
         ');
-        $stmt->execute([$viewerId, $viewerId, $viewerId]);
+        $stmt->execute([$viewerId, $viewerId, 'Profile', $viewerId, $viewerId]);
     } else {
         $stmt = $pdo->query('
             SELECT p.id, p.image_path, p.description, u.username, u.avatar AS user_avatar,
@@ -298,8 +306,10 @@
             $selectedImagePath = (string) ($selectedPost['image_path'] ?? '');
             $selectedImagePath = $normalizePublicPath($selectedImagePath);
             $selectedIsLiked = !empty($selectedPost['is_liked']);
-            $selectedIsBookmarked = !empty($selectedPost['is_bookmarked']);
             $selectedIsOwner = !empty($selectedPost['is_owner']);
+            $selectedHasAnyBookmark = !empty($selectedPost['has_any_bookmark']);
+            $selectedHasNonProfileBookmark = !empty($selectedPost['has_non_profile_bookmark']);
+            $selectedIsBookmarked = $selectedIsOwner ? $selectedHasNonProfileBookmark : $selectedHasAnyBookmark;
             $selectedHeartIcon = $selectedIsLiked ? '/assets/images/icons/U-heart-fill.svg' : '/assets/images/icons/L-heart.svg';
             $selectedBookmarkIcon = $selectedIsBookmarked
                 ? '/assets/images/icons/L-bookmark-plus.svg'
@@ -411,8 +421,10 @@
             $postImagePath = $normalizePublicPath($dbImagePath);
             $authorUsername = (string) ($row['username'] ?? 'unknown');
             $isLiked = !empty($row['is_liked']);
-            $isBookmarked = !empty($row['is_bookmarked']);
             $isOwner = !empty($row['is_owner']);
+            $hasAnyBookmark = !empty($row['has_any_bookmark']);
+            $hasNonProfileBookmark = !empty($row['has_non_profile_bookmark']);
+            $isBookmarked = $isOwner ? $hasNonProfileBookmark : $hasAnyBookmark;
             $isPostFullActive = $selectedPostId > 0 && $postId === $selectedPostId;
 
             include '../src/views/components/post-card_cp.php';
