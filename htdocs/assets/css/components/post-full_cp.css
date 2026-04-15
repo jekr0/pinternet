@@ -181,9 +181,29 @@
     text-decoration: underline;
 }
 
+.post-full__author-meta-separator {
+    width: 4px;
+    height: 4px;
+    margin-left: 10px;
+    margin-right: 10px;
+    border-radius: 50%;
+    background: #bbb;
+    flex: 0 0 auto;
+}
+
+.post-full__author-published-at {
+    font-family: SF_def, Arial, sans-serif;
+    font-size: 20px;
+    line-height: 1;
+    color: #bbb;
+    white-space: nowrap;
+    user-select: none;
+}
+
 .post-full__description {
     width: calc(100% - 40px);
     margin: 15px 20px 0;
+    position: relative;
     font-family: SF_def, Arial, sans-serif;
     font-size: 24px;
     line-height: 1.3;
@@ -191,6 +211,22 @@
     text-align: justify;
     text-align-last: left;
     word-break: break-word;
+}
+
+.post-full__description.is-collapsed {
+    max-height: 90px;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.post-full__description.is-collapsed::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 30px;
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0), #fff);
 }
 
 .post-full__meta-row {
@@ -237,6 +273,163 @@
     height: 1.5px;
     margin: 15px 20px 40px;
     background: #e0e0e0;
+}
+
+.post-full__comments-block {
+    width: calc(100% - 40px);
+    margin: 0 20px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.post-full__comments-empty {
+    margin: 0;
+    font-family: SF_def, Arial, sans-serif;
+    font-size: 20px;
+    line-height: 1.3;
+    color: #bbb;
+    text-align: center;
+    user-select: none;
+}
+
+.post-full__comments-list {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.post-full__comment-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.post-full__comment-avatar {
+    flex: 0 0 auto;
+}
+
+.post-full__comment-side {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 0 0 auto;
+}
+
+.post-full__comment-rail {
+    width: 1.5px;
+    height: 0;
+    margin-top: 5px;
+    background: #e0e0e0;
+    border-radius: 1px;
+}
+
+.post-full__comment-content {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.post-full__comment-meta {
+    display: flex;
+    align-items: center;
+}
+
+.post-full__comment-username {
+    font-family: SF_def, Arial, sans-serif;
+    font-size: 24px;
+    line-height: 1;
+    color: #333;
+    text-decoration: none;
+}
+
+.post-full__comment-username:hover {
+    text-decoration: underline;
+}
+
+.post-full__comment-meta-separator {
+    width: 4px;
+    height: 4px;
+    margin-left: 10px;
+    margin-right: 10px;
+    border-radius: 50%;
+    background: #bbb;
+    flex: 0 0 auto;
+}
+
+.post-full__comment-published-at {
+    font-family: SF_def, Arial, sans-serif;
+    font-size: 18px;
+    line-height: 1;
+    color: #bbb;
+    user-select: none;
+}
+
+.post-full__comment-text {
+    margin: 12px 0 0;
+    font-family: SF_def, Arial, sans-serif;
+    font-size: 20px;
+    line-height: 1.3;
+    color: #333;
+    text-align: justify;
+    text-align-last: left;
+    word-break: break-word;
+}
+
+.post-full__comment-input-wrap {
+    position: relative;
+    width: 100%;
+    margin-top: 0;
+    margin-bottom: 20px;
+}
+
+.post-full__comments-empty + .post-full__comments-list + .post-full__comment-input-wrap,
+.post-full__comments-empty + .post-full__comment-input-wrap {
+    margin-top: 30px;
+}
+
+.post-full__comments-list + .post-full__comment-input-wrap {
+    margin-top: 20px;
+}
+
+.post-full__comment-input {
+    width: 100%;
+    min-height: 50px;
+    padding: 12px 14px 24px;
+    box-sizing: border-box;
+    outline: none;
+    resize: none;
+    overflow: hidden;
+    font-family: SF_def, Arial, sans-serif;
+    font-size: 16px;
+    color: #333;
+    background: #fff;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 10px;
+    transition: border-color 0.2s ease;
+}
+
+.post-full__comment-input::placeholder {
+    color: #bbb;
+}
+
+.post-full__comment-input:hover {
+    border-color: rgb(150, 150, 250);
+}
+
+.post-full__comment-input:focus {
+    border-color: rgb(100, 100, 200);
+}
+
+.post-full__comment-counter {
+    position: absolute;
+    right: 8px;
+    bottom: 6px;
+    font-family: SF_def, Arial, sans-serif;
+    font-size: 14px;
+    color: #bbb;
+    pointer-events: none;
+    user-select: none;
 }
 
 .post-full__meta-button {
