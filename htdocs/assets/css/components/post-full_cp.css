@@ -181,6 +181,24 @@
     text-decoration: underline;
 }
 
+.post-full__author-meta-separator {
+    width: 6px;
+    height: 6px;
+    margin-left: 12px;
+    margin-right: 12px;
+    border-radius: 50%;
+    background: #bbb;
+    flex: 0 0 auto;
+}
+
+.post-full__author-published-at {
+    font-family: SF_def, Arial, sans-serif;
+    font-size: 24px;
+    line-height: 1;
+    color: #bbb;
+    white-space: nowrap;
+}
+
 .post-full__description {
     width: calc(100% - 40px);
     margin: 15px 20px 0;
