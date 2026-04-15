@@ -59,6 +59,10 @@ if ($path === '/posts/report') {
     handlePostReport($pdo, $userId);
 }
 
+if ($path === '/posts/comment') {
+    handleCreateComment($pdo, $userId);
+}
+
 if ($path === '/posts/list') {
     handlePostsList($pdo);
 }
@@ -377,6 +381,45 @@ function handlePostReport(PDO $pdo, int $userId): never
     jsonResponse(['success' => true, 'already_reported' => $alreadyReported]);
 }
 
+function handleCreateComment(PDO $pdo, int $userId): never
+{
+    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+        jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод.'], 405);
+    }
+
+    $postId = (int) ($_POST['post_id'] ?? 0);
+    $content = trim((string) ($_POST['content'] ?? ''));
+
+    if ($postId <= 0) {
+        jsonResponse(['success' => false, 'error' => 'Некорректный post_id.'], 422);
+    }
+
+    if ($content === '') {
+        jsonResponse(['success' => false, 'error' => 'Комментарий не может быть пустым.'], 422);
+    }
+
+    if (mb_strlen($content) > 256) {
+        jsonResponse(['success' => false, 'error' => 'Комментарий не должен превышать 256 символов.'], 422);
+    }
+
+    $postStmt = $pdo->prepare('SELECT id FROM Posts WHERE id = ? LIMIT 1');
+    $postStmt->execute([$postId]);
+    if ($postStmt->fetchColumn() === false) {
+        jsonResponse(['success' => false, 'error' => 'Пост не найден.'], 404);
+    }
+
+    try {
+        ensurePostCommentsTable($pdo);
+        $insertStmt = $pdo->prepare('INSERT INTO Post_Comments (post_id, user_id, content) VALUES (?, ?, ?)');
+        $insertStmt->execute([$postId, $userId, $content]);
+    } catch (Throwable $e) {
+        error_log('Create comment error: ' . $e->getMessage());
+        jsonResponse(['success' => false, 'error' => 'Не удалось сохранить комментарий.'], 500);
+    }
+
+    jsonResponse(['success' => true]);
+}
+
 function handleCreatePost(PDO $pdo, int $userId): never
 {
     if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
@@ -387,8 +430,8 @@ function handleCreatePost(PDO $pdo, int $userId): never
     $collectionInput = trim((string) ($_POST['collection'] ?? ''));
     $tagsInput = trim((string) ($_POST['tags'] ?? ''));
 
-    if (mb_strlen($description) > 256) {
-        jsonResponse(['success' => false, 'error' => 'Описание не должно превышать 256 символов.'], 422);
+    if (mb_strlen($description) > 512) {
+        jsonResponse(['success' => false, 'error' => 'Описание не должно превышать 512 символов.'], 422);
     }
 
     if (!isset($_FILES['image']) || !is_array($_FILES['image'])) {
@@ -504,6 +547,21 @@ function createBoard(PDO $pdo, int $userId, string $collectionName): int
     $insert->execute([$userId, $collectionName, 'Создано автоматически при публикации поста']);
 
     return (int) $pdo->lastInsertId();
+}
+
+function ensurePostCommentsTable(PDO $pdo): void
+{
+    $pdo->exec('
+        CREATE TABLE IF NOT EXISTS Post_Comments (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            post_id INT NOT NULL,
+            user_id INT NOT NULL,
+            content VARCHAR(256) NOT NULL,
+            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            INDEX idx_post_comments_post_id (post_id),
+            INDEX idx_post_comments_user_id (user_id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    ');
 }
 
 function normalizeCollectionName(string $value): string
