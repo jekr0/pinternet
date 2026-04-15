@@ -11,7 +11,7 @@
 
     if ($viewerId > 0) {
         $stmt = $pdo->prepare('
-            SELECT p.id, p.image_path, p.description, u.username, u.avatar AS user_avatar,
+            SELECT p.id, p.image_path, p.description, p.created_at, u.username, u.avatar AS user_avatar,
                    (pl.id IS NOT NULL) AS is_liked,
                    EXISTS(
                        SELECT 1
@@ -37,7 +37,7 @@
         $stmt->execute([$viewerId, $viewerId, 'Profile', $viewerId, $viewerId]);
     } else {
         $stmt = $pdo->query('
-            SELECT p.id, p.image_path, p.description, u.username, u.avatar AS user_avatar,
+            SELECT p.id, p.image_path, p.description, p.created_at, u.username, u.avatar AS user_avatar,
                    0 AS is_liked,
                    0 AS is_bookmarked,
                    (SELECT COUNT(*) FROM Post_Likes pl_all WHERE pl_all.post_id = p.id) AS likes_count,
@@ -60,6 +60,58 @@
         }
 
         return '/' . ltrim($path, '/');
+    };
+
+    $pluralizeRu = static function (int $value, string $one, string $few, string $many): string {
+        $mod100 = $value % 100;
+        if ($mod100 >= 11 && $mod100 <= 14) {
+            return $many;
+        }
+
+        $mod10 = $value % 10;
+        if ($mod10 === 1) {
+            return $one;
+        }
+        if ($mod10 >= 2 && $mod10 <= 4) {
+            return $few;
+        }
+
+        return $many;
+    };
+
+    $formatPostPublishedLabel = static function (?string $createdAtRaw) use ($pluralizeRu): string {
+        if (!is_string($createdAtRaw) || trim($createdAtRaw) === '') {
+            return '';
+        }
+
+        try {
+            $createdAt = new DateTimeImmutable($createdAtRaw);
+            $now = new DateTimeImmutable('now');
+        } catch (Throwable) {
+            return '';
+        }
+
+        if ($createdAt > $now) {
+            return $createdAt->format('d.m.Y');
+        }
+
+        $diffSeconds = $now->getTimestamp() - $createdAt->getTimestamp();
+        $minutes = (int) floor($diffSeconds / 60);
+        if ($minutes <= 59) {
+            return max(1, $minutes) . ' мин. назад';
+        }
+
+        $hours = (int) floor($diffSeconds / 3600);
+        if ($hours <= 23) {
+            return $hours . ' ' . $pluralizeRu($hours, 'час', 'часа', 'часов') . ' назад';
+        }
+
+        $days = (int) floor($diffSeconds / 86400);
+        if ($days <= 3) {
+            return $days . ' ' . $pluralizeRu($days, 'день', 'дня', 'дней') . ' назад';
+        }
+
+        return $createdAt->format('d.m.Y');
     };
 
     $selectedPost = null;
@@ -319,6 +371,7 @@
             $selectedAuthorHasAvatar = $selectedAuthorAvatar !== '/uploads/avatars/avatar.jpg';
             $selectedAuthorProfileUrl = '/profile?username=' . urlencode($selectedAuthorUsername);
             $selectedPostDescription = trim((string) ($selectedPost['description'] ?? ''));
+            $selectedPostPublishedLabel = $formatPostPublishedLabel((string) ($selectedPost['created_at'] ?? ''));
         ?>
         <section
             class="post-full is-open"
@@ -368,6 +421,10 @@
                         href="<?php echo htmlspecialchars($selectedAuthorProfileUrl, ENT_QUOTES, 'UTF-8'); ?>"
                         aria-label="Профиль автора @<?php echo htmlspecialchars($selectedAuthorUsername, ENT_QUOTES, 'UTF-8'); ?>"
                     >@<?php echo htmlspecialchars($selectedAuthorUsername, ENT_QUOTES, 'UTF-8'); ?></a>
+                    <?php if ($selectedPostPublishedLabel !== ''): ?>
+                        <span class="post-full__author-meta-separator" aria-hidden="true"></span>
+                        <span class="post-full__author-published-at"><?php echo htmlspecialchars($selectedPostPublishedLabel, ENT_QUOTES, 'UTF-8'); ?></span>
+                    <?php endif; ?>
                 </div>
 
                 <div class="post-full__bottom-actions" aria-label="Базовые действия с постом">
@@ -426,6 +483,7 @@
             $hasNonProfileBookmark = !empty($row['has_non_profile_bookmark']);
             $isBookmarked = $isOwner ? $hasNonProfileBookmark : $hasAnyBookmark;
             $isPostFullActive = $selectedPostId > 0 && $postId === $selectedPostId;
+            $postPublishedLabel = $formatPostPublishedLabel((string) ($row['created_at'] ?? ''));
 
             include '../src/views/components/post-card_cp.php';
         ?>
