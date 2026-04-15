@@ -553,15 +553,13 @@ function ensurePostCommentsTable(PDO $pdo): void
 {
     $pdo->exec('
         CREATE TABLE IF NOT EXISTS Post_Comments (
-            id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-            post_id INT UNSIGNED NOT NULL,
-            user_id INT UNSIGNED NOT NULL,
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            post_id INT NOT NULL,
+            user_id INT NOT NULL,
             content VARCHAR(256) NOT NULL,
             created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
             INDEX idx_post_comments_post_id (post_id),
-            INDEX idx_post_comments_user_id (user_id),
-            CONSTRAINT fk_post_comments_post FOREIGN KEY (post_id) REFERENCES Posts(id) ON DELETE CASCADE,
-            CONSTRAINT fk_post_comments_user FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE
+            INDEX idx_post_comments_user_id (user_id)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     ');
 }

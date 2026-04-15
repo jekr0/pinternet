@@ -34,6 +34,7 @@ class PostFullComponent {
         if (this.postFullElement) {
             this.initActionIcons();
             this.renderPostPublishedLabel();
+            this.bindDescriptionToggle();
             this.bindMetaActions();
             this.bindFrameActions();
             this.syncStateFromDataset();
@@ -132,6 +133,17 @@ class PostFullComponent {
 
         commentInput.addEventListener('input', updateCounter);
         commentInput.addEventListener('keydown', async (event) => {
+            if (event.key === 'Tab' && event.ctrlKey) {
+                event.preventDefault();
+                const start = commentInput.selectionStart ?? commentInput.value.length;
+                const end = commentInput.selectionEnd ?? commentInput.value.length;
+                const currentValue = commentInput.value;
+                commentInput.value = `${currentValue.slice(0, start)}\n${currentValue.slice(end)}`;
+                commentInput.selectionStart = commentInput.selectionEnd = start + 1;
+                commentInput.dispatchEvent(new Event('input', { bubbles: true }));
+                return;
+            }
+
             if (event.key !== 'Enter' || event.shiftKey) return;
 
             event.preventDefault();
@@ -139,6 +151,19 @@ class PostFullComponent {
         });
 
         updateCounter();
+    }
+
+    bindDescriptionToggle() {
+        const description = this.postFullElement?.querySelector('[data-component="post-full-description"]');
+        if (!description) return;
+
+        const needsCollapse = description.scrollHeight > description.clientHeight + 1;
+        if (!needsCollapse) return;
+
+        description.classList.add('is-collapsed');
+        description.addEventListener('click', () => {
+            description.classList.remove('is-collapsed');
+        }, { once: true });
     }
 
     renderPostPublishedLabel() {

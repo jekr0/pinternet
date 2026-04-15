@@ -512,7 +512,7 @@
             </div>
 
             <?php if ($selectedPostDescription !== ''): ?>
-                <div class="post-full__description">
+                <div class="post-full__description" data-component="post-full-description">
                     <?php echo nl2br(htmlspecialchars($selectedPostDescription, ENT_QUOTES, 'UTF-8')); ?>
                 </div>
             <?php endif; ?>
