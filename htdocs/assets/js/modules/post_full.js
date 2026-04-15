@@ -40,6 +40,8 @@ class PostFullComponent {
             this.syncStateFromDataset();
             this.bindBookmarkSync();
             this.bindCommentInput();
+            this.syncCommentRails();
+            window.addEventListener('resize', () => this.syncCommentRails());
         }
 
         const cards = Array.from(this.container.querySelectorAll('[data-component="post-card"]'));
@@ -157,7 +159,7 @@ class PostFullComponent {
         const description = this.postFullElement?.querySelector('[data-component="post-full-description"]');
         if (!description) return;
 
-        const needsCollapse = description.scrollHeight > description.clientHeight + 1;
+        const needsCollapse = description.scrollHeight > 90;
         if (!needsCollapse) return;
 
         description.classList.add('is-collapsed');
@@ -216,6 +218,10 @@ class PostFullComponent {
 
     autoResizeCommentInput(commentInput) {
         if (!commentInput) return;
+        if (commentInput.value.trim() === '') {
+            commentInput.style.height = '50px';
+            return;
+        }
         commentInput.style.height = 'auto';
         const nextHeight = Math.max(50, commentInput.scrollHeight);
         commentInput.style.height = `${nextHeight}px`;
@@ -390,11 +396,14 @@ class PostFullComponent {
         const item = document.createElement('article');
         item.className = 'post-full__comment-item';
         item.innerHTML = `
-            <a class="post-full__author-avatar post-full__comment-avatar" href="${this.escapeHtml(profileUrl)}" aria-label="Профиль автора @${this.escapeHtml(username)}">
-                ${hasAvatar
-                    ? `<img class="post-full__author-avatar-image" src="${this.escapeHtml(avatarSrc)}" alt="Аватар @${this.escapeHtml(username)}">`
-                    : '<img class="post-full__author-avatar-placeholder" src="/assets/images/icons/planet.svg" alt="Профиль" width="28" height="28">'}
-            </a>
+            <div class="post-full__comment-side">
+                <a class="post-full__author-avatar post-full__comment-avatar" href="${this.escapeHtml(profileUrl)}" aria-label="Профиль автора @${this.escapeHtml(username)}">
+                    ${hasAvatar
+                        ? `<img class="post-full__author-avatar-image" src="${this.escapeHtml(avatarSrc)}" alt="Аватар @${this.escapeHtml(username)}">`
+                        : '<img class="post-full__author-avatar-placeholder" src="/assets/images/icons/planet.svg" alt="Профиль" width="28" height="28">'}
+                </a>
+                <span class="post-full__comment-rail" aria-hidden="true"></span>
+            </div>
             <div class="post-full__comment-content">
                 <div class="post-full__comment-meta">
                     <a class="post-full__comment-username" href="${this.escapeHtml(profileUrl)}" aria-label="Профиль автора @${this.escapeHtml(username)}">@${this.escapeHtml(username)}</a>
@@ -406,6 +415,17 @@ class PostFullComponent {
         `;
 
         commentsList.appendChild(item);
+        this.syncCommentRails();
+    }
+
+    syncCommentRails() {
+        const commentItems = this.postFullElement?.querySelectorAll('.post-full__comment-item') || [];
+        commentItems.forEach((item) => {
+            const textElement = item.querySelector('.post-full__comment-text');
+            const railElement = item.querySelector('.post-full__comment-rail');
+            if (!textElement || !railElement) return;
+            railElement.style.height = `${Math.max(0, Math.round(textElement.offsetHeight))}px`;
+        });
     }
 
     escapeHtml(value) {

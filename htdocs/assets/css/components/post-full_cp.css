@@ -214,7 +214,7 @@
 }
 
 .post-full__description.is-collapsed {
-    max-height: 3.9em;
+    max-height: 90px;
     overflow: hidden;
     cursor: pointer;
 }
@@ -310,6 +310,21 @@
     flex: 0 0 auto;
 }
 
+.post-full__comment-side {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 0 0 auto;
+}
+
+.post-full__comment-rail {
+    width: 1.5px;
+    height: 0;
+    margin-top: 5px;
+    background: #e0e0e0;
+    border-radius: 1px;
+}
+
 .post-full__comment-content {
     flex: 1 1 auto;
     min-width: 0;
@@ -351,7 +366,7 @@
 }
 
 .post-full__comment-text {
-    margin: 5px 0 0;
+    margin: 12px 0 0;
     font-family: SF_def, Arial, sans-serif;
     font-size: 20px;
     line-height: 1.3;

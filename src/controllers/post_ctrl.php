@@ -409,8 +409,7 @@ function handleCreateComment(PDO $pdo, int $userId): never
     }
 
     try {
-        ensurePostCommentsTable($pdo);
-        $insertStmt = $pdo->prepare('INSERT INTO Post_Comments (post_id, user_id, content) VALUES (?, ?, ?)');
+        $insertStmt = $pdo->prepare('INSERT INTO Comments (post_id, user_id, content, parent_comment_id) VALUES (?, ?, ?, NULL)');
         $insertStmt->execute([$postId, $userId, $content]);
     } catch (Throwable $e) {
         error_log('Create comment error: ' . $e->getMessage());

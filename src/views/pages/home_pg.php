@@ -216,12 +216,18 @@
         }
 
         try {
-            $tableExistsStmt = $pdo->query("SHOW TABLES LIKE 'Post_Comments'");
+            $tableExistsStmt = $pdo->query("SHOW TABLES LIKE 'Comments'");
             if ($tableExistsStmt->fetchColumn() === false) {
                 return 0;
             }
 
-            $countStmt = $pdo->prepare('SELECT COUNT(*) FROM Post_Comments WHERE post_id = ?');
+            $countStmt = $pdo->prepare('
+                SELECT COUNT(*)
+                FROM Comments
+                WHERE post_id = ?
+                  AND is_deleted = 0
+                  AND parent_comment_id IS NULL
+            ');
             $countStmt->execute([$postId]);
 
             return (int) $countStmt->fetchColumn();
@@ -258,9 +264,11 @@
             if ($selectedPostCommentsCount > 0) {
                 $commentsStmt = $pdo->prepare('
                     SELECT pc.content, pc.created_at, u.username, u.avatar
-                    FROM Post_Comments pc
+                    FROM Comments pc
                     INNER JOIN Users u ON u.id = pc.user_id
                     WHERE pc.post_id = ?
+                      AND pc.is_deleted = 0
+                      AND pc.parent_comment_id IS NULL
                     ORDER BY pc.created_at ASC, pc.id ASC
                 ');
                 $commentsStmt->execute([$selectedPostId]);
@@ -541,13 +549,16 @@
                             $commentPublishedLabel = $formatPostPublishedLabel((string) ($commentRow['created_at'] ?? ''));
                         ?>
                         <article class="post-full__comment-item">
-                            <a class="post-full__author-avatar post-full__comment-avatar" href="<?php echo htmlspecialchars($commentProfileUrl, ENT_QUOTES, 'UTF-8'); ?>" aria-label="Профиль автора @<?php echo htmlspecialchars($commentUsername, ENT_QUOTES, 'UTF-8'); ?>">
-                                <?php if ($commentHasAvatar): ?>
-                                    <img class="post-full__author-avatar-image" src="<?php echo htmlspecialchars($commentAvatar, ENT_QUOTES, 'UTF-8'); ?>" alt="Аватар @<?php echo htmlspecialchars($commentUsername, ENT_QUOTES, 'UTF-8'); ?>">
-                                <?php else: ?>
-                                    <img class="post-full__author-avatar-placeholder" src="/assets/images/icons/planet.svg" alt="Профиль" width="28" height="28">
-                                <?php endif; ?>
-                            </a>
+                            <div class="post-full__comment-side">
+                                <a class="post-full__author-avatar post-full__comment-avatar" href="<?php echo htmlspecialchars($commentProfileUrl, ENT_QUOTES, 'UTF-8'); ?>" aria-label="Профиль автора @<?php echo htmlspecialchars($commentUsername, ENT_QUOTES, 'UTF-8'); ?>">
+                                    <?php if ($commentHasAvatar): ?>
+                                        <img class="post-full__author-avatar-image" src="<?php echo htmlspecialchars($commentAvatar, ENT_QUOTES, 'UTF-8'); ?>" alt="Аватар @<?php echo htmlspecialchars($commentUsername, ENT_QUOTES, 'UTF-8'); ?>">
+                                    <?php else: ?>
+                                        <img class="post-full__author-avatar-placeholder" src="/assets/images/icons/planet.svg" alt="Профиль" width="28" height="28">
+                                    <?php endif; ?>
+                                </a>
+                                <span class="post-full__comment-rail" aria-hidden="true"></span>
+                            </div>
                             <div class="post-full__comment-content">
                                 <div class="post-full__comment-meta">
                                     <a class="post-full__comment-username" href="<?php echo htmlspecialchars($commentProfileUrl, ENT_QUOTES, 'UTF-8'); ?>" aria-label="Профиль автора @<?php echo htmlspecialchars($commentUsername, ENT_QUOTES, 'UTF-8'); ?>">@<?php echo htmlspecialchars($commentUsername, ENT_QUOTES, 'UTF-8'); ?></a>
