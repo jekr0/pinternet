@@ -184,8 +184,8 @@
 .post-full__author-meta-separator {
     width: 6px;
     height: 6px;
-    margin-left: 10px;
-    margin-right: 10px;
+    margin-left: 5px;
+    margin-right: 5px;
     border-radius: 50%;
     background: #bbb;
     flex: 0 0 auto;
@@ -225,7 +225,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    height: 30px;
+    height: 45px;
     background: linear-gradient(to bottom, rgba(255, 255, 255, 0), #fff);
 }
 
