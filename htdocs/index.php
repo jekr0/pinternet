@@ -96,6 +96,7 @@ switch ($path) {
         case '/boards/create':
         case '/hashtags/suggest':
         case '/posts/report':
+        case '/posts/comment':
         require_once '../src/controllers/post_ctrl.php';
         exit;
 

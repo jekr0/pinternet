@@ -40,14 +40,14 @@
                     name="post-description"
                     placeholder="Добавить описание к посту"
                     autocomplete="off"
-                    maxlength="256"
+                    maxlength="512"
                     data-component="post-description"
                     style="position:relative; top:0; right:0; width:100%; height:100%;"
                 ></textarea>
                 <span
                     data-component="post-description-counter"
                     style="position:absolute; right:5px; bottom:5px; font-size:14px; color:#bbb; pointer-events:none;"
-                >0/256</span>
+                >0/512</span>
             </div>
 
             <!-- Коллекция и список выбора -->
