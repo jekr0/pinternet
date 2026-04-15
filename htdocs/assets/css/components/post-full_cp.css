@@ -254,7 +254,7 @@
 .post-full__description-divider {
     width: calc(100% - 40px);
     height: 1.5px;
-    margin: 15px 20px 40px;
+    margin: 15px 20px 20px;
     background: #e0e0e0;
 }
 
