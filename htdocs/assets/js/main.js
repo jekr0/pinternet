@@ -1,5 +1,7 @@
 /* =========================== Главный объект приложения ========================== */
 
+document.documentElement.classList.add('app-preloading');
+
 const App = {
     // Реестр зарегистрированных компонентов (ключ = имя файла модуля)
     registry: {},
@@ -154,5 +156,8 @@ const App = {
 
 // Инициализируем после полной загрузки DOM (все скрипты уже выполнены)
 document.addEventListener('DOMContentLoaded', () => {
-    App.initWithSvgPreload();
+    App.initWithSvgPreload()
+        .finally(() => {
+            document.documentElement.classList.remove('app-preloading');
+        });
 });

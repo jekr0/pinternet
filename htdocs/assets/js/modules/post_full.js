@@ -160,9 +160,11 @@ class PostFullComponent {
         if (!description) return;
 
         const needsCollapse = description.scrollHeight > 90;
-        if (!needsCollapse) return;
+        if (!needsCollapse) {
+            description.classList.remove('is-collapsed');
+            return;
+        }
 
-        description.classList.add('is-collapsed');
         description.addEventListener('click', () => {
             description.classList.remove('is-collapsed');
         }, { once: true });
@@ -173,10 +175,9 @@ class PostFullComponent {
         if (!element) return;
 
         const createdAtTs = Number(this.postFullElement?.dataset.createdAtTs || 0);
-        const openedAtTs = Number(this.postFullElement?.dataset.pageOpenedTs || 0);
-        if (!createdAtTs || !openedAtTs) return;
+        if (!createdAtTs) return;
 
-        element.textContent = this.formatRelativeTimeLabel(createdAtTs, openedAtTs);
+        element.textContent = this.formatRelativeTimeLabel(createdAtTs, Math.floor(Date.now() / 1000));
     }
 
     formatRelativeTimeLabel(createdAtTs, referenceNowTs) {
@@ -411,10 +412,27 @@ class PostFullComponent {
                     <span class="post-full__comment-published-at">${this.escapeHtml(publishedLabel)}</span>
                 </div>
                 <p class="post-full__comment-text">${this.escapeHtmlWithBreaks(commentData.content || '')}</p>
+                <div class="post-full__comment-actions" aria-label="Действия с комментарием">
+                    <button class="post-full__comment-action-button" type="button" data-action="comment-like" aria-label="Лайк комментария">
+                        <span class="post-full__comment-action-icon" data-svg-src="/assets/images/icons/S-heart.svg" aria-hidden="true"></span>
+                    </button>
+                    <span class="post-full__comment-like-count">0</span>
+                    <button class="post-full__comment-action-button" type="button" data-action="comment-reply" aria-label="Ответить на комментарий">
+                        <span class="post-full__comment-action-icon" data-svg-src="/assets/images/icons/S-comment.svg" aria-hidden="true"></span>
+                    </button>
+                    <button class="post-full__comment-action-button" type="button" data-action="comment-report" aria-label="Пожаловаться на комментарий">
+                        <span class="post-full__comment-action-icon" data-svg-src="/assets/images/icons/S-warning.svg" aria-hidden="true"></span>
+                    </button>
+                </div>
             </div>
         `;
 
         commentsList.appendChild(item);
+        item.querySelectorAll('[data-svg-src]').forEach((node) => {
+            const src = node.getAttribute('data-svg-src');
+            if (!src) return;
+            App.utils.loadSVG(src, node);
+        });
         this.syncCommentRails();
     }
 
@@ -424,7 +442,7 @@ class PostFullComponent {
             const textElement = item.querySelector('.post-full__comment-text');
             const railElement = item.querySelector('.post-full__comment-rail');
             if (!textElement || !railElement) return;
-            railElement.style.height = `${Math.max(0, Math.round(textElement.offsetHeight))}px`;
+            railElement.style.height = `${Math.max(0, Math.round(textElement.offsetHeight + 10))}px`;
         });
     }
 

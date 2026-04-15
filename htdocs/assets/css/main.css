@@ -41,3 +41,7 @@ body {
 body.body--scroll-locked {
     overflow: hidden;
 }
+
+html.app-preloading body {
+    opacity: 0;
+}
