@@ -33,6 +33,7 @@ class PostFullComponent {
         this.postFullFrame = this.postFullElement?.querySelector('.post-full__frame') || null;
         if (this.postFullElement) {
             this.initActionIcons();
+            this.renderPostPublishedLabel();
             this.bindMetaActions();
             this.bindFrameActions();
             this.syncStateFromDataset();
@@ -126,6 +127,7 @@ class PostFullComponent {
 
         const updateCounter = () => {
             commentCounter.textContent = `${commentInput.value.length}/256`;
+            this.autoResizeCommentInput(commentInput);
         };
 
         commentInput.addEventListener('input', updateCounter);
@@ -137,6 +139,61 @@ class PostFullComponent {
         });
 
         updateCounter();
+    }
+
+    renderPostPublishedLabel() {
+        const element = this.postFullElement?.querySelector('[data-component="post-full-published-at"]');
+        if (!element) return;
+
+        const createdAtTs = Number(this.postFullElement?.dataset.createdAtTs || 0);
+        const openedAtTs = Number(this.postFullElement?.dataset.pageOpenedTs || 0);
+        if (!createdAtTs || !openedAtTs) return;
+
+        element.textContent = this.formatRelativeTimeLabel(createdAtTs, openedAtTs);
+    }
+
+    formatRelativeTimeLabel(createdAtTs, referenceNowTs) {
+        const diffSeconds = Math.max(0, Math.floor(referenceNowTs - createdAtTs));
+        if (diffSeconds <= 59) {
+            return `${Math.max(1, diffSeconds)} сек. назад`;
+        }
+
+        const minutes = Math.floor(diffSeconds / 60);
+        if (minutes <= 59) {
+            return `${minutes} мин. назад`;
+        }
+
+        const hours = Math.floor(diffSeconds / 3600);
+        if (hours <= 23) {
+            return `${hours} ${this.pluralizeRu(hours, 'час', 'часа', 'часов')} назад`;
+        }
+
+        const days = Math.floor(diffSeconds / 86400);
+        if (days <= 3) {
+            return `${days} ${this.pluralizeRu(days, 'день', 'дня', 'дней')} назад`;
+        }
+
+        const date = new Date(createdAtTs * 1000);
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}.${month}.${year}`;
+    }
+
+    pluralizeRu(value, one, few, many) {
+        const mod100 = value % 100;
+        if (mod100 >= 11 && mod100 <= 14) return many;
+        const mod10 = value % 10;
+        if (mod10 === 1) return one;
+        if (mod10 >= 2 && mod10 <= 4) return few;
+        return many;
+    }
+
+    autoResizeCommentInput(commentInput) {
+        if (!commentInput) return;
+        commentInput.style.height = 'auto';
+        const nextHeight = Math.max(50, commentInput.scrollHeight);
+        commentInput.style.height = `${nextHeight}px`;
     }
 
     syncStateFromDataset() {
@@ -269,11 +326,21 @@ class PostFullComponent {
             if (commentCounter) {
                 commentCounter.textContent = '0/256';
             }
+            this.autoResizeCommentInput(commentInput);
 
             const emptyMessage = this.postFullElement?.querySelector('.post-full__comments-empty');
             if (emptyMessage) {
                 emptyMessage.remove();
             }
+
+            this.prependComment({
+                content: text,
+                createdAtTs: Math.floor(Date.now() / 1000),
+                username: String(this.postFullElement?.dataset.viewerUsername || '').trim(),
+                avatarSrc: String(this.postFullElement?.dataset.viewerAvatarSrc || ''),
+                profileUrl: String(this.postFullElement?.dataset.viewerProfileUrl || '/profile'),
+                hasAvatar: this.postFullElement?.dataset.viewerHasAvatar === '1'
+            });
 
             this.showToast('Комментарий добавлен');
         } catch (error) {
@@ -283,6 +350,50 @@ class PostFullComponent {
             commentInput.disabled = false;
             commentInput.focus();
         }
+    }
+
+    prependComment(commentData) {
+        const commentsList = this.postFullElement?.querySelector('[data-component="post-full-comments-list"]');
+        if (!commentsList) return;
+
+        const username = commentData.username || 'unknown';
+        const profileUrl = commentData.profileUrl || '/profile';
+        const avatarSrc = commentData.avatarSrc || '/uploads/avatars/avatar.jpg';
+        const hasAvatar = !!commentData.hasAvatar;
+        const publishedLabel = this.formatRelativeTimeLabel(commentData.createdAtTs || Math.floor(Date.now() / 1000), Math.floor(Date.now() / 1000));
+
+        const item = document.createElement('article');
+        item.className = 'post-full__comment-item';
+        item.innerHTML = `
+            <a class="post-full__author-avatar post-full__comment-avatar" href="${this.escapeHtml(profileUrl)}" aria-label="Профиль автора @${this.escapeHtml(username)}">
+                ${hasAvatar
+                    ? `<img class="post-full__author-avatar-image" src="${this.escapeHtml(avatarSrc)}" alt="Аватар @${this.escapeHtml(username)}">`
+                    : '<img class="post-full__author-avatar-placeholder" src="/assets/images/icons/planet.svg" alt="Профиль" width="28" height="28">'}
+            </a>
+            <div class="post-full__comment-content">
+                <div class="post-full__comment-meta">
+                    <a class="post-full__comment-username" href="${this.escapeHtml(profileUrl)}" aria-label="Профиль автора @${this.escapeHtml(username)}">@${this.escapeHtml(username)}</a>
+                    <span class="post-full__comment-meta-separator" aria-hidden="true"></span>
+                    <span class="post-full__comment-published-at">${this.escapeHtml(publishedLabel)}</span>
+                </div>
+                <p class="post-full__comment-text">${this.escapeHtmlWithBreaks(commentData.content || '')}</p>
+            </div>
+        `;
+
+        commentsList.appendChild(item);
+    }
+
+    escapeHtml(value) {
+        return String(value)
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#39;');
+    }
+
+    escapeHtmlWithBreaks(value) {
+        return this.escapeHtml(value).replaceAll('\n', '<br>');
     }
 
     async handleBookmark(button) {

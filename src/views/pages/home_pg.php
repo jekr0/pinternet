@@ -6,6 +6,10 @@
     }
 
     $viewerId = (int) ($_SESSION['user_id'] ?? 0);
+    $viewerUsername = '';
+    $viewerAvatar = '/uploads/avatars/avatar.jpg';
+    $viewerHasAvatar = false;
+    $viewerProfileUrl = '/profile';
     $posts = [];
     $selectedPostId = isset($selectedPostId) ? (int) $selectedPostId : 0;
 
@@ -117,6 +121,7 @@
     $selectedPost = null;
     $selectedPostHashtags = [];
     $selectedPostCommentsCount = 0;
+    $selectedPostComments = [];
 
     $normalizeTag = static function (string $tag): string {
         return mb_strtolower(trim($tag));
@@ -225,6 +230,18 @@
         }
     };
 
+    if ($viewerId > 0) {
+        $viewerStmt = $pdo->prepare('SELECT username, avatar FROM Users WHERE id = ? LIMIT 1');
+        $viewerStmt->execute([$viewerId]);
+        $viewerRow = $viewerStmt->fetch(PDO::FETCH_ASSOC) ?: null;
+        if ($viewerRow) {
+            $viewerUsername = ltrim((string) ($viewerRow['username'] ?? ''), '@');
+            $viewerAvatar = $normalizePublicPath((string) ($viewerRow['avatar'] ?? ''));
+            $viewerHasAvatar = $viewerAvatar !== '/uploads/avatars/avatar.jpg';
+            $viewerProfileUrl = '/profile?username=' . urlencode($viewerUsername);
+        }
+    }
+
     if ($selectedPostId > 0) {
         foreach ($posts as $row) {
             if ((int) ($row['id'] ?? 0) !== $selectedPostId) {
@@ -237,6 +254,18 @@
 
         if ($selectedPost) {
             $selectedPostCommentsCount = $countPostComments($pdo, $selectedPostId);
+
+            if ($selectedPostCommentsCount > 0) {
+                $commentsStmt = $pdo->prepare('
+                    SELECT pc.content, pc.created_at, u.username, u.avatar
+                    FROM Post_Comments pc
+                    INNER JOIN Users u ON u.id = pc.user_id
+                    WHERE pc.post_id = ?
+                    ORDER BY pc.created_at ASC, pc.id ASC
+                ');
+                $commentsStmt->execute([$selectedPostId]);
+                $selectedPostComments = $commentsStmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+            }
 
             $hashtagsStmt = $pdo->prepare('
                 SELECT h.name
@@ -395,6 +424,7 @@
             $selectedAuthorProfileUrl = '/profile?username=' . urlencode($selectedAuthorUsername);
             $selectedPostDescription = trim((string) ($selectedPost['description'] ?? ''));
             $selectedPostPublishedLabel = $formatPostPublishedLabel((string) ($selectedPost['created_at'] ?? ''));
+            $selectedPostCreatedTimestamp = (int) strtotime((string) ($selectedPost['created_at'] ?? ''));
             $selectedHasComments = $selectedPostCommentsCount > 0;
         ?>
         <section
@@ -404,6 +434,12 @@
             data-liked="<?php echo $selectedIsLiked ? '1' : '0'; ?>"
             data-bookmarked="<?php echo $selectedIsBookmarked ? '1' : '0'; ?>"
             data-owner="<?php echo $selectedIsOwner ? '1' : '0'; ?>"
+            data-created-at-ts="<?php echo $selectedPostCreatedTimestamp; ?>"
+            data-page-opened-ts="<?php echo time(); ?>"
+            data-viewer-username="<?php echo htmlspecialchars($viewerUsername, ENT_QUOTES, 'UTF-8'); ?>"
+            data-viewer-avatar-src="<?php echo htmlspecialchars($viewerAvatar, ENT_QUOTES, 'UTF-8'); ?>"
+            data-viewer-profile-url="<?php echo htmlspecialchars($viewerProfileUrl, ENT_QUOTES, 'UTF-8'); ?>"
+            data-viewer-has-avatar="<?php echo $viewerHasAvatar ? '1' : '0'; ?>"
             aria-hidden="false"
         >
             <div
@@ -445,9 +481,9 @@
                         href="<?php echo htmlspecialchars($selectedAuthorProfileUrl, ENT_QUOTES, 'UTF-8'); ?>"
                         aria-label="Профиль автора @<?php echo htmlspecialchars($selectedAuthorUsername, ENT_QUOTES, 'UTF-8'); ?>"
                     >@<?php echo htmlspecialchars($selectedAuthorUsername, ENT_QUOTES, 'UTF-8'); ?></a>
-                    <?php if ($selectedPostPublishedLabel !== ''): ?>
+                    <?php if ($selectedPostCreatedTimestamp > 0): ?>
                         <span class="post-full__author-meta-separator" aria-hidden="true"></span>
-                        <span class="post-full__author-published-at"><?php echo htmlspecialchars($selectedPostPublishedLabel, ENT_QUOTES, 'UTF-8'); ?></span>
+                        <span class="post-full__author-published-at" data-component="post-full-published-at"><?php echo htmlspecialchars($selectedPostPublishedLabel, ENT_QUOTES, 'UTF-8'); ?></span>
                     <?php endif; ?>
                 </div>
 
@@ -495,6 +531,34 @@
                 <?php if (!$selectedHasComments): ?>
                     <p class="post-full__comments-empty">Комментариев пока нет. Будьте первым!</p>
                 <?php endif; ?>
+                <div class="post-full__comments-list" data-component="post-full-comments-list">
+                    <?php foreach ($selectedPostComments as $commentRow): ?>
+                        <?php
+                            $commentUsername = ltrim((string) ($commentRow['username'] ?? 'unknown'), '@');
+                            $commentProfileUrl = '/profile?username=' . urlencode($commentUsername);
+                            $commentAvatar = $normalizePublicPath((string) ($commentRow['avatar'] ?? ''));
+                            $commentHasAvatar = $commentAvatar !== '/uploads/avatars/avatar.jpg';
+                            $commentPublishedLabel = $formatPostPublishedLabel((string) ($commentRow['created_at'] ?? ''));
+                        ?>
+                        <article class="post-full__comment-item">
+                            <a class="post-full__author-avatar post-full__comment-avatar" href="<?php echo htmlspecialchars($commentProfileUrl, ENT_QUOTES, 'UTF-8'); ?>" aria-label="Профиль автора @<?php echo htmlspecialchars($commentUsername, ENT_QUOTES, 'UTF-8'); ?>">
+                                <?php if ($commentHasAvatar): ?>
+                                    <img class="post-full__author-avatar-image" src="<?php echo htmlspecialchars($commentAvatar, ENT_QUOTES, 'UTF-8'); ?>" alt="Аватар @<?php echo htmlspecialchars($commentUsername, ENT_QUOTES, 'UTF-8'); ?>">
+                                <?php else: ?>
+                                    <img class="post-full__author-avatar-placeholder" src="/assets/images/icons/planet.svg" alt="Профиль" width="28" height="28">
+                                <?php endif; ?>
+                            </a>
+                            <div class="post-full__comment-content">
+                                <div class="post-full__comment-meta">
+                                    <a class="post-full__comment-username" href="<?php echo htmlspecialchars($commentProfileUrl, ENT_QUOTES, 'UTF-8'); ?>" aria-label="Профиль автора @<?php echo htmlspecialchars($commentUsername, ENT_QUOTES, 'UTF-8'); ?>">@<?php echo htmlspecialchars($commentUsername, ENT_QUOTES, 'UTF-8'); ?></a>
+                                    <span class="post-full__comment-meta-separator" aria-hidden="true"></span>
+                                    <span class="post-full__comment-published-at"><?php echo htmlspecialchars($commentPublishedLabel, ENT_QUOTES, 'UTF-8'); ?></span>
+                                </div>
+                                <p class="post-full__comment-text"><?php echo nl2br(htmlspecialchars((string) ($commentRow['content'] ?? ''), ENT_QUOTES, 'UTF-8')); ?></p>
+                            </div>
+                        </article>
+                    <?php endforeach; ?>
+                </div>
                 <?php if ($viewerId > 0): ?>
                     <div class="post-full__comment-input-wrap">
                         <textarea
