@@ -37,6 +37,7 @@ class PostFullComponent {
             this.bindFrameActions();
             this.syncStateFromDataset();
             this.bindBookmarkSync();
+            this.bindCommentInput();
         }
 
         const cards = Array.from(this.container.querySelectorAll('[data-component="post-card"]'));
@@ -116,6 +117,26 @@ class PostFullComponent {
             this.postFullElement.dataset.bookmarked = !!event.detail?.bookmarked ? '1' : '0';
             this.syncStateFromDataset();
         });
+    }
+
+    bindCommentInput() {
+        const commentInput = this.postFullElement?.querySelector('[data-component="post-full-comment-input"]');
+        const commentCounter = this.postFullElement?.querySelector('[data-component="post-full-comment-counter"]');
+        if (!commentInput || !commentCounter) return;
+
+        const updateCounter = () => {
+            commentCounter.textContent = `${commentInput.value.length}/256`;
+        };
+
+        commentInput.addEventListener('input', updateCounter);
+        commentInput.addEventListener('keydown', async (event) => {
+            if (event.key !== 'Enter' || event.shiftKey) return;
+
+            event.preventDefault();
+            await this.submitComment(commentInput);
+        });
+
+        updateCounter();
     }
 
     syncStateFromDataset() {
@@ -212,6 +233,56 @@ class PostFullComponent {
         const currentCount = Number(countElement.textContent || 0);
         const nextCount = isLiked ? currentCount + 1 : Math.max(0, currentCount - 1);
         countElement.textContent = String(nextCount);
+    }
+
+    async submitComment(commentInput) {
+        const postId = this.getPostId();
+        const text = commentInput.value.trim();
+        if (!postId || !text) return;
+        if (text.length > 256) {
+            this.showToast('Комментарий не должен превышать 256 символов.');
+            return;
+        }
+
+        commentInput.disabled = true;
+        try {
+            const response = await fetch('/posts/comment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                    'Accept': 'application/json'
+                },
+                body: new URLSearchParams({
+                    post_id: String(postId),
+                    content: text
+                }).toString()
+            });
+
+            const payload = await response.json();
+            if (!response.ok || !payload.success) {
+                this.showToast(payload?.error || 'Не удалось сохранить комментарий.');
+                return;
+            }
+
+            commentInput.value = '';
+            const commentCounter = this.postFullElement?.querySelector('[data-component="post-full-comment-counter"]');
+            if (commentCounter) {
+                commentCounter.textContent = '0/256';
+            }
+
+            const emptyMessage = this.postFullElement?.querySelector('.post-full__comments-empty');
+            if (emptyMessage) {
+                emptyMessage.remove();
+            }
+
+            this.showToast('Комментарий добавлен');
+        } catch (error) {
+            console.warn('Unable to submit comment from post-full', error);
+            this.showToast('Не удалось сохранить комментарий.');
+        } finally {
+            commentInput.disabled = false;
+            commentInput.focus();
+        }
     }
 
     async handleBookmark(button) {

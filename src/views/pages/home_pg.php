@@ -91,14 +91,14 @@
             return '';
         }
 
-        if ($createdAt > $now) {
-            return $createdAt->format('d.m.Y');
+        $diffSeconds = max(0, $now->getTimestamp() - $createdAt->getTimestamp());
+        if ($diffSeconds <= 59) {
+            return max(1, $diffSeconds) . ' сек. назад';
         }
 
-        $diffSeconds = $now->getTimestamp() - $createdAt->getTimestamp();
         $minutes = (int) floor($diffSeconds / 60);
         if ($minutes <= 59) {
-            return max(1, $minutes) . ' мин. назад';
+            return $minutes . ' мин. назад';
         }
 
         $hours = (int) floor($diffSeconds / 3600);
@@ -116,6 +116,7 @@
 
     $selectedPost = null;
     $selectedPostHashtags = [];
+    $selectedPostCommentsCount = 0;
 
     $normalizeTag = static function (string $tag): string {
         return mb_strtolower(trim($tag));
@@ -204,6 +205,26 @@
         return $relatedTags;
     };
 
+    $countPostComments = static function (PDO $pdo, int $postId): int {
+        if ($postId <= 0) {
+            return 0;
+        }
+
+        try {
+            $tableExistsStmt = $pdo->query("SHOW TABLES LIKE 'Post_Comments'");
+            if ($tableExistsStmt->fetchColumn() === false) {
+                return 0;
+            }
+
+            $countStmt = $pdo->prepare('SELECT COUNT(*) FROM Post_Comments WHERE post_id = ?');
+            $countStmt->execute([$postId]);
+
+            return (int) $countStmt->fetchColumn();
+        } catch (Throwable) {
+            return 0;
+        }
+    };
+
     if ($selectedPostId > 0) {
         foreach ($posts as $row) {
             if ((int) ($row['id'] ?? 0) !== $selectedPostId) {
@@ -215,6 +236,8 @@
         }
 
         if ($selectedPost) {
+            $selectedPostCommentsCount = $countPostComments($pdo, $selectedPostId);
+
             $hashtagsStmt = $pdo->prepare('
                 SELECT h.name
                 FROM Hashtags h
@@ -372,6 +395,7 @@
             $selectedAuthorProfileUrl = '/profile?username=' . urlencode($selectedAuthorUsername);
             $selectedPostDescription = trim((string) ($selectedPost['description'] ?? ''));
             $selectedPostPublishedLabel = $formatPostPublishedLabel((string) ($selectedPost['created_at'] ?? ''));
+            $selectedHasComments = $selectedPostCommentsCount > 0;
         ?>
         <section
             class="post-full is-open"
@@ -465,9 +489,25 @@
                 </div>
             <?php endif; ?>
 
-            <?php if ($selectedPostDescription !== '' || !empty($selectedPostHashtags)): ?>
-                <div class="post-full__description-divider" aria-hidden="true"></div>
-            <?php endif; ?>
+            <div class="post-full__description-divider" aria-hidden="true"></div>
+
+            <div class="post-full__comments-block">
+                <?php if (!$selectedHasComments): ?>
+                    <p class="post-full__comments-empty">Комментариев пока нет. Будьте первым!</p>
+                <?php endif; ?>
+                <?php if ($viewerId > 0): ?>
+                    <div class="post-full__comment-input-wrap">
+                        <textarea
+                            class="post-full__comment-input"
+                            data-component="post-full-comment-input"
+                            placeholder="Оставить комментарий"
+                            maxlength="256"
+                            aria-label="Оставить комментарий"
+                        ></textarea>
+                        <span class="post-full__comment-counter" data-component="post-full-comment-counter">0/256</span>
+                    </div>
+                <?php endif; ?>
+            </div>
         </section>
     <?php endif; ?>
 
@@ -483,8 +523,6 @@
             $hasNonProfileBookmark = !empty($row['has_non_profile_bookmark']);
             $isBookmarked = $isOwner ? $hasNonProfileBookmark : $hasAnyBookmark;
             $isPostFullActive = $selectedPostId > 0 && $postId === $selectedPostId;
-            $postPublishedLabel = $formatPostPublishedLabel((string) ($row['created_at'] ?? ''));
-
             include '../src/views/components/post-card_cp.php';
         ?>
     <?php endforeach; ?>
