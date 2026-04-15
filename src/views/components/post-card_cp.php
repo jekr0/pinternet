@@ -10,6 +10,9 @@
     $isBookmarked = !empty($isBookmarked);
     $isOwner = !empty($isOwner);
     $isPostFullActive = !empty($isPostFullActive);
+    $postPublishedLabel = isset($postPublishedLabel) && is_string($postPublishedLabel)
+        ? trim($postPublishedLabel)
+        : '';
 ?>
 
 <article
@@ -25,7 +28,13 @@
         class="post-card__author-badge"
         href="/profile?username=<?php echo urlencode(ltrim($authorUsername, '@')); ?>"
         aria-label="Профиль автора @<?php echo htmlspecialchars(ltrim($authorUsername, '@'), ENT_QUOTES, 'UTF-8'); ?>"
-    >@<?php echo htmlspecialchars(ltrim($authorUsername, '@'), ENT_QUOTES, 'UTF-8'); ?></a>
+    >
+        <span class="post-card__author-username">@<?php echo htmlspecialchars(ltrim($authorUsername, '@'), ENT_QUOTES, 'UTF-8'); ?></span>
+        <?php if ($postPublishedLabel !== ''): ?>
+            <span class="post-card__author-meta-separator" aria-hidden="true"></span>
+            <span class="post-card__author-published-at"><?php echo htmlspecialchars($postPublishedLabel, ENT_QUOTES, 'UTF-8'); ?></span>
+        <?php endif; ?>
+    </a>
 
     <img
         class="post-card__image"
