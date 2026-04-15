@@ -142,7 +142,7 @@ class CreatePostModalComponent {
 
         const updateCounter = () => {
             const length = this.descriptionField.value.length;
-            this.descriptionCounter.textContent = `${length}/256`;
+            this.descriptionCounter.textContent = `${length}/512`;
         };
 
         this.descriptionField.addEventListener('input', updateCounter);
@@ -366,7 +366,7 @@ class CreatePostModalComponent {
         this.selectedCollections = [];
         this.updateCollectionFieldValue();
         this.updateCollectionSelectionUI();
-        this.descriptionCounter.textContent = '0/256';
+        this.descriptionCounter.textContent = '0/512';
         this.hideAlert();
         this.hideSuccessToast();
         this.hideTagSuggestions();

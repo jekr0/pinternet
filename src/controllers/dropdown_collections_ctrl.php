@@ -120,6 +120,18 @@ function handleBookmarkBoardToggle(PDO $pdo, int $userId): never
         $hasAnyStmt->execute([$userId, $postId]);
         $hasAny = $hasAnyStmt->fetchColumn() !== false;
 
+        $hasNonProfileStmt = $pdo->prepare('
+            SELECT 1
+            FROM Saved_Posts sp
+            INNER JOIN Boards b ON b.id = sp.board_id AND b.user_id = sp.user_id
+            WHERE sp.user_id = ?
+              AND sp.post_id = ?
+              AND LOWER(b.name) <> LOWER(?)
+            LIMIT 1
+        ');
+        $hasNonProfileStmt->execute([$userId, $postId, 'Profile']);
+        $hasNonProfile = $hasNonProfileStmt->fetchColumn() !== false;
+
         $pdo->commit();
     } catch (Throwable $e) {
         $pdo->rollBack();
@@ -127,7 +139,7 @@ function handleBookmarkBoardToggle(PDO $pdo, int $userId): never
         jsonResponse(['success' => false, 'error' => 'Не удалось обновить коллекцию.'], 500);
     }
 
-    jsonResponse(['success' => true, 'saved' => $isSaved, 'has_any' => $hasAny]);
+    jsonResponse(['success' => true, 'saved' => $isSaved, 'has_any' => $hasAny, 'has_non_profile' => $hasNonProfile]);
 }
 
 function handleBookmarkClear(PDO $pdo, int $userId): never
@@ -168,12 +180,24 @@ function handleBookmarkClear(PDO $pdo, int $userId): never
         ');
         $hasAnyStmt->execute([$userId, $postId]);
         $hasAny = $hasAnyStmt->fetchColumn() !== false;
+
+        $hasNonProfileStmt = $pdo->prepare('
+            SELECT 1
+            FROM Saved_Posts sp
+            INNER JOIN Boards b ON b.id = sp.board_id AND b.user_id = sp.user_id
+            WHERE sp.user_id = ?
+              AND sp.post_id = ?
+              AND LOWER(b.name) <> LOWER(?)
+            LIMIT 1
+        ');
+        $hasNonProfileStmt->execute([$userId, $postId, 'Profile']);
+        $hasNonProfile = $hasNonProfileStmt->fetchColumn() !== false;
     } catch (Throwable $e) {
         error_log('Bookmark clear error: ' . $e->getMessage());
         jsonResponse(['success' => false, 'error' => 'Не удалось удалить пост из коллекций.'], 500);
     }
 
-    jsonResponse(['success' => true, 'has_any' => $hasAny]);
+    jsonResponse(['success' => true, 'has_any' => $hasAny, 'has_non_profile' => $hasNonProfile]);
 }
 
 function handleBookmarkBoardCreate(PDO $pdo, int $userId): never

@@ -59,6 +59,10 @@ if ($path === '/posts/report') {
     handlePostReport($pdo, $userId);
 }
 
+if ($path === '/posts/comment') {
+    handleCreateComment($pdo, $userId);
+}
+
 if ($path === '/posts/list') {
     handlePostsList($pdo);
 }
@@ -377,6 +381,44 @@ function handlePostReport(PDO $pdo, int $userId): never
     jsonResponse(['success' => true, 'already_reported' => $alreadyReported]);
 }
 
+function handleCreateComment(PDO $pdo, int $userId): never
+{
+    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+        jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод.'], 405);
+    }
+
+    $postId = (int) ($_POST['post_id'] ?? 0);
+    $content = trim((string) ($_POST['content'] ?? ''));
+
+    if ($postId <= 0) {
+        jsonResponse(['success' => false, 'error' => 'Некорректный post_id.'], 422);
+    }
+
+    if ($content === '') {
+        jsonResponse(['success' => false, 'error' => 'Комментарий не может быть пустым.'], 422);
+    }
+
+    if (mb_strlen($content) > 256) {
+        jsonResponse(['success' => false, 'error' => 'Комментарий не должен превышать 256 символов.'], 422);
+    }
+
+    $postStmt = $pdo->prepare('SELECT id FROM Posts WHERE id = ? LIMIT 1');
+    $postStmt->execute([$postId]);
+    if ($postStmt->fetchColumn() === false) {
+        jsonResponse(['success' => false, 'error' => 'Пост не найден.'], 404);
+    }
+
+    try {
+        $insertStmt = $pdo->prepare('INSERT INTO Comments (post_id, user_id, content, parent_comment_id) VALUES (?, ?, ?, NULL)');
+        $insertStmt->execute([$postId, $userId, $content]);
+    } catch (Throwable $e) {
+        error_log('Create comment error: ' . $e->getMessage());
+        jsonResponse(['success' => false, 'error' => 'Не удалось сохранить комментарий.'], 500);
+    }
+
+    jsonResponse(['success' => true]);
+}
+
 function handleCreatePost(PDO $pdo, int $userId): never
 {
     if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
@@ -387,8 +429,8 @@ function handleCreatePost(PDO $pdo, int $userId): never
     $collectionInput = trim((string) ($_POST['collection'] ?? ''));
     $tagsInput = trim((string) ($_POST['tags'] ?? ''));
 
-    if (mb_strlen($description) > 256) {
-        jsonResponse(['success' => false, 'error' => 'Описание не должно превышать 256 символов.'], 422);
+    if (mb_strlen($description) > 512) {
+        jsonResponse(['success' => false, 'error' => 'Описание не должно превышать 512 символов.'], 422);
     }
 
     if (!isset($_FILES['image']) || !is_array($_FILES['image'])) {
