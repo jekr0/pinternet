@@ -238,12 +238,7 @@
     color: #999;
     cursor: not-allowed;
     pointer-events: none;
-}
-
-.create-post-modal__collection-add-button {
-    text-align: center !important;
-    font-size: 20px !important;
-    color: #bbb !important;
+    height: 29px;
 }
 
 .create-post-modal__collection-add-button {
