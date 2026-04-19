@@ -444,7 +444,7 @@
             data-bookmarked="<?php echo $selectedIsBookmarked ? '1' : '0'; ?>"
             data-owner="<?php echo $selectedIsOwner ? '1' : '0'; ?>"
             data-created-at-ts="<?php echo $selectedPostCreatedTimestamp; ?>"
-            data-page-opened-ts="<?php echo time(); ?>"
+            data-server-now-ts="<?php echo time(); ?>"
             data-viewer-username="<?php echo htmlspecialchars($viewerUsername, ENT_QUOTES, 'UTF-8'); ?>"
             data-viewer-avatar-src="<?php echo htmlspecialchars($viewerAvatar, ENT_QUOTES, 'UTF-8'); ?>"
             data-viewer-profile-url="<?php echo htmlspecialchars($viewerProfileUrl, ENT_QUOTES, 'UTF-8'); ?>"
@@ -492,7 +492,11 @@
                     >@<?php echo htmlspecialchars($selectedAuthorUsername, ENT_QUOTES, 'UTF-8'); ?></a>
                     <?php if ($selectedPostCreatedTimestamp > 0): ?>
                         <span class="post-full__author-meta-separator" aria-hidden="true"></span>
-                        <span class="post-full__author-published-at" data-component="post-full-published-at"><?php echo htmlspecialchars($selectedPostPublishedLabel, ENT_QUOTES, 'UTF-8'); ?></span>
+                        <span
+                            class="post-full__author-published-at"
+                            data-component="post-full-published-at"
+                            data-created-at-ts="<?php echo $selectedPostCreatedTimestamp; ?>"
+                        ><?php echo htmlspecialchars($selectedPostPublishedLabel, ENT_QUOTES, 'UTF-8'); ?></span>
                     <?php endif; ?>
                 </div>
 
@@ -548,6 +552,7 @@
                             $commentAvatar = $normalizePublicPath((string) ($commentRow['avatar'] ?? ''));
                             $commentHasAvatar = $commentAvatar !== '/uploads/avatars/avatar.jpg';
                             $commentPublishedLabel = $formatPostPublishedLabel((string) ($commentRow['created_at'] ?? ''));
+                            $commentCreatedTimestamp = (int) strtotime((string) ($commentRow['created_at'] ?? ''));
                             $commentLikesCount = (int) ($commentRow['likes_count'] ?? 0);
                         ?>
                         <article class="post-full__comment-item">
@@ -565,7 +570,7 @@
                                 <div class="post-full__comment-meta">
                                     <a class="post-full__comment-username" href="<?php echo htmlspecialchars($commentProfileUrl, ENT_QUOTES, 'UTF-8'); ?>" aria-label="Профиль автора @<?php echo htmlspecialchars($commentUsername, ENT_QUOTES, 'UTF-8'); ?>">@<?php echo htmlspecialchars($commentUsername, ENT_QUOTES, 'UTF-8'); ?></a>
                                     <span class="post-full__comment-meta-separator" aria-hidden="true"></span>
-                                    <span class="post-full__comment-published-at"><?php echo htmlspecialchars($commentPublishedLabel, ENT_QUOTES, 'UTF-8'); ?></span>
+                                    <span class="post-full__comment-published-at" data-created-at-ts="<?php echo $commentCreatedTimestamp; ?>"><?php echo htmlspecialchars($commentPublishedLabel, ENT_QUOTES, 'UTF-8'); ?></span>
                                 </div>
                                 <p class="post-full__comment-text"><?php echo nl2br(htmlspecialchars((string) ($commentRow['content'] ?? ''), ENT_QUOTES, 'UTF-8')); ?></p>
                                 <div class="post-full__comment-actions" aria-label="Действия с комментарием">

@@ -94,14 +94,6 @@
     position: absolute;
     left: 0;
     top: 0;
-}
-
-.create-post-modal__meta-column {
-    position: absolute;
-    inset: 0;
-}
-
-.create-post-modal__upload-column {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -294,11 +286,6 @@
 .create-post-modal__tags-input-row:hover .create-post-modal__tags-add-button {
     border-color: rgb(150, 150, 250);
     color: rgb(150, 150, 250);
-}
-
-.create-post-modal__tags-input-row:focus-within .create-post-modal__tags-add-button {
-    border-color: rgb(100, 100, 200);
-    color: #fff;
 }
 
 .create-post-modal__tags-add-button:hover {
