@@ -6,6 +6,9 @@ class PostFullComponent {
         this.postFullFrame = null;
         this.postFullElement = null;
         this.shareActiveTimer = null;
+        this.relativeTimeTimer = null;
+        this.serverNowTs = 0;
+        this.clientNowMsAtInit = 0;
 
         this.zoomOverlay = null;
         this.zoomImage = null;
@@ -32,8 +35,10 @@ class PostFullComponent {
         this.postFullElement = document.querySelector('.post-full');
         this.postFullFrame = this.postFullElement?.querySelector('.post-full__frame') || null;
         if (this.postFullElement) {
+            this.initReferenceClock();
             this.initActionIcons();
-            this.renderPostPublishedLabel();
+            this.renderRelativeTimeLabels();
+            this.startRelativeTimeUpdater();
             this.bindDescriptionToggle();
             this.bindMetaActions();
             this.bindFrameActions();
@@ -62,6 +67,59 @@ class PostFullComponent {
         });
     }
 
+    // Инициализирует опорное серверное время, чтобы убрать влияние неверных часов на клиенте.
+    initReferenceClock() {
+        const datasetServerNowTs = Number(this.postFullElement?.dataset.serverNowTs || 0);
+        this.serverNowTs = Number.isFinite(datasetServerNowTs) && datasetServerNowTs > 0
+            ? Math.floor(datasetServerNowTs)
+            : Math.floor(Date.now() / 1000);
+        this.clientNowMsAtInit = Date.now();
+    }
+
+    // Возвращает текущее время (в секундах) на основе серверного времени + прошедшего времени на клиенте.
+    getReferenceNowTs() {
+        if (!this.clientNowMsAtInit || !this.serverNowTs) {
+            return Math.floor(Date.now() / 1000);
+        }
+
+        const elapsedSeconds = Math.max(0, Math.floor((Date.now() - this.clientNowMsAtInit) / 1000));
+        return this.serverNowTs + elapsedSeconds;
+    }
+
+    // Обновляет все подписи времени для поста и комментариев.
+    renderRelativeTimeLabels() {
+        if (!this.postFullElement) return;
+
+        const nowTs = this.getReferenceNowTs();
+        const timeNodes = this.postFullElement.querySelectorAll('[data-created-at-ts]');
+        timeNodes.forEach((node) => {
+            const createdAtTs = this.normalizeUnixTimestamp(node.dataset.createdAtTs);
+            if (!createdAtTs) return;
+            node.textContent = this.formatRelativeTimeLabel(createdAtTs, nowTs);
+        });
+    }
+
+    // Запускает периодическое обновление подписей времени.
+    startRelativeTimeUpdater() {
+        if (this.relativeTimeTimer) {
+            clearInterval(this.relativeTimeTimer);
+        }
+
+        this.relativeTimeTimer = setInterval(() => {
+            this.renderRelativeTimeLabels();
+        }, 30_000);
+    }
+
+    // Нормализует timestamp (секунды/миллисекунды) и защищает от некорректных значений.
+    normalizeUnixTimestamp(rawTimestamp) {
+        const parsed = Number(rawTimestamp || 0);
+        if (!Number.isFinite(parsed) || parsed <= 0) return 0;
+
+        const normalized = parsed > 1_000_000_000_000 ? Math.floor(parsed / 1000) : Math.floor(parsed);
+        return normalized > 0 ? normalized : 0;
+    }
+
+    // Инициализирует SVG-иконки в блоке поста.
     initActionIcons() {
         if (!this.postFullElement) return;
 
@@ -170,16 +228,7 @@ class PostFullComponent {
         }, { once: true });
     }
 
-    renderPostPublishedLabel() {
-        const element = this.postFullElement?.querySelector('[data-component="post-full-published-at"]');
-        if (!element) return;
-
-        const createdAtTs = Number(this.postFullElement?.dataset.createdAtTs || 0);
-        if (!createdAtTs) return;
-
-        element.textContent = this.formatRelativeTimeLabel(createdAtTs, Math.floor(Date.now() / 1000));
-    }
-
+    // Форматирует timestamp в человекочитаемое «x сек/мин/час/дн назад» с сохранением текущих интервалов.
     formatRelativeTimeLabel(createdAtTs, referenceNowTs) {
         const diffSeconds = Math.max(0, Math.floor(referenceNowTs - createdAtTs));
         if (diffSeconds <= 59) {
@@ -208,6 +257,7 @@ class PostFullComponent {
         return `${day}.${month}.${year}`;
     }
 
+    // Выбирает корректную форму слова для русского языка.
     pluralizeRu(value, one, few, many) {
         const mod100 = value % 100;
         if (mod100 >= 11 && mod100 <= 14) return many;
@@ -384,6 +434,7 @@ class PostFullComponent {
         }
     }
 
+    // Добавляет новый комментарий в DOM и выставляет ему timestamp для последующих автообновлений времени.
     prependComment(commentData) {
         const commentsList = this.postFullElement?.querySelector('[data-component="post-full-comments-list"]');
         if (!commentsList) return;
@@ -392,7 +443,8 @@ class PostFullComponent {
         const profileUrl = commentData.profileUrl || '/profile';
         const avatarSrc = commentData.avatarSrc || '/uploads/avatars/avatar.jpg';
         const hasAvatar = !!commentData.hasAvatar;
-        const publishedLabel = this.formatRelativeTimeLabel(commentData.createdAtTs || Math.floor(Date.now() / 1000), Math.floor(Date.now() / 1000));
+        const createdAtTs = this.normalizeUnixTimestamp(commentData.createdAtTs || this.getReferenceNowTs());
+        const publishedLabel = this.formatRelativeTimeLabel(createdAtTs, this.getReferenceNowTs());
 
         const item = document.createElement('article');
         item.className = 'post-full__comment-item';
@@ -409,7 +461,7 @@ class PostFullComponent {
                 <div class="post-full__comment-meta">
                     <a class="post-full__comment-username" href="${this.escapeHtml(profileUrl)}" aria-label="Профиль автора @${this.escapeHtml(username)}">@${this.escapeHtml(username)}</a>
                     <span class="post-full__comment-meta-separator" aria-hidden="true"></span>
-                    <span class="post-full__comment-published-at">${this.escapeHtml(publishedLabel)}</span>
+                    <span class="post-full__comment-published-at" data-created-at-ts="${createdAtTs}">${this.escapeHtml(publishedLabel)}</span>
                 </div>
                 <p class="post-full__comment-text">${this.escapeHtmlWithBreaks(commentData.content || '')}</p>
                 <div class="post-full__comment-actions" aria-label="Действия с комментарием">
@@ -434,6 +486,7 @@ class PostFullComponent {
             App.utils.loadSVG(src, node);
         });
         this.syncCommentRails();
+        this.renderRelativeTimeLabels();
     }
 
     syncCommentRails() {
