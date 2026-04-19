@@ -122,6 +122,7 @@
     $selectedPostHashtags = [];
     $selectedPostCommentsCount = 0;
     $selectedPostComments = [];
+    $selectedPostCommentThreads = [];
 
     $normalizeTag = static function (string $tag): string {
         return mb_strtolower(trim($tag));
@@ -267,6 +268,61 @@
                 ');
                 $commentsStmt->execute([$viewerId, $selectedPostId]);
                 $selectedPostComments = $commentsStmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+
+                if (!empty($selectedPostComments)) {
+                    $commentsById = [];
+                    foreach ($selectedPostComments as $commentRow) {
+                        $commentsById[(int) ($commentRow['id'] ?? 0)] = $commentRow;
+                    }
+
+                    $resolveRootCommentId = static function (int $commentId, array $allComments): int {
+                        $cursorId = $commentId;
+                        $safety = 0;
+                        while ($cursorId > 0 && isset($allComments[$cursorId]) && $safety < 32) {
+                            $parentId = (int) ($allComments[$cursorId]['parent_comment_id'] ?? 0);
+                            if ($parentId <= 0 || !isset($allComments[$parentId])) {
+                                return $cursorId;
+                            }
+                            $cursorId = $parentId;
+                            $safety++;
+                        }
+
+                        return $commentId;
+                    };
+
+                    $threaded = [];
+                    foreach ($selectedPostComments as $commentRow) {
+                        $commentId = (int) ($commentRow['id'] ?? 0);
+                        if ($commentId <= 0) {
+                            continue;
+                        }
+
+                        $rootCommentId = $resolveRootCommentId($commentId, $commentsById);
+                        $commentRow['root_comment_id'] = $rootCommentId;
+                        if (!isset($threaded[$rootCommentId])) {
+                            $threaded[$rootCommentId] = [
+                                'root' => null,
+                                'children' => []
+                            ];
+                        }
+
+                        if ($commentId === $rootCommentId) {
+                            $threaded[$rootCommentId]['root'] = $commentRow;
+                        } else {
+                            $threaded[$rootCommentId]['children'][] = $commentRow;
+                        }
+                    }
+
+                    foreach ($threaded as $rootId => $threadRow) {
+                        if ($threadRow['root'] === null) {
+                            continue;
+                        }
+                        $selectedPostCommentThreads[] = [
+                            'root' => $threadRow['root'],
+                            'children' => $threadRow['children'],
+                        ];
+                    }
+                }
             }
 
             $hashtagsStmt = $pdo->prepare('
@@ -538,60 +594,80 @@
                     <p class="post-full__comments-empty">Комментариев пока нет. Будьте первым!</p>
                 <?php endif; ?>
                 <div class="post-full__comments-list" data-component="post-full-comments-list">
-                    <?php foreach ($selectedPostComments as $commentRow): ?>
+                    <?php foreach ($selectedPostCommentThreads as $threadRow): ?>
                         <?php
-                            $commentUsername = ltrim((string) ($commentRow['username'] ?? 'unknown'), '@');
-                            $commentProfileUrl = '/profile?username=' . urlencode($commentUsername);
-                            $commentAvatar = $normalizePublicPath((string) ($commentRow['avatar'] ?? ''));
-                            $commentHasAvatar = $commentAvatar !== '/uploads/avatars/avatar.jpg';
-                            $commentPublishedLabel = $formatPostPublishedLabel((string) ($commentRow['created_at'] ?? ''));
-                            $commentCreatedTimestamp = (int) strtotime((string) ($commentRow['created_at'] ?? ''));
-                            $commentLikesCount = (int) ($commentRow['likes_count'] ?? 0);
-                            $commentId = (int) ($commentRow['id'] ?? 0);
-                            $commentParentId = (int) ($commentRow['parent_comment_id'] ?? 0);
-                            $commentParentUsername = ltrim((string) ($commentRow['parent_username'] ?? ''), '@');
-                            $commentIsLikedByViewer = !empty($commentRow['is_liked_by_viewer']);
+                            $rootComment = $threadRow['root'] ?? [];
+                            $rootId = (int) ($rootComment['id'] ?? 0);
+                            $threadChildren = $threadRow['children'] ?? [];
+                            $renderCommentItem = static function (array $commentRow, bool $isReply = false) use ($normalizePublicPath, $formatPostPublishedLabel): void {
+                                $commentUsername = ltrim((string) ($commentRow['username'] ?? 'unknown'), '@');
+                                $commentProfileUrl = '/profile?username=' . urlencode($commentUsername);
+                                $commentAvatar = $normalizePublicPath((string) ($commentRow['avatar'] ?? ''));
+                                $commentHasAvatar = $commentAvatar !== '/uploads/avatars/avatar.jpg';
+                                $commentPublishedLabel = $formatPostPublishedLabel((string) ($commentRow['created_at'] ?? ''));
+                                $commentCreatedTimestamp = (int) strtotime((string) ($commentRow['created_at'] ?? ''));
+                                $commentLikesCount = (int) ($commentRow['likes_count'] ?? 0);
+                                $commentId = (int) ($commentRow['id'] ?? 0);
+                                $commentRootId = (int) ($commentRow['root_comment_id'] ?? $commentId);
+                                $commentParentId = (int) ($commentRow['parent_comment_id'] ?? 0);
+                                $commentParentUsername = ltrim((string) ($commentRow['parent_username'] ?? ''), '@');
+                                $commentIsLikedByViewer = !empty($commentRow['is_liked_by_viewer']);
+                                ?>
+                                <article
+                                    class="post-full__comment-item<?php echo $isReply ? ' post-full__comment-item--reply' : ''; ?>"
+                                    data-comment-id="<?php echo $commentId; ?>"
+                                    data-root-comment-id="<?php echo $commentRootId; ?>"
+                                    data-comment-username="<?php echo htmlspecialchars($commentUsername, ENT_QUOTES, 'UTF-8'); ?>"
+                                >
+                                    <div class="post-full__comment-side">
+                                        <a class="post-full__author-avatar post-full__comment-avatar" href="<?php echo htmlspecialchars($commentProfileUrl, ENT_QUOTES, 'UTF-8'); ?>" aria-label="Профиль автора @<?php echo htmlspecialchars($commentUsername, ENT_QUOTES, 'UTF-8'); ?>">
+                                            <?php if ($commentHasAvatar): ?>
+                                                <img class="post-full__author-avatar-image" src="<?php echo htmlspecialchars($commentAvatar, ENT_QUOTES, 'UTF-8'); ?>" alt="Аватар @<?php echo htmlspecialchars($commentUsername, ENT_QUOTES, 'UTF-8'); ?>">
+                                            <?php else: ?>
+                                                <img class="post-full__author-avatar-placeholder" src="/assets/images/icons/planet.svg" alt="Профиль" width="28" height="28">
+                                            <?php endif; ?>
+                                        </a>
+                                        <span class="post-full__comment-rail" aria-hidden="true"></span>
+                                    </div>
+                                    <div class="post-full__comment-content">
+                                        <div class="post-full__comment-meta">
+                                            <a class="post-full__comment-username" href="<?php echo htmlspecialchars($commentProfileUrl, ENT_QUOTES, 'UTF-8'); ?>" aria-label="Профиль автора @<?php echo htmlspecialchars($commentUsername, ENT_QUOTES, 'UTF-8'); ?>">@<?php echo htmlspecialchars($commentUsername, ENT_QUOTES, 'UTF-8'); ?></a>
+                                            <?php if ($commentParentId > 0 && $commentParentUsername !== ''): ?>
+                                                <span class="post-full__comment-meta-separator" aria-hidden="true"></span>
+                                                <span class="post-full__comment-reply-label">Ответ <span class="post-full__comment-reply-target">@<?php echo htmlspecialchars($commentParentUsername, ENT_QUOTES, 'UTF-8'); ?></span></span>
+                                            <?php endif; ?>
+                                            <span class="post-full__comment-meta-separator" aria-hidden="true"></span>
+                                            <span class="post-full__comment-published-at" data-created-at-ts="<?php echo $commentCreatedTimestamp; ?>"><?php echo htmlspecialchars($commentPublishedLabel, ENT_QUOTES, 'UTF-8'); ?></span>
+                                        </div>
+                                        <p class="post-full__comment-text"><?php echo nl2br(htmlspecialchars((string) ($commentRow['content'] ?? ''), ENT_QUOTES, 'UTF-8')); ?></p>
+                                        <div class="post-full__comment-actions" aria-label="Действия с комментарием">
+                                            <button class="post-full__comment-action-button<?php echo $commentIsLikedByViewer ? ' is-active' : ''; ?>" type="button" data-action="comment-like" aria-label="Лайк комментария">
+                                                <span class="post-full__comment-action-icon" data-svg-src="/assets/images/icons/S-heart.svg" aria-hidden="true"></span>
+                                            </button>
+                                            <span class="post-full__comment-like-count"><?php echo $commentLikesCount; ?></span>
+                                            <button class="post-full__comment-action-button" type="button" data-action="comment-reply" aria-label="Ответить на комментарий">
+                                                <span class="post-full__comment-action-icon" data-svg-src="/assets/images/icons/S-comment.svg" aria-hidden="true"></span>
+                                            </button>
+                                            <button class="post-full__comment-action-button" type="button" data-action="comment-report" aria-label="Пожаловаться на комментарий">
+                                                <span class="post-full__comment-action-icon" data-svg-src="/assets/images/icons/S-warning.svg" aria-hidden="true"></span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </article>
+                            <?php };
                         ?>
-                        <article
-                            class="post-full__comment-item"
-                            data-comment-id="<?php echo $commentId; ?>"
-                            data-comment-username="<?php echo htmlspecialchars($commentUsername, ENT_QUOTES, 'UTF-8'); ?>"
-                        >
-                            <div class="post-full__comment-side">
-                                <a class="post-full__author-avatar post-full__comment-avatar" href="<?php echo htmlspecialchars($commentProfileUrl, ENT_QUOTES, 'UTF-8'); ?>" aria-label="Профиль автора @<?php echo htmlspecialchars($commentUsername, ENT_QUOTES, 'UTF-8'); ?>">
-                                    <?php if ($commentHasAvatar): ?>
-                                        <img class="post-full__author-avatar-image" src="<?php echo htmlspecialchars($commentAvatar, ENT_QUOTES, 'UTF-8'); ?>" alt="Аватар @<?php echo htmlspecialchars($commentUsername, ENT_QUOTES, 'UTF-8'); ?>">
-                                    <?php else: ?>
-                                        <img class="post-full__author-avatar-placeholder" src="/assets/images/icons/planet.svg" alt="Профиль" width="28" height="28">
-                                    <?php endif; ?>
-                                </a>
-                                <span class="post-full__comment-rail" aria-hidden="true"></span>
+                        <?php if ($rootId > 0): ?>
+                            <div class="post-full__comment-thread" data-root-comment-id="<?php echo $rootId; ?>">
+                                <?php $renderCommentItem($rootComment, false); ?>
+                                <?php if (!empty($threadChildren)): ?>
+                                    <div class="post-full__comment-children">
+                                        <?php foreach ($threadChildren as $childComment): ?>
+                                            <?php $renderCommentItem($childComment, true); ?>
+                                        <?php endforeach; ?>
+                                    </div>
+                                <?php endif; ?>
                             </div>
-                            <div class="post-full__comment-content">
-                                <div class="post-full__comment-meta">
-                                    <a class="post-full__comment-username" href="<?php echo htmlspecialchars($commentProfileUrl, ENT_QUOTES, 'UTF-8'); ?>" aria-label="Профиль автора @<?php echo htmlspecialchars($commentUsername, ENT_QUOTES, 'UTF-8'); ?>">@<?php echo htmlspecialchars($commentUsername, ENT_QUOTES, 'UTF-8'); ?></a>
-                                    <?php if ($commentParentId > 0 && $commentParentUsername !== ''): ?>
-                                        <span class="post-full__comment-meta-separator" aria-hidden="true"></span>
-                                        <span class="post-full__comment-reply-label">Ответ <span class="post-full__comment-reply-target">@<?php echo htmlspecialchars($commentParentUsername, ENT_QUOTES, 'UTF-8'); ?></span></span>
-                                    <?php endif; ?>
-                                    <span class="post-full__comment-meta-separator" aria-hidden="true"></span>
-                                    <span class="post-full__comment-published-at" data-created-at-ts="<?php echo $commentCreatedTimestamp; ?>"><?php echo htmlspecialchars($commentPublishedLabel, ENT_QUOTES, 'UTF-8'); ?></span>
-                                </div>
-                                <p class="post-full__comment-text"><?php echo nl2br(htmlspecialchars((string) ($commentRow['content'] ?? ''), ENT_QUOTES, 'UTF-8')); ?></p>
-                                <div class="post-full__comment-actions" aria-label="Действия с комментарием">
-                                    <button class="post-full__comment-action-button<?php echo $commentIsLikedByViewer ? ' is-active' : ''; ?>" type="button" data-action="comment-like" aria-label="Лайк комментария">
-                                        <span class="post-full__comment-action-icon" data-svg-src="/assets/images/icons/S-heart.svg" aria-hidden="true"></span>
-                                    </button>
-                                    <span class="post-full__comment-like-count"><?php echo $commentLikesCount; ?></span>
-                                    <button class="post-full__comment-action-button" type="button" data-action="comment-reply" aria-label="Ответить на комментарий">
-                                        <span class="post-full__comment-action-icon" data-svg-src="/assets/images/icons/S-comment.svg" aria-hidden="true"></span>
-                                    </button>
-                                    <button class="post-full__comment-action-button" type="button" data-action="comment-report" aria-label="Пожаловаться на комментарий">
-                                        <span class="post-full__comment-action-icon" data-svg-src="/assets/images/icons/S-warning.svg" aria-hidden="true"></span>
-                                    </button>
-                                </div>
-                            </div>
-                        </article>
+                        <?php endif; ?>
                     <?php endforeach; ?>
                 </div>
                 <?php if ($viewerId > 0): ?>

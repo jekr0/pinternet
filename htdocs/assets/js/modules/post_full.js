@@ -27,6 +27,7 @@ class PostFullComponent {
         this.zoomStartPanX = 0;
         this.zoomStartPanY = 0;
         this.replyTargetCommentId = 0;
+        this.replyTargetRootCommentId = 0;
         this.replyTargetUsername = '';
         this.pendingCommentReportId = 0;
     }
@@ -228,6 +229,7 @@ class PostFullComponent {
             const action = button.dataset.action;
             const commentItem = button.closest('.post-full__comment-item');
             const commentId = Number(commentItem?.dataset.commentId || 0);
+            const rootCommentId = Number(commentItem?.dataset.rootCommentId || 0);
             const commentUsername = String(commentItem?.dataset.commentUsername || '').trim();
 
             if (!commentId) return;
@@ -243,7 +245,7 @@ class PostFullComponent {
             }
 
             if (action === 'comment-reply') {
-                this.activateReplyState(commentId, commentUsername);
+                this.activateReplyState(commentId, rootCommentId, commentUsername);
             }
         });
     }
@@ -470,7 +472,8 @@ class PostFullComponent {
                 profileUrl: String(this.postFullElement?.dataset.viewerProfileUrl || '/profile'),
                 hasAvatar: this.postFullElement?.dataset.viewerHasAvatar === '1',
                 parentUsername: this.replyTargetUsername,
-                parentCommentId
+                parentCommentId,
+                rootCommentId: this.replyTargetRootCommentId
             });
 
             this.showToast('Комментарий добавлен');
@@ -500,10 +503,85 @@ class PostFullComponent {
         const createdAtTs = this.normalizeUnixTimestamp(commentData.createdAtTs || this.getReferenceNowTs());
         const publishedLabel = this.formatRelativeTimeLabel(createdAtTs, this.getReferenceNowTs());
 
+        const item = this.createCommentItemElement({
+            commentId,
+            username,
+            profileUrl,
+            avatarSrc,
+            hasAvatar,
+            parentCommentId,
+            parentUsername,
+            createdAtTs,
+            publishedLabel,
+            content: commentData.content || '',
+            likesCount: Number(commentData.likesCount || 0),
+            isLiked: !!commentData.isLiked,
+            isReply: parentCommentId > 0,
+            rootCommentId: Number(commentData.rootCommentId || 0),
+        });
+
+        const rootCommentId = Number(commentData.rootCommentId || commentId || 0);
+        if (parentCommentId > 0 && rootCommentId > 0) {
+            const thread = commentsList.querySelector(`.post-full__comment-thread[data-root-comment-id="${rootCommentId}"]`);
+            if (thread) {
+                let childrenContainer = thread.querySelector('.post-full__comment-children');
+                if (!childrenContainer) {
+                    childrenContainer = document.createElement('div');
+                    childrenContainer.className = 'post-full__comment-children';
+                    thread.appendChild(childrenContainer);
+                }
+                childrenContainer.appendChild(item);
+            } else {
+                const fallbackThread = document.createElement('div');
+                fallbackThread.className = 'post-full__comment-thread';
+                fallbackThread.dataset.rootCommentId = String(rootCommentId);
+                const childrenContainer = document.createElement('div');
+                childrenContainer.className = 'post-full__comment-children';
+                childrenContainer.appendChild(item);
+                fallbackThread.appendChild(childrenContainer);
+                commentsList.appendChild(fallbackThread);
+            }
+        } else {
+            const thread = document.createElement('div');
+            thread.className = 'post-full__comment-thread';
+            if (commentId > 0) {
+                thread.dataset.rootCommentId = String(commentId);
+            }
+            thread.appendChild(item);
+            commentsList.appendChild(thread);
+        }
+
+        item.querySelectorAll('[data-svg-src]').forEach((node) => {
+            const src = node.getAttribute('data-svg-src');
+            if (!src) return;
+            App.utils.loadSVG(src, node);
+        });
+        this.syncCommentRails();
+        this.renderRelativeTimeLabels();
+    }
+
+    createCommentItemElement(commentData) {
+        const username = commentData.username || 'unknown';
+        const profileUrl = commentData.profileUrl || '/profile';
+        const avatarSrc = commentData.avatarSrc || '/uploads/avatars/avatar.jpg';
+        const hasAvatar = !!commentData.hasAvatar;
+        const commentId = Number(commentData.commentId || 0);
+        const parentCommentId = Number(commentData.parentCommentId || 0);
+        const parentUsername = String(commentData.parentUsername || '').trim();
+        const hasReplyLabel = parentCommentId > 0 && parentUsername !== '';
+        const createdAtTs = this.normalizeUnixTimestamp(commentData.createdAtTs || this.getReferenceNowTs());
+        const publishedLabel = commentData.publishedLabel || this.formatRelativeTimeLabel(createdAtTs, this.getReferenceNowTs());
+        const likesCount = Number(commentData.likesCount || 0);
+        const isLiked = !!commentData.isLiked;
+        const rootCommentId = Number(commentData.rootCommentId || commentId || 0);
+
         const item = document.createElement('article');
-        item.className = 'post-full__comment-item';
+        item.className = `post-full__comment-item${commentData.isReply ? ' post-full__comment-item--reply' : ''}`;
         if (commentId > 0) {
             item.dataset.commentId = String(commentId);
+        }
+        if (rootCommentId > 0) {
+            item.dataset.rootCommentId = String(rootCommentId);
         }
         item.dataset.commentUsername = username;
         item.innerHTML = `
@@ -527,10 +605,10 @@ class PostFullComponent {
                 </div>
                 <p class="post-full__comment-text">${this.escapeHtmlWithBreaks(commentData.content || '')}</p>
                 <div class="post-full__comment-actions" aria-label="Действия с комментарием">
-                    <button class="post-full__comment-action-button" type="button" data-action="comment-like" aria-label="Лайк комментария">
+                    <button class="post-full__comment-action-button${isLiked ? ' is-active' : ''}" type="button" data-action="comment-like" aria-label="Лайк комментария">
                         <span class="post-full__comment-action-icon" data-svg-src="/assets/images/icons/S-heart.svg" aria-hidden="true"></span>
                     </button>
-                    <span class="post-full__comment-like-count">0</span>
+                    <span class="post-full__comment-like-count">${Math.max(0, likesCount)}</span>
                     <button class="post-full__comment-action-button" type="button" data-action="comment-reply" aria-label="Ответить на комментарий">
                         <span class="post-full__comment-action-icon" data-svg-src="/assets/images/icons/S-comment.svg" aria-hidden="true"></span>
                     </button>
@@ -540,21 +618,14 @@ class PostFullComponent {
                 </div>
             </div>
         `;
-
-        commentsList.appendChild(item);
-        item.querySelectorAll('[data-svg-src]').forEach((node) => {
-            const src = node.getAttribute('data-svg-src');
-            if (!src) return;
-            App.utils.loadSVG(src, node);
-        });
-        this.syncCommentRails();
-        this.renderRelativeTimeLabels();
+        return item;
     }
 
-    activateReplyState(commentId, username) {
+    activateReplyState(commentId, rootCommentId, username) {
         if (!commentId || !username) return;
 
         this.replyTargetCommentId = commentId;
+        this.replyTargetRootCommentId = rootCommentId > 0 ? rootCommentId : commentId;
         this.replyTargetUsername = username.replace(/^@+/, '');
 
         const stateNode = this.postFullElement?.querySelector('[data-component="post-full-reply-state"]');
@@ -567,6 +638,7 @@ class PostFullComponent {
 
     clearReplyState() {
         this.replyTargetCommentId = 0;
+        this.replyTargetRootCommentId = 0;
         this.replyTargetUsername = '';
 
         const stateNode = this.postFullElement?.querySelector('[data-component="post-full-reply-state"]');
@@ -698,6 +770,28 @@ class PostFullComponent {
             const railElement = item.querySelector('.post-full__comment-rail');
             if (!textElement || !railElement) return;
             railElement.style.height = `${Math.max(0, Math.round(textElement.offsetHeight + 25))}px`;
+        });
+
+        const threads = this.postFullElement?.querySelectorAll('.post-full__comment-thread') || [];
+        threads.forEach((thread) => {
+            const parentItem = thread.querySelector('.post-full__comment-item:not(.post-full__comment-item--reply)');
+            const children = thread.querySelectorAll('.post-full__comment-item--reply');
+            if (!parentItem || children.length === 0) return;
+
+            const parentRail = parentItem.querySelector('.post-full__comment-rail');
+            const lastChild = children[children.length - 1];
+            const lastChildRail = lastChild.querySelector('.post-full__comment-rail');
+            if (!parentRail || !lastChildRail) return;
+
+            const parentRailRect = parentRail.getBoundingClientRect();
+            const lastChildRailRect = lastChildRail.getBoundingClientRect();
+            const lastChildBottom = lastChildRailRect.top + lastChildRail.offsetHeight;
+            const extendedHeight = Math.max(
+                Math.round(parentRail.offsetHeight),
+                Math.round(lastChildBottom - parentRailRect.top)
+            );
+
+            parentRail.style.height = `${Math.max(0, extendedHeight)}px`;
         });
     }
 
