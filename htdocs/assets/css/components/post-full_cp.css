@@ -271,7 +271,7 @@
 .post-full__description-divider {
     width: calc(100% - 40px);
     height: 1.5px;
-    margin: 15px 20px 20px;
+    margin: 15px 20px 30px;
     background: #e0e0e0;
     border-radius: 1px;
 }
@@ -295,7 +295,7 @@
 }
 
 .post-full__comments-list {
-    margin-top: 20px;
+    margin-top: 0;
     display: flex;
     flex-direction: column;
     gap: 16px;
@@ -367,6 +367,18 @@
     user-select: none;
 }
 
+.post-full__comment-reply-label {
+    font-family: 'SF_def', Arial, sans-serif;
+    font-size: 15px;
+    line-height: 1;
+    color: #bbb;
+    user-select: none;
+}
+
+.post-full__comment-reply-target {
+    color: rgb(150, 150, 250);
+}
+
 .post-full__comment-text {
     font-family: 'SF_def', Arial, sans-serif;
     font-size: 20px;
@@ -402,6 +414,10 @@
     color: rgb(150, 150, 250);
 }
 
+.post-full__comment-action-button.is-active {
+    color: rgb(100, 100, 200);
+}
+
 .post-full__comment-action-icon {
     width: 20px;
     height: 20px;
@@ -429,17 +445,61 @@
 .post-full__comment-input-wrap {
     position: relative;
     width: 100%;
-    margin-top: 0;
+    margin-top: 50px;
     margin-bottom: 20px;
 }
 
 .post-full__comments-empty + .post-full__comments-list + .post-full__comment-input-wrap,
 .post-full__comments-empty + .post-full__comment-input-wrap {
-    margin-top: 30px;
+    margin-top: 50px;
 }
 
-.post-full__comments-list + .post-full__comment-input-wrap {
-    margin-top: 20px;
+.post-full__comment-reply-state {
+    margin-top: 5px;
+    margin-bottom: 0;
+    display: none;
+    align-items: center;
+    gap: 10px;
+}
+
+.post-full__comment-reply-state.is-active {
+    display: flex;
+}
+
+.post-full__comment-reply-text {
+    font-family: 'SF_def', Arial, sans-serif;
+    font-size: 20px;
+    line-height: 1;
+    color: #333;
+}
+
+.post-full__comment-reply-cancel {
+    width: 20px;
+    height: 20px;
+    border: none;
+    border-radius: 5px;
+    background: transparent;
+    color: #bbb;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.post-full__comment-reply-cancel:hover {
+    color: rgb(150, 150, 250);
+    background: rgba(150, 150, 250, 0.1);
+}
+
+.post-full__comment-reply-cancel:focus-visible {
+    outline: 1.5px solid rgb(150, 150, 250);
+    outline-offset: 1px;
+}
+
+.post-full__comment-reply-nickname {
+    color: rgb(100, 100, 200);
 }
 
 .post-full__comment-input {

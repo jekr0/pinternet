@@ -63,6 +63,14 @@ if ($path === '/posts/comment') {
     handleCreateComment($pdo, $userId);
 }
 
+if ($path === '/comments/like') {
+    handleToggleCommentLike($pdo, $userId);
+}
+
+if ($path === '/comments/report') {
+    handleCommentReport($pdo, $userId);
+}
+
 if ($path === '/posts/list') {
     handlePostsList($pdo);
 }
@@ -389,6 +397,7 @@ function handleCreateComment(PDO $pdo, int $userId): never
 
     $postId = (int) ($_POST['post_id'] ?? 0);
     $content = trim((string) ($_POST['content'] ?? ''));
+    $parentCommentId = (int) ($_POST['parent_comment_id'] ?? 0);
 
     if ($postId <= 0) {
         jsonResponse(['success' => false, 'error' => 'Некорректный post_id.'], 422);
@@ -408,15 +417,115 @@ function handleCreateComment(PDO $pdo, int $userId): never
         jsonResponse(['success' => false, 'error' => 'Пост не найден.'], 404);
     }
 
+    $resolvedParentCommentId = null;
+    if ($parentCommentId > 0) {
+        $parentStmt = $pdo->prepare('
+            SELECT id
+            FROM Comments
+            WHERE id = ?
+              AND post_id = ?
+              AND is_deleted = 0
+            LIMIT 1
+        ');
+        $parentStmt->execute([$parentCommentId, $postId]);
+        $parentExists = $parentStmt->fetchColumn();
+        if ($parentExists === false) {
+            jsonResponse(['success' => false, 'error' => 'Комментарий для ответа не найден.'], 404);
+        }
+        $resolvedParentCommentId = (int) $parentExists;
+    }
+
     try {
-        $insertStmt = $pdo->prepare('INSERT INTO Comments (post_id, user_id, content, parent_comment_id) VALUES (?, ?, ?, NULL)');
-        $insertStmt->execute([$postId, $userId, $content]);
+        $insertStmt = $pdo->prepare('INSERT INTO Comments (post_id, user_id, content, parent_comment_id) VALUES (?, ?, ?, ?)');
+        $insertStmt->execute([$postId, $userId, $content, $resolvedParentCommentId]);
+        $commentId = (int) $pdo->lastInsertId();
     } catch (Throwable $e) {
         error_log('Create comment error: ' . $e->getMessage());
         jsonResponse(['success' => false, 'error' => 'Не удалось сохранить комментарий.'], 500);
     }
 
-    jsonResponse(['success' => true]);
+    jsonResponse([
+        'success' => true,
+        'comment_id' => $commentId,
+        'parent_comment_id' => $resolvedParentCommentId,
+    ]);
+}
+
+function handleToggleCommentLike(PDO $pdo, int $userId): never
+{
+    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+        jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод.'], 405);
+    }
+
+    $commentId = (int) ($_POST['comment_id'] ?? 0);
+    if ($commentId <= 0) {
+        jsonResponse(['success' => false, 'error' => 'Некорректный comment_id.'], 422);
+    }
+
+    $commentStmt = $pdo->prepare('SELECT id FROM Comments WHERE id = ? AND is_deleted = 0 LIMIT 1');
+    $commentStmt->execute([$commentId]);
+    if ($commentStmt->fetchColumn() === false) {
+        jsonResponse(['success' => false, 'error' => 'Комментарий не найден.'], 404);
+    }
+
+    try {
+        $pdo->beginTransaction();
+
+        $selectLike = $pdo->prepare('SELECT id FROM Comment_Likes WHERE user_id = ? AND comment_id = ? LIMIT 1');
+        $selectLike->execute([$userId, $commentId]);
+        $likeId = $selectLike->fetchColumn();
+
+        $liked = true;
+        if ($likeId !== false) {
+            $deleteLike = $pdo->prepare('DELETE FROM Comment_Likes WHERE id = ?');
+            $deleteLike->execute([(int) $likeId]);
+            $liked = false;
+        } else {
+            $insertLike = $pdo->prepare('INSERT INTO Comment_Likes (user_id, comment_id) VALUES (?, ?)');
+            $insertLike->execute([$userId, $commentId]);
+        }
+
+        $countStmt = $pdo->prepare('SELECT COUNT(*) FROM Comment_Likes WHERE comment_id = ?');
+        $countStmt->execute([$commentId]);
+        $likesCount = (int) $countStmt->fetchColumn();
+
+        $pdo->commit();
+    } catch (Throwable $e) {
+        $pdo->rollBack();
+        error_log('Comment like toggle error: ' . $e->getMessage());
+        jsonResponse(['success' => false, 'error' => 'Не удалось обработать лайк комментария.'], 500);
+    }
+
+    jsonResponse(['success' => true, 'liked' => $liked, 'likes_count' => $likesCount]);
+}
+
+function handleCommentReport(PDO $pdo, int $userId): never
+{
+    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+        jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод.'], 405);
+    }
+
+    $commentId = (int) ($_POST['comment_id'] ?? 0);
+    if ($commentId <= 0) {
+        jsonResponse(['success' => false, 'error' => 'Некорректный comment_id.'], 422);
+    }
+
+    $commentStmt = $pdo->prepare('SELECT id FROM Comments WHERE id = ? AND is_deleted = 0 LIMIT 1');
+    $commentStmt->execute([$commentId]);
+    if ($commentStmt->fetchColumn() === false) {
+        jsonResponse(['success' => false, 'error' => 'Комментарий не найден.'], 404);
+    }
+
+    try {
+        $insertStmt = $pdo->prepare('INSERT IGNORE INTO Comment_Reports (user_id, comment_id) VALUES (?, ?)');
+        $insertStmt->execute([$userId, $commentId]);
+        $alreadyReported = $insertStmt->rowCount() === 0;
+    } catch (Throwable $e) {
+        error_log('Comment report error: ' . $e->getMessage());
+        jsonResponse(['success' => false, 'error' => 'Не удалось отправить жалобу.'], 500);
+    }
+
+    jsonResponse(['success' => true, 'already_reported' => $alreadyReported]);
 }
 
 function handleCreatePost(PDO $pdo, int $userId): never

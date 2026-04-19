@@ -26,6 +26,9 @@ class PostFullComponent {
         this.zoomPanY = 0;
         this.zoomStartPanX = 0;
         this.zoomStartPanY = 0;
+        this.replyTargetCommentId = 0;
+        this.replyTargetUsername = '';
+        this.pendingCommentReportId = 0;
     }
 
     init() {
@@ -45,6 +48,8 @@ class PostFullComponent {
             this.syncStateFromDataset();
             this.bindBookmarkSync();
             this.bindCommentInput();
+            this.bindCommentActions();
+            this.bindReplyStateCancel();
             this.syncCommentRails();
             window.addEventListener('resize', () => this.syncCommentRails());
         }
@@ -213,6 +218,45 @@ class PostFullComponent {
         updateCounter();
     }
 
+    bindCommentActions() {
+        if (!this.postFullElement) return;
+
+        this.postFullElement.addEventListener('click', async (event) => {
+            const button = event.target.closest('.post-full__comment-action-button');
+            if (!button || button.disabled) return;
+
+            const action = button.dataset.action;
+            const commentItem = button.closest('.post-full__comment-item');
+            const commentId = Number(commentItem?.dataset.commentId || 0);
+            const commentUsername = String(commentItem?.dataset.commentUsername || '').trim();
+
+            if (!commentId) return;
+
+            if (action === 'comment-like') {
+                await this.toggleCommentLike(button, commentId);
+                return;
+            }
+
+            if (action === 'comment-report') {
+                this.openCommentReportOverlay(commentId);
+                return;
+            }
+
+            if (action === 'comment-reply') {
+                this.activateReplyState(commentId, commentUsername);
+            }
+        });
+    }
+
+    bindReplyStateCancel() {
+        const cancelButton = this.postFullElement?.querySelector('[data-action="reply-cancel"]');
+        if (!cancelButton) return;
+
+        cancelButton.addEventListener('click', () => {
+            this.clearReplyState();
+        });
+    }
+
     bindDescriptionToggle() {
         const description = this.postFullElement?.querySelector('[data-component="post-full-description"]');
         if (!description) return;
@@ -377,6 +421,7 @@ class PostFullComponent {
     async submitComment(commentInput) {
         const postId = this.getPostId();
         const text = commentInput.value.trim();
+        const parentCommentId = this.replyTargetCommentId > 0 ? this.replyTargetCommentId : 0;
         if (!postId || !text) return;
         if (text.length > 256) {
             this.showToast('Комментарий не должен превышать 256 символов.');
@@ -393,7 +438,8 @@ class PostFullComponent {
                 },
                 body: new URLSearchParams({
                     post_id: String(postId),
-                    content: text
+                    content: text,
+                    parent_comment_id: String(parentCommentId)
                 }).toString()
             });
 
@@ -416,15 +462,19 @@ class PostFullComponent {
             }
 
             this.prependComment({
+                commentId: Number(payload?.comment_id || 0),
                 content: text,
                 createdAtTs: Math.floor(Date.now() / 1000),
                 username: String(this.postFullElement?.dataset.viewerUsername || '').trim(),
                 avatarSrc: String(this.postFullElement?.dataset.viewerAvatarSrc || ''),
                 profileUrl: String(this.postFullElement?.dataset.viewerProfileUrl || '/profile'),
-                hasAvatar: this.postFullElement?.dataset.viewerHasAvatar === '1'
+                hasAvatar: this.postFullElement?.dataset.viewerHasAvatar === '1',
+                parentUsername: this.replyTargetUsername,
+                parentCommentId
             });
 
             this.showToast('Комментарий добавлен');
+            this.clearReplyState();
         } catch (error) {
             console.warn('Unable to submit comment from post-full', error);
             this.showToast('Не удалось сохранить комментарий.');
@@ -443,11 +493,19 @@ class PostFullComponent {
         const profileUrl = commentData.profileUrl || '/profile';
         const avatarSrc = commentData.avatarSrc || '/uploads/avatars/avatar.jpg';
         const hasAvatar = !!commentData.hasAvatar;
+        const commentId = Number(commentData.commentId || 0);
+        const parentCommentId = Number(commentData.parentCommentId || 0);
+        const parentUsername = String(commentData.parentUsername || '').trim();
+        const hasReplyLabel = parentCommentId > 0 && parentUsername !== '';
         const createdAtTs = this.normalizeUnixTimestamp(commentData.createdAtTs || this.getReferenceNowTs());
         const publishedLabel = this.formatRelativeTimeLabel(createdAtTs, this.getReferenceNowTs());
 
         const item = document.createElement('article');
         item.className = 'post-full__comment-item';
+        if (commentId > 0) {
+            item.dataset.commentId = String(commentId);
+        }
+        item.dataset.commentUsername = username;
         item.innerHTML = `
             <div class="post-full__comment-side">
                 <a class="post-full__author-avatar post-full__comment-avatar" href="${this.escapeHtml(profileUrl)}" aria-label="Профиль автора @${this.escapeHtml(username)}">
@@ -460,6 +518,10 @@ class PostFullComponent {
             <div class="post-full__comment-content">
                 <div class="post-full__comment-meta">
                     <a class="post-full__comment-username" href="${this.escapeHtml(profileUrl)}" aria-label="Профиль автора @${this.escapeHtml(username)}">@${this.escapeHtml(username)}</a>
+                    ${hasReplyLabel
+                        ? `<span class="post-full__comment-meta-separator" aria-hidden="true"></span>
+                           <span class="post-full__comment-reply-label">Ответ <span class="post-full__comment-reply-target">@${this.escapeHtml(parentUsername)}</span></span>`
+                        : ''}
                     <span class="post-full__comment-meta-separator" aria-hidden="true"></span>
                     <span class="post-full__comment-published-at" data-created-at-ts="${createdAtTs}">${this.escapeHtml(publishedLabel)}</span>
                 </div>
@@ -487,6 +549,146 @@ class PostFullComponent {
         });
         this.syncCommentRails();
         this.renderRelativeTimeLabels();
+    }
+
+    activateReplyState(commentId, username) {
+        if (!commentId || !username) return;
+
+        this.replyTargetCommentId = commentId;
+        this.replyTargetUsername = username.replace(/^@+/, '');
+
+        const stateNode = this.postFullElement?.querySelector('[data-component="post-full-reply-state"]');
+        const nicknameNode = this.postFullElement?.querySelector('[data-component="post-full-reply-nickname"]');
+        if (!stateNode || !nicknameNode) return;
+
+        nicknameNode.textContent = `@${this.replyTargetUsername}`;
+        stateNode.classList.add('is-active');
+    }
+
+    clearReplyState() {
+        this.replyTargetCommentId = 0;
+        this.replyTargetUsername = '';
+
+        const stateNode = this.postFullElement?.querySelector('[data-component="post-full-reply-state"]');
+        const nicknameNode = this.postFullElement?.querySelector('[data-component="post-full-reply-nickname"]');
+        if (!stateNode || !nicknameNode) return;
+
+        nicknameNode.textContent = '';
+        stateNode.classList.remove('is-active');
+    }
+
+    async toggleCommentLike(button, commentId) {
+        if (!commentId) return;
+
+        button.disabled = true;
+        try {
+            const response = await fetch('/comments/like', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                    'Accept': 'application/json'
+                },
+                body: new URLSearchParams({ comment_id: String(commentId) }).toString()
+            });
+            const payload = await response.json();
+            if (!response.ok || !payload.success) {
+                this.showToast(payload?.error || 'Не удалось обработать лайк комментария.');
+                return;
+            }
+
+            const isLiked = !!payload.liked;
+            button.classList.toggle('is-active', isLiked);
+
+            const commentItem = button.closest('.post-full__comment-item');
+            const countNode = commentItem?.querySelector('.post-full__comment-like-count');
+            if (countNode) {
+                countNode.textContent = String(Math.max(0, Number(payload.likes_count || 0)));
+            }
+        } catch (error) {
+            console.warn('Unable to toggle like for comment from post-full', error);
+            this.showToast('Не удалось обработать лайк комментария.');
+        } finally {
+            button.disabled = false;
+        }
+    }
+
+    openCommentReportOverlay(commentId) {
+        if (!App.overlay || !commentId) return;
+        if (App.overlay.get('comment-report')) return;
+
+        this.pendingCommentReportId = commentId;
+        let reportButton = null;
+
+        App.overlay.open({
+            key: 'comment-report',
+            overlayClass: 'post-full-report',
+            hiddenClass: 'post-full-report--hidden',
+            panelClass: 'post-full-report__panel',
+            buildPanel: (panel, close) => {
+                const text = document.createElement('p');
+                text.className = 'post-full-report__text';
+                text.textContent = 'Вы уверены, что хотите пожаловаться на этот комментарий?';
+
+                const actions = document.createElement('div');
+                actions.className = 'post-full-report__actions';
+
+                const cancelButton = document.createElement('button');
+                cancelButton.className = 'post-full-report__button post-full-report__button--cancel';
+                cancelButton.type = 'button';
+                cancelButton.textContent = 'Отмена';
+                cancelButton.addEventListener('click', close);
+
+                reportButton = document.createElement('button');
+                reportButton.className = 'post-full-report__button post-full-report__button--confirm';
+                reportButton.type = 'button';
+                reportButton.textContent = 'Пожаловаться';
+                reportButton.addEventListener('click', async () => {
+                    await this.submitCommentReport(reportButton);
+                });
+
+                actions.appendChild(cancelButton);
+                actions.appendChild(reportButton);
+                panel.appendChild(text);
+                panel.appendChild(actions);
+            }
+        });
+    }
+
+    async submitCommentReport(reportButton) {
+        const commentId = this.pendingCommentReportId;
+        if (!commentId || !reportButton) return;
+
+        reportButton.disabled = true;
+        try {
+            const response = await fetch('/comments/report', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                    'Accept': 'application/json'
+                },
+                body: new URLSearchParams({ comment_id: String(commentId) }).toString()
+            });
+
+            const payload = await response.json();
+            if (!response.ok || !payload.success) {
+                this.showToast(payload?.error || 'Не удалось отправить жалобу.');
+                return;
+            }
+
+            if (payload.already_reported) {
+                this.showToast('Жалоба на рассмотрении');
+            } else {
+                this.showToast('Жалоба отправлена');
+            }
+
+            App.overlay?.close('comment-report');
+        } catch (error) {
+            console.warn('Unable to report comment from post-full', error);
+            this.showToast('Не удалось отправить жалобу.');
+        } finally {
+            reportButton.disabled = false;
+            this.pendingCommentReportId = 0;
+        }
     }
 
     syncCommentRails() {

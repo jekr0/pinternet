@@ -226,7 +226,6 @@
                 FROM Comments
                 WHERE post_id = ?
                   AND is_deleted = 0
-                  AND parent_comment_id IS NULL
             ');
             $countStmt->execute([$postId]);
 
@@ -263,16 +262,19 @@
 
             if ($selectedPostCommentsCount > 0) {
                 $commentsStmt = $pdo->prepare('
-                    SELECT pc.content, pc.created_at, u.username, u.avatar,
-                           (SELECT COUNT(*) FROM Comment_Likes cl WHERE cl.comment_id = pc.id) AS likes_count
+                    SELECT pc.id, pc.content, pc.created_at, pc.parent_comment_id, u.username, u.avatar,
+                           pu.username AS parent_username,
+                           (SELECT COUNT(*) FROM Comment_Likes cl WHERE cl.comment_id = pc.id) AS likes_count,
+                           (SELECT COUNT(*) FROM Comment_Likes clv WHERE clv.comment_id = pc.id AND clv.user_id = ?) AS is_liked_by_viewer
                     FROM Comments pc
                     INNER JOIN Users u ON u.id = pc.user_id
+                    LEFT JOIN Comments parent ON parent.id = pc.parent_comment_id
+                    LEFT JOIN Users pu ON pu.id = parent.user_id
                     WHERE pc.post_id = ?
                       AND pc.is_deleted = 0
-                      AND pc.parent_comment_id IS NULL
                     ORDER BY pc.created_at ASC, pc.id ASC
                 ');
-                $commentsStmt->execute([$selectedPostId]);
+                $commentsStmt->execute([$viewerId, $selectedPostId]);
                 $selectedPostComments = $commentsStmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
             }
 
@@ -554,8 +556,16 @@
                             $commentPublishedLabel = $formatPostPublishedLabel((string) ($commentRow['created_at'] ?? ''));
                             $commentCreatedTimestamp = (int) strtotime((string) ($commentRow['created_at'] ?? ''));
                             $commentLikesCount = (int) ($commentRow['likes_count'] ?? 0);
+                            $commentId = (int) ($commentRow['id'] ?? 0);
+                            $commentParentId = (int) ($commentRow['parent_comment_id'] ?? 0);
+                            $commentParentUsername = ltrim((string) ($commentRow['parent_username'] ?? ''), '@');
+                            $commentIsLikedByViewer = !empty($commentRow['is_liked_by_viewer']);
                         ?>
-                        <article class="post-full__comment-item">
+                        <article
+                            class="post-full__comment-item"
+                            data-comment-id="<?php echo $commentId; ?>"
+                            data-comment-username="<?php echo htmlspecialchars($commentUsername, ENT_QUOTES, 'UTF-8'); ?>"
+                        >
                             <div class="post-full__comment-side">
                                 <a class="post-full__author-avatar post-full__comment-avatar" href="<?php echo htmlspecialchars($commentProfileUrl, ENT_QUOTES, 'UTF-8'); ?>" aria-label="Профиль автора @<?php echo htmlspecialchars($commentUsername, ENT_QUOTES, 'UTF-8'); ?>">
                                     <?php if ($commentHasAvatar): ?>
@@ -569,12 +579,16 @@
                             <div class="post-full__comment-content">
                                 <div class="post-full__comment-meta">
                                     <a class="post-full__comment-username" href="<?php echo htmlspecialchars($commentProfileUrl, ENT_QUOTES, 'UTF-8'); ?>" aria-label="Профиль автора @<?php echo htmlspecialchars($commentUsername, ENT_QUOTES, 'UTF-8'); ?>">@<?php echo htmlspecialchars($commentUsername, ENT_QUOTES, 'UTF-8'); ?></a>
+                                    <?php if ($commentParentId > 0 && $commentParentUsername !== ''): ?>
+                                        <span class="post-full__comment-meta-separator" aria-hidden="true"></span>
+                                        <span class="post-full__comment-reply-label">Ответ <span class="post-full__comment-reply-target">@<?php echo htmlspecialchars($commentParentUsername, ENT_QUOTES, 'UTF-8'); ?></span></span>
+                                    <?php endif; ?>
                                     <span class="post-full__comment-meta-separator" aria-hidden="true"></span>
                                     <span class="post-full__comment-published-at" data-created-at-ts="<?php echo $commentCreatedTimestamp; ?>"><?php echo htmlspecialchars($commentPublishedLabel, ENT_QUOTES, 'UTF-8'); ?></span>
                                 </div>
                                 <p class="post-full__comment-text"><?php echo nl2br(htmlspecialchars((string) ($commentRow['content'] ?? ''), ENT_QUOTES, 'UTF-8')); ?></p>
                                 <div class="post-full__comment-actions" aria-label="Действия с комментарием">
-                                    <button class="post-full__comment-action-button" type="button" data-action="comment-like" aria-label="Лайк комментария">
+                                    <button class="post-full__comment-action-button<?php echo $commentIsLikedByViewer ? ' is-active' : ''; ?>" type="button" data-action="comment-like" aria-label="Лайк комментария">
                                         <span class="post-full__comment-action-icon" data-svg-src="/assets/images/icons/S-heart.svg" aria-hidden="true"></span>
                                     </button>
                                     <span class="post-full__comment-like-count"><?php echo $commentLikesCount; ?></span>
@@ -590,6 +604,12 @@
                     <?php endforeach; ?>
                 </div>
                 <?php if ($viewerId > 0): ?>
+                    <div class="post-full__comment-reply-state" data-component="post-full-reply-state" aria-live="polite">
+                        <span class="post-full__comment-reply-text">
+                            Ответ пользователю <span class="post-full__comment-reply-nickname" data-component="post-full-reply-nickname"></span>
+                        </span>
+                        <button class="post-full__comment-reply-cancel" type="button" data-action="reply-cancel" aria-label="Отменить ответ">×</button>
+                    </div>
                     <div class="post-full__comment-input-wrap">
                         <textarea
                             class="post-full__comment-input"
