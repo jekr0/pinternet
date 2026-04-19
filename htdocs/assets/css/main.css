@@ -14,15 +14,6 @@
     font-display: swap;
 }
 
-/* Специфика */
-@font-face {
-    font-family: 'MC_def';
-    src: url('../fonts/MC_def.woff2') format('woff2');
-    font-weight: normal;
-    font-style: normal;
-    font-display: swap;
-}
-
 /* Основной */
 @font-face {
     font-family: 'SF_def';
