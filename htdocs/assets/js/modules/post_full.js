@@ -495,7 +495,7 @@ class PostFullComponent {
             const textElement = item.querySelector('.post-full__comment-text');
             const railElement = item.querySelector('.post-full__comment-rail');
             if (!textElement || !railElement) return;
-            railElement.style.height = `${Math.max(0, Math.round(textElement.offsetHeight + 27))}px`;
+            railElement.style.height = `${Math.max(0, Math.round(textElement.offsetHeight + 25))}px`;
         });
     }
 
