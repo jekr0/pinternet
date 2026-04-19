@@ -286,6 +286,7 @@
 
 .post-full__comments-empty {
     margin: 0;
+    margin-bottom: 50px;
     font-family: 'MC_caps', Arial, sans-serif;
     font-size: 20px;
     line-height: 1.3;
@@ -296,6 +297,7 @@
 
 .post-full__comments-list {
     margin-top: 0;
+    margin-bottom: 50px;
     display: flex;
     flex-direction: column;
     gap: 16px;
@@ -445,18 +447,18 @@
 .post-full__comment-input-wrap {
     position: relative;
     width: 100%;
-    margin-top: 50px;
+    margin-top: 0;
     margin-bottom: 20px;
 }
 
 .post-full__comments-empty + .post-full__comments-list + .post-full__comment-input-wrap,
 .post-full__comments-empty + .post-full__comment-input-wrap {
-    margin-top: 50px;
+    margin-top: 0;
 }
 
 .post-full__comment-reply-state {
-    margin-top: 5px;
-    margin-bottom: 0;
+    margin-top: 0;
+    margin-bottom: 5px;
     display: none;
     align-items: center;
     gap: 10px;
@@ -468,12 +470,13 @@
 
 .post-full__comment-reply-text {
     font-family: 'SF_def', Arial, sans-serif;
-    font-size: 20px;
+    font-size: 15px;
     line-height: 1;
     color: #333;
 }
 
 .post-full__comment-reply-cancel {
+    font-family: 'SF_def', Arial, sans-serif;
     width: 20px;
     height: 20px;
     border: none;

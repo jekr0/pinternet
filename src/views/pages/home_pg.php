@@ -215,24 +215,15 @@
             return 0;
         }
 
-        try {
-            $tableExistsStmt = $pdo->query("SHOW TABLES LIKE 'Comments'");
-            if ($tableExistsStmt->fetchColumn() === false) {
-                return 0;
-            }
+        $countStmt = $pdo->prepare('
+            SELECT COUNT(*)
+            FROM Comments
+            WHERE post_id = ?
+              AND is_deleted = 0
+        ');
+        $countStmt->execute([$postId]);
 
-            $countStmt = $pdo->prepare('
-                SELECT COUNT(*)
-                FROM Comments
-                WHERE post_id = ?
-                  AND is_deleted = 0
-            ');
-            $countStmt->execute([$postId]);
-
-            return (int) $countStmt->fetchColumn();
-        } catch (Throwable) {
-            return 0;
-        }
+        return (int) $countStmt->fetchColumn();
     };
 
     if ($viewerId > 0) {

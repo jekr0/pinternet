@@ -657,21 +657,6 @@ function createBoard(PDO $pdo, int $userId, string $collectionName): int
     return (int) $pdo->lastInsertId();
 }
 
-function ensurePostCommentsTable(PDO $pdo): void
-{
-    $pdo->exec('
-        CREATE TABLE IF NOT EXISTS Post_Comments (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            post_id INT NOT NULL,
-            user_id INT NOT NULL,
-            content VARCHAR(256) NOT NULL,
-            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            INDEX idx_post_comments_post_id (post_id),
-            INDEX idx_post_comments_user_id (user_id)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-    ');
-}
-
 function normalizeCollectionName(string $value): string
 {
     $normalized = trim($value);
