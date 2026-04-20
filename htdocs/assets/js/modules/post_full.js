@@ -57,7 +57,9 @@ class PostFullComponent {
             this.bindCommentActions();
             this.bindReplyStateCancel();
             this.bindCommentsToggle();
+            this.bindCommentChildrenToggle();
             this.applyCommentsPreviewState();
+            this.applyCommentChildrenState();
             this.syncCommentRails();
             window.addEventListener('resize', () => this.syncCommentRails());
         }
@@ -334,6 +336,7 @@ class PostFullComponent {
 
     requestMasonryLayoutUpdate() {
         this.applyCommentsPreviewState();
+        this.applyCommentChildrenState();
         this.syncCommentRails();
         document.dispatchEvent(new CustomEvent('post-full:resize'));
     }
@@ -347,6 +350,20 @@ class PostFullComponent {
         toggleButton.addEventListener('click', () => {
             this.commentsExpanded = !this.commentsExpanded;
             this.applyCommentsPreviewState();
+            this.requestMasonryLayoutUpdate();
+        });
+    }
+
+    bindCommentChildrenToggle() {
+        if (!this.postFullElement) return;
+
+        this.postFullElement.addEventListener('click', (event) => {
+            const button = event.target.closest('[data-action="comment-children-toggle"]');
+            if (!button) return;
+
+            const nextExpanded = button.dataset.expanded !== '1';
+            button.dataset.expanded = nextExpanded ? '1' : '0';
+            this.applyCommentChildrenState();
             this.requestMasonryLayoutUpdate();
         });
     }
@@ -399,23 +416,53 @@ class PostFullComponent {
             return;
         }
 
+        if (hiddenCount <= 0) {
+            divider.classList.remove('is-visible');
+            return;
+        }
+
         divider.classList.add('is-visible');
         if (hiddenCount > 0 && !this.commentsExpanded) {
-            divider.classList.remove('is-solid');
             toggleButton.textContent = `Показать все комментарии (+${hiddenCount})`;
             toggleButton.style.display = '';
             return;
         }
 
         if (hiddenCount > 0 && this.commentsExpanded) {
-            divider.classList.remove('is-solid');
             toggleButton.textContent = 'Скрыть комментарии';
             toggleButton.style.display = '';
             return;
         }
+    }
 
-        divider.classList.add('is-solid');
-        toggleButton.style.display = 'none';
+    applyCommentChildrenState() {
+        if (!this.postFullElement) return;
+
+        const threads = Array.from(this.postFullElement.querySelectorAll('.post-full__comment-thread'));
+        threads.forEach((thread) => {
+            const parentItem = thread.querySelector('.post-full__comment-item:not(.post-full__comment-item--reply)');
+            const childrenContainer = thread.querySelector('.post-full__comment-children');
+            const childrenCount = childrenContainer?.querySelectorAll('.post-full__comment-item--reply').length || 0;
+            if (!parentItem || !childrenContainer || childrenCount === 0) return;
+
+            const commentSide = parentItem.querySelector('.post-full__comment-side');
+            if (!commentSide) return;
+
+            let toggleButton = commentSide.querySelector('[data-action="comment-children-toggle"]');
+            if (!toggleButton) {
+                toggleButton = document.createElement('button');
+                toggleButton.className = 'post-full__comment-children-toggle';
+                toggleButton.type = 'button';
+                toggleButton.dataset.action = 'comment-children-toggle';
+                toggleButton.dataset.expanded = '0';
+                commentSide.appendChild(toggleButton);
+            }
+
+            const isExpanded = toggleButton.dataset.expanded === '1';
+            toggleButton.textContent = isExpanded ? '−' : '+';
+            toggleButton.setAttribute('aria-label', isExpanded ? 'Скрыть ответы' : 'Показать ответы');
+            childrenContainer.style.display = isExpanded ? '' : 'none';
+        });
     }
 
     // Форматирует timestamp в человекочитаемое «x сек/мин/час/дн назад» с сохранением текущих интервалов.
@@ -941,6 +988,7 @@ class PostFullComponent {
         const threads = this.postFullElement?.querySelectorAll('.post-full__comment-thread') || [];
         threads.forEach((thread) => {
             const parentItem = thread.querySelector('.post-full__comment-item:not(.post-full__comment-item--reply)');
+            const childrenContainer = thread.querySelector('.post-full__comment-children');
             const children = thread.querySelectorAll('.post-full__comment-item--reply');
             if (!parentItem || children.length === 0) return;
 
@@ -948,6 +996,7 @@ class PostFullComponent {
             const lastChild = children[children.length - 1];
             const lastChildRail = lastChild.querySelector('.post-full__comment-rail');
             if (!parentRail || !lastChildRail) return;
+            if (childrenContainer && getComputedStyle(childrenContainer).display === 'none') return;
 
             const parentRailRect = parentRail.getBoundingClientRect();
             const lastChildRailRect = lastChildRail.getBoundingClientRect();

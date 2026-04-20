@@ -195,8 +195,13 @@
     border-radius: 50%;
     background: #bbb;
     flex: 0 0 auto;
+<<<<<<< HEAD
     align-self: flex-end;
     margin-bottom: 1px;
+=======
+    align-self: center;
+    margin-bottom: 0;
+>>>>>>> 780e444ee34a9d04f952ab7accf0be397fd87645
 }
 
 .post-full__author-published-at {
@@ -427,8 +432,13 @@
     border-radius: 50%;
     background: #bbb;
     flex: 0 0 auto;
+<<<<<<< HEAD
     align-self: flex-end;
     margin-bottom: 1px;
+=======
+    align-self: center;
+    margin-bottom: 0;
+>>>>>>> 780e444ee34a9d04f952ab7accf0be397fd87645
 }
 
 .post-full__comment-published-at {
@@ -548,8 +558,13 @@
     width: 100%;
     display: none;
     align-items: center;
+<<<<<<< HEAD
     gap: 15px;
     margin: 20px 0 50px;
+=======
+    gap: 10px;
+    margin: 10px 0 20px;
+>>>>>>> 780e444ee34a9d04f952ab7accf0be397fd87645
 }
 
 .post-full__comments-toggle-divider.is-visible {
@@ -576,7 +591,10 @@
     line-height: 1.2;
     color: #bbb;
     cursor: pointer;
+<<<<<<< HEAD
     margin-bottom: 3px;
+=======
+>>>>>>> 780e444ee34a9d04f952ab7accf0be397fd87645
 }
 
 .post-full__comments-toggle-button:hover {
@@ -587,13 +605,17 @@
 .post-full__comment-reply-state {
     margin-left: 10px;
     margin-bottom: 10px;
-    display: none;
+    min-height: 20px;
+    visibility: hidden;
+    pointer-events: none;
+    display: flex;
     align-items: center;
     gap: 10px;
 }
 
 .post-full__comment-reply-state.is-active {
-    display: flex;
+    visibility: visible;
+    pointer-events: auto;
 }
 
 .post-full__comment-reply-text {
@@ -626,6 +648,34 @@
 }
 
 .post-full__comment-reply-cancel:focus-visible {
+    outline: 1.5px solid rgb(150, 150, 250);
+    outline-offset: 1px;
+}
+
+.post-full__comment-children-toggle {
+    font-family: 'SF_def', Arial, sans-serif;
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    border: none;
+    border-radius: 5px;
+    background: transparent;
+    color: #bbb;
+    padding: 0;
+    margin-top: 5px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.post-full__comment-children-toggle:hover {
+    color: rgb(150, 150, 250);
+    background: rgba(150, 150, 250, 0.1);
+}
+
+.post-full__comment-children-toggle:focus-visible {
     outline: 1.5px solid rgb(150, 150, 250);
     outline-offset: 1px;
 }
