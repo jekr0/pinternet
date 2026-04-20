@@ -340,10 +340,10 @@
     color: #bbb;
     text-align: center;
     user-select: none;
+    margin-bottom: 50px;
 }
 
 .post-full__comments-list {
-    margin-bottom: 50px;
     display: flex;
     flex-direction: column;
     gap: 20px;
@@ -548,8 +548,8 @@
     width: 100%;
     display: none;
     align-items: center;
-    gap: 10px;
-    margin: 10px 0 20px;
+    gap: 15px;
+    margin: 20px 0 50px;
 }
 
 .post-full__comments-toggle-divider.is-visible {
