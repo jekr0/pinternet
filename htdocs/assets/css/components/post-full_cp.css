@@ -195,13 +195,8 @@
     border-radius: 50%;
     background: #bbb;
     flex: 0 0 auto;
-<<<<<<< HEAD
-    align-self: flex-end;
-    margin-bottom: 1px;
-=======
     align-self: center;
-    margin-bottom: 0;
->>>>>>> 780e444ee34a9d04f952ab7accf0be397fd87645
+    margin-top: 5px;
 }
 
 .post-full__author-published-at {
@@ -301,10 +296,10 @@
 
 .post-full__hashtags {
     width: calc(100% - 40px);
-    margin: 10px 20px 0;
+    margin: 0 20px 0;
     display: flex;
     flex-wrap: wrap;
-    gap: 5px;
+    gap: 10px;
 }
 
 .post-full__tag-item {
@@ -325,7 +320,7 @@
 .post-full__description-divider {
     width: calc(100% - 40px);
     height: 2px;
-    margin: 20px 20px 20px;
+    margin: 20px 20px 30px;
     background: #e0e0e0;
     border-radius: 1px;
 }
@@ -388,10 +383,10 @@
 }
 
 .post-full__comment-rail {
-    width: 1.5px;
+    width: 2.5px;
     height: 0;
     margin-top: 5px;
-    background: #e0e0e0;
+    background: #bbb;
     border-radius: 1px;
 }
 
@@ -432,13 +427,8 @@
     border-radius: 50%;
     background: #bbb;
     flex: 0 0 auto;
-<<<<<<< HEAD
-    align-self: flex-end;
-    margin-bottom: 1px;
-=======
     align-self: center;
-    margin-bottom: 0;
->>>>>>> 780e444ee34a9d04f952ab7accf0be397fd87645
+    margin-top: 5px;
 }
 
 .post-full__comment-published-at {
@@ -558,13 +548,8 @@
     width: 100%;
     display: none;
     align-items: center;
-<<<<<<< HEAD
     gap: 15px;
-    margin: 20px 0 50px;
-=======
-    gap: 10px;
-    margin: 10px 0 20px;
->>>>>>> 780e444ee34a9d04f952ab7accf0be397fd87645
+    margin: 20px 0 30px;
 }
 
 .post-full__comments-toggle-divider.is-visible {
@@ -591,10 +576,7 @@
     line-height: 1.2;
     color: #bbb;
     cursor: pointer;
-<<<<<<< HEAD
     margin-bottom: 3px;
-=======
->>>>>>> 780e444ee34a9d04f952ab7accf0be397fd87645
 }
 
 .post-full__comments-toggle-button:hover {

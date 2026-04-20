@@ -982,7 +982,7 @@ class PostFullComponent {
             const textElement = item.querySelector('.post-full__comment-text');
             const railElement = item.querySelector('.post-full__comment-rail');
             if (!textElement || !railElement) return;
-            railElement.style.height = `${Math.max(0, Math.round(textElement.offsetHeight + 15))}px`;
+            railElement.style.height = `${Math.max(0, Math.round(textElement.offsetHeight + 18))}px`;
         });
 
         const threads = this.postFullElement?.querySelectorAll('.post-full__comment-thread') || [];
