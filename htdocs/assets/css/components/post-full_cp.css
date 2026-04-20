@@ -212,7 +212,7 @@
 
 .post-full__description {
     width: calc(100% - 40px);
-    margin: 15px 20px 15px;
+    margin: 15px 20px 0;
     position: relative;
     font-family: 'NS_def', Arial, sans-serif;
     font-size: 25px;
@@ -296,7 +296,7 @@
 
 .post-full__hashtags {
     width: calc(100% - 40px);
-    margin: 0 20px 0;
+    margin: 15px 20px 0;
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
