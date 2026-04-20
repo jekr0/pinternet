@@ -606,9 +606,9 @@ class PostFullComponent {
                 <p class="post-full__comment-text">${this.escapeHtmlWithBreaks(commentData.content || '')}</p>
                 <div class="post-full__comment-actions" aria-label="Действия с комментарием">
                     <button class="post-full__comment-action-button${isLiked ? ' is-active' : ''}" type="button" data-action="comment-like" aria-label="Лайк комментария">
-                        <span class="post-full__comment-action-icon" data-svg-src="/assets/images/icons/S-heart.svg" aria-hidden="true"></span>
+                        <span class="post-full__comment-action-icon" data-svg-src="${isLiked ? '/assets/images/icons/U-heart-fill.svg' : '/assets/images/icons/S-heart.svg'}" aria-hidden="true"></span>
                     </button>
-                    <span class="post-full__comment-like-count">${Math.max(0, likesCount)}</span>
+                    <span class="post-full__comment-like-count${isLiked ? ' is-active' : ''}">${Math.max(0, likesCount)}</span>
                     <button class="post-full__comment-action-button" type="button" data-action="comment-reply" aria-label="Ответить на комментарий">
                         <span class="post-full__comment-action-icon" data-svg-src="/assets/images/icons/S-comment.svg" aria-hidden="true"></span>
                     </button>
@@ -670,11 +670,13 @@ class PostFullComponent {
 
             const isLiked = !!payload.liked;
             button.classList.toggle('is-active', isLiked);
+            this.setCommentLikeIcon(button, isLiked);
 
             const commentItem = button.closest('.post-full__comment-item');
             const countNode = commentItem?.querySelector('.post-full__comment-like-count');
             if (countNode) {
                 countNode.textContent = String(Math.max(0, Number(payload.likes_count || 0)));
+                countNode.classList.toggle('is-active', isLiked);
             }
         } catch (error) {
             console.warn('Unable to toggle like for comment from post-full', error);
@@ -682,6 +684,15 @@ class PostFullComponent {
         } finally {
             button.disabled = false;
         }
+    }
+
+    setCommentLikeIcon(button, liked) {
+        const iconContainer = button?.querySelector('.post-full__comment-action-icon');
+        if (!iconContainer) return;
+
+        const iconPath = liked ? '/assets/images/icons/U-heart-fill.svg' : '/assets/images/icons/S-heart.svg';
+        iconContainer.setAttribute('data-svg-src', iconPath);
+        App.utils.loadSVG(iconPath, iconContainer);
     }
 
     openCommentReportOverlay(commentId) {

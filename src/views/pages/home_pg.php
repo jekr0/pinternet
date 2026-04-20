@@ -642,9 +642,9 @@
                                         <p class="post-full__comment-text"><?php echo nl2br(htmlspecialchars((string) ($commentRow['content'] ?? ''), ENT_QUOTES, 'UTF-8')); ?></p>
                                         <div class="post-full__comment-actions" aria-label="Действия с комментарием">
                                             <button class="post-full__comment-action-button<?php echo $commentIsLikedByViewer ? ' is-active' : ''; ?>" type="button" data-action="comment-like" aria-label="Лайк комментария">
-                                                <span class="post-full__comment-action-icon" data-svg-src="/assets/images/icons/S-heart.svg" aria-hidden="true"></span>
+                                                <span class="post-full__comment-action-icon" data-svg-src="<?php echo $commentIsLikedByViewer ? '/assets/images/icons/U-heart-fill.svg' : '/assets/images/icons/S-heart.svg'; ?>" aria-hidden="true"></span>
                                             </button>
-                                            <span class="post-full__comment-like-count"><?php echo $commentLikesCount; ?></span>
+                                            <span class="post-full__comment-like-count<?php echo $commentIsLikedByViewer ? ' is-active' : ''; ?>"><?php echo $commentLikesCount; ?></span>
                                             <button class="post-full__comment-action-button" type="button" data-action="comment-reply" aria-label="Ответить на комментарий">
                                                 <span class="post-full__comment-action-icon" data-svg-src="/assets/images/icons/S-comment.svg" aria-hidden="true"></span>
                                             </button>
