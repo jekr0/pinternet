@@ -574,6 +574,9 @@ class PostFullComponent {
         const likesCount = Number(commentData.likesCount || 0);
         const isLiked = !!commentData.isLiked;
         const rootCommentId = Number(commentData.rootCommentId || commentId || 0);
+        const likeIconPath = isLiked
+            ? '/assets/images/icons/U-heart-fill.svg'
+            : '/assets/images/icons/S-heart.svg';
 
         const item = document.createElement('article');
         item.className = `post-full__comment-item${commentData.isReply ? ' post-full__comment-item--reply' : ''}`;
@@ -606,7 +609,7 @@ class PostFullComponent {
                 <p class="post-full__comment-text">${this.escapeHtmlWithBreaks(commentData.content || '')}</p>
                 <div class="post-full__comment-actions" aria-label="Действия с комментарием">
                     <button class="post-full__comment-action-button${isLiked ? ' is-active' : ''}" type="button" data-action="comment-like" aria-label="Лайк комментария">
-                        <span class="post-full__comment-action-icon" data-svg-src="/assets/images/icons/S-heart.svg" aria-hidden="true"></span>
+                        <span class="post-full__comment-action-icon" data-svg-src="${likeIconPath}" aria-hidden="true"></span>
                     </button>
                     <span class="post-full__comment-like-count">${Math.max(0, likesCount)}</span>
                     <button class="post-full__comment-action-button" type="button" data-action="comment-reply" aria-label="Ответить на комментарий">
@@ -670,6 +673,7 @@ class PostFullComponent {
 
             const isLiked = !!payload.liked;
             button.classList.toggle('is-active', isLiked);
+            this.setCommentLikeIcon(button, isLiked);
 
             const commentItem = button.closest('.post-full__comment-item');
             const countNode = commentItem?.querySelector('.post-full__comment-like-count');
@@ -682,6 +686,18 @@ class PostFullComponent {
         } finally {
             button.disabled = false;
         }
+    }
+
+    setCommentLikeIcon(button, isLiked) {
+        const icon = button.querySelector('.post-full__comment-action-icon');
+        if (!icon) return;
+
+        const iconPath = isLiked
+            ? '/assets/images/icons/U-heart-fill.svg'
+            : '/assets/images/icons/S-heart.svg';
+
+        icon.setAttribute('data-svg-src', iconPath);
+        App.utils.loadSVG(iconPath, icon);
     }
 
     openCommentReportOverlay(commentId) {

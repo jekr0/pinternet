@@ -322,7 +322,11 @@
 }
 
 .post-full__comment-item--reply {
-    margin-left: 52px;
+    margin-left: 0;
+}
+
+.post-full__comment-item--reply .post-full__comment-content {
+    padding-left: 12px;
 }
 
 .post-full__comment-avatar {
