@@ -446,15 +446,15 @@
 }
 
 .post-full__comment-actions {
-    margin-top: 10px;
+    margin-top: 5px;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 15px;
 }
 
 .post-full__comment-action-button {
-    width: 20px;
-    height: 20px;
+    width: 15px;
+    height: 15px;
     border: none;
     background: transparent;
     color: #bbb;
@@ -475,8 +475,8 @@
 }
 
 .post-full__comment-action-icon {
-    width: 20px;
-    height: 20px;
+    width: 15px;
+    height: 15px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -522,7 +522,7 @@
 }
 
 .post-full__comment-reply-text {
-    font-family: 'NS_def', Arial, sans-serif;
+    font-family: 'SF_def', Arial, sans-serif;
     font-size: 18px;
     line-height: 1;
     color: #bbb;
