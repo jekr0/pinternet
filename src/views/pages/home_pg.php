@@ -534,19 +534,21 @@
                         data-placeholder-size="28"
                         aria-label="Профиль автора @<?php echo htmlspecialchars($selectedAuthorUsername, ENT_QUOTES, 'UTF-8'); ?>"
                     ></button>
-                    <a
-                        class="post-full__author-username"
-                        href="<?php echo htmlspecialchars($selectedAuthorProfileUrl, ENT_QUOTES, 'UTF-8'); ?>"
-                        aria-label="Профиль автора @<?php echo htmlspecialchars($selectedAuthorUsername, ENT_QUOTES, 'UTF-8'); ?>"
-                    >@<?php echo htmlspecialchars($selectedAuthorUsername, ENT_QUOTES, 'UTF-8'); ?></a>
-                    <?php if ($selectedPostCreatedTimestamp > 0): ?>
-                        <span class="post-full__author-meta-separator" aria-hidden="true"></span>
-                        <span
-                            class="post-full__author-published-at"
-                            data-component="post-full-published-at"
-                            data-created-at-ts="<?php echo $selectedPostCreatedTimestamp; ?>"
-                        ><?php echo htmlspecialchars($selectedPostPublishedLabel, ENT_QUOTES, 'UTF-8'); ?></span>
-                    <?php endif; ?>
+                    <div class="post-full__author-meta">
+                        <a
+                            class="post-full__author-username"
+                            href="<?php echo htmlspecialchars($selectedAuthorProfileUrl, ENT_QUOTES, 'UTF-8'); ?>"
+                            aria-label="Профиль автора @<?php echo htmlspecialchars($selectedAuthorUsername, ENT_QUOTES, 'UTF-8'); ?>"
+                        >@<?php echo htmlspecialchars($selectedAuthorUsername, ENT_QUOTES, 'UTF-8'); ?></a>
+                        <?php if ($selectedPostCreatedTimestamp > 0): ?>
+                            <span class="post-full__author-meta-separator" aria-hidden="true"></span>
+                            <span
+                                class="post-full__author-published-at"
+                                data-component="post-full-published-at"
+                                data-created-at-ts="<?php echo $selectedPostCreatedTimestamp; ?>"
+                            ><?php echo htmlspecialchars($selectedPostPublishedLabel, ENT_QUOTES, 'UTF-8'); ?></span>
+                        <?php endif; ?>
+                    </div>
                 </div>
 
                 <div class="post-full__bottom-actions" aria-label="Базовые действия с постом">
@@ -599,7 +601,8 @@
                             $rootComment = $threadRow['root'] ?? [];
                             $rootId = (int) ($rootComment['id'] ?? 0);
                             $threadChildren = $threadRow['children'] ?? [];
-                            $renderCommentItem = static function (array $commentRow, bool $isReply = false) use ($normalizePublicPath, $formatPostPublishedLabel): void {
+                            $renderCommentItem = null;
+                            $renderCommentItem = static function (array $commentRow, bool $isReply = false, array $childrenRows = []) use (&$renderCommentItem, $normalizePublicPath, $formatPostPublishedLabel): void {
                                 $commentUsername = ltrim((string) ($commentRow['username'] ?? 'unknown'), '@');
                                 $commentProfileUrl = '/profile?username=' . urlencode($commentUsername);
                                 $commentAvatar = $normalizePublicPath((string) ($commentRow['avatar'] ?? ''));
@@ -631,20 +634,22 @@
                                     </div>
                                     <div class="post-full__comment-content">
                                         <div class="post-full__comment-meta">
-                                            <a class="post-full__comment-username" href="<?php echo htmlspecialchars($commentProfileUrl, ENT_QUOTES, 'UTF-8'); ?>" aria-label="Профиль автора @<?php echo htmlspecialchars($commentUsername, ENT_QUOTES, 'UTF-8'); ?>">@<?php echo htmlspecialchars($commentUsername, ENT_QUOTES, 'UTF-8'); ?></a>
-                                            <?php if ($commentParentId > 0 && $commentParentUsername !== ''): ?>
+                                            <div class="post-full__comment-meta-main">
+                                                <a class="post-full__comment-username" href="<?php echo htmlspecialchars($commentProfileUrl, ENT_QUOTES, 'UTF-8'); ?>" aria-label="Профиль автора @<?php echo htmlspecialchars($commentUsername, ENT_QUOTES, 'UTF-8'); ?>">@<?php echo htmlspecialchars($commentUsername, ENT_QUOTES, 'UTF-8'); ?></a>
+                                                <?php if ($commentParentId > 0 && $commentParentUsername !== ''): ?>
+                                                    <span class="post-full__comment-meta-separator" aria-hidden="true"></span>
+                                                    <span class="post-full__comment-reply-label">Ответ <span class="post-full__comment-reply-target">@<?php echo htmlspecialchars($commentParentUsername, ENT_QUOTES, 'UTF-8'); ?></span></span>
+                                                <?php endif; ?>
                                                 <span class="post-full__comment-meta-separator" aria-hidden="true"></span>
-                                                <span class="post-full__comment-reply-label">Ответ <span class="post-full__comment-reply-target">@<?php echo htmlspecialchars($commentParentUsername, ENT_QUOTES, 'UTF-8'); ?></span></span>
-                                            <?php endif; ?>
-                                            <span class="post-full__comment-meta-separator" aria-hidden="true"></span>
-                                            <span class="post-full__comment-published-at" data-created-at-ts="<?php echo $commentCreatedTimestamp; ?>"><?php echo htmlspecialchars($commentPublishedLabel, ENT_QUOTES, 'UTF-8'); ?></span>
+                                                <span class="post-full__comment-published-at" data-created-at-ts="<?php echo $commentCreatedTimestamp; ?>"><?php echo htmlspecialchars($commentPublishedLabel, ENT_QUOTES, 'UTF-8'); ?></span>
+                                            </div>
                                         </div>
                                         <p class="post-full__comment-text"><?php echo nl2br(htmlspecialchars((string) ($commentRow['content'] ?? ''), ENT_QUOTES, 'UTF-8')); ?></p>
                                         <div class="post-full__comment-actions" aria-label="Действия с комментарием">
                                             <button class="post-full__comment-action-button<?php echo $commentIsLikedByViewer ? ' is-active' : ''; ?>" type="button" data-action="comment-like" aria-label="Лайк комментария">
-                                                <span class="post-full__comment-action-icon" data-svg-src="/assets/images/icons/S-heart.svg" aria-hidden="true"></span>
+                                                <span class="post-full__comment-action-icon" data-svg-src="<?php echo $commentIsLikedByViewer ? '/assets/images/icons/U-heart-fill.svg' : '/assets/images/icons/S-heart.svg'; ?>" aria-hidden="true"></span>
                                             </button>
-                                            <span class="post-full__comment-like-count"><?php echo $commentLikesCount; ?></span>
+                                            <span class="post-full__comment-like-count<?php echo $commentIsLikedByViewer ? ' is-active' : ''; ?>"><?php echo $commentLikesCount; ?></span>
                                             <button class="post-full__comment-action-button" type="button" data-action="comment-reply" aria-label="Ответить на комментарий">
                                                 <span class="post-full__comment-action-icon" data-svg-src="/assets/images/icons/S-comment.svg" aria-hidden="true"></span>
                                             </button>
@@ -652,20 +657,20 @@
                                                 <span class="post-full__comment-action-icon" data-svg-src="/assets/images/icons/S-warning.svg" aria-hidden="true"></span>
                                             </button>
                                         </div>
+                                        <?php if (!$isReply && !empty($childrenRows)): ?>
+                                            <div class="post-full__comment-children">
+                                                <?php foreach ($childrenRows as $childComment): ?>
+                                                    <?php $renderCommentItem($childComment, true, []); ?>
+                                                <?php endforeach; ?>
+                                            </div>
+                                        <?php endif; ?>
                                     </div>
                                 </article>
                             <?php };
                         ?>
                         <?php if ($rootId > 0): ?>
                             <div class="post-full__comment-thread" data-root-comment-id="<?php echo $rootId; ?>">
-                                <?php $renderCommentItem($rootComment, false); ?>
-                                <?php if (!empty($threadChildren)): ?>
-                                    <div class="post-full__comment-children">
-                                        <?php foreach ($threadChildren as $childComment): ?>
-                                            <?php $renderCommentItem($childComment, true); ?>
-                                        <?php endforeach; ?>
-                                    </div>
-                                <?php endif; ?>
+                                <?php $renderCommentItem($rootComment, false, $threadChildren); ?>
                             </div>
                         <?php endif; ?>
                     <?php endforeach; ?>

@@ -30,6 +30,11 @@ class PostFullComponent {
         this.replyTargetRootCommentId = 0;
         this.replyTargetUsername = '';
         this.pendingCommentReportId = 0;
+        this.descriptionElement = null;
+        this.descriptionHideButton = null;
+        this.descriptionSupportsCollapse = false;
+        this.descriptionExpanded = false;
+        this.descriptionPositionHandler = null;
     }
 
     init() {
@@ -53,6 +58,8 @@ class PostFullComponent {
             this.bindReplyStateCancel();
             this.syncCommentRails();
             window.addEventListener('resize', () => this.syncCommentRails());
+            window.addEventListener('resize', () => this.updateDescriptionHideButtonPosition());
+            window.addEventListener('scroll', () => this.updateDescriptionHideButtonPosition(), { passive: true });
         }
 
         const cards = Array.from(this.container.querySelectorAll('[data-component="post-card"]'));
@@ -260,18 +267,84 @@ class PostFullComponent {
     }
 
     bindDescriptionToggle() {
-        const description = this.postFullElement?.querySelector('[data-component="post-full-description"]');
-        if (!description) return;
+        this.descriptionElement = this.postFullElement?.querySelector('[data-component="post-full-description"]') || null;
+        if (!this.descriptionElement) return;
 
-        const needsCollapse = description.scrollHeight > 90;
-        if (!needsCollapse) {
-            description.classList.remove('is-collapsed');
+        this.descriptionSupportsCollapse = this.descriptionElement.scrollHeight > 90;
+        if (!this.descriptionSupportsCollapse) {
+            this.descriptionElement.classList.remove('is-collapsed');
             return;
         }
 
-        description.addEventListener('click', () => {
-            description.classList.remove('is-collapsed');
-        }, { once: true });
+        this.ensureDescriptionHideButton();
+        this.descriptionExpanded = false;
+        this.descriptionElement.classList.add('is-collapsed');
+        this.descriptionElement.addEventListener('click', () => {
+            if (!this.descriptionSupportsCollapse || this.descriptionExpanded) return;
+            this.expandDescription();
+        });
+    }
+
+    ensureDescriptionHideButton() {
+        if (this.descriptionHideButton || !this.postFullElement) return;
+
+        const hideButton = document.createElement('button');
+        hideButton.className = 'post-full__description-hide-button';
+        hideButton.type = 'button';
+        hideButton.textContent = 'Скрыть описание';
+        hideButton.addEventListener('click', () => {
+            this.collapseDescription();
+        });
+
+        this.postFullElement.appendChild(hideButton);
+        this.descriptionHideButton = hideButton;
+    }
+
+    expandDescription() {
+        if (!this.descriptionElement) return;
+        this.descriptionExpanded = true;
+        this.descriptionElement.classList.remove('is-collapsed');
+        this.showDescriptionHideButton();
+        this.requestMasonryLayoutUpdate();
+    }
+
+    collapseDescription() {
+        if (!this.descriptionElement || !this.descriptionSupportsCollapse) return;
+        this.descriptionExpanded = false;
+        this.descriptionElement.classList.add('is-collapsed');
+        this.hideDescriptionHideButton();
+        this.requestMasonryLayoutUpdate();
+    }
+
+    showDescriptionHideButton() {
+        if (!this.descriptionHideButton) return;
+        this.descriptionHideButton.classList.add('is-visible');
+        this.updateDescriptionHideButtonPosition();
+    }
+
+    hideDescriptionHideButton() {
+        if (!this.descriptionHideButton) return;
+        this.descriptionHideButton.classList.remove('is-visible');
+    }
+
+    updateDescriptionHideButtonPosition() {
+        if (!this.descriptionElement || !this.descriptionHideButton || !this.descriptionExpanded) return;
+
+        const descriptionRect = this.descriptionElement.getBoundingClientRect();
+        const buttonRect = this.descriptionHideButton.getBoundingClientRect();
+        const preferredTop = descriptionRect.bottom + 10;
+        const maxTop = window.innerHeight - buttonRect.height - 20;
+        const top = Math.max(0, Math.min(preferredTop, maxTop));
+        const left = Math.max(0, descriptionRect.left + (descriptionRect.width - buttonRect.width) / 2);
+
+        this.descriptionHideButton.style.top = `${Math.round(top)}px`;
+        this.descriptionHideButton.style.left = `${Math.round(left)}px`;
+    }
+
+    requestMasonryLayoutUpdate() {
+        this.syncCommentRails();
+        this.updateDescriptionHideButtonPosition();
+        document.dispatchEvent(new CustomEvent('post-full:resize'));
     }
 
     // Форматирует timestamp в человекочитаемое «x сек/мин/час/дн назад» с сохранением текущих интервалов.
@@ -478,6 +551,7 @@ class PostFullComponent {
 
             this.showToast('Комментарий добавлен');
             this.clearReplyState();
+            this.requestMasonryLayoutUpdate();
         } catch (error) {
             console.warn('Unable to submit comment from post-full', error);
             this.showToast('Не удалось сохранить комментарий.');
@@ -524,11 +598,17 @@ class PostFullComponent {
         if (parentCommentId > 0 && rootCommentId > 0) {
             const thread = commentsList.querySelector(`.post-full__comment-thread[data-root-comment-id="${rootCommentId}"]`);
             if (thread) {
-                let childrenContainer = thread.querySelector('.post-full__comment-children');
+                const rootComment = thread.querySelector('.post-full__comment-item:not(.post-full__comment-item--reply)');
+                const rootContent = rootComment?.querySelector('.post-full__comment-content');
+                let childrenContainer = rootContent?.querySelector('.post-full__comment-children');
                 if (!childrenContainer) {
                     childrenContainer = document.createElement('div');
                     childrenContainer.className = 'post-full__comment-children';
-                    thread.appendChild(childrenContainer);
+                    if (rootContent) {
+                        rootContent.appendChild(childrenContainer);
+                    } else {
+                        thread.appendChild(childrenContainer);
+                    }
                 }
                 childrenContainer.appendChild(item);
             } else {
@@ -556,7 +636,7 @@ class PostFullComponent {
             if (!src) return;
             App.utils.loadSVG(src, node);
         });
-        this.syncCommentRails();
+        this.requestMasonryLayoutUpdate();
         this.renderRelativeTimeLabels();
     }
 
@@ -595,20 +675,22 @@ class PostFullComponent {
             </div>
             <div class="post-full__comment-content">
                 <div class="post-full__comment-meta">
-                    <a class="post-full__comment-username" href="${this.escapeHtml(profileUrl)}" aria-label="Профиль автора @${this.escapeHtml(username)}">@${this.escapeHtml(username)}</a>
-                    ${hasReplyLabel
-                        ? `<span class="post-full__comment-meta-separator" aria-hidden="true"></span>
-                           <span class="post-full__comment-reply-label">Ответ <span class="post-full__comment-reply-target">@${this.escapeHtml(parentUsername)}</span></span>`
-                        : ''}
-                    <span class="post-full__comment-meta-separator" aria-hidden="true"></span>
-                    <span class="post-full__comment-published-at" data-created-at-ts="${createdAtTs}">${this.escapeHtml(publishedLabel)}</span>
+                    <div class="post-full__comment-meta-main">
+                        <a class="post-full__comment-username" href="${this.escapeHtml(profileUrl)}" aria-label="Профиль автора @${this.escapeHtml(username)}">@${this.escapeHtml(username)}</a>
+                        ${hasReplyLabel
+                            ? `<span class="post-full__comment-meta-separator" aria-hidden="true"></span>
+                               <span class="post-full__comment-reply-label">Ответ <span class="post-full__comment-reply-target">@${this.escapeHtml(parentUsername)}</span></span>`
+                            : ''}
+                        <span class="post-full__comment-meta-separator" aria-hidden="true"></span>
+                        <span class="post-full__comment-published-at" data-created-at-ts="${createdAtTs}">${this.escapeHtml(publishedLabel)}</span>
+                    </div>
                 </div>
                 <p class="post-full__comment-text">${this.escapeHtmlWithBreaks(commentData.content || '')}</p>
                 <div class="post-full__comment-actions" aria-label="Действия с комментарием">
                     <button class="post-full__comment-action-button${isLiked ? ' is-active' : ''}" type="button" data-action="comment-like" aria-label="Лайк комментария">
-                        <span class="post-full__comment-action-icon" data-svg-src="/assets/images/icons/S-heart.svg" aria-hidden="true"></span>
+                        <span class="post-full__comment-action-icon" data-svg-src="${isLiked ? '/assets/images/icons/U-heart-fill.svg' : '/assets/images/icons/S-heart.svg'}" aria-hidden="true"></span>
                     </button>
-                    <span class="post-full__comment-like-count">${Math.max(0, likesCount)}</span>
+                    <span class="post-full__comment-like-count${isLiked ? ' is-active' : ''}">${Math.max(0, likesCount)}</span>
                     <button class="post-full__comment-action-button" type="button" data-action="comment-reply" aria-label="Ответить на комментарий">
                         <span class="post-full__comment-action-icon" data-svg-src="/assets/images/icons/S-comment.svg" aria-hidden="true"></span>
                     </button>
@@ -634,6 +716,7 @@ class PostFullComponent {
 
         nicknameNode.textContent = `@${this.replyTargetUsername}`;
         stateNode.classList.add('is-active');
+        this.requestMasonryLayoutUpdate();
     }
 
     clearReplyState() {
@@ -647,6 +730,7 @@ class PostFullComponent {
 
         nicknameNode.textContent = '';
         stateNode.classList.remove('is-active');
+        this.requestMasonryLayoutUpdate();
     }
 
     async toggleCommentLike(button, commentId) {
@@ -670,11 +754,13 @@ class PostFullComponent {
 
             const isLiked = !!payload.liked;
             button.classList.toggle('is-active', isLiked);
+            this.setCommentLikeIcon(button, isLiked);
 
             const commentItem = button.closest('.post-full__comment-item');
             const countNode = commentItem?.querySelector('.post-full__comment-like-count');
             if (countNode) {
                 countNode.textContent = String(Math.max(0, Number(payload.likes_count || 0)));
+                countNode.classList.toggle('is-active', isLiked);
             }
         } catch (error) {
             console.warn('Unable to toggle like for comment from post-full', error);
@@ -682,6 +768,15 @@ class PostFullComponent {
         } finally {
             button.disabled = false;
         }
+    }
+
+    setCommentLikeIcon(button, liked) {
+        const iconContainer = button?.querySelector('.post-full__comment-action-icon');
+        if (!iconContainer) return;
+
+        const iconPath = liked ? '/assets/images/icons/U-heart-fill.svg' : '/assets/images/icons/S-heart.svg';
+        iconContainer.setAttribute('data-svg-src', iconPath);
+        App.utils.loadSVG(iconPath, iconContainer);
     }
 
     openCommentReportOverlay(commentId) {
