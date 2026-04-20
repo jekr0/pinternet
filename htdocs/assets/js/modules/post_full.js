@@ -30,6 +30,11 @@ class PostFullComponent {
         this.replyTargetRootCommentId = 0;
         this.replyTargetUsername = '';
         this.pendingCommentReportId = 0;
+        this.descriptionElement = null;
+        this.descriptionHideButton = null;
+        this.descriptionSupportsCollapse = false;
+        this.descriptionExpanded = false;
+        this.descriptionPositionHandler = null;
     }
 
     init() {
@@ -53,6 +58,8 @@ class PostFullComponent {
             this.bindReplyStateCancel();
             this.syncCommentRails();
             window.addEventListener('resize', () => this.syncCommentRails());
+            window.addEventListener('resize', () => this.updateDescriptionHideButtonPosition());
+            window.addEventListener('scroll', () => this.updateDescriptionHideButtonPosition(), { passive: true });
         }
 
         const cards = Array.from(this.container.querySelectorAll('[data-component="post-card"]'));
@@ -260,18 +267,84 @@ class PostFullComponent {
     }
 
     bindDescriptionToggle() {
-        const description = this.postFullElement?.querySelector('[data-component="post-full-description"]');
-        if (!description) return;
+        this.descriptionElement = this.postFullElement?.querySelector('[data-component="post-full-description"]') || null;
+        if (!this.descriptionElement) return;
 
-        const needsCollapse = description.scrollHeight > 90;
-        if (!needsCollapse) {
-            description.classList.remove('is-collapsed');
+        this.descriptionSupportsCollapse = this.descriptionElement.scrollHeight > 90;
+        if (!this.descriptionSupportsCollapse) {
+            this.descriptionElement.classList.remove('is-collapsed');
             return;
         }
 
-        description.addEventListener('click', () => {
-            description.classList.remove('is-collapsed');
-        }, { once: true });
+        this.ensureDescriptionHideButton();
+        this.descriptionExpanded = false;
+        this.descriptionElement.classList.add('is-collapsed');
+        this.descriptionElement.addEventListener('click', () => {
+            if (!this.descriptionSupportsCollapse || this.descriptionExpanded) return;
+            this.expandDescription();
+        });
+    }
+
+    ensureDescriptionHideButton() {
+        if (this.descriptionHideButton || !this.postFullElement) return;
+
+        const hideButton = document.createElement('button');
+        hideButton.className = 'post-full__description-hide-button';
+        hideButton.type = 'button';
+        hideButton.textContent = 'Скрыть описание';
+        hideButton.addEventListener('click', () => {
+            this.collapseDescription();
+        });
+
+        this.postFullElement.appendChild(hideButton);
+        this.descriptionHideButton = hideButton;
+    }
+
+    expandDescription() {
+        if (!this.descriptionElement) return;
+        this.descriptionExpanded = true;
+        this.descriptionElement.classList.remove('is-collapsed');
+        this.showDescriptionHideButton();
+        this.requestMasonryLayoutUpdate();
+    }
+
+    collapseDescription() {
+        if (!this.descriptionElement || !this.descriptionSupportsCollapse) return;
+        this.descriptionExpanded = false;
+        this.descriptionElement.classList.add('is-collapsed');
+        this.hideDescriptionHideButton();
+        this.requestMasonryLayoutUpdate();
+    }
+
+    showDescriptionHideButton() {
+        if (!this.descriptionHideButton) return;
+        this.descriptionHideButton.classList.add('is-visible');
+        this.updateDescriptionHideButtonPosition();
+    }
+
+    hideDescriptionHideButton() {
+        if (!this.descriptionHideButton) return;
+        this.descriptionHideButton.classList.remove('is-visible');
+    }
+
+    updateDescriptionHideButtonPosition() {
+        if (!this.descriptionElement || !this.descriptionHideButton || !this.descriptionExpanded) return;
+
+        const descriptionRect = this.descriptionElement.getBoundingClientRect();
+        const buttonRect = this.descriptionHideButton.getBoundingClientRect();
+        const preferredTop = descriptionRect.bottom + 10;
+        const maxTop = window.innerHeight - buttonRect.height - 20;
+        const top = Math.max(0, Math.min(preferredTop, maxTop));
+        const left = Math.max(0, descriptionRect.left + (descriptionRect.width - buttonRect.width) / 2);
+
+        this.descriptionHideButton.style.top = `${Math.round(top)}px`;
+        this.descriptionHideButton.style.left = `${Math.round(left)}px`;
+    }
+
+    requestMasonryLayoutUpdate() {
+        this.syncCommentRails();
+        this.updateDescriptionHideButtonPosition();
+        document.dispatchEvent(new CustomEvent('post-full:resize'));
     }
 
     // Форматирует timestamp в человекочитаемое «x сек/мин/час/дн назад» с сохранением текущих интервалов.
@@ -478,6 +551,7 @@ class PostFullComponent {
 
             this.showToast('Комментарий добавлен');
             this.clearReplyState();
+            this.requestMasonryLayoutUpdate();
         } catch (error) {
             console.warn('Unable to submit comment from post-full', error);
             this.showToast('Не удалось сохранить комментарий.');
@@ -562,7 +636,7 @@ class PostFullComponent {
             if (!src) return;
             App.utils.loadSVG(src, node);
         });
-        this.syncCommentRails();
+        this.requestMasonryLayoutUpdate();
         this.renderRelativeTimeLabels();
     }
 
@@ -601,13 +675,15 @@ class PostFullComponent {
             </div>
             <div class="post-full__comment-content">
                 <div class="post-full__comment-meta">
-                    <a class="post-full__comment-username" href="${this.escapeHtml(profileUrl)}" aria-label="Профиль автора @${this.escapeHtml(username)}">@${this.escapeHtml(username)}</a>
-                    ${hasReplyLabel
-                        ? `<span class="post-full__comment-meta-separator" aria-hidden="true"></span>
-                           <span class="post-full__comment-reply-label">Ответ <span class="post-full__comment-reply-target">@${this.escapeHtml(parentUsername)}</span></span>`
-                        : ''}
-                    <span class="post-full__comment-meta-separator" aria-hidden="true"></span>
-                    <span class="post-full__comment-published-at" data-created-at-ts="${createdAtTs}">${this.escapeHtml(publishedLabel)}</span>
+                    <div class="post-full__comment-meta-main">
+                        <a class="post-full__comment-username" href="${this.escapeHtml(profileUrl)}" aria-label="Профиль автора @${this.escapeHtml(username)}">@${this.escapeHtml(username)}</a>
+                        ${hasReplyLabel
+                            ? `<span class="post-full__comment-meta-separator" aria-hidden="true"></span>
+                               <span class="post-full__comment-reply-label">Ответ <span class="post-full__comment-reply-target">@${this.escapeHtml(parentUsername)}</span></span>`
+                            : ''}
+                        <span class="post-full__comment-meta-separator" aria-hidden="true"></span>
+                        <span class="post-full__comment-published-at" data-created-at-ts="${createdAtTs}">${this.escapeHtml(publishedLabel)}</span>
+                    </div>
                 </div>
                 <p class="post-full__comment-text">${this.escapeHtmlWithBreaks(commentData.content || '')}</p>
                 <div class="post-full__comment-actions" aria-label="Действия с комментарием">
@@ -640,6 +716,7 @@ class PostFullComponent {
 
         nicknameNode.textContent = `@${this.replyTargetUsername}`;
         stateNode.classList.add('is-active');
+        this.requestMasonryLayoutUpdate();
     }
 
     clearReplyState() {
@@ -653,6 +730,7 @@ class PostFullComponent {
 
         nicknameNode.textContent = '';
         stateNode.classList.remove('is-active');
+        this.requestMasonryLayoutUpdate();
     }
 
     async toggleCommentLike(button, commentId) {

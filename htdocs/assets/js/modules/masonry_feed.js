@@ -12,6 +12,7 @@ class MasonryFeedComponent {
         this.resizeHandler = null;
         this.imageLoadHandler = null;
         this.postFullToggleHandler = null;
+        this.postFullResizeHandler = null;
     }
 
     init() {
@@ -27,6 +28,8 @@ class MasonryFeedComponent {
         window.addEventListener('resize', this.resizeHandler);
         this.postFullToggleHandler = () => this.layout();
         document.addEventListener('post-full:toggle', this.postFullToggleHandler);
+        this.postFullResizeHandler = () => this.layout();
+        document.addEventListener('post-full:resize', this.postFullResizeHandler);
 
         this.imageLoadHandler = () => this.layout();
         this.cards.forEach((card) => {

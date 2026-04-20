@@ -127,6 +127,12 @@
     min-width: 0;
 }
 
+.post-full__author-meta {
+    display: flex;
+    align-items: center;
+    height: 30px;
+}
+
 .post-full__author-avatar {
     position: relative;
     width: 40px;
@@ -228,6 +234,29 @@
     bottom: 0;
     height: 45px;
     background: linear-gradient(to bottom, rgba(255, 255, 255, 0), #fff);
+}
+
+.post-full__description-hide-button {
+    position: fixed;
+    z-index: 40;
+    min-width: 180px;
+    height: 34px;
+    border: 2px solid #bbb;
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(1px);
+    -webkit-backdrop-filter: blur(1px);
+    font-family: 'SF_def', Arial, sans-serif;
+    font-size: 15px;
+    color: #bbb;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.post-full__description-hide-button.is-visible {
+    display: inline-flex;
 }
 
 .post-full__meta-row {
@@ -357,6 +386,12 @@
     min-height: 40px;
 }
 
+.post-full__comment-meta-main {
+    display: flex;
+    align-items: center;
+    height: 25px;
+}
+
 .post-full__comment-username {
     font-family: 'SF_def', Arial, sans-serif;
     font-size: 25px;
@@ -462,6 +497,7 @@
     color: #bbb;
     text-align: center;
     user-select: none;
+    margin-left: -10px;
 }
 
 .post-full__comment-like-count.is-active {
@@ -481,7 +517,7 @@
 }
 
 .post-full__comment-reply-state {
-    margin-left: 10px;
+    margin-left: 15px;
     margin-top: 0;
     margin-bottom: 5px;
     display: none;
@@ -495,9 +531,9 @@
 
 .post-full__comment-reply-text {
     font-family: 'SF_def', Arial, sans-serif;
-    font-size: 15px;
+    font-size: 20px;
     line-height: 1;
-    color: #333;
+    color: #bbb;
 }
 
 .post-full__comment-reply-cancel {
@@ -528,7 +564,7 @@
 }
 
 .post-full__comment-reply-nickname {
-    color: rgb(100, 100, 200);
+    color: rgb(150, 150, 250);
 }
 
 .post-full__comment-input {

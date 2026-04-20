@@ -534,19 +534,21 @@
                         data-placeholder-size="28"
                         aria-label="Профиль автора @<?php echo htmlspecialchars($selectedAuthorUsername, ENT_QUOTES, 'UTF-8'); ?>"
                     ></button>
-                    <a
-                        class="post-full__author-username"
-                        href="<?php echo htmlspecialchars($selectedAuthorProfileUrl, ENT_QUOTES, 'UTF-8'); ?>"
-                        aria-label="Профиль автора @<?php echo htmlspecialchars($selectedAuthorUsername, ENT_QUOTES, 'UTF-8'); ?>"
-                    >@<?php echo htmlspecialchars($selectedAuthorUsername, ENT_QUOTES, 'UTF-8'); ?></a>
-                    <?php if ($selectedPostCreatedTimestamp > 0): ?>
-                        <span class="post-full__author-meta-separator" aria-hidden="true"></span>
-                        <span
-                            class="post-full__author-published-at"
-                            data-component="post-full-published-at"
-                            data-created-at-ts="<?php echo $selectedPostCreatedTimestamp; ?>"
-                        ><?php echo htmlspecialchars($selectedPostPublishedLabel, ENT_QUOTES, 'UTF-8'); ?></span>
-                    <?php endif; ?>
+                    <div class="post-full__author-meta">
+                        <a
+                            class="post-full__author-username"
+                            href="<?php echo htmlspecialchars($selectedAuthorProfileUrl, ENT_QUOTES, 'UTF-8'); ?>"
+                            aria-label="Профиль автора @<?php echo htmlspecialchars($selectedAuthorUsername, ENT_QUOTES, 'UTF-8'); ?>"
+                        >@<?php echo htmlspecialchars($selectedAuthorUsername, ENT_QUOTES, 'UTF-8'); ?></a>
+                        <?php if ($selectedPostCreatedTimestamp > 0): ?>
+                            <span class="post-full__author-meta-separator" aria-hidden="true"></span>
+                            <span
+                                class="post-full__author-published-at"
+                                data-component="post-full-published-at"
+                                data-created-at-ts="<?php echo $selectedPostCreatedTimestamp; ?>"
+                            ><?php echo htmlspecialchars($selectedPostPublishedLabel, ENT_QUOTES, 'UTF-8'); ?></span>
+                        <?php endif; ?>
+                    </div>
                 </div>
 
                 <div class="post-full__bottom-actions" aria-label="Базовые действия с постом">
@@ -632,13 +634,15 @@
                                     </div>
                                     <div class="post-full__comment-content">
                                         <div class="post-full__comment-meta">
-                                            <a class="post-full__comment-username" href="<?php echo htmlspecialchars($commentProfileUrl, ENT_QUOTES, 'UTF-8'); ?>" aria-label="Профиль автора @<?php echo htmlspecialchars($commentUsername, ENT_QUOTES, 'UTF-8'); ?>">@<?php echo htmlspecialchars($commentUsername, ENT_QUOTES, 'UTF-8'); ?></a>
-                                            <?php if ($commentParentId > 0 && $commentParentUsername !== ''): ?>
+                                            <div class="post-full__comment-meta-main">
+                                                <a class="post-full__comment-username" href="<?php echo htmlspecialchars($commentProfileUrl, ENT_QUOTES, 'UTF-8'); ?>" aria-label="Профиль автора @<?php echo htmlspecialchars($commentUsername, ENT_QUOTES, 'UTF-8'); ?>">@<?php echo htmlspecialchars($commentUsername, ENT_QUOTES, 'UTF-8'); ?></a>
+                                                <?php if ($commentParentId > 0 && $commentParentUsername !== ''): ?>
+                                                    <span class="post-full__comment-meta-separator" aria-hidden="true"></span>
+                                                    <span class="post-full__comment-reply-label">Ответ <span class="post-full__comment-reply-target">@<?php echo htmlspecialchars($commentParentUsername, ENT_QUOTES, 'UTF-8'); ?></span></span>
+                                                <?php endif; ?>
                                                 <span class="post-full__comment-meta-separator" aria-hidden="true"></span>
-                                                <span class="post-full__comment-reply-label">Ответ <span class="post-full__comment-reply-target">@<?php echo htmlspecialchars($commentParentUsername, ENT_QUOTES, 'UTF-8'); ?></span></span>
-                                            <?php endif; ?>
-                                            <span class="post-full__comment-meta-separator" aria-hidden="true"></span>
-                                            <span class="post-full__comment-published-at" data-created-at-ts="<?php echo $commentCreatedTimestamp; ?>"><?php echo htmlspecialchars($commentPublishedLabel, ENT_QUOTES, 'UTF-8'); ?></span>
+                                                <span class="post-full__comment-published-at" data-created-at-ts="<?php echo $commentCreatedTimestamp; ?>"><?php echo htmlspecialchars($commentPublishedLabel, ENT_QUOTES, 'UTF-8'); ?></span>
+                                            </div>
                                         </div>
                                         <p class="post-full__comment-text"><?php echo nl2br(htmlspecialchars((string) ($commentRow['content'] ?? ''), ENT_QUOTES, 'UTF-8')); ?></p>
                                         <div class="post-full__comment-actions" aria-label="Действия с комментарием">
