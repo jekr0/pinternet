@@ -288,10 +288,6 @@
     color: rgb(150, 150, 250);
 }
 
-.create-post-modal__tags-add-button:hover {
-    opacity: 0.8;
-}
-
 .create-post-modal__tags-list {
     display: flex;
     flex-direction: column;
