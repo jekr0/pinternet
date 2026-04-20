@@ -599,7 +599,8 @@
                             $rootComment = $threadRow['root'] ?? [];
                             $rootId = (int) ($rootComment['id'] ?? 0);
                             $threadChildren = $threadRow['children'] ?? [];
-                            $renderCommentItem = static function (array $commentRow, bool $isReply = false) use ($normalizePublicPath, $formatPostPublishedLabel): void {
+                            $renderCommentItem = null;
+                            $renderCommentItem = static function (array $commentRow, bool $isReply = false, array $childrenRows = []) use (&$renderCommentItem, $normalizePublicPath, $formatPostPublishedLabel): void {
                                 $commentUsername = ltrim((string) ($commentRow['username'] ?? 'unknown'), '@');
                                 $commentProfileUrl = '/profile?username=' . urlencode($commentUsername);
                                 $commentAvatar = $normalizePublicPath((string) ($commentRow['avatar'] ?? ''));
@@ -652,20 +653,20 @@
                                                 <span class="post-full__comment-action-icon" data-svg-src="/assets/images/icons/S-warning.svg" aria-hidden="true"></span>
                                             </button>
                                         </div>
+                                        <?php if (!$isReply && !empty($childrenRows)): ?>
+                                            <div class="post-full__comment-children">
+                                                <?php foreach ($childrenRows as $childComment): ?>
+                                                    <?php $renderCommentItem($childComment, true, []); ?>
+                                                <?php endforeach; ?>
+                                            </div>
+                                        <?php endif; ?>
                                     </div>
                                 </article>
                             <?php };
                         ?>
                         <?php if ($rootId > 0): ?>
                             <div class="post-full__comment-thread" data-root-comment-id="<?php echo $rootId; ?>">
-                                <?php $renderCommentItem($rootComment, false); ?>
-                                <?php if (!empty($threadChildren)): ?>
-                                    <div class="post-full__comment-children">
-                                        <?php foreach ($threadChildren as $childComment): ?>
-                                            <?php $renderCommentItem($childComment, true); ?>
-                                        <?php endforeach; ?>
-                                    </div>
-                                <?php endif; ?>
+                                <?php $renderCommentItem($rootComment, false, $threadChildren); ?>
                             </div>
                         <?php endif; ?>
                     <?php endforeach; ?>

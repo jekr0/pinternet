@@ -118,7 +118,7 @@
 
 .post-full__author {
     display: flex;
-    align-items: flex-end;
+    align-items: center;
     gap: 12px;
 }
 
@@ -198,6 +198,7 @@
     color: #bbb;
     white-space: nowrap;
     user-select: none;
+    align-self: flex-end;
 }
 
 .post-full__description {
@@ -313,6 +314,7 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
+    margin-top: 16px;
 }
 
 .post-full__comment-item {
@@ -323,10 +325,6 @@
 
 .post-full__comment-item--reply {
     margin-left: 0;
-}
-
-.post-full__comment-children {
-    margin-left: 52px;
 }
 
 .post-full__comment-avatar {
@@ -355,7 +353,7 @@
 
 .post-full__comment-meta {
     display: flex;
-    align-items: flex-end;
+    align-items: center;
     min-height: 40px;
 }
 
@@ -387,6 +385,7 @@
     line-height: 1;
     color: #bbb;
     user-select: none;
+    align-self: flex-end;
 }
 
 .post-full__comment-reply-label {
@@ -395,6 +394,7 @@
     line-height: 1;
     color: #bbb;
     user-select: none;
+    align-self: flex-end;
 }
 
 .post-full__comment-reply-target {

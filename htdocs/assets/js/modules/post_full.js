@@ -524,11 +524,17 @@ class PostFullComponent {
         if (parentCommentId > 0 && rootCommentId > 0) {
             const thread = commentsList.querySelector(`.post-full__comment-thread[data-root-comment-id="${rootCommentId}"]`);
             if (thread) {
-                let childrenContainer = thread.querySelector('.post-full__comment-children');
+                const rootComment = thread.querySelector('.post-full__comment-item:not(.post-full__comment-item--reply)');
+                const rootContent = rootComment?.querySelector('.post-full__comment-content');
+                let childrenContainer = rootContent?.querySelector('.post-full__comment-children');
                 if (!childrenContainer) {
                     childrenContainer = document.createElement('div');
                     childrenContainer.className = 'post-full__comment-children';
-                    thread.appendChild(childrenContainer);
+                    if (rootContent) {
+                        rootContent.appendChild(childrenContainer);
+                    } else {
+                        thread.appendChild(childrenContainer);
+                    }
                 }
                 childrenContainer.appendChild(item);
             } else {
