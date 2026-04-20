@@ -677,10 +677,10 @@
                 </div>
                 <?php if ($viewerId > 0): ?>
                     <div class="post-full__comment-reply-state" data-component="post-full-reply-state" aria-live="polite">
+                        <button class="post-full__comment-reply-cancel" type="button" data-action="reply-cancel" aria-label="Отменить ответ">×</button>
                         <span class="post-full__comment-reply-text">
                             Ответ пользователю <span class="post-full__comment-reply-nickname" data-component="post-full-reply-nickname"></span>
                         </span>
-                        <button class="post-full__comment-reply-cancel" type="button" data-action="reply-cancel" aria-label="Отменить ответ">×</button>
                     </div>
                     <div class="post-full__comment-input-wrap">
                         <textarea
