@@ -190,8 +190,8 @@
 .post-full__author-meta-separator {
     width: 6px;
     height: 6px;
-    margin-left: 5px;
-    margin-right: 5px;
+    margin-left: 15px;
+    margin-right: 15px;
     border-radius: 50%;
     background: #bbb;
     flex: 0 0 auto;
@@ -199,11 +199,12 @@
 
 .post-full__author-published-at {
     font-family: 'SF_def', Arial, sans-serif;
-    font-size: 20px;
+    font-size: 22px;
     line-height: 1;
     color: #bbb;
     white-space: nowrap;
     user-select: none;
+    margin-bottom: 1px;
     align-self: flex-end;
 }
 
@@ -241,12 +242,11 @@
     z-index: 40;
     min-width: 180px;
     height: 34px;
-    border: 2px solid #bbb;
-    border-radius: 5px;
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(1px);
-    -webkit-backdrop-filter: blur(1px);
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    background: #fff;
     font-family: 'SF_def', Arial, sans-serif;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.07);
     font-size: 15px;
     color: #bbb;
     display: none;
@@ -256,7 +256,7 @@
 }
 
 .post-full__description-hide-button.is-visible {
-    display: inline-flex;
+    display: flex;
 }
 
 .post-full__meta-row {
@@ -317,7 +317,7 @@
 .post-full__comments-empty {
     margin: 0;
     margin-bottom: 50px;
-    font-family: 'MC_caps', Arial, sans-serif;
+    font-family: 'SF_def', Arial, sans-serif;
     font-size: 20px;
     line-height: 1.3;
     color: #bbb;
@@ -416,19 +416,21 @@
 
 .post-full__comment-published-at {
     font-family: 'SF_def', Arial, sans-serif;
-    font-size: 15px;
+    font-size: 18px;
     line-height: 1;
     color: #bbb;
     user-select: none;
+    margin-bottom: 1px;
     align-self: flex-end;
 }
 
 .post-full__comment-reply-label {
     font-family: 'SF_def', Arial, sans-serif;
-    font-size: 15px;
+    font-size: 18px;
     line-height: 1;
     color: #bbb;
     user-select: none;
+    margin-bottom: 1px;
     align-self: flex-end;
 }
 
