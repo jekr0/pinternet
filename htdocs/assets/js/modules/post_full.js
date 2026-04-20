@@ -369,8 +369,14 @@ class PostFullComponent {
                     <button class="post-full__comments-toggle-button" type="button" data-action="comments-toggle"></button>
                     <span class="post-full__comments-toggle-line" aria-hidden="true"></span>
                 `;
-                const anchorNode = commentsBlock.querySelector('.post-full__comments-empty') || commentsList;
-                commentsBlock.insertBefore(createdDivider, anchorNode);
+                const replyState = commentsBlock.querySelector('[data-component="post-full-reply-state"]');
+                const inputWrap = commentsBlock.querySelector('.post-full__comment-input-wrap');
+                const anchorNode = replyState || inputWrap || commentsBlock.querySelector('.post-full__comments-empty');
+                if (anchorNode) {
+                    commentsBlock.insertBefore(createdDivider, anchorNode);
+                } else {
+                    commentsBlock.appendChild(createdDivider);
+                }
                 divider = createdDivider;
                 this.bindCommentsToggle();
             }
@@ -395,17 +401,20 @@ class PostFullComponent {
 
         divider.classList.add('is-visible');
         if (hiddenCount > 0 && !this.commentsExpanded) {
+            divider.classList.remove('is-solid');
             toggleButton.textContent = `Показать все комментарии (+${hiddenCount})`;
             toggleButton.style.display = '';
             return;
         }
 
         if (hiddenCount > 0 && this.commentsExpanded) {
+            divider.classList.remove('is-solid');
             toggleButton.textContent = 'Скрыть комментарии';
             toggleButton.style.display = '';
             return;
         }
 
+        divider.classList.add('is-solid');
         toggleButton.style.display = 'none';
     }
 

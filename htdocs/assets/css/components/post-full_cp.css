@@ -556,6 +556,10 @@
     display: flex;
 }
 
+.post-full__comments-toggle-divider.is-solid {
+    gap: 0;
+}
+
 .post-full__comments-toggle-line {
     flex: 1 1 auto;
     height: 2px;

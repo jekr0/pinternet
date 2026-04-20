@@ -593,31 +593,6 @@
             <div class="post-full__description-divider" aria-hidden="true"></div>
 
             <div class="post-full__comments-block">
-                <?php if ($viewerId > 0): ?>
-                    <div class="post-full__comment-reply-state" data-component="post-full-reply-state" aria-live="polite">
-                        <button class="post-full__comment-reply-cancel" type="button" data-action="reply-cancel" aria-label="Отменить ответ">×</button>
-                        <span class="post-full__comment-reply-text">
-                            Ответ пользователю <span class="post-full__comment-reply-nickname" data-component="post-full-reply-nickname"></span>
-                        </span>
-                    </div>
-                    <div class="post-full__comment-input-wrap">
-                        <textarea
-                            class="post-full__comment-input"
-                            data-component="post-full-comment-input"
-                            placeholder="Оставить комментарий"
-                            maxlength="256"
-                            aria-label="Оставить комментарий"
-                        ></textarea>
-                        <span class="post-full__comment-counter" data-component="post-full-comment-counter">0/256</span>
-                    </div>
-                <?php endif; ?>
-                <?php if ($selectedHasComments): ?>
-                    <div class="post-full__comments-toggle-divider" data-component="post-full-comments-toggle-divider">
-                        <span class="post-full__comments-toggle-line" aria-hidden="true"></span>
-                        <button class="post-full__comments-toggle-button" type="button" data-action="comments-toggle"></button>
-                        <span class="post-full__comments-toggle-line" aria-hidden="true"></span>
-                    </div>
-                <?php endif; ?>
                 <?php if (!$selectedHasComments): ?>
                     <p class="post-full__comments-empty">Комментариев пока нет. Будьте первым!</p>
                 <?php endif; ?>
@@ -701,6 +676,31 @@
                         <?php endif; ?>
                     <?php endforeach; ?>
                 </div>
+                <?php if ($viewerId > 0 && $selectedHasComments): ?>
+                    <div class="post-full__comments-toggle-divider" data-component="post-full-comments-toggle-divider">
+                        <span class="post-full__comments-toggle-line" aria-hidden="true"></span>
+                        <button class="post-full__comments-toggle-button" type="button" data-action="comments-toggle"></button>
+                        <span class="post-full__comments-toggle-line" aria-hidden="true"></span>
+                    </div>
+                <?php endif; ?>
+                <?php if ($viewerId > 0): ?>
+                    <div class="post-full__comment-reply-state" data-component="post-full-reply-state" aria-live="polite">
+                        <button class="post-full__comment-reply-cancel" type="button" data-action="reply-cancel" aria-label="Отменить ответ">×</button>
+                        <span class="post-full__comment-reply-text">
+                            Ответ пользователю <span class="post-full__comment-reply-nickname" data-component="post-full-reply-nickname"></span>
+                        </span>
+                    </div>
+                    <div class="post-full__comment-input-wrap">
+                        <textarea
+                            class="post-full__comment-input"
+                            data-component="post-full-comment-input"
+                            placeholder="Оставить комментарий"
+                            maxlength="256"
+                            aria-label="Оставить комментарий"
+                        ></textarea>
+                        <span class="post-full__comment-counter" data-component="post-full-comment-counter">0/256</span>
+                    </div>
+                <?php endif; ?>
             </div>
         </section>
     <?php endif; ?>
