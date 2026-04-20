@@ -34,7 +34,7 @@ class PostFullComponent {
         this.descriptionHideButton = null;
         this.descriptionSupportsCollapse = false;
         this.descriptionExpanded = false;
-        this.descriptionPositionHandler = null;
+        this.commentsExpanded = false;
     }
 
     init() {
@@ -56,10 +56,10 @@ class PostFullComponent {
             this.bindCommentInput();
             this.bindCommentActions();
             this.bindReplyStateCancel();
+            this.bindCommentsToggle();
+            this.applyCommentsPreviewState();
             this.syncCommentRails();
             window.addEventListener('resize', () => this.syncCommentRails());
-            window.addEventListener('resize', () => this.updateDescriptionHideButtonPosition());
-            window.addEventListener('scroll', () => this.updateDescriptionHideButtonPosition(), { passive: true });
         }
 
         const cards = Array.from(this.container.querySelectorAll('[data-component="post-card"]'));
@@ -287,6 +287,8 @@ class PostFullComponent {
 
     ensureDescriptionHideButton() {
         if (this.descriptionHideButton || !this.postFullElement) return;
+        const hideSlot = this.postFullElement.querySelector('[data-component="post-full-description-hide-slot"]');
+        if (!hideSlot) return;
 
         const hideButton = document.createElement('button');
         hideButton.className = 'post-full__description-hide-button';
@@ -296,7 +298,7 @@ class PostFullComponent {
             this.collapseDescription();
         });
 
-        this.postFullElement.appendChild(hideButton);
+        hideSlot.appendChild(hideButton);
         this.descriptionHideButton = hideButton;
     }
 
@@ -318,33 +320,93 @@ class PostFullComponent {
 
     showDescriptionHideButton() {
         if (!this.descriptionHideButton) return;
+        const hideSlot = this.postFullElement?.querySelector('[data-component="post-full-description-hide-slot"]');
+        hideSlot?.classList.add('has-button');
         this.descriptionHideButton.classList.add('is-visible');
-        this.updateDescriptionHideButtonPosition();
     }
 
     hideDescriptionHideButton() {
         if (!this.descriptionHideButton) return;
+        const hideSlot = this.postFullElement?.querySelector('[data-component="post-full-description-hide-slot"]');
+        hideSlot?.classList.remove('has-button');
         this.descriptionHideButton.classList.remove('is-visible');
     }
 
-    updateDescriptionHideButtonPosition() {
-        if (!this.descriptionElement || !this.descriptionHideButton || !this.descriptionExpanded) return;
-
-        const descriptionRect = this.descriptionElement.getBoundingClientRect();
-        const buttonRect = this.descriptionHideButton.getBoundingClientRect();
-        const preferredTop = descriptionRect.bottom + 10;
-        const maxTop = window.innerHeight - buttonRect.height - 20;
-        const top = Math.max(0, Math.min(preferredTop, maxTop));
-        const left = Math.max(0, descriptionRect.left + (descriptionRect.width - buttonRect.width) / 2);
-
-        this.descriptionHideButton.style.top = `${Math.round(top)}px`;
-        this.descriptionHideButton.style.left = `${Math.round(left)}px`;
+    requestMasonryLayoutUpdate() {
+        this.applyCommentsPreviewState();
+        this.syncCommentRails();
+        document.dispatchEvent(new CustomEvent('post-full:resize'));
     }
 
-    requestMasonryLayoutUpdate() {
-        this.syncCommentRails();
-        this.updateDescriptionHideButtonPosition();
-        document.dispatchEvent(new CustomEvent('post-full:resize'));
+    bindCommentsToggle() {
+        if (!this.postFullElement) return;
+        const toggleButton = this.postFullElement.querySelector('[data-action="comments-toggle"]');
+        if (!toggleButton) return;
+        if (toggleButton.dataset.bound === '1') return;
+        toggleButton.dataset.bound = '1';
+        toggleButton.addEventListener('click', () => {
+            this.commentsExpanded = !this.commentsExpanded;
+            this.applyCommentsPreviewState();
+            this.requestMasonryLayoutUpdate();
+        });
+    }
+
+    applyCommentsPreviewState() {
+        if (!this.postFullElement) return;
+
+        const commentsList = this.postFullElement.querySelector('[data-component="post-full-comments-list"]');
+        if (!commentsList) return;
+
+        let divider = this.postFullElement.querySelector('[data-component="post-full-comments-toggle-divider"]');
+        if (!divider) {
+            const commentsBlock = this.postFullElement.querySelector('.post-full__comments-block');
+            if (commentsBlock) {
+                const createdDivider = document.createElement('div');
+                createdDivider.className = 'post-full__comments-toggle-divider';
+                createdDivider.dataset.component = 'post-full-comments-toggle-divider';
+                createdDivider.innerHTML = `
+                    <span class="post-full__comments-toggle-line" aria-hidden="true"></span>
+                    <button class="post-full__comments-toggle-button" type="button" data-action="comments-toggle"></button>
+                    <span class="post-full__comments-toggle-line" aria-hidden="true"></span>
+                `;
+                const anchorNode = commentsBlock.querySelector('.post-full__comments-empty') || commentsList;
+                commentsBlock.insertBefore(createdDivider, anchorNode);
+                divider = createdDivider;
+                this.bindCommentsToggle();
+            }
+        }
+
+        const toggleButton = divider?.querySelector('[data-action="comments-toggle"]') || null;
+        if (!divider || !toggleButton) return;
+
+        const threads = Array.from(commentsList.querySelectorAll('.post-full__comment-thread'));
+        const totalThreads = threads.length;
+        const hiddenCount = Math.max(0, totalThreads - 3);
+
+        threads.forEach((thread, index) => {
+            const isVisible = this.commentsExpanded || index < 3;
+            thread.style.display = isVisible ? '' : 'none';
+        });
+
+        if (totalThreads === 0) {
+            divider.classList.remove('is-visible');
+            return;
+        }
+
+        divider.classList.add('is-visible');
+        if (hiddenCount > 0 && !this.commentsExpanded) {
+            toggleButton.textContent = `Показать все комментарии (+${hiddenCount})`;
+            toggleButton.style.display = '';
+            return;
+        }
+
+        if (hiddenCount > 0 && this.commentsExpanded) {
+            toggleButton.textContent = 'Скрыть комментарии';
+            toggleButton.style.display = '';
+            return;
+        }
+
+        toggleButton.style.display = 'none';
     }
 
     // Форматирует timestamp в человекочитаемое «x сек/мин/час/дн назад» с сохранением текущих интервалов.
@@ -691,8 +753,8 @@ class PostFullComponent {
                         <span class="post-full__comment-action-icon" data-svg-src="${isLiked ? '/assets/images/icons/U-heart-fill.svg' : '/assets/images/icons/S-heart.svg'}" aria-hidden="true"></span>
                     </button>
                     <span class="post-full__comment-like-count${isLiked ? ' is-active' : ''}">${Math.max(0, likesCount)}</span>
-                    <button class="post-full__comment-action-button" type="button" data-action="comment-reply" aria-label="Ответить на комментарий">
-                        <span class="post-full__comment-action-icon" data-svg-src="/assets/images/icons/S-comment.svg" aria-hidden="true"></span>
+                    <button class="post-full__comment-action-button post-full__comment-action-button--reply" type="button" data-action="comment-reply" aria-label="Ответить на комментарий">
+                        Ответить
                     </button>
                     <button class="post-full__comment-action-button" type="button" data-action="comment-report" aria-label="Пожаловаться на комментарий">
                         <span class="post-full__comment-action-icon" data-svg-src="/assets/images/icons/S-warning.svg" aria-hidden="true"></span>

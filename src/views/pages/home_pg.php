@@ -579,6 +579,7 @@
                 <div class="post-full__description is-collapsed" data-component="post-full-description">
                     <?php echo nl2br(htmlspecialchars($selectedPostDescription, ENT_QUOTES, 'UTF-8')); ?>
                 </div>
+                <div class="post-full__description-hide-slot" data-component="post-full-description-hide-slot"></div>
             <?php endif; ?>
 
             <?php if (!empty($selectedPostHashtags)): ?>
@@ -592,6 +593,31 @@
             <div class="post-full__description-divider" aria-hidden="true"></div>
 
             <div class="post-full__comments-block">
+                <?php if ($viewerId > 0): ?>
+                    <div class="post-full__comment-reply-state" data-component="post-full-reply-state" aria-live="polite">
+                        <button class="post-full__comment-reply-cancel" type="button" data-action="reply-cancel" aria-label="Отменить ответ">×</button>
+                        <span class="post-full__comment-reply-text">
+                            Ответ пользователю <span class="post-full__comment-reply-nickname" data-component="post-full-reply-nickname"></span>
+                        </span>
+                    </div>
+                    <div class="post-full__comment-input-wrap">
+                        <textarea
+                            class="post-full__comment-input"
+                            data-component="post-full-comment-input"
+                            placeholder="Оставить комментарий"
+                            maxlength="256"
+                            aria-label="Оставить комментарий"
+                        ></textarea>
+                        <span class="post-full__comment-counter" data-component="post-full-comment-counter">0/256</span>
+                    </div>
+                <?php endif; ?>
+                <?php if ($selectedHasComments): ?>
+                    <div class="post-full__comments-toggle-divider" data-component="post-full-comments-toggle-divider">
+                        <span class="post-full__comments-toggle-line" aria-hidden="true"></span>
+                        <button class="post-full__comments-toggle-button" type="button" data-action="comments-toggle"></button>
+                        <span class="post-full__comments-toggle-line" aria-hidden="true"></span>
+                    </div>
+                <?php endif; ?>
                 <?php if (!$selectedHasComments): ?>
                     <p class="post-full__comments-empty">Комментариев пока нет. Будьте первым!</p>
                 <?php endif; ?>
@@ -650,8 +676,8 @@
                                                 <span class="post-full__comment-action-icon" data-svg-src="<?php echo $commentIsLikedByViewer ? '/assets/images/icons/U-heart-fill.svg' : '/assets/images/icons/S-heart.svg'; ?>" aria-hidden="true"></span>
                                             </button>
                                             <span class="post-full__comment-like-count<?php echo $commentIsLikedByViewer ? ' is-active' : ''; ?>"><?php echo $commentLikesCount; ?></span>
-                                            <button class="post-full__comment-action-button" type="button" data-action="comment-reply" aria-label="Ответить на комментарий">
-                                                <span class="post-full__comment-action-icon" data-svg-src="/assets/images/icons/S-comment.svg" aria-hidden="true"></span>
+                                            <button class="post-full__comment-action-button post-full__comment-action-button--reply" type="button" data-action="comment-reply" aria-label="Ответить на комментарий">
+                                                Ответить
                                             </button>
                                             <button class="post-full__comment-action-button" type="button" data-action="comment-report" aria-label="Пожаловаться на комментарий">
                                                 <span class="post-full__comment-action-icon" data-svg-src="/assets/images/icons/S-warning.svg" aria-hidden="true"></span>
@@ -675,24 +701,6 @@
                         <?php endif; ?>
                     <?php endforeach; ?>
                 </div>
-                <?php if ($viewerId > 0): ?>
-                    <div class="post-full__comment-reply-state" data-component="post-full-reply-state" aria-live="polite">
-                        <button class="post-full__comment-reply-cancel" type="button" data-action="reply-cancel" aria-label="Отменить ответ">×</button>
-                        <span class="post-full__comment-reply-text">
-                            Ответ пользователю <span class="post-full__comment-reply-nickname" data-component="post-full-reply-nickname"></span>
-                        </span>
-                    </div>
-                    <div class="post-full__comment-input-wrap">
-                        <textarea
-                            class="post-full__comment-input"
-                            data-component="post-full-comment-input"
-                            placeholder="Оставить комментарий"
-                            maxlength="256"
-                            aria-label="Оставить комментарий"
-                        ></textarea>
-                        <span class="post-full__comment-counter" data-component="post-full-comment-counter">0/256</span>
-                    </div>
-                <?php endif; ?>
             </div>
         </section>
     <?php endif; ?>
