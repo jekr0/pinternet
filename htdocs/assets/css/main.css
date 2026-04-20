@@ -23,6 +23,15 @@
     font-display: swap;
 }
 
+/* Дополнительный */
+@font-face {
+    font-family: 'NS_def';
+    src: url('../fonts/NS_def.woff2') format('woff2');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
 /* Вся страница */
 body {
     font-family: 'SF_def', Arial, sans-serif; /* основной шрифт интерфейса */
