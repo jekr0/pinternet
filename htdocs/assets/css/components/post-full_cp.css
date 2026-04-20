@@ -313,6 +313,20 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
+    margin-left: 52px;
+    padding-left: 14px;
+    position: relative;
+}
+
+.post-full__comment-children::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 1.5px;
+    background: #e0e0e0;
+    border-radius: 1px;
 }
 
 .post-full__comment-item {
@@ -323,10 +337,37 @@
 
 .post-full__comment-item--reply {
     margin-left: 0;
+    gap: 10px;
+}
+
+.post-full__comment-item--reply .post-full__comment-avatar {
+    display: none;
+}
+
+.post-full__comment-item--reply .post-full__comment-side {
+    width: 1.5px;
+    min-width: 1.5px;
+    align-items: flex-start;
+}
+
+.post-full__comment-item--reply .post-full__comment-rail {
+    margin-top: 0;
 }
 
 .post-full__comment-item--reply .post-full__comment-content {
-    padding-left: 12px;
+    position: relative;
+    padding-left: 10px;
+}
+
+.post-full__comment-item--reply .post-full__comment-content::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 20px;
+    width: 10px;
+    height: 1.5px;
+    background: #e0e0e0;
+    border-radius: 1px;
 }
 
 .post-full__comment-avatar {
