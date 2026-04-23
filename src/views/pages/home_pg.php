@@ -579,15 +579,17 @@
                 <div class="post-full__description is-collapsed" data-component="post-full-description">
                     <?php echo nl2br(htmlspecialchars($selectedPostDescription, ENT_QUOTES, 'UTF-8')); ?>
                 </div>
-                <div class="post-full__description-hide-slot" data-component="post-full-description-hide-slot"></div>
             <?php endif; ?>
 
             <?php if (!empty($selectedPostHashtags)): ?>
-                <div class="post-full__hashtags" aria-label="Хештеги поста">
+                <div class="post-full__hashtags" data-component="post-full-hashtags" aria-label="Хештеги поста">
                     <?php foreach ($selectedPostHashtags as $postHashtag): ?>
                         <span class="post-full__tag-item">#<?php echo htmlspecialchars($postHashtag, ENT_QUOTES, 'UTF-8'); ?></span>
                     <?php endforeach; ?>
                 </div>
+            <?php endif; ?>
+            <?php if ($selectedPostDescription !== ''): ?>
+                <div class="post-full__description-hide-slot" data-component="post-full-description-hide-slot"></div>
             <?php endif; ?>
 
             <div class="post-full__description-divider" aria-hidden="true"></div>
@@ -616,6 +618,21 @@
                                 $commentParentId = (int) ($commentRow['parent_comment_id'] ?? 0);
                                 $commentParentUsername = ltrim((string) ($commentRow['parent_username'] ?? ''), '@');
                                 $commentIsLikedByViewer = !empty($commentRow['is_liked_by_viewer']);
+                                $childrenCount = !$isReply ? count($childrenRows) : 0;
+                                $childrenCountLabel = '';
+                                if ($childrenCount > 0) {
+                                    $mod100 = $childrenCount % 100;
+                                    $mod10 = $childrenCount % 10;
+                                    if ($mod100 >= 11 && $mod100 <= 14) {
+                                        $childrenCountLabel = 'комментариев';
+                                    } elseif ($mod10 === 1) {
+                                        $childrenCountLabel = 'комментарий';
+                                    } elseif ($mod10 >= 2 && $mod10 <= 4) {
+                                        $childrenCountLabel = 'комментария';
+                                    } else {
+                                        $childrenCountLabel = 'комментариев';
+                                    }
+                                }
                                 ?>
                                 <article
                                     class="post-full__comment-item<?php echo $isReply ? ' post-full__comment-item--reply' : ''; ?>"
@@ -643,6 +660,10 @@
                                                 <?php endif; ?>
                                                 <span class="post-full__comment-meta-separator" aria-hidden="true"></span>
                                                 <span class="post-full__comment-published-at" data-created-at-ts="<?php echo $commentCreatedTimestamp; ?>"><?php echo htmlspecialchars($commentPublishedLabel, ENT_QUOTES, 'UTF-8'); ?></span>
+                                                <?php if ($childrenCount > 0): ?>
+                                                    <span class="post-full__comment-meta-separator" aria-hidden="true"></span>
+                                                    <span class="post-full__comment-published-at post-full__comment-children-count"><?php echo $childrenCount . ' ' . $childrenCountLabel; ?></span>
+                                                <?php endif; ?>
                                             </div>
                                         </div>
                                         <p class="post-full__comment-text"><?php echo nl2br(htmlspecialchars((string) ($commentRow['content'] ?? ''), ENT_QUOTES, 'UTF-8')); ?></p>

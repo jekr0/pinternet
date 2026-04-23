@@ -288,6 +288,12 @@
     color: rgb(150, 150, 250);
 }
 
+.create-post-modal__tags-input-row:focus-within:hover .create-post-modal__tags-add-button {
+    border-color: rgb(100, 100, 200);
+    background: rgb(100, 100, 200);
+    color: #fff;
+}
+
 .create-post-modal__tags-list {
     display: flex;
     flex-direction: column;

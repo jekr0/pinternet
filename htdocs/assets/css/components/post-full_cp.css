@@ -241,7 +241,10 @@
 }
 
 .post-full__description-hide-button {
-    position: static;
+    position: absolute;
+    left: 50%;
+    top: 0;
+    transform: translate(-50%, -50%);
     min-width: 180px;
     height: 34px;
     border: 2px solid #e0e0e0;
@@ -268,14 +271,9 @@
 
 .post-full__description-hide-slot {
     width: calc(100% - 40px);
+    height: 0;
     margin: 0 20px;
-    display: flex;
-    justify-content: center;
-}
-
-.post-full__description-hide-slot.has-button {
-    margin-top: 10px;
-    margin-bottom: 10px;
+    position: relative;
 }
 
 .post-full__meta-row {
@@ -298,8 +296,16 @@
     width: calc(100% - 40px);
     margin: 15px 20px 0;
     display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
+    flex-direction: column;
+    row-gap: 10px;
+}
+
+.post-full__hashtags-row {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    column-gap: 10px;
+    width: 100%;
 }
 
 .post-full__tag-item {
@@ -635,25 +641,27 @@
 }
 
 .post-full__comment-children-toggle {
-    font-family: 'NS_def', Arial, sans-serif;
-    font-size: 20px;
-    width: 20px;
+    font-family: 'SF_def', Arial, sans-serif;
+    font-size: 15px;
+    line-height: 20px;
+    width: auto;
+    min-width: 90px;
     height: 20px;
     border: none;
-    border-radius: 5px;
     background: transparent;
-    color: rgb(150, 150, 250);
-    margin-top: 5px;
+    color: #bbb;
+    margin-left: -5px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: color 0.2s ease, background-color 0.2s ease;
+    transition: color 0.2s ease;
+    text-decoration: none;
 }
 
 .post-full__comment-children-toggle:hover {
-    color: rgb(100, 100, 200);
-    background: rgba(150, 150, 250, 0.1);
+    color: rgb(150, 150, 250);
+    text-decoration: underline;
 }
 
 .post-full__comment-children-toggle:focus-visible {
@@ -898,7 +906,7 @@
 .post-full-report__text {
     margin: 0;
     font-family: 'SF_def', Arial, sans-serif;
-    font-size: 15px;
+    font-size: 20px;
     line-height: 1.35;
     text-align: center;
     color: #333;
@@ -912,12 +920,22 @@
 
 .post-full-report__button {
     flex: 1 1 auto;
-    height: 50px;
+    height: 56px;
+    min-width: 220px;
     border-radius: 10px;
     font-family: 'SF_def', Arial, sans-serif;
-    font-size: 15px;
+    font-size: 20px;
     cursor: pointer;
     transition: border-color 0.2s ease, opacity 0.2s ease;
+}
+
+.post-full__description-hide-button.is-pinned {
+    position: fixed;
+    top: auto;
+    left: 50%;
+    bottom: 20px;
+    transform: translateX(-50%);
+    z-index: 1001;
 }
 
 .post-full-report__button--cancel {
