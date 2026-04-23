@@ -585,12 +585,12 @@
             <?php if (!empty($selectedPostHashtags)): ?>
                 <div class="post-full__hashtags" aria-label="Хештеги поста">
                     <?php foreach ($selectedPostHashtags as $postHashtag): ?>
-                        <span class="post-full__tag-item">#<?php echo htmlspecialchars($postHashtag, ENT_QUOTES, 'UTF-8'); ?></span>
+                        <span class="post-full__tag-item"><span class="post-full__tag-label">#<?php echo htmlspecialchars($postHashtag, ENT_QUOTES, 'UTF-8'); ?></span></span>
                     <?php endforeach; ?>
                 </div>
             <?php endif; ?>
 
-            <div class="post-full__description-divider" aria-hidden="true"></div>
+            <div class="post-full__description-divider" data-component="post-full-description-divider" aria-hidden="true"></div>
 
             <div class="post-full__comments-block">
                 <?php if (!$selectedHasComments): ?>

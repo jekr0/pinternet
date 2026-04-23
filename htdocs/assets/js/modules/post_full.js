@@ -34,6 +34,7 @@ class PostFullComponent {
         this.descriptionHideButton = null;
         this.descriptionSupportsCollapse = false;
         this.descriptionExpanded = false;
+        this.descriptionHideScrollHandler = null;
         this.commentsExpanded = false;
         this.tagsResizeHandler = null;
     }
@@ -67,6 +68,9 @@ class PostFullComponent {
             window.addEventListener('resize', () => this.syncCommentRails());
             this.tagsResizeHandler = () => this.layoutPostTags();
             window.addEventListener('resize', this.tagsResizeHandler);
+            this.descriptionHideScrollHandler = () => this.updateDescriptionHideButtonPosition();
+            window.addEventListener('scroll', this.descriptionHideScrollHandler, { passive: true });
+            window.addEventListener('resize', this.descriptionHideScrollHandler);
         }
 
         const cards = Array.from(this.container.querySelectorAll('[data-component="post-card"]'));
@@ -286,6 +290,7 @@ class PostFullComponent {
         this.ensureDescriptionHideButton();
         this.descriptionExpanded = false;
         this.descriptionElement.classList.add('is-collapsed');
+        this.updateDescriptionHideButtonPosition();
         this.descriptionElement.addEventListener('click', () => {
             if (!this.descriptionSupportsCollapse || this.descriptionExpanded) return;
             this.expandDescription();
@@ -294,7 +299,7 @@ class PostFullComponent {
 
     ensureDescriptionHideButton() {
         if (this.descriptionHideButton || !this.postFullElement) return;
-        const hideSlot = this.postFullElement.querySelector('[data-component="post-full-description-hide-slot"]');
+        const hideSlot = this.postFullElement.querySelector('[data-component="post-full-description-divider"]');
         if (!hideSlot) return;
 
         const hideButton = document.createElement('button');
@@ -327,16 +332,30 @@ class PostFullComponent {
 
     showDescriptionHideButton() {
         if (!this.descriptionHideButton) return;
-        const hideSlot = this.postFullElement?.querySelector('[data-component="post-full-description-hide-slot"]');
+        const hideSlot = this.postFullElement?.querySelector('[data-component="post-full-description-divider"]');
         hideSlot?.classList.add('has-button');
         this.descriptionHideButton.classList.add('is-visible');
+        this.updateDescriptionHideButtonPosition();
     }
 
     hideDescriptionHideButton() {
         if (!this.descriptionHideButton) return;
-        const hideSlot = this.postFullElement?.querySelector('[data-component="post-full-description-hide-slot"]');
+        const hideSlot = this.postFullElement?.querySelector('[data-component="post-full-description-divider"]');
         hideSlot?.classList.remove('has-button');
         this.descriptionHideButton.classList.remove('is-visible');
+        this.descriptionHideButton.classList.remove('is-floating-bottom');
+    }
+
+    updateDescriptionHideButtonPosition() {
+        if (!this.descriptionHideButton) return;
+        if (!this.descriptionExpanded || !this.descriptionHideButton.classList.contains('is-visible')) {
+            this.descriptionHideButton.classList.remove('is-floating-bottom');
+            return;
+        }
+
+        const rect = this.descriptionHideButton.getBoundingClientRect();
+        const shouldPinToBottom = rect.top > (window.innerHeight - 20);
+        this.descriptionHideButton.classList.toggle('is-floating-bottom', shouldPinToBottom);
     }
 
     requestMasonryLayoutUpdate() {
@@ -1040,7 +1059,7 @@ class PostFullComponent {
             const sideRect = sideElement.getBoundingClientRect();
             const actionsRect = actions.getBoundingClientRect();
             const alignedTop = Math.max(0, Math.round((actionsRect.top + (actionsRect.height / 2)) - sideRect.top - (toggleButton.offsetHeight / 2)));
-            toggleButton.style.marginTop = `${alignedTop}px`;
+            toggleButton.style.top = `${alignedTop}px`;
         });
     }
 

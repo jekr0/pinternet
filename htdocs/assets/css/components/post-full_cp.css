@@ -241,7 +241,11 @@
 }
 
 .post-full__description-hide-button {
-    position: static;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
     min-width: 180px;
     height: 34px;
     border: 2px solid #e0e0e0;
@@ -267,15 +271,21 @@
 }
 
 .post-full__description-hide-slot {
-    width: calc(100% - 40px);
-    margin: 0 20px;
-    display: flex;
-    justify-content: center;
+    width: 100%;
+    margin: 0;
+    display: block;
 }
 
 .post-full__description-hide-slot.has-button {
-    margin-top: 10px;
-    margin-bottom: 10px;
+    margin: 0;
+}
+
+.post-full__description-hide-button.is-floating-bottom {
+    position: fixed;
+    top: auto;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
 }
 
 .post-full__meta-row {
@@ -311,6 +321,7 @@
 }
 
 .post-full__tag-item {
+    position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -321,8 +332,36 @@
     color: #555;
     background: #efefef;
     border-radius: 5px;
-    cursor: default;
+    cursor: pointer;
     user-select: none;
+}
+
+.post-full__tag-label {
+    transition: filter 0.1s ease, color 0.1s ease;
+}
+
+.post-full__tag-item::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    background: rgb(100, 100, 200);
+    mask: url('/assets/images/icons/S-warning.svg') center / 15px 15px no-repeat;
+    -webkit-mask: url('/assets/images/icons/S-warning.svg') center / 15px 15px no-repeat;
+    transition: opacity 0.1s ease;
+}
+
+.post-full__tag-item:hover .post-full__tag-label {
+    filter: blur(1px);
+    color: #999;
+}
+
+.post-full__tag-item:hover::after {
+    opacity: 1;
 }
 
 .post-full__description-divider {
@@ -331,6 +370,7 @@
     margin: 20px 20px 30px;
     background: #e0e0e0;
     border-radius: 1px;
+    position: relative;
 }
 
 .post-full__comments-block {
@@ -384,6 +424,7 @@
 }
 
 .post-full__comment-side {
+    position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -643,6 +684,10 @@
 }
 
 .post-full__comment-children-toggle {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1;
     font-family: 'NS_def', Arial, sans-serif;
     font-size: 20px;
     width: 20px;
