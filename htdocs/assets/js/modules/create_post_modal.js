@@ -457,14 +457,14 @@ class CreatePostModalComponent {
             tagEl.innerHTML = `<span class="create-post-modal__tag-label">#${tag}</span>`;
             tagEl.addEventListener('click', () => this.removeTag(index));
             currentRow.appendChild(tagEl);
-            this.adjustTagsSpacing(currentRow, availableWidth);
+            this.adjustTagsSpacing(currentRow, false);
 
             if (currentRow.scrollWidth <= availableWidth) {
                 return;
             }
 
             currentRow.removeChild(tagEl);
-            this.adjustTagsSpacing(currentRow, availableWidth);
+            this.adjustTagsSpacing(currentRow, true);
 
             if (rows.length >= this.maxVisibleTagRows) {
                 hiddenCount += 1;
@@ -474,17 +474,22 @@ class CreatePostModalComponent {
             const nextRow = this.createTagRow();
             rows.push(nextRow);
             nextRow.appendChild(tagEl);
-            this.adjustTagsSpacing(nextRow, availableWidth);
+            this.adjustTagsSpacing(nextRow, false);
 
             if (nextRow.scrollWidth > availableWidth) {
                 nextRow.removeChild(tagEl);
-                this.adjustTagsSpacing(nextRow, availableWidth);
+                this.adjustTagsSpacing(nextRow, false);
                 hiddenCount += 1;
             }
         });
 
         if (hiddenCount > 0) {
             this.appendHiddenMoreChip(hiddenCount, availableWidth);
+        }
+
+        const lastRow = rows[rows.length - 1];
+        if (lastRow) {
+            this.adjustTagsSpacing(lastRow, false);
         }
     }
 
@@ -511,7 +516,7 @@ class CreatePostModalComponent {
         moreEl.textContent = `+${hiddenCount}`;
 
         lastRow.appendChild(moreEl);
-        this.adjustTagsSpacing(lastRow, availableWidth);
+        this.adjustTagsSpacing(lastRow, false);
 
         while (lastRow.scrollWidth > availableWidth) {
             const regularChips = Array.from(lastRow.querySelectorAll('.create-post-modal__tag-item:not(.create-post-modal__tag-item--more)'));
@@ -523,24 +528,22 @@ class CreatePostModalComponent {
             lastRow.removeChild(chipToHide);
             hiddenCount += 1;
             moreEl.textContent = `+${hiddenCount}`;
-            this.adjustTagsSpacing(lastRow, availableWidth);
+            this.adjustTagsSpacing(lastRow, false);
         }
     }
 
-    adjustTagsSpacing(rowEl, availableWidth = 630) {
+    adjustTagsSpacing(rowEl, isClosedRow) {
         if (!rowEl) return;
         const chipElements = Array.from(rowEl.querySelectorAll('.create-post-modal__tag-item:not(.create-post-modal__tag-item--more)'));
 
         if (chipElements.length <= 1) {
+            rowEl.style.justifyContent = 'flex-start';
             rowEl.style.columnGap = '5px';
             return;
         }
 
-        const totalChipWidth = chipElements.reduce((sum, el) => sum + el.offsetWidth, 0);
-        const available = availableWidth - totalChipWidth;
-        const computedGap = Math.floor(available / (chipElements.length - 1));
-        const normalizedGap = Math.max(5, Math.min(35, computedGap));
-        rowEl.style.columnGap = `${normalizedGap}px`;
+        rowEl.style.justifyContent = isClosedRow ? 'space-between' : 'flex-start';
+        rowEl.style.columnGap = isClosedRow ? '0px' : '5px';
     }
 
     showAlert(message) {

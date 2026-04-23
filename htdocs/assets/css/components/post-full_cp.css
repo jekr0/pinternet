@@ -298,8 +298,16 @@
     width: calc(100% - 40px);
     margin: 15px 20px 0;
     display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
+    flex-direction: column;
+    row-gap: 8px;
+}
+
+.post-full__hashtags-row {
+    width: 100%;
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    column-gap: 8px;
 }
 
 .post-full__tag-item {
@@ -643,7 +651,7 @@
     border-radius: 5px;
     background: transparent;
     color: rgb(150, 150, 250);
-    margin-top: 5px;
+    margin-top: 0;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -898,7 +906,7 @@
 .post-full-report__text {
     margin: 0;
     font-family: 'SF_def', Arial, sans-serif;
-    font-size: 15px;
+    font-size: 20px;
     line-height: 1.35;
     text-align: center;
     color: #333;
@@ -911,7 +919,7 @@
 }
 
 .post-full-report__button {
-    flex: 1 1 auto;
+    flex: 1 1 0;
     height: 50px;
     border-radius: 10px;
     font-family: 'SF_def', Arial, sans-serif;

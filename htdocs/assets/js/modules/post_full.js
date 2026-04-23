@@ -35,6 +35,7 @@ class PostFullComponent {
         this.descriptionSupportsCollapse = false;
         this.descriptionExpanded = false;
         this.commentsExpanded = false;
+        this.tagsResizeHandler = null;
     }
 
     init() {
@@ -60,8 +61,12 @@ class PostFullComponent {
             this.bindCommentChildrenToggle();
             this.applyCommentsPreviewState();
             this.applyCommentChildrenState();
+            this.refreshReplyCounters();
             this.syncCommentRails();
+            this.layoutPostTags();
             window.addEventListener('resize', () => this.syncCommentRails());
+            this.tagsResizeHandler = () => this.layoutPostTags();
+            window.addEventListener('resize', this.tagsResizeHandler);
         }
 
         const cards = Array.from(this.container.querySelectorAll('[data-component="post-card"]'));
@@ -338,6 +343,7 @@ class PostFullComponent {
         this.applyCommentsPreviewState();
         this.applyCommentChildrenState();
         this.syncCommentRails();
+        this.layoutPostTags();
         document.dispatchEvent(new CustomEvent('post-full:resize'));
     }
 
@@ -462,7 +468,14 @@ class PostFullComponent {
             toggleButton.textContent = isExpanded ? '−' : '+';
             toggleButton.setAttribute('aria-label', isExpanded ? 'Скрыть ответы' : 'Показать ответы');
             childrenContainer.style.display = isExpanded ? '' : 'none';
+            this.updateThreadReplyCount(thread);
         });
+    }
+
+    refreshReplyCounters() {
+        if (!this.postFullElement) return;
+        const threads = Array.from(this.postFullElement.querySelectorAll('.post-full__comment-thread'));
+        threads.forEach((thread) => this.updateThreadReplyCount(thread));
     }
 
     // Форматирует timestamp в человекочитаемое «x сек/мин/час/дн назад» с сохранением текущих интервалов.
@@ -729,6 +742,8 @@ class PostFullComponent {
                     }
                 }
                 childrenContainer.appendChild(item);
+                this.expandThreadReplies(thread);
+                this.updateThreadReplyCount(thread);
             } else {
                 const fallbackThread = document.createElement('div');
                 fallbackThread.className = 'post-full__comment-thread';
@@ -738,6 +753,8 @@ class PostFullComponent {
                 childrenContainer.appendChild(item);
                 fallbackThread.appendChild(childrenContainer);
                 commentsList.appendChild(fallbackThread);
+                this.expandThreadReplies(fallbackThread);
+                this.updateThreadReplyCount(fallbackThread);
             }
         } else {
             const thread = document.createElement('div');
@@ -747,6 +764,7 @@ class PostFullComponent {
             }
             thread.appendChild(item);
             commentsList.appendChild(thread);
+            this.updateThreadReplyCount(thread);
         }
 
         item.querySelectorAll('[data-svg-src]').forEach((node) => {
@@ -801,6 +819,8 @@ class PostFullComponent {
                             : ''}
                         <span class="post-full__comment-meta-separator" aria-hidden="true"></span>
                         <span class="post-full__comment-published-at" data-created-at-ts="${createdAtTs}">${this.escapeHtml(publishedLabel)}</span>
+                        <span class="post-full__comment-meta-separator" data-component="post-full-comment-replies-separator" aria-hidden="true" style="display:none;"></span>
+                        <span class="post-full__comment-reply-label" data-component="post-full-comment-replies-meta" style="display:none;"></span>
                     </div>
                 </div>
                 <p class="post-full__comment-text">${this.escapeHtmlWithBreaks(commentData.content || '')}</p>
@@ -912,7 +932,7 @@ class PostFullComponent {
             buildPanel: (panel, close) => {
                 const text = document.createElement('p');
                 text.className = 'post-full-report__text';
-                text.textContent = 'Вы уверены, что хотите пожаловаться на этот комментарий?';
+                text.textContent = 'Пожаловаться на комментарий?';
 
                 const actions = document.createElement('div');
                 actions.className = 'post-full-report__actions';
@@ -979,10 +999,10 @@ class PostFullComponent {
     syncCommentRails() {
         const commentItems = this.postFullElement?.querySelectorAll('.post-full__comment-item') || [];
         commentItems.forEach((item) => {
-            const textElement = item.querySelector('.post-full__comment-text');
             const railElement = item.querySelector('.post-full__comment-rail');
-            if (!textElement || !railElement) return;
-            railElement.style.height = `${Math.max(0, Math.round(textElement.offsetHeight + 18))}px`;
+            if (!railElement) return;
+            const railBottom = this.getCommentRailBottom(item);
+            railElement.style.height = `${Math.max(0, railBottom)}px`;
         });
 
         const threads = this.postFullElement?.querySelectorAll('.post-full__comment-thread') || [];
@@ -999,8 +1019,7 @@ class PostFullComponent {
             if (childrenContainer && getComputedStyle(childrenContainer).display === 'none') return;
 
             const parentRailRect = parentRail.getBoundingClientRect();
-            const lastChildRailRect = lastChildRail.getBoundingClientRect();
-            const lastChildBottom = lastChildRailRect.top + lastChildRail.offsetHeight;
+            const lastChildBottom = this.getCommentAbsoluteRailBottom(lastChild);
             const extendedHeight = Math.max(
                 Math.round(parentRail.offsetHeight),
                 Math.round(lastChildBottom - parentRailRect.top)
@@ -1008,6 +1027,127 @@ class PostFullComponent {
 
             parentRail.style.height = `${Math.max(0, extendedHeight)}px`;
         });
+
+        const sideElements = this.postFullElement?.querySelectorAll('.post-full__comment-side') || [];
+        sideElements.forEach((sideElement) => {
+            const commentItem = sideElement.closest('.post-full__comment-item');
+            const toggleButton = sideElement.querySelector('.post-full__comment-children-toggle');
+            if (!commentItem || !toggleButton) return;
+
+            const actions = commentItem.querySelector('.post-full__comment-actions');
+            if (!actions) return;
+
+            const sideRect = sideElement.getBoundingClientRect();
+            const actionsRect = actions.getBoundingClientRect();
+            const alignedTop = Math.max(0, Math.round((actionsRect.top + (actionsRect.height / 2)) - sideRect.top - (toggleButton.offsetHeight / 2)));
+            toggleButton.style.marginTop = `${alignedTop}px`;
+        });
+    }
+
+    getCommentRailBottom(commentItem) {
+        const sideElement = commentItem?.querySelector('.post-full__comment-side');
+        if (!sideElement) return 0;
+
+        const avatarElement = sideElement.querySelector('.post-full__comment-avatar');
+        const likeCount = commentItem.querySelector('.post-full__comment-like-count');
+        const actions = commentItem.querySelector('.post-full__comment-actions');
+        const textElement = commentItem.querySelector('.post-full__comment-text');
+        const sideRect = sideElement.getBoundingClientRect();
+        const avatarRect = avatarElement?.getBoundingClientRect() || sideRect;
+        const fallbackBottom = textElement
+            ? textElement.getBoundingClientRect().bottom
+            : sideRect.bottom;
+        const targetBottom = likeCount?.getBoundingClientRect().bottom
+            || actions?.getBoundingClientRect().bottom
+            || fallbackBottom;
+        return Math.max(0, Math.round(targetBottom - avatarRect.bottom - 5));
+    }
+
+    getCommentAbsoluteRailBottom(commentItem) {
+        const sideElement = commentItem?.querySelector('.post-full__comment-side');
+        const railElement = commentItem?.querySelector('.post-full__comment-rail');
+        if (!sideElement || !railElement) return 0;
+
+        const sideRect = sideElement.getBoundingClientRect();
+        const railRect = railElement.getBoundingClientRect();
+        const relativeBottom = this.getCommentRailBottom(commentItem);
+        return sideRect.top + railRect.top - sideRect.top + relativeBottom;
+    }
+
+    expandThreadReplies(thread) {
+        if (!thread) return;
+        const toggleButton = thread.querySelector('[data-action="comment-children-toggle"]');
+        const childrenContainer = thread.querySelector('.post-full__comment-children');
+        if (!toggleButton || !childrenContainer) return;
+        toggleButton.dataset.expanded = '1';
+        childrenContainer.style.display = '';
+    }
+
+    updateThreadReplyCount(thread) {
+        if (!thread) return;
+        const parentItem = thread.querySelector('.post-full__comment-item:not(.post-full__comment-item--reply)');
+        if (!parentItem) return;
+        const repliesCount = thread.querySelectorAll('.post-full__comment-item--reply').length;
+        const metaNode = parentItem.querySelector('[data-component="post-full-comment-replies-meta"]');
+        const separatorNode = parentItem.querySelector('[data-component="post-full-comment-replies-separator"]');
+        if (!metaNode || !separatorNode) return;
+
+        if (repliesCount <= 0) {
+            metaNode.style.display = 'none';
+            metaNode.textContent = '';
+            separatorNode.style.display = 'none';
+            return;
+        }
+
+        metaNode.style.display = '';
+        separatorNode.style.display = '';
+        metaNode.textContent = `${repliesCount} ${this.pluralizeRu(repliesCount, 'ответ', 'ответа', 'ответов')}`;
+    }
+
+    layoutPostTags() {
+        const tagsContainer = this.postFullElement?.querySelector('.post-full__hashtags');
+        if (!tagsContainer) return;
+
+        const tagNodes = Array.from(tagsContainer.querySelectorAll('.post-full__tag-item'));
+        if (tagNodes.length === 0) return;
+
+        tagsContainer.innerHTML = '';
+        const availableWidth = tagsContainer.clientWidth || 1;
+        let currentRow = this.createPostTagRow(tagsContainer);
+
+        tagNodes.forEach((tagNode) => {
+            currentRow.appendChild(tagNode);
+            if (currentRow.scrollWidth <= availableWidth) {
+                this.adjustPostTagRow(currentRow, false);
+                return;
+            }
+
+            currentRow.removeChild(tagNode);
+            this.adjustPostTagRow(currentRow, true);
+            currentRow = this.createPostTagRow(tagsContainer);
+            currentRow.appendChild(tagNode);
+            this.adjustPostTagRow(currentRow, false);
+        });
+    }
+
+    createPostTagRow(tagsContainer) {
+        const row = document.createElement('div');
+        row.className = 'post-full__hashtags-row';
+        tagsContainer.appendChild(row);
+        return row;
+    }
+
+    adjustPostTagRow(rowElement, isClosed) {
+        if (!rowElement) return;
+        const chipElements = Array.from(rowElement.querySelectorAll('.post-full__tag-item'));
+        if (chipElements.length <= 1) {
+            rowElement.style.justifyContent = 'flex-start';
+            rowElement.style.columnGap = '8px';
+            return;
+        }
+
+        rowElement.style.justifyContent = isClosed ? 'space-between' : 'flex-start';
+        rowElement.style.columnGap = isClosed ? '0px' : '8px';
     }
 
     escapeHtml(value) {
@@ -1337,7 +1477,7 @@ class PostFullComponent {
             buildPanel: (panel, close) => {
                 const text = document.createElement('p');
                 text.className = 'post-full-report__text';
-                text.textContent = 'Вы уверены, что хотите пожаловаться на этот пост?';
+                text.textContent = 'Пожаловаться на пост?';
 
                 const actions = document.createElement('div');
                 actions.className = 'post-full-report__actions';
