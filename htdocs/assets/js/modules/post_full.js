@@ -410,11 +410,13 @@ class PostFullComponent {
         if (this.descriptionDividerButton) {
             this.descriptionDividerButton.classList.add('is-visible');
         }
+        this.descriptionDividerElement?.classList.add('has-controls');
         this.updateDescriptionHideButtonPosition();
     }
 
     hideDescriptionHideButton() {
         this.descriptionDividerButton?.classList.remove('is-visible');
+        this.descriptionDividerElement?.classList.remove('has-controls');
         this.hideFloatingDescriptionButton(true);
     }
 

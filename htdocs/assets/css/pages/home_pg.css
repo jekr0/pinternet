@@ -31,7 +31,7 @@
     line-height: 1;
     cursor: pointer;
     box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
-    transition: transform 0.2s ease, opacity 0.2s ease;
+    transition: transform 0.2s ease, opacity 0.2s ease, background-color 0.2s ease;
 }
 
 .create-post-open-button:hover {
@@ -52,20 +52,21 @@
     width: 60px;
     height: 60px;
     border: none;
-    border-radius: 20px;
+    border-radius: 10px;
     background: rgba(0, 0, 0, 0.2);
     backdrop-filter: blur(1px);
+    -webkit-backdrop-filter: blur(1px);
     color: #fff;
     font-family: 'SF_def', Arial, sans-serif;
     font-size: 30px;
     line-height: 1;
     cursor: pointer;
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+    color: rgba(255, 255, 255, 0.5);
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
     transform: translateY(10px);
-    transition: opacity 0.1s ease, visibility 0.1s ease, transform 0.1s ease;
+    transition: opacity 0.1s ease, visibility 0.1s ease, transform 0.1s ease, background-color 0.2s ease;
 }
 
 .scroll-to-top-button.is-open {
@@ -84,5 +85,7 @@
 }
 
 .scroll-to-top-button:hover {
-    background: rgba(100, 100, 200, 0.75);
+    background: rgba(0, 0, 0, 0.2);
+    color: rgba(255, 255, 255, 1);
+    transform: translateY(-2px);
 }

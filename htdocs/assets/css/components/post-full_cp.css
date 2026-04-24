@@ -351,8 +351,8 @@
     opacity: 0;
     pointer-events: none;
     background: rgb(100, 100, 200);
-    mask: url('/assets/images/icons/search.svg') center / 15px 15px no-repeat;
-    -webkit-mask: url('/assets/images/icons/search.svg') center / 15px 15px no-repeat;
+    mask: url('/assets/images/icons/S-search.svg') center / 15px 15px no-repeat;
+    -webkit-mask: url('/assets/images/icons/S-search.svg') center / 15px 15px no-repeat;
     transition: opacity 0.1s ease;
 }
 
@@ -367,18 +367,31 @@
 
 .post-full__description-divider {
     width: calc(100% - 40px);
+    height: 2px;
     margin: 20px 20px 30px;
+    background: #e0e0e0;
+    border-radius: 1px;
+}
+
+.post-full__description-divider.has-controls {
+    height: auto;
     display: flex;
     align-items: center;
     gap: 15px;
+    background: none;
     position: relative;
 }
 
 .post-full__description-divider-line {
+    display: none;
     flex: 1 1 auto;
     height: 2px;
     background: #e0e0e0;
     border-radius: 1px;
+}
+
+.post-full__description-divider.has-controls .post-full__description-divider-line {
+    display: block;
 }
 
 .post-full__comments-block {

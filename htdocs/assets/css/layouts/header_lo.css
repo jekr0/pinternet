@@ -58,8 +58,8 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 340px;
-    height: 44px;
+    width: 45%;
+    height: 50px;
 }
 
 .header__search-input {
@@ -106,8 +106,8 @@
     width: 16px;
     height: 16px;
     background: #bbb;
-    mask: url('/assets/images/icons/search.svg') center / contain no-repeat;
-    -webkit-mask: url('/assets/images/icons/search.svg') center / contain no-repeat;
+    mask: url('/assets/images/icons/L-search.svg') center / contain no-repeat;
+    -webkit-mask: url('/assets/images/icons/L-search.svg') center / contain no-repeat;
 }
 
 .header__search-placeholder-text {
