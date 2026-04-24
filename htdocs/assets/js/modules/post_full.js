@@ -39,6 +39,9 @@ class PostFullComponent {
         this.descriptionHideScrollHandler = null;
         this.commentsExpanded = false;
         this.tagsResizeHandler = null;
+        this.scrollTopButton = null;
+        this.scrollTopButtonHandler = null;
+        this.scrollTopHideTimer = null;
     }
 
     init() {
@@ -73,6 +76,7 @@ class PostFullComponent {
             this.descriptionHideScrollHandler = () => this.updateDescriptionHideButtonPosition();
             window.addEventListener('scroll', this.descriptionHideScrollHandler, { passive: true });
             window.addEventListener('resize', this.descriptionHideScrollHandler);
+            this.initScrollTopButton();
         }
 
         const cards = Array.from(this.container.querySelectorAll('[data-component="post-card"]'));
@@ -304,12 +308,23 @@ class PostFullComponent {
         if (!this.postFullElement || !this.descriptionDividerElement) return;
 
         if (!this.descriptionDividerButton) {
+            const leftLine = document.createElement('span');
+            leftLine.className = 'post-full__description-divider-line';
+            leftLine.setAttribute('aria-hidden', 'true');
+
             const dividerButton = document.createElement('button');
             dividerButton.className = 'post-full__comments-toggle-button post-full__description-divider-button';
             dividerButton.type = 'button';
             dividerButton.textContent = 'Скрыть описание';
             dividerButton.addEventListener('click', () => this.collapseDescription());
+
+            const rightLine = document.createElement('span');
+            rightLine.className = 'post-full__description-divider-line';
+            rightLine.setAttribute('aria-hidden', 'true');
+
+            this.descriptionDividerElement.appendChild(leftLine);
             this.descriptionDividerElement.appendChild(dividerButton);
+            this.descriptionDividerElement.appendChild(rightLine);
             this.descriptionDividerButton = dividerButton;
         }
 
@@ -322,6 +337,57 @@ class PostFullComponent {
             this.postFullElement.appendChild(floatingButton);
             this.descriptionHideButton = floatingButton;
         }
+    }
+
+    initScrollTopButton() {
+        this.scrollTopButton = document.querySelector('[data-component="scroll-to-top"]');
+        if (!this.scrollTopButton) return;
+        if (this.scrollTopButton.dataset.bound === '1') return;
+        this.scrollTopButton.dataset.bound = '1';
+
+        this.scrollTopButton.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        this.scrollTopButtonHandler = () => this.updateScrollTopButtonVisibility();
+        window.addEventListener('scroll', this.scrollTopButtonHandler, { passive: true });
+        window.addEventListener('resize', this.scrollTopButtonHandler);
+        this.updateScrollTopButtonVisibility();
+    }
+
+    updateScrollTopButtonVisibility() {
+        if (!this.scrollTopButton || !this.postFullElement) return;
+        const postImage = this.postFullElement.querySelector('.post-full__image');
+        if (!postImage) {
+            this.hideScrollTopButton(true);
+            return;
+        }
+
+        const imageRect = postImage.getBoundingClientRect();
+        const shouldShow = imageRect.bottom < 0 || imageRect.top > window.innerHeight;
+        if (shouldShow) {
+            this.scrollTopButton.classList.add('is-open');
+            this.scrollTopButton.classList.remove('scroll-to-top-button--closing');
+            return;
+        }
+
+        this.hideScrollTopButton();
+    }
+
+    hideScrollTopButton(immediate = false) {
+        if (!this.scrollTopButton) return;
+        if (immediate) {
+            this.scrollTopButton.classList.remove('is-open', 'scroll-to-top-button--closing');
+            return;
+        }
+
+        if (!this.scrollTopButton.classList.contains('is-open')) return;
+        this.scrollTopButton.classList.remove('is-open');
+        this.scrollTopButton.classList.add('scroll-to-top-button--closing');
+        clearTimeout(this.scrollTopHideTimer);
+        this.scrollTopHideTimer = window.setTimeout(() => {
+            this.scrollTopButton?.classList.remove('scroll-to-top-button--closing');
+        }, 200);
     }
 
     expandDescription() {

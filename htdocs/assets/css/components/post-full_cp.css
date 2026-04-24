@@ -351,8 +351,8 @@
     opacity: 0;
     pointer-events: none;
     background: rgb(100, 100, 200);
-    mask: url('/assets/images/icons/S-warning.svg') center / 15px 15px no-repeat;
-    -webkit-mask: url('/assets/images/icons/S-warning.svg') center / 15px 15px no-repeat;
+    mask: url('/assets/images/icons/search.svg') center / 15px 15px no-repeat;
+    -webkit-mask: url('/assets/images/icons/search.svg') center / 15px 15px no-repeat;
     transition: opacity 0.1s ease;
 }
 
@@ -367,11 +367,18 @@
 
 .post-full__description-divider {
     width: calc(100% - 40px);
-    height: 2px;
     margin: 20px 20px 30px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    position: relative;
+}
+
+.post-full__description-divider-line {
+    flex: 1 1 auto;
+    height: 2px;
     background: #e0e0e0;
     border-radius: 1px;
-    position: relative;
 }
 
 .post-full__comments-block {
