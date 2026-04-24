@@ -480,11 +480,17 @@ class PostFullComponent {
         if (!this.postFullElement) return;
 
         this.postFullElement.addEventListener('click', (event) => {
-            const button = event.target.closest('[data-action="comment-children-toggle"]');
-            if (!button) return;
+            const control = event.target.closest('[data-action="comment-children-toggle"]');
+            if (!control) return;
 
-            const nextExpanded = button.dataset.expanded !== '1';
-            button.dataset.expanded = nextExpanded ? '1' : '0';
+            const thread = control.closest('.post-full__comment-thread');
+            if (!thread) return;
+
+            const toggleButton = thread.querySelector('[data-action="comment-children-toggle"].post-full__comment-children-toggle');
+            if (!toggleButton) return;
+
+            const nextExpanded = toggleButton.dataset.expanded !== '1';
+            toggleButton.dataset.expanded = nextExpanded ? '1' : '0';
             this.applyCommentChildrenState();
             this.requestMasonryLayoutUpdate();
         });
@@ -584,9 +590,8 @@ class PostFullComponent {
             }
 
             const isExpanded = toggleButton.dataset.expanded === '1';
-            const repliesLabel = `${childrenCount} ${this.pluralizeRu(childrenCount, 'ответ', 'ответа', 'ответов')}`;
-            toggleButton.textContent = isExpanded ? 'Скрыть ответы' : repliesLabel;
-            toggleButton.setAttribute('aria-label', isExpanded ? 'Скрыть ответы' : `Показать ${repliesLabel}`);
+            toggleButton.textContent = isExpanded ? '−' : '+';
+            toggleButton.setAttribute('aria-label', isExpanded ? 'Скрыть ответы' : 'Показать ответы');
             childrenContainer.style.display = isExpanded ? '' : 'none';
             this.updateThreadReplyCount(thread);
         });
@@ -1242,12 +1247,23 @@ class PostFullComponent {
             metaNode.style.display = 'none';
             metaNode.textContent = '';
             separatorNode.style.display = 'none';
+            delete metaNode.dataset.action;
+            delete metaNode.dataset.expanded;
+            metaNode.removeAttribute('aria-label');
             return;
         }
 
         metaNode.style.display = '';
         separatorNode.style.display = '';
         metaNode.textContent = `${repliesCount} ${this.pluralizeRu(repliesCount, 'ответ', 'ответа', 'ответов')}`;
+        metaNode.dataset.action = 'comment-children-toggle';
+
+        const toggleButton = thread.querySelector('[data-action="comment-children-toggle"].post-full__comment-children-toggle');
+        if (toggleButton) {
+            const isExpanded = toggleButton.dataset.expanded === '1';
+            metaNode.dataset.expanded = isExpanded ? '1' : '0';
+            metaNode.setAttribute('aria-label', isExpanded ? 'Скрыть ответы' : `Показать ${metaNode.textContent}`);
+        }
     }
 
     layoutPostTags() {
