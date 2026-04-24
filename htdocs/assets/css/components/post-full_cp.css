@@ -241,11 +241,11 @@
 }
 
 .post-full__description-hide-button {
-    position: absolute;
+    position: fixed;
     left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 2;
+    bottom: 20px;
+    transform: translate(-50%, 10px);
+    z-index: 60;
     min-width: 180px;
     height: 34px;
     border: 2px solid #e0e0e0;
@@ -255,14 +255,14 @@
     box-shadow: 0 2px 4px rgba(0,0,0,0.07);
     font-size: 15px;
     color: #bbb;
-    display: none;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-}
-
-.post-full__description-hide-button.is-visible {
-    display: flex;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.1s ease, visibility 0.1s ease, transform 0.1s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
 .post-full__description-hide-button:hover {
@@ -270,22 +270,23 @@
     border-color: rgb(150, 150, 250);
 }
 
-.post-full__description-hide-slot {
-    width: 100%;
-    margin: 0;
-    display: block;
+.post-full__description-hide-button.is-visible {
+    visibility: visible;
 }
 
-.post-full__description-hide-slot.has-button {
-    margin: 0;
+.post-full__description-hide-button.is-open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translate(-50%, 0);
 }
 
-.post-full__description-hide-button.is-floating-bottom {
-    position: fixed;
-    top: auto;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
+.post-full__description-hide-button--closing {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translate(-50%, 5px);
+    transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease;
 }
 
 .post-full__meta-row {
@@ -536,11 +537,15 @@
     transition: color 0.2s ease;
 }
 
-.post-full__comment-action-button:hover {
+.post-full__comment-action-button:not(.is-active):hover {
     color: rgb(150, 150, 250);
 }
 
 .post-full__comment-action-button.is-active {
+    color: rgb(150, 150, 250);
+}
+
+.post-full__comment-action-button.is-active:hover {
     color: rgb(100, 100, 200);
 }
 
@@ -621,16 +626,25 @@
     background: transparent;
     padding: 0;
     font-family: 'SF_def', Arial, sans-serif;
-    font-size: 18px;
+    font-size: 15px;
     line-height: 1.2;
     color: #bbb;
     cursor: pointer;
     margin-bottom: 3px;
+    transition: color 0.2s ease;
 }
 
 .post-full__comments-toggle-button:hover {
     color: rgb(150, 150, 250);
     text-decoration: underline;
+}
+
+.post-full__description-divider-button {
+    display: none;
+}
+
+.post-full__description-divider-button.is-visible {
+    display: inline-flex;
 }
 
 .post-full__comment-reply-state {

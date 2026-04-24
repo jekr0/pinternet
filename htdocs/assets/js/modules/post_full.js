@@ -32,6 +32,8 @@ class PostFullComponent {
         this.pendingCommentReportId = 0;
         this.descriptionElement = null;
         this.descriptionHideButton = null;
+        this.descriptionDividerButton = null;
+        this.descriptionDividerElement = null;
         this.descriptionSupportsCollapse = false;
         this.descriptionExpanded = false;
         this.descriptionHideScrollHandler = null;
@@ -279,6 +281,7 @@ class PostFullComponent {
 
     bindDescriptionToggle() {
         this.descriptionElement = this.postFullElement?.querySelector('[data-component="post-full-description"]') || null;
+        this.descriptionDividerElement = this.postFullElement?.querySelector('[data-component="post-full-description-divider"]') || null;
         if (!this.descriptionElement) return;
 
         this.descriptionSupportsCollapse = this.descriptionElement.scrollHeight > 90;
@@ -287,7 +290,7 @@ class PostFullComponent {
             return;
         }
 
-        this.ensureDescriptionHideButton();
+        this.ensureDescriptionHideButtons();
         this.descriptionExpanded = false;
         this.descriptionElement.classList.add('is-collapsed');
         this.updateDescriptionHideButtonPosition();
@@ -297,21 +300,28 @@ class PostFullComponent {
         });
     }
 
-    ensureDescriptionHideButton() {
-        if (this.descriptionHideButton || !this.postFullElement) return;
-        const hideSlot = this.postFullElement.querySelector('[data-component="post-full-description-divider"]');
-        if (!hideSlot) return;
+    ensureDescriptionHideButtons() {
+        if (!this.postFullElement || !this.descriptionDividerElement) return;
 
-        const hideButton = document.createElement('button');
-        hideButton.className = 'post-full__description-hide-button';
-        hideButton.type = 'button';
-        hideButton.textContent = 'Скрыть описание';
-        hideButton.addEventListener('click', () => {
-            this.collapseDescription();
-        });
+        if (!this.descriptionDividerButton) {
+            const dividerButton = document.createElement('button');
+            dividerButton.className = 'post-full__comments-toggle-button post-full__description-divider-button';
+            dividerButton.type = 'button';
+            dividerButton.textContent = 'Скрыть описание';
+            dividerButton.addEventListener('click', () => this.collapseDescription());
+            this.descriptionDividerElement.appendChild(dividerButton);
+            this.descriptionDividerButton = dividerButton;
+        }
 
-        hideSlot.appendChild(hideButton);
-        this.descriptionHideButton = hideButton;
+        if (!this.descriptionHideButton) {
+            const floatingButton = document.createElement('button');
+            floatingButton.className = 'post-full__description-hide-button';
+            floatingButton.type = 'button';
+            floatingButton.textContent = 'Скрыть описание';
+            floatingButton.addEventListener('click', () => this.collapseDescription());
+            this.postFullElement.appendChild(floatingButton);
+            this.descriptionHideButton = floatingButton;
+        }
     }
 
     expandDescription() {
@@ -331,31 +341,50 @@ class PostFullComponent {
     }
 
     showDescriptionHideButton() {
-        if (!this.descriptionHideButton) return;
-        const hideSlot = this.postFullElement?.querySelector('[data-component="post-full-description-divider"]');
-        hideSlot?.classList.add('has-button');
-        this.descriptionHideButton.classList.add('is-visible');
+        if (this.descriptionDividerButton) {
+            this.descriptionDividerButton.classList.add('is-visible');
+        }
         this.updateDescriptionHideButtonPosition();
     }
 
     hideDescriptionHideButton() {
-        if (!this.descriptionHideButton) return;
-        const hideSlot = this.postFullElement?.querySelector('[data-component="post-full-description-divider"]');
-        hideSlot?.classList.remove('has-button');
-        this.descriptionHideButton.classList.remove('is-visible');
-        this.descriptionHideButton.classList.remove('is-floating-bottom');
+        this.descriptionDividerButton?.classList.remove('is-visible');
+        this.hideFloatingDescriptionButton(true);
     }
 
     updateDescriptionHideButtonPosition() {
-        if (!this.descriptionHideButton) return;
-        if (!this.descriptionExpanded || !this.descriptionHideButton.classList.contains('is-visible')) {
-            this.descriptionHideButton.classList.remove('is-floating-bottom');
+        if (!this.descriptionHideButton || !this.descriptionDividerButton || !this.descriptionElement) return;
+        if (!this.descriptionExpanded || !this.descriptionDividerButton.classList.contains('is-visible')) {
+            this.hideFloatingDescriptionButton(true);
             return;
         }
 
-        const rect = this.descriptionHideButton.getBoundingClientRect();
-        const shouldPinToBottom = rect.top > (window.innerHeight - 20);
-        this.descriptionHideButton.classList.toggle('is-floating-bottom', shouldPinToBottom);
+        const dividerRect = this.descriptionDividerButton.getBoundingClientRect();
+        const shouldShowFloating = dividerRect.bottom < 0 || dividerRect.top > window.innerHeight;
+        if (!shouldShowFloating) {
+            this.hideFloatingDescriptionButton();
+            return;
+        }
+
+        const descriptionRect = this.descriptionElement.getBoundingClientRect();
+        this.descriptionHideButton.style.left = `${Math.round(descriptionRect.left + (descriptionRect.width / 2))}px`;
+        this.descriptionHideButton.classList.add('is-visible', 'is-open');
+        this.descriptionHideButton.classList.remove('post-full__description-hide-button--closing');
+    }
+
+    hideFloatingDescriptionButton(immediate = false) {
+        if (!this.descriptionHideButton || !this.descriptionHideButton.classList.contains('is-visible')) return;
+        if (immediate) {
+            this.descriptionHideButton.classList.remove('is-visible', 'is-open', 'post-full__description-hide-button--closing');
+            return;
+        }
+
+        this.descriptionHideButton.classList.remove('is-open');
+        this.descriptionHideButton.classList.add('post-full__description-hide-button--closing');
+        window.setTimeout(() => {
+            if (!this.descriptionHideButton) return;
+            this.descriptionHideButton.classList.remove('is-visible', 'post-full__description-hide-button--closing');
+        }, 200);
     }
 
     requestMasonryLayoutUpdate() {
@@ -724,6 +753,19 @@ class PostFullComponent {
         const parentCommentId = Number(commentData.parentCommentId || 0);
         const parentUsername = String(commentData.parentUsername || '').trim();
         const hasReplyLabel = parentCommentId > 0 && parentUsername !== '';
+        const metaAfterUsername = commentData.isReply
+            ? `<span class="post-full__comment-meta-separator" aria-hidden="true"></span>
+               <span class="post-full__comment-published-at" data-created-at-ts="${createdAtTs}">${this.escapeHtml(publishedLabel)}</span>
+               ${hasReplyLabel
+                    ? `<span class="post-full__comment-meta-separator" aria-hidden="true"></span>
+                       <span class="post-full__comment-reply-label">Ответ <span class="post-full__comment-reply-target">@${this.escapeHtml(parentUsername)}</span></span>`
+                    : ''}`
+            : `${hasReplyLabel
+                    ? `<span class="post-full__comment-meta-separator" aria-hidden="true"></span>
+                       <span class="post-full__comment-reply-label">Ответ <span class="post-full__comment-reply-target">@${this.escapeHtml(parentUsername)}</span></span>`
+                    : ''}
+               <span class="post-full__comment-meta-separator" aria-hidden="true"></span>
+               <span class="post-full__comment-published-at" data-created-at-ts="${createdAtTs}">${this.escapeHtml(publishedLabel)}</span>`;
         const createdAtTs = this.normalizeUnixTimestamp(commentData.createdAtTs || this.getReferenceNowTs());
         const publishedLabel = this.formatRelativeTimeLabel(createdAtTs, this.getReferenceNowTs());
 
@@ -832,12 +874,7 @@ class PostFullComponent {
                 <div class="post-full__comment-meta">
                     <div class="post-full__comment-meta-main">
                         <a class="post-full__comment-username" href="${this.escapeHtml(profileUrl)}" aria-label="Профиль автора @${this.escapeHtml(username)}">@${this.escapeHtml(username)}</a>
-                        ${hasReplyLabel
-                            ? `<span class="post-full__comment-meta-separator" aria-hidden="true"></span>
-                               <span class="post-full__comment-reply-label">Ответ <span class="post-full__comment-reply-target">@${this.escapeHtml(parentUsername)}</span></span>`
-                            : ''}
-                        <span class="post-full__comment-meta-separator" aria-hidden="true"></span>
-                        <span class="post-full__comment-published-at" data-created-at-ts="${createdAtTs}">${this.escapeHtml(publishedLabel)}</span>
+                        ${metaAfterUsername}
                         <span class="post-full__comment-meta-separator" data-component="post-full-comment-replies-separator" aria-hidden="true" style="display:none;"></span>
                         <span class="post-full__comment-reply-label" data-component="post-full-comment-replies-meta" style="display:none;"></span>
                     </div>
@@ -1016,6 +1053,29 @@ class PostFullComponent {
     }
 
     syncCommentRails() {
+        const sideElements = this.postFullElement?.querySelectorAll('.post-full__comment-side') || [];
+        sideElements.forEach((sideElement) => {
+            const thread = sideElement.closest('.post-full__comment-thread');
+            const commentItem = sideElement.closest('.post-full__comment-item');
+            const toggleButton = sideElement.querySelector('.post-full__comment-children-toggle');
+            if (!thread || !commentItem || !toggleButton) return;
+
+            const threadChildren = thread.querySelectorAll('.post-full__comment-item--reply');
+            const isExpanded = toggleButton.dataset.expanded === '1';
+            const anchorItem = (isExpanded && threadChildren.length > 0)
+                ? threadChildren[threadChildren.length - 1]
+                : commentItem;
+            const anchorLike = anchorItem.querySelector('.post-full__comment-like-count');
+            const anchorActions = anchorItem.querySelector('.post-full__comment-actions');
+            const anchorTarget = anchorLike || anchorActions;
+            if (!anchorTarget) return;
+
+            const sideRect = sideElement.getBoundingClientRect();
+            const targetRect = anchorTarget.getBoundingClientRect();
+            const alignedTop = Math.max(0, Math.round((targetRect.top + (targetRect.height / 2)) - sideRect.top - (toggleButton.offsetHeight / 2)));
+            toggleButton.style.top = `${alignedTop}px`;
+        });
+
         const commentItems = this.postFullElement?.querySelectorAll('.post-full__comment-item') || [];
         commentItems.forEach((item) => {
             const railElement = item.querySelector('.post-full__comment-rail');
@@ -1032,9 +1092,11 @@ class PostFullComponent {
             if (!parentItem || children.length === 0) return;
 
             const parentRail = parentItem.querySelector('.post-full__comment-rail');
+            const parentToggle = parentItem.querySelector('.post-full__comment-children-toggle');
             const lastChild = children[children.length - 1];
             const lastChildRail = lastChild.querySelector('.post-full__comment-rail');
             if (!parentRail || !lastChildRail) return;
+            if (parentToggle) return;
             if (childrenContainer && getComputedStyle(childrenContainer).display === 'none') return;
 
             const parentRailRect = parentRail.getBoundingClientRect();
@@ -1047,20 +1109,6 @@ class PostFullComponent {
             parentRail.style.height = `${Math.max(0, extendedHeight)}px`;
         });
 
-        const sideElements = this.postFullElement?.querySelectorAll('.post-full__comment-side') || [];
-        sideElements.forEach((sideElement) => {
-            const commentItem = sideElement.closest('.post-full__comment-item');
-            const toggleButton = sideElement.querySelector('.post-full__comment-children-toggle');
-            if (!commentItem || !toggleButton) return;
-
-            const actions = commentItem.querySelector('.post-full__comment-actions');
-            if (!actions) return;
-
-            const sideRect = sideElement.getBoundingClientRect();
-            const actionsRect = actions.getBoundingClientRect();
-            const alignedTop = Math.max(0, Math.round((actionsRect.top + (actionsRect.height / 2)) - sideRect.top - (toggleButton.offsetHeight / 2)));
-            toggleButton.style.top = `${alignedTop}px`;
-        });
     }
 
     getCommentRailBottom(commentItem) {
@@ -1071,14 +1119,21 @@ class PostFullComponent {
         const likeCount = commentItem.querySelector('.post-full__comment-like-count');
         const actions = commentItem.querySelector('.post-full__comment-actions');
         const textElement = commentItem.querySelector('.post-full__comment-text');
+        const toggleButton = sideElement.querySelector('.post-full__comment-children-toggle');
         const sideRect = sideElement.getBoundingClientRect();
         const avatarRect = avatarElement?.getBoundingClientRect() || sideRect;
         const fallbackBottom = textElement
             ? textElement.getBoundingClientRect().bottom
             : sideRect.bottom;
+        const toggleTop = toggleButton
+            ? toggleButton.getBoundingClientRect().top
+            : 0;
         const targetBottom = likeCount?.getBoundingClientRect().bottom
             || actions?.getBoundingClientRect().bottom
             || fallbackBottom;
+        if (toggleButton) {
+            return Math.max(0, Math.round(toggleTop - avatarRect.bottom - 5));
+        }
         return Math.max(0, Math.round(targetBottom - avatarRect.bottom - 5));
     }
 

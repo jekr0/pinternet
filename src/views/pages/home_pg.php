@@ -579,7 +579,6 @@
                 <div class="post-full__description is-collapsed" data-component="post-full-description">
                     <?php echo nl2br(htmlspecialchars($selectedPostDescription, ENT_QUOTES, 'UTF-8')); ?>
                 </div>
-                <div class="post-full__description-hide-slot" data-component="post-full-description-hide-slot"></div>
             <?php endif; ?>
 
             <?php if (!empty($selectedPostHashtags)): ?>
@@ -637,12 +636,21 @@
                                         <div class="post-full__comment-meta">
                                             <div class="post-full__comment-meta-main">
                                                 <a class="post-full__comment-username" href="<?php echo htmlspecialchars($commentProfileUrl, ENT_QUOTES, 'UTF-8'); ?>" aria-label="Профиль автора @<?php echo htmlspecialchars($commentUsername, ENT_QUOTES, 'UTF-8'); ?>">@<?php echo htmlspecialchars($commentUsername, ENT_QUOTES, 'UTF-8'); ?></a>
-                                                <?php if ($commentParentId > 0 && $commentParentUsername !== ''): ?>
+                                                <?php if ($isReply): ?>
                                                     <span class="post-full__comment-meta-separator" aria-hidden="true"></span>
-                                                    <span class="post-full__comment-reply-label">Ответ <span class="post-full__comment-reply-target">@<?php echo htmlspecialchars($commentParentUsername, ENT_QUOTES, 'UTF-8'); ?></span></span>
+                                                    <span class="post-full__comment-published-at" data-created-at-ts="<?php echo $commentCreatedTimestamp; ?>"><?php echo htmlspecialchars($commentPublishedLabel, ENT_QUOTES, 'UTF-8'); ?></span>
+                                                    <?php if ($commentParentId > 0 && $commentParentUsername !== ''): ?>
+                                                        <span class="post-full__comment-meta-separator" aria-hidden="true"></span>
+                                                        <span class="post-full__comment-reply-label">Ответ <span class="post-full__comment-reply-target">@<?php echo htmlspecialchars($commentParentUsername, ENT_QUOTES, 'UTF-8'); ?></span></span>
+                                                    <?php endif; ?>
+                                                <?php else: ?>
+                                                    <?php if ($commentParentId > 0 && $commentParentUsername !== ''): ?>
+                                                        <span class="post-full__comment-meta-separator" aria-hidden="true"></span>
+                                                        <span class="post-full__comment-reply-label">Ответ <span class="post-full__comment-reply-target">@<?php echo htmlspecialchars($commentParentUsername, ENT_QUOTES, 'UTF-8'); ?></span></span>
+                                                    <?php endif; ?>
+                                                    <span class="post-full__comment-meta-separator" aria-hidden="true"></span>
+                                                    <span class="post-full__comment-published-at" data-created-at-ts="<?php echo $commentCreatedTimestamp; ?>"><?php echo htmlspecialchars($commentPublishedLabel, ENT_QUOTES, 'UTF-8'); ?></span>
                                                 <?php endif; ?>
-                                                <span class="post-full__comment-meta-separator" aria-hidden="true"></span>
-                                                <span class="post-full__comment-published-at" data-created-at-ts="<?php echo $commentCreatedTimestamp; ?>"><?php echo htmlspecialchars($commentPublishedLabel, ENT_QUOTES, 'UTF-8'); ?></span>
                                                 <span class="post-full__comment-meta-separator" data-component="post-full-comment-replies-separator" aria-hidden="true" style="display:none;"></span>
                                                 <span class="post-full__comment-reply-label" data-component="post-full-comment-replies-meta" style="display:none;"></span>
                                             </div>
