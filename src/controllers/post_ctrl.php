@@ -31,6 +31,10 @@ if ($path === '/posts/bookmark/boards') {
     handleBookmarkBoards($pdo, $userId);
 }
 
+if ($path === '/posts/bookmark/board-create') {
+    handleBookmarkBoardCreate($pdo, $userId);
+}
+
 if ($path === '/hashtags/suggest') {
     handleHashtagsSuggest($pdo);
 }
@@ -249,6 +253,36 @@ function handleBookmarkPost(PDO $pdo, int $userId): never
     jsonResponse(['success' => true, 'bookmarked' => true]);
 }
 
+function handleBookmarkBoards(PDO $pdo, int $userId): never
+{
+    $postId = (int) ($_GET['post_id'] ?? 0);
+    if ($postId <= 0) {
+        jsonResponse(['success' => false, 'error' => 'Некорректный post_id.'], 422);
+    }
+
+    $boardsStmt = $pdo->prepare('
+        SELECT b.name, CASE WHEN sp.id IS NULL THEN 0 ELSE 1 END AS is_saved
+        FROM Boards b
+        LEFT JOIN Saved_Posts sp ON sp.board_id = b.id AND sp.user_id = b.user_id AND sp.post_id = ?
+        WHERE b.user_id = ?
+        ORDER BY b.created_at ASC
+    ');
+    $boardsStmt->execute([$postId, $userId]);
+    $rows = $boardsStmt->fetchAll();
+
+    if (empty($rows)) {
+        createBoard($pdo, $userId, 'Profile');
+        $rows = [['name' => 'Profile', 'is_saved' => 0]];
+    }
+
+    $boards = array_map(static fn(array $row) => [
+        'name' => ((string) $row['name']) === 'Profile' ? 'Профиль' : (string) $row['name'],
+        'is_saved' => ((int) $row['is_saved']) === 1,
+    ], $rows);
+
+    jsonResponse(['success' => true, 'boards' => $boards]);
+}
+
 function handleBookmarkBoardToggle(PDO $pdo, int $userId): never
 {
     if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
@@ -256,18 +290,22 @@ function handleBookmarkBoardToggle(PDO $pdo, int $userId): never
     }
 
     $postId = (int) ($_POST['post_id'] ?? 0);
-    $boardName = trim((string) ($_POST['board'] ?? ''));
+    $boardName = normalizeCollectionName(trim((string) ($_POST['board'] ?? '')));
 
     if ($postId <= 0 || $boardName === '') {
         jsonResponse(['success' => false, 'error' => 'Некорректные параметры.'], 422);
     }
 
-    $normalizedBoardName = normalizeCollectionName($boardName);
-    if ($normalizedBoardName === 'Profile') {
+    $isOwner = isPostOwner($pdo, $postId, $userId);
+    if ($isOwner === null) {
+        jsonResponse(['success' => false, 'error' => 'Пост не найден.'], 404);
+    }
+    if ($boardName === 'Profile' && $isOwner) {
         jsonResponse(['success' => false, 'error' => 'Коллекцию "Профиль" нельзя изменять вручную.'], 403);
     }
-    $boardId = findBoardId($pdo, $userId, $normalizedBoardName);
-    if ($boardId === null && $normalizedBoardName === 'Profile') {
+
+    $boardId = findBoardId($pdo, $userId, $boardName);
+    if ($boardId === null && $boardName === 'Profile') {
         $boardId = createBoard($pdo, $userId, 'Profile');
     }
     if ($boardId === null) {
@@ -301,6 +339,18 @@ function handleBookmarkBoardToggle(PDO $pdo, int $userId): never
         $hasAnyStmt->execute([$userId, $postId]);
         $hasAny = $hasAnyStmt->fetchColumn() !== false;
 
+        $hasNonProfileStmt = $pdo->prepare('
+            SELECT 1
+            FROM Saved_Posts sp
+            INNER JOIN Boards b ON b.id = sp.board_id AND b.user_id = sp.user_id
+            WHERE sp.user_id = ?
+              AND sp.post_id = ?
+              AND LOWER(b.name) <> LOWER(?)
+            LIMIT 1
+        ');
+        $hasNonProfileStmt->execute([$userId, $postId, 'Profile']);
+        $hasNonProfile = $hasNonProfileStmt->fetchColumn() !== false;
+
         $pdo->commit();
     } catch (Throwable $e) {
         $pdo->rollBack();
@@ -308,7 +358,7 @@ function handleBookmarkBoardToggle(PDO $pdo, int $userId): never
         jsonResponse(['success' => false, 'error' => 'Не удалось обновить коллекцию.'], 500);
     }
 
-    jsonResponse(['success' => true, 'saved' => $isSaved, 'has_any' => $hasAny]);
+    jsonResponse(['success' => true, 'saved' => $isSaved, 'has_any' => $hasAny, 'has_non_profile' => $hasNonProfile]);
 }
 
 function handleBookmarkClear(PDO $pdo, int $userId): never
@@ -322,14 +372,24 @@ function handleBookmarkClear(PDO $pdo, int $userId): never
         jsonResponse(['success' => false, 'error' => 'Некорректный post_id.'], 422);
     }
 
+    $isOwner = isPostOwner($pdo, $postId, $userId);
+    if ($isOwner === null) {
+        jsonResponse(['success' => false, 'error' => 'Пост не найден.'], 404);
+    }
+
     try {
-        $deleteStmt = $pdo->prepare('
-            DELETE sp
-            FROM Saved_Posts sp
-            INNER JOIN Boards b ON b.id = sp.board_id
-            WHERE sp.user_id = ? AND sp.post_id = ? AND LOWER(b.name) <> LOWER(?)
-        ');
-        $deleteStmt->execute([$userId, $postId, 'Profile']);
+        if ($isOwner) {
+            $deleteStmt = $pdo->prepare('
+                DELETE sp
+                FROM Saved_Posts sp
+                INNER JOIN Boards b ON b.id = sp.board_id
+                WHERE sp.user_id = ? AND sp.post_id = ? AND LOWER(b.name) <> LOWER(?)
+            ');
+            $deleteStmt->execute([$userId, $postId, 'Profile']);
+        } else {
+            $deleteStmt = $pdo->prepare('DELETE FROM Saved_Posts WHERE user_id = ? AND post_id = ?');
+            $deleteStmt->execute([$userId, $postId]);
+        }
 
         $hasAnyStmt = $pdo->prepare('
             SELECT 1
@@ -340,12 +400,65 @@ function handleBookmarkClear(PDO $pdo, int $userId): never
         ');
         $hasAnyStmt->execute([$userId, $postId]);
         $hasAny = $hasAnyStmt->fetchColumn() !== false;
+
+        $hasNonProfileStmt = $pdo->prepare('
+            SELECT 1
+            FROM Saved_Posts sp
+            INNER JOIN Boards b ON b.id = sp.board_id AND b.user_id = sp.user_id
+            WHERE sp.user_id = ?
+              AND sp.post_id = ?
+              AND LOWER(b.name) <> LOWER(?)
+            LIMIT 1
+        ');
+        $hasNonProfileStmt->execute([$userId, $postId, 'Profile']);
+        $hasNonProfile = $hasNonProfileStmt->fetchColumn() !== false;
     } catch (Throwable $e) {
         error_log('Bookmark clear error: ' . $e->getMessage());
         jsonResponse(['success' => false, 'error' => 'Не удалось удалить пост из коллекций.'], 500);
     }
 
-    jsonResponse(['success' => true, 'has_any' => $hasAny]);
+    jsonResponse(['success' => true, 'has_any' => $hasAny, 'has_non_profile' => $hasNonProfile]);
+}
+
+function handleBookmarkBoardCreate(PDO $pdo, int $userId): never
+{
+    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+        jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод.'], 405);
+    }
+
+    $postId = (int) ($_POST['post_id'] ?? 0);
+    $boardName = validateAndNormalizeCollectionName(trim((string) ($_POST['board'] ?? '')));
+    if ($postId <= 0 || $boardName === null || $boardName === '') {
+        jsonResponse(['success' => false, 'error' => 'Некорректные параметры.'], 422);
+    }
+
+    try {
+        $pdo->beginTransaction();
+
+        $boardId = findBoardId($pdo, $userId, $boardName);
+        if ($boardId === null) {
+            $boardId = createBoard($pdo, $userId, $boardName);
+        }
+
+        $existsStmt = $pdo->prepare('SELECT id FROM Saved_Posts WHERE user_id = ? AND post_id = ? AND board_id = ? LIMIT 1');
+        $existsStmt->execute([$userId, $postId, $boardId]);
+        $savedId = $existsStmt->fetchColumn();
+
+        if ($savedId === false) {
+            $insertStmt = $pdo->prepare('INSERT INTO Saved_Posts (user_id, post_id, board_id) VALUES (?, ?, ?)');
+            $insertStmt->execute([$userId, $postId, $boardId]);
+        }
+
+        $pdo->commit();
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        error_log('Bookmark board create error: ' . $e->getMessage());
+        jsonResponse(['success' => false, 'error' => 'Не удалось создать коллекцию.'], 500);
+    }
+
+    jsonResponse(['success' => true, 'board' => $boardName === 'Profile' ? 'Профиль' : $boardName]);
 }
 
 function handlePostsList(PDO $pdo): never
@@ -634,6 +747,20 @@ function handleCreatePost(PDO $pdo, int $userId): never
     }
 
     jsonResponse(['success' => true, 'post_id' => $postId, 'image_path' => $publicPath]);
+}
+
+
+function isPostOwner(PDO $pdo, int $postId, int $userId): ?bool
+{
+    $postOwnerStmt = $pdo->prepare('SELECT user_id FROM Posts WHERE id = ? LIMIT 1');
+    $postOwnerStmt->execute([$postId]);
+    $postOwnerId = $postOwnerStmt->fetchColumn();
+
+    if ($postOwnerId === false) {
+        return null;
+    }
+
+    return (int) $postOwnerId === $userId;
 }
 
 function findBoardId(PDO $pdo, int $userId, string $collectionName): ?int

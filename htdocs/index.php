@@ -92,6 +92,10 @@ switch ($path) {
         case '/posts/list':
         case '/posts/like':
         case '/posts/bookmark':
+        case '/posts/bookmark/boards':
+        case '/posts/bookmark/board-toggle':
+        case '/posts/bookmark/board-create':
+        case '/posts/bookmark/clear':
         case '/boards/list':
         case '/boards/create':
         case '/hashtags/suggest':
@@ -100,13 +104,6 @@ switch ($path) {
         case '/comments/like':
         case '/comments/report':
         require_once '../src/controllers/post_ctrl.php';
-        exit;
-
-        case '/posts/bookmark/boards':
-        case '/posts/bookmark/board-toggle':
-        case '/posts/bookmark/board-create':
-        case '/posts/bookmark/clear':
-        require_once '../src/controllers/dropdown_collections_ctrl.php';
         exit;
 
         case '/registration':

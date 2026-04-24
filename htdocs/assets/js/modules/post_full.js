@@ -534,16 +534,19 @@ class PostFullComponent {
         });
 
         if (totalThreads === 0) {
-            divider.classList.remove('is-visible');
-            return;
-        }
-
-        if (hiddenCount <= 0) {
-            divider.classList.remove('is-visible');
+            divider.classList.remove('is-visible', 'is-solid');
+            toggleButton.style.display = 'none';
             return;
         }
 
         divider.classList.add('is-visible');
+        if (hiddenCount <= 0) {
+            divider.classList.add('is-solid');
+            toggleButton.style.display = 'none';
+            return;
+        }
+
+        divider.classList.remove('is-solid');
         if (hiddenCount > 0 && !this.commentsExpanded) {
             toggleButton.textContent = `Показать все комментарии (+${hiddenCount})`;
             toggleButton.style.display = '';
@@ -581,8 +584,9 @@ class PostFullComponent {
             }
 
             const isExpanded = toggleButton.dataset.expanded === '1';
-            toggleButton.textContent = isExpanded ? '−' : '+';
-            toggleButton.setAttribute('aria-label', isExpanded ? 'Скрыть ответы' : 'Показать ответы');
+            const repliesLabel = `${childrenCount} ${this.pluralizeRu(childrenCount, 'ответ', 'ответа', 'ответов')}`;
+            toggleButton.textContent = isExpanded ? 'Скрыть ответы' : repliesLabel;
+            toggleButton.setAttribute('aria-label', isExpanded ? 'Скрыть ответы' : `Показать ${repliesLabel}`);
             childrenContainer.style.display = isExpanded ? '' : 'none';
             this.updateThreadReplyCount(thread);
         });

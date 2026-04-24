@@ -722,25 +722,29 @@
     left: 50%;
     transform: translateX(-50%);
     z-index: 1;
-    font-family: 'NS_def', Arial, sans-serif;
-    font-size: 20px;
-    width: 20px;
+    font-family: 'SF_def', Arial, sans-serif;
+    font-size: 15px;
+    line-height: 20px;
+    width: auto;
+    min-width: 20px;
     height: 20px;
     border: none;
     border-radius: 5px;
     background: transparent;
-    color: rgb(150, 150, 250);
+    color: #bbb;
     margin-top: 0;
+    padding: 0 6px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: color 0.2s ease, background-color 0.2s ease;
+    white-space: nowrap;
+    transition: color 0.2s ease;
 }
 
 .post-full__comment-children-toggle:hover {
-    color: rgb(100, 100, 200);
-    background: rgba(150, 150, 250, 0.1);
+    color: rgb(150, 150, 250);
+    text-decoration: underline;
 }
 
 .post-full__comment-children-toggle:focus-visible {
