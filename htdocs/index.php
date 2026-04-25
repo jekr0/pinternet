@@ -54,6 +54,7 @@ switch ($path) {
             'toast_stack.js',
             'profile_button.js',
             'dropdown_profile.js',
+            'dropdown_search.js',
             'create_post_modal.js',
             'post_card.js',
             'post_full.js',
@@ -86,6 +87,11 @@ switch ($path) {
 
         case '/auth':
         require_once '../src/controllers/auth_ctrl.php';
+        exit;
+
+        case '/search/history':
+        case '/search/suggest':
+        require_once '../src/controllers/search_ctrl.php';
         exit;
 
         case '/posts/create':
@@ -135,6 +141,7 @@ switch ($path) {
             'toast_stack.js',
             'profile_button.js',
             'dropdown_profile.js',
+            'dropdown_search.js',
             'create_post_modal.js',
             'post_card.js',
             'adaptive_text.js'

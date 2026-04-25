@@ -256,3 +256,27 @@ CREATE TABLE Notifications (
 
     FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE
 );
+
+-- ---------------------------------------------------------------------
+-- Search history
+-- ---------------------------------------------------------------------
+
+CREATE TABLE `search-users` (
+    user_id     INT NOT NULL,
+    slot_index  TINYINT NOT NULL,
+    query_text  VARCHAR(128) NOT NULL,
+    searched_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, slot_index),
+    KEY idx_search_users_recent (user_id, searched_at),
+    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE `search-global` (
+    id          BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id     INT NOT NULL,
+    query_text  VARCHAR(128) NOT NULL,
+    searched_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_search_global_recent (searched_at),
+    KEY idx_search_global_query (query_text),
+    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE
+);

@@ -643,9 +643,9 @@ class PostFullComponent {
         }
 
         const date = new Date(createdAtTs * 1000);
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const year = date.getFullYear();
+        const day = String(date.getUTCDate()).padStart(2, '0');
+        const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+        const year = date.getUTCFullYear();
         return `${day}.${month}.${year}`;
     }
 
@@ -812,14 +812,14 @@ class PostFullComponent {
             this.prependComment({
                 commentId: Number(payload?.comment_id || 0),
                 content: text,
-                createdAtTs: Math.floor(Date.now() / 1000),
+                createdAtTs: Number(payload?.created_at_ts || this.getReferenceNowTs()),
                 username: String(this.postFullElement?.dataset.viewerUsername || '').trim(),
                 avatarSrc: String(this.postFullElement?.dataset.viewerAvatarSrc || ''),
                 profileUrl: String(this.postFullElement?.dataset.viewerProfileUrl || '/profile'),
                 hasAvatar: this.postFullElement?.dataset.viewerHasAvatar === '1',
                 parentUsername: this.replyTargetUsername,
                 parentCommentId,
-                rootCommentId: this.replyTargetRootCommentId
+                rootCommentId: Number(payload?.root_comment_id || this.replyTargetRootCommentId)
             });
 
             this.showToast('Комментарий добавлен');
@@ -930,6 +930,20 @@ class PostFullComponent {
         const likesCount = Number(commentData.likesCount || 0);
         const isLiked = !!commentData.isLiked;
         const rootCommentId = Number(commentData.rootCommentId || commentId || 0);
+        const hasReplyLabel = parentCommentId > 0 && parentUsername !== '';
+        const metaAfterUsername = commentData.isReply
+            ? `<span class="post-full__comment-meta-separator" aria-hidden="true"></span>
+               <span class="post-full__comment-published-at" data-created-at-ts="${createdAtTs}">${this.escapeHtml(publishedLabel)}</span>
+               ${hasReplyLabel
+                    ? `<span class="post-full__comment-meta-separator" aria-hidden="true"></span>
+                       <span class="post-full__comment-reply-label">Ответ <span class="post-full__comment-reply-target">@${this.escapeHtml(parentUsername)}</span></span>`
+                    : ''}`
+            : `${hasReplyLabel
+                    ? `<span class="post-full__comment-meta-separator" aria-hidden="true"></span>
+                       <span class="post-full__comment-reply-label">Ответ <span class="post-full__comment-reply-target">@${this.escapeHtml(parentUsername)}</span></span>`
+                    : ''}
+               <span class="post-full__comment-meta-separator" aria-hidden="true"></span>
+               <span class="post-full__comment-published-at" data-created-at-ts="${createdAtTs}">${this.escapeHtml(publishedLabel)}</span>`;
 
         const item = document.createElement('article');
         item.className = `post-full__comment-item${commentData.isReply ? ' post-full__comment-item--reply' : ''}`;

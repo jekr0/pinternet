@@ -130,8 +130,8 @@ if (!$selectedPost) {
                         $commentProfileUrl = '/profile?username=' . urlencode($commentUsername);
                         $commentAvatar = $normalizePublicPath((string) ($commentRow['avatar'] ?? ''));
                         $commentHasAvatar = $commentAvatar !== '/uploads/avatars/avatar.jpg';
-                        $commentPublishedLabel = $formatPostPublishedLabel((string) ($commentRow['created_at'] ?? ''));
-                        $commentCreatedTimestamp = (int) strtotime((string) ($commentRow['created_at'] ?? ''));
+                        $commentCreatedTimestamp = (int) ($commentRow['created_at_ts'] ?? 0);
+                        $commentPublishedLabel = $formatPostPublishedLabel($commentCreatedTimestamp);
                         $commentLikesCount = (int) ($commentRow['likes_count'] ?? 0);
                         $commentId = (int) ($commentRow['id'] ?? 0);
                         $commentRootId = (int) ($commentRow['root_comment_id'] ?? $commentId);

@@ -531,9 +531,10 @@ function handleCreateComment(PDO $pdo, int $userId): never
     }
 
     $resolvedParentCommentId = null;
+    $rootCommentId = null;
     if ($parentCommentId > 0) {
         $parentStmt = $pdo->prepare('
-            SELECT id
+            SELECT id, parent_comment_id
             FROM Comments
             WHERE id = ?
               AND post_id = ?
@@ -541,11 +542,12 @@ function handleCreateComment(PDO $pdo, int $userId): never
             LIMIT 1
         ');
         $parentStmt->execute([$parentCommentId, $postId]);
-        $parentExists = $parentStmt->fetchColumn();
-        if ($parentExists === false) {
+        $parentRow = $parentStmt->fetch(PDO::FETCH_ASSOC) ?: null;
+        if ($parentRow === null) {
             jsonResponse(['success' => false, 'error' => 'Комментарий для ответа не найден.'], 404);
         }
-        $resolvedParentCommentId = (int) $parentExists;
+        $resolvedParentCommentId = (int) ($parentRow['id'] ?? 0);
+        $rootCommentId = resolveRootCommentId($pdo, $resolvedParentCommentId, $postId);
     }
 
     try {
@@ -557,11 +559,45 @@ function handleCreateComment(PDO $pdo, int $userId): never
         jsonResponse(['success' => false, 'error' => 'Не удалось сохранить комментарий.'], 500);
     }
 
+    $createdAtTsStmt = $pdo->prepare('SELECT UNIX_TIMESTAMP(created_at) FROM Comments WHERE id = ? LIMIT 1');
+    $createdAtTsStmt->execute([$commentId]);
+    $createdAtTs = (int) $createdAtTsStmt->fetchColumn();
+    if ($createdAtTs <= 0) {
+        $createdAtTs = time();
+    }
+
     jsonResponse([
         'success' => true,
         'comment_id' => $commentId,
         'parent_comment_id' => $resolvedParentCommentId,
+        'root_comment_id' => $rootCommentId ?? $commentId,
+        'created_at_ts' => $createdAtTs,
     ]);
+}
+
+function resolveRootCommentId(PDO $pdo, int $commentId, int $postId): int
+{
+    $cursorId = $commentId;
+    $safety = 0;
+    while ($cursorId > 0 && $safety < 32) {
+        $parentStmt = $pdo->prepare('
+            SELECT parent_comment_id
+            FROM Comments
+            WHERE id = ?
+              AND post_id = ?
+              AND is_deleted = 0
+            LIMIT 1
+        ');
+        $parentStmt->execute([$cursorId, $postId]);
+        $parentId = (int) $parentStmt->fetchColumn();
+        if ($parentId <= 0) {
+            return $cursorId;
+        }
+        $cursorId = $parentId;
+        $safety++;
+    }
+
+    return $commentId;
 }
 
 function handleToggleCommentLike(PDO $pdo, int $userId): never

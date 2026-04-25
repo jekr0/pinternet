@@ -15,7 +15,7 @@
 
     if ($viewerId > 0) {
         $stmt = $pdo->prepare('
-            SELECT p.id, p.image_path, p.description, p.created_at, u.username, u.avatar AS user_avatar,
+            SELECT p.id, p.image_path, p.description, p.created_at, UNIX_TIMESTAMP(p.created_at) AS created_at_ts, u.username, u.avatar AS user_avatar,
                    (pl.id IS NOT NULL) AS is_liked,
                    EXISTS(
                        SELECT 1
@@ -41,7 +41,7 @@
         $stmt->execute([$viewerId, $viewerId, 'Profile', $viewerId, $viewerId]);
     } else {
         $stmt = $pdo->query('
-            SELECT p.id, p.image_path, p.description, p.created_at, u.username, u.avatar AS user_avatar,
+            SELECT p.id, p.image_path, p.description, p.created_at, UNIX_TIMESTAMP(p.created_at) AS created_at_ts, u.username, u.avatar AS user_avatar,
                    0 AS is_liked,
                    0 AS is_bookmarked,
                    (SELECT COUNT(*) FROM Post_Likes pl_all WHERE pl_all.post_id = p.id) AS likes_count,
@@ -83,19 +83,13 @@
         return $many;
     };
 
-    $formatPostPublishedLabel = static function (?string $createdAtRaw) use ($pluralizeRu): string {
-        if (!is_string($createdAtRaw) || trim($createdAtRaw) === '') {
+    $formatPostPublishedLabel = static function (int $createdAtTs) use ($pluralizeRu): string {
+        if ($createdAtTs <= 0) {
             return '';
         }
 
-        try {
-            $createdAt = new DateTimeImmutable($createdAtRaw);
-            $now = new DateTimeImmutable('now');
-        } catch (Throwable) {
-            return '';
-        }
-
-        $diffSeconds = max(0, $now->getTimestamp() - $createdAt->getTimestamp());
+        $nowTs = time();
+        $diffSeconds = max(0, $nowTs - $createdAtTs);
         if ($diffSeconds <= 59) {
             return max(1, $diffSeconds) . ' сек. назад';
         }
@@ -115,7 +109,7 @@
             return $days . ' ' . $pluralizeRu($days, 'день', 'дня', 'дней') . ' назад';
         }
 
-        return $createdAt->format('d.m.Y');
+        return gmdate('d.m.Y', $createdAtTs);
     };
 
     $selectedPost = null;
@@ -254,7 +248,7 @@
 
             if ($selectedPostCommentsCount > 0) {
                 $commentsStmt = $pdo->prepare('
-                    SELECT pc.id, pc.content, pc.created_at, pc.parent_comment_id, u.username, u.avatar,
+                    SELECT pc.id, pc.content, pc.created_at, UNIX_TIMESTAMP(pc.created_at) AS created_at_ts, pc.parent_comment_id, u.username, u.avatar,
                            pu.username AS parent_username,
                            (SELECT COUNT(*) FROM Comment_Likes cl WHERE cl.comment_id = pc.id) AS likes_count,
                            (SELECT COUNT(*) FROM Comment_Likes clv WHERE clv.comment_id = pc.id AND clv.user_id = ?) AS is_liked_by_viewer
@@ -481,8 +475,8 @@
             $selectedAuthorHasAvatar = $selectedAuthorAvatar !== '/uploads/avatars/avatar.jpg';
             $selectedAuthorProfileUrl = '/profile?username=' . urlencode($selectedAuthorUsername);
             $selectedPostDescription = trim((string) ($selectedPost['description'] ?? ''));
-            $selectedPostPublishedLabel = $formatPostPublishedLabel((string) ($selectedPost['created_at'] ?? ''));
-            $selectedPostCreatedTimestamp = (int) strtotime((string) ($selectedPost['created_at'] ?? ''));
+            $selectedPostCreatedTimestamp = (int) ($selectedPost['created_at_ts'] ?? 0);
+            $selectedPostPublishedLabel = $formatPostPublishedLabel($selectedPostCreatedTimestamp);
             $selectedHasComments = $selectedPostCommentsCount > 0;
             include '../src/views/components/post-full_cp.php';
         ?>
