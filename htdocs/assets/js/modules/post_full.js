@@ -189,6 +189,15 @@ class PostFullComponent {
             if (!button || button.disabled) return;
 
             const action = button.dataset.action;
+            if (action === 'back') {
+                if (window.history.length > 1) {
+                    window.history.back();
+                } else {
+                    window.location.href = '/';
+                }
+                return;
+            }
+
             if (action === 'maximize') {
                 this.openZoomOverlay();
                 return;
@@ -344,6 +353,14 @@ class PostFullComponent {
         if (!this.scrollTopButton) return;
         if (this.scrollTopButton.dataset.bound === '1') return;
         this.scrollTopButton.dataset.bound = '1';
+
+        const scrollIcon = this.scrollTopButton.querySelector('[data-svg-src]');
+        if (scrollIcon) {
+            const src = scrollIcon.getAttribute('data-svg-src');
+            if (src) {
+                App.utils.loadSVG(src, scrollIcon);
+            }
+        }
 
         this.scrollTopButton.addEventListener('click', () => {
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -829,20 +846,6 @@ class PostFullComponent {
         const commentId = Number(commentData.commentId || 0);
         const parentCommentId = Number(commentData.parentCommentId || 0);
         const parentUsername = String(commentData.parentUsername || '').trim();
-        const hasReplyLabel = parentCommentId > 0 && parentUsername !== '';
-        const metaAfterUsername = commentData.isReply
-            ? `<span class="post-full__comment-meta-separator" aria-hidden="true"></span>
-               <span class="post-full__comment-published-at" data-created-at-ts="${createdAtTs}">${this.escapeHtml(publishedLabel)}</span>
-               ${hasReplyLabel
-                    ? `<span class="post-full__comment-meta-separator" aria-hidden="true"></span>
-                       <span class="post-full__comment-reply-label">Ответ <span class="post-full__comment-reply-target">@${this.escapeHtml(parentUsername)}</span></span>`
-                    : ''}`
-            : `${hasReplyLabel
-                    ? `<span class="post-full__comment-meta-separator" aria-hidden="true"></span>
-                       <span class="post-full__comment-reply-label">Ответ <span class="post-full__comment-reply-target">@${this.escapeHtml(parentUsername)}</span></span>`
-                    : ''}
-               <span class="post-full__comment-meta-separator" aria-hidden="true"></span>
-               <span class="post-full__comment-published-at" data-created-at-ts="${createdAtTs}">${this.escapeHtml(publishedLabel)}</span>`;
         const createdAtTs = this.normalizeUnixTimestamp(commentData.createdAtTs || this.getReferenceNowTs());
         const publishedLabel = this.formatRelativeTimeLabel(createdAtTs, this.getReferenceNowTs());
 
@@ -922,7 +925,6 @@ class PostFullComponent {
         const commentId = Number(commentData.commentId || 0);
         const parentCommentId = Number(commentData.parentCommentId || 0);
         const parentUsername = String(commentData.parentUsername || '').trim();
-        const hasReplyLabel = parentCommentId > 0 && parentUsername !== '';
         const createdAtTs = this.normalizeUnixTimestamp(commentData.createdAtTs || this.getReferenceNowTs());
         const publishedLabel = commentData.publishedLabel || this.formatRelativeTimeLabel(createdAtTs, this.getReferenceNowTs());
         const likesCount = Number(commentData.likesCount || 0);

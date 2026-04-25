@@ -75,6 +75,13 @@
     gap: 10px;
 }
 
+.post-full__action-button--back {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 3;
+}
+
 .post-full__action-button {
     width: 40px;
     height: 40px;

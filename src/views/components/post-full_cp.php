@@ -29,6 +29,10 @@ if (!$selectedPost) {
             alt="Изображение поста"
         >
 
+        <button class="post-full__action-button post-full__action-button--back" type="button" data-action="back" aria-label="Назад">
+            <span class="post-full__action-icon" data-svg-src="/assets/images/icons/arrow.svg" aria-hidden="true"></span>
+        </button>
+
         <div class="post-full__actions" aria-label="Действия с изображением">
             <button class="post-full__action-button" type="button" data-action="warning" aria-label="Пожаловаться">
                 <span class="post-full__action-icon" data-svg-src="/assets/images/icons/L-warning.svg" aria-hidden="true"></span>
