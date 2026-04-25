@@ -54,6 +54,7 @@ switch ($path) {
             'toast_stack.js',
             'profile_button.js',
             'dropdown_profile.js',
+            'dropdown_search.js',
             'create_post_modal.js',
             'post_card.js',
             'post_full.js',
@@ -88,10 +89,19 @@ switch ($path) {
         require_once '../src/controllers/auth_ctrl.php';
         exit;
 
+        case '/search/history':
+        case '/search/suggest':
+        require_once '../src/controllers/search_ctrl.php';
+        exit;
+
         case '/posts/create':
         case '/posts/list':
         case '/posts/like':
         case '/posts/bookmark':
+        case '/posts/bookmark/boards':
+        case '/posts/bookmark/board-toggle':
+        case '/posts/bookmark/board-create':
+        case '/posts/bookmark/clear':
         case '/boards/list':
         case '/boards/create':
         case '/hashtags/suggest':
@@ -100,13 +110,6 @@ switch ($path) {
         case '/comments/like':
         case '/comments/report':
         require_once '../src/controllers/post_ctrl.php';
-        exit;
-
-        case '/posts/bookmark/boards':
-        case '/posts/bookmark/board-toggle':
-        case '/posts/bookmark/board-create':
-        case '/posts/bookmark/clear':
-        require_once '../src/controllers/dropdown_collections_ctrl.php';
         exit;
 
         case '/registration':
@@ -138,6 +141,7 @@ switch ($path) {
             'toast_stack.js',
             'profile_button.js',
             'dropdown_profile.js',
+            'dropdown_search.js',
             'create_post_modal.js',
             'post_card.js',
             'adaptive_text.js'

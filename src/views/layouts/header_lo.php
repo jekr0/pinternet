@@ -8,6 +8,7 @@
             <span class="header__search-placeholder-icon"></span>
             <span class="header__search-placeholder-text">Поиск</span>
         </span>
+        <?php include '../src/views/components/dropdown-search_cp.php'; ?>
     </label>
 
     <!-- Контейнер профиля (вынесен в отдельный компонент) -->

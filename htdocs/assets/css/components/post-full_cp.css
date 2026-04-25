@@ -75,6 +75,13 @@
     gap: 10px;
 }
 
+.post-full__action-button--back {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 3;
+}
+
 .post-full__action-button {
     width: 40px;
     height: 40px;
@@ -524,6 +531,18 @@
 .post-full__comment-reply-target {
     color: rgb(150, 150, 250);
 }
+
+.post-full__comment-reply-label[data-action="comment-children-toggle"] {
+    cursor: pointer;
+    user-select: none;
+    transition: color 0.2s ease;
+}
+
+.post-full__comment-reply-label[data-action="comment-children-toggle"]:hover {
+    color: rgb(150, 150, 250);
+    text-decoration: underline;
+}
+
 
 .post-full__comment-text {
     font-family: 'NS_def', sans-serif;

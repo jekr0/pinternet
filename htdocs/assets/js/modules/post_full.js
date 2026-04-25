@@ -189,6 +189,15 @@ class PostFullComponent {
             if (!button || button.disabled) return;
 
             const action = button.dataset.action;
+            if (action === 'back') {
+                if (window.history.length > 1) {
+                    window.history.back();
+                } else {
+                    window.location.href = '/';
+                }
+                return;
+            }
+
             if (action === 'maximize') {
                 this.openZoomOverlay();
                 return;
@@ -345,6 +354,14 @@ class PostFullComponent {
         if (this.scrollTopButton.dataset.bound === '1') return;
         this.scrollTopButton.dataset.bound = '1';
 
+        const scrollIcon = this.scrollTopButton.querySelector('[data-svg-src]');
+        if (scrollIcon) {
+            const src = scrollIcon.getAttribute('data-svg-src');
+            if (src) {
+                App.utils.loadSVG(src, scrollIcon);
+            }
+        }
+
         this.scrollTopButton.addEventListener('click', () => {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         });
@@ -480,11 +497,17 @@ class PostFullComponent {
         if (!this.postFullElement) return;
 
         this.postFullElement.addEventListener('click', (event) => {
-            const button = event.target.closest('[data-action="comment-children-toggle"]');
-            if (!button) return;
+            const control = event.target.closest('[data-action="comment-children-toggle"]');
+            if (!control) return;
 
-            const nextExpanded = button.dataset.expanded !== '1';
-            button.dataset.expanded = nextExpanded ? '1' : '0';
+            const thread = control.closest('.post-full__comment-thread');
+            if (!thread) return;
+
+            const toggleButton = thread.querySelector('[data-action="comment-children-toggle"].post-full__comment-children-toggle');
+            if (!toggleButton) return;
+
+            const nextExpanded = toggleButton.dataset.expanded !== '1';
+            toggleButton.dataset.expanded = nextExpanded ? '1' : '0';
             this.applyCommentChildrenState();
             this.requestMasonryLayoutUpdate();
         });
@@ -534,16 +557,19 @@ class PostFullComponent {
         });
 
         if (totalThreads === 0) {
-            divider.classList.remove('is-visible');
-            return;
-        }
-
-        if (hiddenCount <= 0) {
-            divider.classList.remove('is-visible');
+            divider.classList.remove('is-visible', 'is-solid');
+            toggleButton.style.display = 'none';
             return;
         }
 
         divider.classList.add('is-visible');
+        if (hiddenCount <= 0) {
+            divider.classList.add('is-solid');
+            toggleButton.style.display = 'none';
+            return;
+        }
+
+        divider.classList.remove('is-solid');
         if (hiddenCount > 0 && !this.commentsExpanded) {
             toggleButton.textContent = `Показать все комментарии (+${hiddenCount})`;
             toggleButton.style.display = '';
@@ -617,9 +643,9 @@ class PostFullComponent {
         }
 
         const date = new Date(createdAtTs * 1000);
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const year = date.getFullYear();
+        const day = String(date.getUTCDate()).padStart(2, '0');
+        const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+        const year = date.getUTCFullYear();
         return `${day}.${month}.${year}`;
     }
 
@@ -786,14 +812,14 @@ class PostFullComponent {
             this.prependComment({
                 commentId: Number(payload?.comment_id || 0),
                 content: text,
-                createdAtTs: Math.floor(Date.now() / 1000),
+                createdAtTs: Number(payload?.created_at_ts || this.getReferenceNowTs()),
                 username: String(this.postFullElement?.dataset.viewerUsername || '').trim(),
                 avatarSrc: String(this.postFullElement?.dataset.viewerAvatarSrc || ''),
                 profileUrl: String(this.postFullElement?.dataset.viewerProfileUrl || '/profile'),
                 hasAvatar: this.postFullElement?.dataset.viewerHasAvatar === '1',
                 parentUsername: this.replyTargetUsername,
                 parentCommentId,
-                rootCommentId: this.replyTargetRootCommentId
+                rootCommentId: Number(payload?.root_comment_id || this.replyTargetRootCommentId)
             });
 
             this.showToast('Комментарий добавлен');
@@ -820,20 +846,6 @@ class PostFullComponent {
         const commentId = Number(commentData.commentId || 0);
         const parentCommentId = Number(commentData.parentCommentId || 0);
         const parentUsername = String(commentData.parentUsername || '').trim();
-        const hasReplyLabel = parentCommentId > 0 && parentUsername !== '';
-        const metaAfterUsername = commentData.isReply
-            ? `<span class="post-full__comment-meta-separator" aria-hidden="true"></span>
-               <span class="post-full__comment-published-at" data-created-at-ts="${createdAtTs}">${this.escapeHtml(publishedLabel)}</span>
-               ${hasReplyLabel
-                    ? `<span class="post-full__comment-meta-separator" aria-hidden="true"></span>
-                       <span class="post-full__comment-reply-label">Ответ <span class="post-full__comment-reply-target">@${this.escapeHtml(parentUsername)}</span></span>`
-                    : ''}`
-            : `${hasReplyLabel
-                    ? `<span class="post-full__comment-meta-separator" aria-hidden="true"></span>
-                       <span class="post-full__comment-reply-label">Ответ <span class="post-full__comment-reply-target">@${this.escapeHtml(parentUsername)}</span></span>`
-                    : ''}
-               <span class="post-full__comment-meta-separator" aria-hidden="true"></span>
-               <span class="post-full__comment-published-at" data-created-at-ts="${createdAtTs}">${this.escapeHtml(publishedLabel)}</span>`;
         const createdAtTs = this.normalizeUnixTimestamp(commentData.createdAtTs || this.getReferenceNowTs());
         const publishedLabel = this.formatRelativeTimeLabel(createdAtTs, this.getReferenceNowTs());
 
@@ -913,12 +925,25 @@ class PostFullComponent {
         const commentId = Number(commentData.commentId || 0);
         const parentCommentId = Number(commentData.parentCommentId || 0);
         const parentUsername = String(commentData.parentUsername || '').trim();
-        const hasReplyLabel = parentCommentId > 0 && parentUsername !== '';
         const createdAtTs = this.normalizeUnixTimestamp(commentData.createdAtTs || this.getReferenceNowTs());
         const publishedLabel = commentData.publishedLabel || this.formatRelativeTimeLabel(createdAtTs, this.getReferenceNowTs());
         const likesCount = Number(commentData.likesCount || 0);
         const isLiked = !!commentData.isLiked;
         const rootCommentId = Number(commentData.rootCommentId || commentId || 0);
+        const hasReplyLabel = parentCommentId > 0 && parentUsername !== '';
+        const metaAfterUsername = commentData.isReply
+            ? `<span class="post-full__comment-meta-separator" aria-hidden="true"></span>
+               <span class="post-full__comment-published-at" data-created-at-ts="${createdAtTs}">${this.escapeHtml(publishedLabel)}</span>
+               ${hasReplyLabel
+                    ? `<span class="post-full__comment-meta-separator" aria-hidden="true"></span>
+                       <span class="post-full__comment-reply-label">Ответ <span class="post-full__comment-reply-target">@${this.escapeHtml(parentUsername)}</span></span>`
+                    : ''}`
+            : `${hasReplyLabel
+                    ? `<span class="post-full__comment-meta-separator" aria-hidden="true"></span>
+                       <span class="post-full__comment-reply-label">Ответ <span class="post-full__comment-reply-target">@${this.escapeHtml(parentUsername)}</span></span>`
+                    : ''}
+               <span class="post-full__comment-meta-separator" aria-hidden="true"></span>
+               <span class="post-full__comment-published-at" data-created-at-ts="${createdAtTs}">${this.escapeHtml(publishedLabel)}</span>`;
 
         const item = document.createElement('article');
         item.className = `post-full__comment-item${commentData.isReply ? ' post-full__comment-item--reply' : ''}`;
@@ -1238,12 +1263,23 @@ class PostFullComponent {
             metaNode.style.display = 'none';
             metaNode.textContent = '';
             separatorNode.style.display = 'none';
+            delete metaNode.dataset.action;
+            delete metaNode.dataset.expanded;
+            metaNode.removeAttribute('aria-label');
             return;
         }
 
         metaNode.style.display = '';
         separatorNode.style.display = '';
         metaNode.textContent = `${repliesCount} ${this.pluralizeRu(repliesCount, 'ответ', 'ответа', 'ответов')}`;
+        metaNode.dataset.action = 'comment-children-toggle';
+
+        const toggleButton = thread.querySelector('[data-action="comment-children-toggle"].post-full__comment-children-toggle');
+        if (toggleButton) {
+            const isExpanded = toggleButton.dataset.expanded === '1';
+            metaNode.dataset.expanded = isExpanded ? '1' : '0';
+            metaNode.setAttribute('aria-label', isExpanded ? 'Скрыть ответы' : `Показать ${metaNode.textContent}`);
+        }
     }
 
     layoutPostTags() {

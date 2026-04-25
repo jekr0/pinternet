@@ -51,29 +51,29 @@ class DropdownCollectionsComponent {
     createDropdown() {
         if (this.dropdown) return;
 
-        this.dropdown = document.createElement('div');
-        this.dropdown.className = 'dropdown-collections';
-        this.dropdown.setAttribute('aria-hidden', 'true');
+        this.dropdown = document.querySelector('#post-dropdown-collections') || document.querySelector('.dropdown-collections');
+        if (!this.dropdown) {
+            this.dropdown = document.createElement('div');
+            this.dropdown.className = 'dropdown-collections';
+            this.dropdown.setAttribute('aria-hidden', 'true');
+            this.dropdown.innerHTML = `
+                <h3 class="dropdown-collections__title">Сохранить пост</h3>
+                <ul class="dropdown-collections__collection-list"></ul>
+                <button class="dropdown-collections__clear-button" type="button">Удалить</button>
+            `;
+            document.body.appendChild(this.dropdown);
+        }
 
-        this.title = document.createElement('h3');
-        this.title.className = 'dropdown-collections__title';
-        this.title.textContent = 'Сохранить пост';
+        this.title = this.dropdown.querySelector('.dropdown-collections__title');
+        this.list = this.dropdown.querySelector('.dropdown-collections__collection-list');
+        this.clearButton = this.dropdown.querySelector('.dropdown-collections__clear-button');
 
-        this.list = document.createElement('ul');
-        this.list.className = 'dropdown-collections__collection-list';
-
-        this.clearButton = document.createElement('button');
-        this.clearButton.type = 'button';
-        this.clearButton.className = 'dropdown-collections__clear-button';
-        this.clearButton.textContent = 'Удалить';
-        this.clearButton.addEventListener('click', async () => {
-            await this.clearPost();
-        });
-
-        this.dropdown.appendChild(this.title);
-        this.dropdown.appendChild(this.list);
-        this.dropdown.appendChild(this.clearButton);
-        document.body.appendChild(this.dropdown);
+        if (this.clearButton && this.clearButton.dataset.bound !== '1') {
+            this.clearButton.dataset.bound = '1';
+            this.clearButton.addEventListener('click', async () => {
+                await this.clearPost();
+            });
+        }
     }
 
     open() {
