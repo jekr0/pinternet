@@ -17,7 +17,8 @@ class DropdownSearchComponent {
         this.scroll = this.dropdown?.querySelector('[data-component="dropdown-search-scroll"]') || null;
         if (!this.field || !this.input || !this.dropdown || !this.scroll) return;
 
-        this.input.addEventListener('focus', async () => {
+        this.field.addEventListener('focusin', async () => {
+            clearTimeout(this.hideTimer);
             await this.loadHistory();
             this.open();
         });
@@ -31,7 +32,9 @@ class DropdownSearchComponent {
             this.open();
         });
 
-        this.input.addEventListener('blur', () => {
+        this.field.addEventListener('focusout', (event) => {
+            const nextTarget = event.relatedTarget;
+            if (nextTarget && this.field.contains(nextTarget)) return;
             clearTimeout(this.hideTimer);
             this.hideTimer = window.setTimeout(() => this.close(), 120);
         });
