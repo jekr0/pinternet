@@ -120,12 +120,12 @@ class DropdownSearchComponent {
     }
 
     open() {
-        this.dropdown.classList.add('is-open');
+        this.dropdown.classList.remove('dropdown-search--hidden');
         this.dropdown.setAttribute('aria-hidden', 'false');
     }
 
     close() {
-        this.dropdown.classList.remove('is-open');
+        this.dropdown.classList.add('dropdown-search--hidden');
         this.dropdown.setAttribute('aria-hidden', 'true');
     }
 }
