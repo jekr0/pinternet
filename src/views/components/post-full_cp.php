@@ -34,8 +34,8 @@ if (!$selectedPost) {
         </button>
 
         <div class="post-full__actions" aria-label="Действия с изображением">
-            <button class="post-full__action-button" type="button" data-action="warning" aria-label="Пожаловаться">
-                <span class="post-full__action-icon" data-svg-src="/assets/images/icons/L-warning.svg" aria-hidden="true"></span>
+            <button class="post-full__action-button" type="button" data-action="<?php echo $selectedIsOwner ? 'edit' : 'warning'; ?>" aria-label="<?php echo $selectedIsOwner ? 'Редактировать пост' : 'Пожаловаться'; ?>">
+                <span class="post-full__action-icon" data-svg-src="<?php echo $selectedIsOwner ? '/assets/images/icons/L-edit.svg' : '/assets/images/icons/L-warning.svg'; ?>" aria-hidden="true"></span>
             </button>
             <button class="post-full__action-button" type="button" data-action="maximize" aria-label="Развернуть">
                 <span class="post-full__action-icon" data-svg-src="/assets/images/icons/maximize.svg" aria-hidden="true"></span>
@@ -138,6 +138,7 @@ if (!$selectedPost) {
                         $commentParentId = (int) ($commentRow['parent_comment_id'] ?? 0);
                         $commentParentUsername = ltrim((string) ($commentRow['parent_username'] ?? ''), '@');
                         $commentIsLikedByViewer = !empty($commentRow['is_liked_by_viewer']);
+                        $commentIsOwner = !empty($commentRow['is_owner']);
                         ?>
                         <article
                             class="post-full__comment-item<?php echo $isReply ? ' post-full__comment-item--reply' : ''; ?>"
@@ -187,8 +188,8 @@ if (!$selectedPost) {
                                     <button class="post-full__comment-action-button post-full__comment-action-button--reply" type="button" data-action="comment-reply" aria-label="Ответить на комментарий">
                                         Ответить
                                     </button>
-                                    <button class="post-full__comment-action-button" type="button" data-action="comment-report" aria-label="Пожаловаться на комментарий">
-                                        <span class="post-full__comment-action-icon" data-svg-src="/assets/images/icons/S-warning.svg" aria-hidden="true"></span>
+                                    <button class="post-full__comment-action-button" type="button" data-action="comment-report" aria-label="<?php echo $commentIsOwner ? 'Редактировать комментарий' : 'Пожаловаться на комментарий'; ?>">
+                                        <span class="post-full__comment-action-icon" data-svg-src="<?php echo $commentIsOwner ? '/assets/images/icons/S-edit.svg' : '/assets/images/icons/S-warning.svg'; ?>" aria-hidden="true"></span>
                                     </button>
                                 </div>
                                 <?php if (!$isReply && !empty($childrenRows)): ?>
@@ -209,7 +210,7 @@ if (!$selectedPost) {
                 <?php endif; ?>
             <?php endforeach; ?>
         </div>
-        <?php if ($viewerId > 0 && $selectedHasComments): ?>
+        <?php if ($viewerId > 0 && count($selectedPostCommentThreads) > 3): ?>
             <div class="post-full__comments-toggle-divider" data-component="post-full-comments-toggle-divider">
                 <span class="post-full__comments-toggle-line" aria-hidden="true"></span>
                 <button class="post-full__comments-toggle-button" type="button" data-action="comments-toggle"></button>

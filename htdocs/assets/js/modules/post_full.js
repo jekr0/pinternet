@@ -42,6 +42,8 @@ class PostFullComponent {
         this.scrollTopButton = null;
         this.scrollTopButtonHandler = null;
         this.scrollTopHideTimer = null;
+        this.postEditMode = false;
+        this.descriptionEditor = null;
     }
 
     init() {
@@ -205,6 +207,11 @@ class PostFullComponent {
 
             if (action === 'warning') {
                 this.openReportOverlay();
+                return;
+            }
+
+            if (action === 'edit') {
+                this.togglePostEditMode();
             }
         });
     }
@@ -300,6 +307,7 @@ class PostFullComponent {
         this.descriptionSupportsCollapse = this.descriptionElement.scrollHeight > 90;
         if (!this.descriptionSupportsCollapse) {
             this.descriptionElement.classList.remove('is-collapsed');
+            this.hideDescriptionHideButton();
             return;
         }
 
@@ -324,8 +332,14 @@ class PostFullComponent {
             const dividerButton = document.createElement('button');
             dividerButton.className = 'post-full__comments-toggle-button post-full__description-divider-button';
             dividerButton.type = 'button';
-            dividerButton.textContent = 'Скрыть описание';
-            dividerButton.addEventListener('click', () => this.collapseDescription());
+            dividerButton.textContent = 'Показать описание';
+            dividerButton.addEventListener('click', () => {
+                if (this.descriptionExpanded) {
+                    this.collapseDescription();
+                    return;
+                }
+                this.expandDescription();
+            });
 
             const rightLine = document.createElement('span');
             rightLine.className = 'post-full__description-divider-line';
@@ -425,6 +439,7 @@ class PostFullComponent {
 
     showDescriptionHideButton() {
         if (this.descriptionDividerButton) {
+            this.descriptionDividerButton.textContent = 'Скрыть описание';
             this.descriptionDividerButton.classList.add('is-visible');
         }
         this.descriptionDividerElement?.classList.add('has-controls');
@@ -432,8 +447,14 @@ class PostFullComponent {
     }
 
     hideDescriptionHideButton() {
-        this.descriptionDividerButton?.classList.remove('is-visible');
-        this.descriptionDividerElement?.classList.remove('has-controls');
+        if (this.descriptionDividerButton && this.descriptionSupportsCollapse) {
+            this.descriptionDividerButton.textContent = 'Показать описание';
+            this.descriptionDividerButton.classList.add('is-visible');
+            this.descriptionDividerElement?.classList.add('has-controls');
+        } else {
+            this.descriptionDividerButton?.classList.remove('is-visible');
+            this.descriptionDividerElement?.classList.remove('has-controls');
+        }
         this.hideFloatingDescriptionButton(true);
     }
 
@@ -564,7 +585,7 @@ class PostFullComponent {
 
         divider.classList.add('is-visible');
         if (hiddenCount <= 0) {
-            divider.classList.add('is-solid');
+            divider.classList.remove('is-visible', 'is-solid');
             toggleButton.style.display = 'none';
             return;
         }
@@ -668,6 +689,23 @@ class PostFullComponent {
         commentInput.style.height = 'auto';
         const nextHeight = Math.max(50, commentInput.scrollHeight);
         commentInput.style.height = `${nextHeight}px`;
+    }
+
+    togglePostEditMode() {
+        if (!this.descriptionElement || this.postEditMode) return;
+        this.postEditMode = true;
+        this.descriptionElement.style.display = 'none';
+        this.hideDescriptionHideButton();
+
+        const editor = document.createElement('textarea');
+        editor.className = 'post-full__comment-input post-full__description-editor';
+        editor.placeholder = 'Редактировать описание';
+        editor.value = this.descriptionElement.textContent?.trim() || '';
+        this.descriptionElement.insertAdjacentElement('afterend', editor);
+        this.descriptionEditor = editor;
+        this.autoResizeCommentInput(editor);
+        editor.addEventListener('input', () => this.autoResizeCommentInput(editor));
+        editor.focus();
     }
 
     syncStateFromDataset() {

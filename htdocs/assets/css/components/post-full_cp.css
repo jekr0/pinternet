@@ -686,6 +686,12 @@
     display: inline-flex;
 }
 
+.post-full__description-editor {
+    width: calc(100% - 40px);
+    margin: 15px 20px 0;
+    min-height: 50px;
+}
+
 .post-full__comment-reply-state {
     margin-left: 10px;
     margin-bottom: 10px;
