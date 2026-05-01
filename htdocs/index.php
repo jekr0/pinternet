@@ -38,6 +38,7 @@ switch ($path) {
         ];
         $CSS = [
             'header_lo.css',
+            'dropdown-search_cp.css',
             'profile-container_cp.css',
             'dropdown-profile_cp.css',
             'create-post-modal_cp.css',
@@ -131,6 +132,7 @@ switch ($path) {
         ];
         $CSS = [
             'header_lo.css',
+            'dropdown-search_cp.css',
             'profile-container_cp.css',
             'dropdown-profile_cp.css',
             'create-post-modal_cp.css',
