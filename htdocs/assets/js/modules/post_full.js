@@ -692,20 +692,17 @@ class PostFullComponent {
     }
 
     togglePostEditMode() {
-        if (!this.descriptionElement || this.postEditMode) return;
-        this.postEditMode = true;
-        this.descriptionElement.style.display = 'none';
-        this.hideDescriptionHideButton();
+        if (!this.postFullElement) return;
+        const postId = Number(this.postFullElement.dataset.postId || 0);
+        const description = this.descriptionElement?.textContent?.trim() || '';
+        const imageSrc = this.postFullElement.dataset.postImageSrc || this.postFullElement.querySelector('.post-full__image')?.getAttribute('src') || '';
+        const tags = Array.from(this.postFullElement.querySelectorAll('.post-full__tag-label'))
+            .map((node) => String(node.textContent || '').replace(/^#/, '').trim())
+            .filter(Boolean);
 
-        const editor = document.createElement('textarea');
-        editor.className = 'post-full__comment-input post-full__description-editor';
-        editor.placeholder = 'Редактировать описание';
-        editor.value = this.descriptionElement.textContent?.trim() || '';
-        this.descriptionElement.insertAdjacentElement('afterend', editor);
-        this.descriptionEditor = editor;
-        this.autoResizeCommentInput(editor);
-        editor.addEventListener('input', () => this.autoResizeCommentInput(editor));
-        editor.focus();
+        document.dispatchEvent(new CustomEvent('post-modal:open-edit', {
+            detail: { postId, description, imageSrc, tags }
+        }));
     }
 
     syncStateFromDataset() {

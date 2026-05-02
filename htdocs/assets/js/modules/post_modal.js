@@ -33,10 +33,13 @@ class CreatePostModalComponent {
         this.allowedMimeTypes = ['image/png', 'image/jpeg', 'image/gif'];
         this.objectUrl = null;
         this.currentFile = null;
+        this.titleElement = null;
+        this.cancelButton = null;
+        this.isEditMode = false;
     }
 
     init() {
-        this.modal = document.getElementById('create-post-modal');
+        this.modal = document.getElementById('post-modal');
         if (!this.modal) return;
 
         this.dropzone = this.modal.querySelector('[data-component="post-upload-dropzone"]');
@@ -49,13 +52,15 @@ class CreatePostModalComponent {
         this.collectionItems = Array.from(this.modal.querySelectorAll('[data-component="post-collection-item"]'));
         this.descriptionField = this.modal.querySelector('[data-component="post-description"]');
         this.descriptionCounter = this.modal.querySelector('[data-component="post-description-counter"]');
-        this.tagsField = this.modal.querySelector('.create-post-modal__input--tags');
+        this.tagsField = this.modal.querySelector('.post-modal__input--tags');
         this.submitButton = this.modal.querySelector('[data-component="create-post-submit"]');
         this.tagsAddButton = this.modal.querySelector('[data-component="post-tags-add-button"]');
         this.tagsList = this.modal.querySelector('[data-component="post-tags-list"]');
         this.alertBox = this.modal.querySelector('[data-component="create-post-alert"]');
         this.tagsSuggestList = this.modal.querySelector('[data-component="post-tags-suggest-list"]');
-        this.tagsInputRow = this.modal.querySelector('.create-post-modal__tags-input-row');
+        this.tagsInputRow = this.modal.querySelector('.post-modal__tags-input-row');
+        this.titleElement = this.modal.querySelector('[data-component="post-modal-title"]');
+        this.cancelButton = this.modal.querySelector('[data-component="create-post-cancel"]');
 
         if (!this.dropzone || !this.fileInput || !this.placeholder || !this.preview) return;
 
@@ -76,7 +81,7 @@ class CreatePostModalComponent {
         this.bindCloseHandlers();
 
         document.addEventListener('create-collection:created', async (event) => {
-            if (event.detail?.source !== 'create-post-modal') return;
+            if (event.detail?.source !== 'post-modal') return;
             const createdBoard = String(event.detail?.board || '').trim();
             await this.loadBoards(createdBoard);
         });
@@ -87,10 +92,15 @@ class CreatePostModalComponent {
             const trigger = event.target.closest('[data-component="create-post-open"]');
             if (!trigger) return;
             event.preventDefault();
+            this.applyCreateModeUI();
             this.open();
         });
 
-        document.addEventListener('create-post-modal:open', () => this.open());
+        document.addEventListener('post-modal:open', () => {
+            this.applyCreateModeUI();
+            this.open();
+        });
+        document.addEventListener('post-modal:open-edit', async (event) => this.openEditMode(event.detail || {}));
     }
 
     bindUploadHandlers() {
@@ -109,16 +119,16 @@ class CreatePostModalComponent {
 
         this.dropzone.addEventListener('dragover', (event) => {
             event.preventDefault();
-            this.dropzone.classList.add('create-post-modal__upload-dropzone--dragover');
+            this.dropzone.classList.add('post-modal__upload-dropzone--dragover');
         });
 
         this.dropzone.addEventListener('dragleave', () => {
-            this.dropzone.classList.remove('create-post-modal__upload-dropzone--dragover');
+            this.dropzone.classList.remove('post-modal__upload-dropzone--dragover');
         });
 
         this.dropzone.addEventListener('drop', (event) => {
             event.preventDefault();
-            this.dropzone.classList.remove('create-post-modal__upload-dropzone--dragover');
+            this.dropzone.classList.remove('post-modal__upload-dropzone--dragover');
             const file = event.dataTransfer?.files?.[0];
             this.handleFile(file);
         });
@@ -167,7 +177,7 @@ class CreatePostModalComponent {
 
             if (event.key === 'Tab' && !event.shiftKey) {
                 const topSuggestionButton = this.tagsSuggestList?.querySelector('button');
-                const isSuggestOpen = this.tagsSuggestList && !this.tagsSuggestList.classList.contains('create-post-modal__tags-suggest-list--hidden');
+                const isSuggestOpen = this.tagsSuggestList && !this.tagsSuggestList.classList.contains('post-modal__tags-suggest-list--hidden');
                 if (!isSuggestOpen || !topSuggestionButton) {
                     return;
                 }
@@ -210,28 +220,81 @@ class CreatePostModalComponent {
         });
 
         document.addEventListener('keydown', (event) => {
-            if (event.key === 'Escape' && !this.modal.classList.contains('create-post-modal--hidden')) {
+            if (event.key === 'Escape' && !this.modal.classList.contains('post-modal--hidden')) {
                 this.close();
             }
         });
     }
 
     open() {
-        if (!this.modal.classList.contains('create-post-modal--hidden')) return;
-        this.modal.classList.remove('create-post-modal--hidden');
+        if (!this.modal.classList.contains('post-modal--hidden')) return;
+        this.modal.classList.remove('post-modal--hidden');
         this.modal.setAttribute('aria-hidden', 'false');
         App.utils.lockBodyScroll();
         this.loadBoards();
     }
 
     close() {
-        if (this.modal.classList.contains('create-post-modal--hidden')) return;
+        if (this.modal.classList.contains('post-modal--hidden')) return;
         this.hideAlert();
         this.hideSuccessToast();
         this.hideTagSuggestions();
-        this.modal.classList.add('create-post-modal--hidden');
+        this.modal.classList.add('post-modal--hidden');
         this.modal.setAttribute('aria-hidden', 'true');
         App.utils.unlockBodyScroll();
+        this.applyCreateModeUI();
+    }
+
+    async openEditMode(payload) {
+        this.applyEditModeUI();
+        this.open();
+        this.fillEditData(payload);
+        await this.preloadEditCollections(payload.postId);
+    }
+
+    applyCreateModeUI() {
+        this.isEditMode = false;
+        this.modal.classList.remove('post-modal--edit');
+        if (this.titleElement) this.titleElement.textContent = 'Новый пост';
+        if (this.submitButton) this.submitButton.textContent = 'Создать пост';
+    }
+
+    applyEditModeUI() {
+        this.isEditMode = true;
+        this.modal.classList.add('post-modal--edit');
+        if (this.titleElement) this.titleElement.textContent = 'Редактировать пост';
+        if (this.submitButton) this.submitButton.textContent = 'Сохранить';
+    }
+
+    fillEditData(payload) {
+        if (this.descriptionField) this.descriptionField.value = String(payload.description || '');
+        if (this.descriptionCounter) this.descriptionCounter.textContent = `${this.descriptionField.value.length}/512`;
+        this.tags = Array.isArray(payload.tags) ? payload.tags.map((tag) => String(tag || '').trim()).filter(Boolean) : [];
+        this.renderTags();
+        const imageSrc = String(payload.imageSrc || '');
+        if (imageSrc) {
+            this.preview.src = imageSrc;
+            this.preview.classList.remove('post-modal__preview--hidden');
+            this.placeholder.style.display = 'none';
+            this.dropzone.classList.add('post-modal__upload-dropzone--filled');
+        }
+    }
+
+    async preloadEditCollections(postId) {
+        if (!postId) return;
+        try {
+            const response = await fetch(`/posts/bookmark/boards?post_id=${encodeURIComponent(String(postId))}`);
+            if (!response.ok) return;
+            const payload = await response.json();
+            const selectedBoards = Array.isArray(payload.selected) ? payload.selected : [];
+            this.selectedCollections = selectedBoards
+                .map((name) => String(name) === 'Profile' ? 'Профиль' : String(name))
+                .filter((name) => name !== 'Профиль');
+            this.updateCollectionFieldValue();
+            this.updateCollectionSelectionUI();
+        } catch (error) {
+            console.warn('Unable to preload collections for edit mode', error);
+        }
     }
 
     handleFile(file) {
@@ -256,9 +319,9 @@ class CreatePostModalComponent {
         this.objectUrl = URL.createObjectURL(file);
         this.currentFile = file;
         this.preview.src = this.objectUrl;
-        this.preview.classList.remove('create-post-modal__preview--hidden');
+        this.preview.classList.remove('post-modal__preview--hidden');
         this.placeholder.style.display = 'none';
-        this.dropzone.classList.add('create-post-modal__upload-dropzone--filled');
+        this.dropzone.classList.add('post-modal__upload-dropzone--filled');
     }
 
     attachCollectionItemHandlers() {
@@ -323,7 +386,7 @@ class CreatePostModalComponent {
             this.collectionList.innerHTML = localizedBoards.map((board) => (
                 `<li><button type="button" data-component="post-collection-item" ${board === 'Профиль' ? 'data-is-profile="1"' : ''}>${board}</button></li>`
             )).join('') + `
-                <li><button type="button" class="create-post-modal__collection-add-button" data-component="post-collection-add-button">+</button></li>
+                <li><button type="button" class="post-modal__collection-add-button" data-component="post-collection-add-button">+</button></li>
             `;
 
             this.collectionItems = Array.from(this.modal.querySelectorAll('[data-component="post-collection-item"]'));
@@ -341,7 +404,7 @@ class CreatePostModalComponent {
             if (addButton) {
                 addButton.addEventListener('click', () => {
                     document.dispatchEvent(new CustomEvent('create-collection:open', {
-                        detail: { source: 'create-post-modal' }
+                        detail: { source: 'post-modal' }
                     }));
                 });
             }
@@ -355,9 +418,9 @@ class CreatePostModalComponent {
         this.fileInput.value = '';
         this.currentFile = null;
         this.preview.src = '';
-        this.preview.classList.add('create-post-modal__preview--hidden');
+        this.preview.classList.add('post-modal__preview--hidden');
         this.placeholder.style.display = '';
-        this.dropzone.classList.remove('create-post-modal__upload-dropzone--filled');
+        this.dropzone.classList.remove('post-modal__upload-dropzone--filled');
         this.descriptionField.value = '';
         this.tagsField.value = '';
         this.tags = [];
@@ -453,8 +516,8 @@ class CreatePostModalComponent {
         this.tags.forEach((tag, index) => {
             const currentRow = rows[rows.length - 1];
             const tagEl = document.createElement('span');
-            tagEl.className = 'create-post-modal__tag-item';
-            tagEl.innerHTML = `<span class="create-post-modal__tag-label">#${tag}</span>`;
+            tagEl.className = 'post-modal__tag-item';
+            tagEl.innerHTML = `<span class="post-modal__tag-label">#${tag}</span>`;
             tagEl.addEventListener('click', () => this.removeTag(index));
             currentRow.appendChild(tagEl);
             this.adjustTagsSpacing(currentRow, false);
@@ -500,26 +563,26 @@ class CreatePostModalComponent {
 
     createTagRow() {
         const rowEl = document.createElement('div');
-        rowEl.className = 'create-post-modal__tags-row';
+        rowEl.className = 'post-modal__tags-row';
         this.tagsList.appendChild(rowEl);
         return rowEl;
     }
 
     appendHiddenMoreChip(hiddenCount, availableWidth) {
         if (!this.tagsList || hiddenCount <= 0) return;
-        const rows = Array.from(this.tagsList.querySelectorAll('.create-post-modal__tags-row'));
+        const rows = Array.from(this.tagsList.querySelectorAll('.post-modal__tags-row'));
         const lastRow = rows[rows.length - 1];
         if (!lastRow) return;
 
         const moreEl = document.createElement('span');
-        moreEl.className = 'create-post-modal__tag-item create-post-modal__tag-item--more';
+        moreEl.className = 'post-modal__tag-item post-modal__tag-item--more';
         moreEl.textContent = `+${hiddenCount}`;
 
         lastRow.appendChild(moreEl);
         this.adjustTagsSpacing(lastRow, false);
 
         while (lastRow.scrollWidth > availableWidth) {
-            const regularChips = Array.from(lastRow.querySelectorAll('.create-post-modal__tag-item:not(.create-post-modal__tag-item--more)'));
+            const regularChips = Array.from(lastRow.querySelectorAll('.post-modal__tag-item:not(.post-modal__tag-item--more)'));
             const chipToHide = regularChips.pop();
             if (!chipToHide) {
                 break;
@@ -534,7 +597,7 @@ class CreatePostModalComponent {
 
     adjustTagsSpacing(rowEl, isClosedRow) {
         if (!rowEl) return;
-        const chipElements = Array.from(rowEl.querySelectorAll('.create-post-modal__tag-item:not(.create-post-modal__tag-item--more)'));
+        const chipElements = Array.from(rowEl.querySelectorAll('.post-modal__tag-item:not(.post-modal__tag-item--more)'));
 
         if (chipElements.length <= 1) {
             rowEl.style.justifyContent = 'flex-start';
@@ -553,10 +616,10 @@ class CreatePostModalComponent {
         clearTimeout(this.alertFadeTimer);
 
         this.alertBox.textContent = message;
-        this.alertBox.classList.remove('create-post-modal__alert--hidden', 'create-post-modal__alert--fade-out');
+        this.alertBox.classList.remove('post-modal__alert--hidden', 'post-modal__alert--fade-out');
 
         this.alertHideTimer = setTimeout(() => {
-            this.alertBox.classList.add('create-post-modal__alert--fade-out');
+            this.alertBox.classList.add('post-modal__alert--fade-out');
         }, 2500);
 
         this.alertFadeTimer = setTimeout(() => {
@@ -568,8 +631,8 @@ class CreatePostModalComponent {
         if (!this.alertBox) return;
         clearTimeout(this.alertHideTimer);
         clearTimeout(this.alertFadeTimer);
-        this.alertBox.classList.add('create-post-modal__alert--hidden');
-        this.alertBox.classList.remove('create-post-modal__alert--fade-out');
+        this.alertBox.classList.add('post-modal__alert--hidden');
+        this.alertBox.classList.remove('post-modal__alert--fade-out');
         this.alertBox.textContent = '';
     }
 
@@ -606,7 +669,7 @@ class CreatePostModalComponent {
             }
 
             this.tagsSuggestList.innerHTML = payload.tags.map((tag) => (
-                `<li><button type="button" data-tag="${this.escapeHtml(tag)}"><span class="create-post-modal__tags-suggest-match">#</span>${this.highlightSuggestionMatch(tag, query)}</button></li>`
+                `<li><button type="button" data-tag="${this.escapeHtml(tag)}"><span class="post-modal__tags-suggest-match">#</span>${this.highlightSuggestionMatch(tag, query)}</button></li>`
             )).join('');
 
             this.tagsSuggestList.querySelectorAll('button').forEach((button) => {
@@ -616,8 +679,8 @@ class CreatePostModalComponent {
                 });
             });
 
-            this.tagsSuggestList.classList.remove('create-post-modal__tags-suggest-list--hidden');
-            this.tagsInputRow.classList.add('create-post-modal__tags-input-row--suggest-open');
+            this.tagsSuggestList.classList.remove('post-modal__tags-suggest-list--hidden');
+            this.tagsInputRow.classList.add('post-modal__tags-input-row--suggest-open');
         } catch (error) {
             this.hideTagSuggestions();
         }
@@ -625,9 +688,9 @@ class CreatePostModalComponent {
 
     hideTagSuggestions() {
         if (!this.tagsSuggestList || !this.tagsInputRow) return;
-        this.tagsSuggestList.classList.add('create-post-modal__tags-suggest-list--hidden');
+        this.tagsSuggestList.classList.add('post-modal__tags-suggest-list--hidden');
         this.tagsSuggestList.innerHTML = '';
-        this.tagsInputRow.classList.remove('create-post-modal__tags-input-row--suggest-open');
+        this.tagsInputRow.classList.remove('post-modal__tags-input-row--suggest-open');
     }
 
     highlightSuggestionMatch(tag, query) {
@@ -637,7 +700,7 @@ class CreatePostModalComponent {
 
         return escapedTag.replace(
             new RegExp(`(${normalizedQuery})`, 'i'),
-            '<span class="create-post-modal__tags-suggest-match">$1</span>'
+            '<span class="post-modal__tags-suggest-match">$1</span>'
         );
     }
 
@@ -655,4 +718,4 @@ class CreatePostModalComponent {
     }
 }
 
-App.register('create_post_modal.js', CreatePostModalComponent);
+App.register('post_modal.js', CreatePostModalComponent);

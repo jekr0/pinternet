@@ -17,6 +17,7 @@ if (!$selectedPost) {
     data-viewer-avatar-src="<?php echo htmlspecialchars($viewerAvatar, ENT_QUOTES, 'UTF-8'); ?>"
     data-viewer-profile-url="<?php echo htmlspecialchars($viewerProfileUrl, ENT_QUOTES, 'UTF-8'); ?>"
     data-viewer-has-avatar="<?php echo $viewerHasAvatar ? '1' : '0'; ?>"
+    data-post-image-src="<?php echo htmlspecialchars($selectedImagePath, ENT_QUOTES, 'UTF-8'); ?>"
     aria-hidden="false"
 >
     <div

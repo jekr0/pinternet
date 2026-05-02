@@ -20,4 +20,4 @@
     <?php include '../src/views/components/dropdown-profile_cp.php'; ?>
 </header>
 
-<?php include '../src/views/components/create-post-modal_cp.php'; ?>
+<?php include '../src/views/components/post-modal_cp.php'; ?>
