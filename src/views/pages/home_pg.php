@@ -248,10 +248,11 @@
 
             if ($selectedPostCommentsCount > 0) {
                 $commentsStmt = $pdo->prepare('
-                    SELECT pc.id, pc.content, pc.created_at, UNIX_TIMESTAMP(pc.created_at) AS created_at_ts, pc.parent_comment_id, u.username, u.avatar,
+                    SELECT pc.id, pc.content, pc.created_at, UNIX_TIMESTAMP(pc.created_at) AS created_at_ts, pc.parent_comment_id, pc.user_id, u.username, u.avatar,
                            pu.username AS parent_username,
                            (SELECT COUNT(*) FROM Comment_Likes cl WHERE cl.comment_id = pc.id) AS likes_count,
-                           (SELECT COUNT(*) FROM Comment_Likes clv WHERE clv.comment_id = pc.id AND clv.user_id = ?) AS is_liked_by_viewer
+                           (SELECT COUNT(*) FROM Comment_Likes clv WHERE clv.comment_id = pc.id AND clv.user_id = ?) AS is_liked_by_viewer,
+                           (pc.user_id = ?) AS is_owner
                     FROM Comments pc
                     INNER JOIN Users u ON u.id = pc.user_id
                     LEFT JOIN Comments parent ON parent.id = pc.parent_comment_id
@@ -260,7 +261,7 @@
                       AND pc.is_deleted = 0
                     ORDER BY pc.created_at ASC, pc.id ASC
                 ');
-                $commentsStmt->execute([$viewerId, $selectedPostId]);
+                $commentsStmt->execute([$viewerId, $viewerId, $selectedPostId]);
                 $selectedPostComments = $commentsStmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
 
                 if (!empty($selectedPostComments)) {

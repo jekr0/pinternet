@@ -41,7 +41,7 @@ switch ($path) {
             'dropdown-search_cp.css',
             'profile-container_cp.css',
             'dropdown-profile_cp.css',
-            'create-post-modal_cp.css',
+            'post-modal_cp.css',
             'post-card_cp.css',
             'post-full_cp.css',
             'dropdown-collections_cp.css',
@@ -56,7 +56,7 @@ switch ($path) {
             'profile_button.js',
             'dropdown_profile.js',
             'dropdown_search.js',
-            'create_post_modal.js',
+            'post_modal.js',
             'post_card.js',
             'post_full.js',
             'dropdown_collections.js',
@@ -135,7 +135,7 @@ switch ($path) {
             'dropdown-search_cp.css',
             'profile-container_cp.css',
             'dropdown-profile_cp.css',
-            'create-post-modal_cp.css',
+            'post-modal_cp.css',
             'toast-stack_cp.css',
             'footer_lo.css'
         ];
@@ -144,7 +144,7 @@ switch ($path) {
             'profile_button.js',
             'dropdown_profile.js',
             'dropdown_search.js',
-            'create_post_modal.js',
+            'post_modal.js',
             'post_card.js',
             'adaptive_text.js'
         ];
