@@ -33,6 +33,10 @@
     border-radius: 20px;
     box-shadow: 0 2px 3px rgba(0, 0, 0, 0.07);
 }
+.post-modal__panel--pulse {
+    border: 2px solid rgb(100, 100, 200);
+    transition: border-color 1s ease-out;
+}
 
 .post-modal__alert {
     position: absolute;
@@ -446,8 +450,11 @@
     flex: 1 1 calc(50% - 5px);
     background: #fff;
     border: 1.5px solid #e0e0e0;
-    color: #d26a6a;
+    color: rgb(100, 100, 200);
     display: none;
+}
+.post-modal__button--delete:hover {
+    border-color: rgb(150, 150, 250);
 }
 
 .post-modal--edit .post-modal__button--delete {
@@ -494,6 +501,28 @@
     cursor: pointer;
     overflow: hidden;
     transition: border-color 0.2s ease-in-out;
+}
+.post-modal__lock-overlay {
+    position: absolute;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.25);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    cursor: not-allowed;
+    z-index: 3;
+}
+.post-modal--edit .post-modal__lock-overlay {
+    display: flex;
+}
+.post-modal--edit .post-modal__lock-overlay .post-modal__upload-icon svg,
+.post-modal--edit .post-modal__lock-overlay .post-modal__upload-icon svg * {
+    fill: rgba(255,255,255,0.9);
+}
+.post-modal--edit .post-modal__upload-dropzone {
+    cursor: not-allowed;
 }
 
 .post-modal__upload-dropzone:hover,

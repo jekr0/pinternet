@@ -36,6 +36,7 @@ class CreatePostModalComponent {
         this.titleElement = null;
         this.cancelButton = null;
         this.isEditMode = false;
+        this.initialSnapshot = null;
     }
 
     init() {
@@ -104,15 +105,20 @@ class CreatePostModalComponent {
     }
 
     bindUploadHandlers() {
-        this.dropzone.addEventListener('click', () => this.fileInput.click());
+        this.dropzone.addEventListener('click', () => {
+            if (this.isEditMode) return;
+            this.fileInput.click();
+        });
         this.dropzone.addEventListener('keydown', (event) => {
             if (event.key === 'Enter' || event.key === ' ') {
+                if (this.isEditMode) return;
                 event.preventDefault();
                 this.fileInput.click();
             }
         });
 
         this.fileInput.addEventListener('change', () => {
+            if (this.isEditMode) return;
             const file = this.fileInput.files?.[0];
             this.handleFile(file);
         });
@@ -130,6 +136,7 @@ class CreatePostModalComponent {
             event.preventDefault();
             this.dropzone.classList.remove('post-modal__upload-dropzone--dragover');
             const file = event.dataTransfer?.files?.[0];
+            if (this.isEditMode) return;
             this.handleFile(file);
         });
     }
@@ -163,6 +170,8 @@ class CreatePostModalComponent {
         if (!this.submitButton) return;
 
         this.submitButton.addEventListener('click', () => this.submitPost());
+        const deleteButton = this.modal.querySelector('[data-component="post-edit-delete"]');
+        deleteButton?.addEventListener('click', () => this.deletePost());
     }
 
     bindTagsHandlers() {
@@ -208,14 +217,14 @@ class CreatePostModalComponent {
     bindCloseHandlers() {
         this.modal.addEventListener('click', (event) => {
             if (event.target === this.modal) {
-                this.close();
+                this.pulsePanelBorder();
             }
         });
 
         document.addEventListener('click', (event) => {
             const cancelButton = event.target.closest('[data-component="create-post-cancel"]');
             if (cancelButton) {
-                this.close();
+                this.handleBackAction();
             }
         });
 
@@ -232,6 +241,7 @@ class CreatePostModalComponent {
         this.modal.setAttribute('aria-hidden', 'false');
         App.utils.lockBodyScroll();
         this.loadBoards();
+        this.captureSnapshot();
     }
 
     close() {
@@ -242,14 +252,19 @@ class CreatePostModalComponent {
         this.modal.classList.add('post-modal--hidden');
         this.modal.setAttribute('aria-hidden', 'true');
         App.utils.unlockBodyScroll();
-        this.applyCreateModeUI();
+        this.resetForm();
+        window.setTimeout(() => {
+            if (this.modal.classList.contains('post-modal--hidden')) {
+                this.applyCreateModeUI();
+            }
+        }, 220);
     }
 
     async openEditMode(payload) {
         this.applyEditModeUI();
         this.open();
-        this.fillEditData(payload);
-        await this.preloadEditCollections(payload.postId);
+        await this.fillEditData(payload);
+        this.captureSnapshot();
     }
 
     applyCreateModeUI() {
@@ -266,7 +281,7 @@ class CreatePostModalComponent {
         if (this.submitButton) this.submitButton.textContent = 'Сохранить';
     }
 
-    fillEditData(payload) {
+    async fillEditData(payload) {
         if (this.descriptionField) this.descriptionField.value = String(payload.description || '');
         if (this.descriptionCounter) this.descriptionCounter.textContent = `${this.descriptionField.value.length}/512`;
         this.tags = Array.isArray(payload.tags) ? payload.tags.map((tag) => String(tag || '').trim()).filter(Boolean) : [];
@@ -278,6 +293,7 @@ class CreatePostModalComponent {
             this.placeholder.style.display = 'none';
             this.dropzone.classList.add('post-modal__upload-dropzone--filled');
         }
+        await this.preloadEditCollections(payload.postId);
     }
 
     async preloadEditCollections(postId) {
@@ -286,7 +302,9 @@ class CreatePostModalComponent {
             const response = await fetch(`/posts/bookmark/boards?post_id=${encodeURIComponent(String(postId))}`);
             if (!response.ok) return;
             const payload = await response.json();
-            const selectedBoards = Array.isArray(payload.selected) ? payload.selected : [];
+            const selectedBoards = Array.isArray(payload.boards)
+                ? payload.boards.filter((b) => b && b.is_saved).map((b) => b.name)
+                : [];
             this.selectedCollections = selectedBoards
                 .map((name) => String(name) === 'Profile' ? 'Профиль' : String(name))
                 .filter((name) => name !== 'Профиль');
@@ -433,6 +451,43 @@ class CreatePostModalComponent {
         this.hideAlert();
         this.hideSuccessToast();
         this.hideTagSuggestions();
+        this.initialSnapshot = null;
+    }
+
+    captureSnapshot() {
+        this.initialSnapshot = JSON.stringify({
+            description: this.descriptionField?.value || '',
+            tags: [...this.tags],
+            collections: [...this.selectedCollections],
+        });
+    }
+
+    hasUnsavedChanges() {
+        if (!this.initialSnapshot) return false;
+        const current = JSON.stringify({
+            description: this.descriptionField?.value || '',
+            tags: [...this.tags],
+            collections: [...this.selectedCollections],
+        });
+        return current !== this.initialSnapshot;
+    }
+
+    async handleBackAction() {
+        if (this.isEditMode && this.hasUnsavedChanges()) {
+            const shouldSave = window.confirm('У вас есть несохранённые изменения! Сохранить их?\nНажмите ОК для сохранения или Отмена для выхода.');
+            if (shouldSave) {
+                await this.submitPost();
+                return;
+            }
+        }
+        this.close();
+    }
+
+    pulsePanelBorder() {
+        const panel = this.modal?.querySelector('.post-modal__panel');
+        if (!panel) return;
+        panel.classList.add('post-modal__panel--pulse');
+        window.setTimeout(() => panel.classList.remove('post-modal__panel--pulse'), 1000);
     }
 
     buildPostFormData() {
@@ -445,6 +500,9 @@ class CreatePostModalComponent {
     }
 
     async submitPost(preparedFormData = null) {
+        if (this.isEditMode) {
+            return this.savePostChanges();
+        }
         if (!this.currentFile && !preparedFormData) {
             this.showAlert('Сначала добавьте изображение.');
             return;
@@ -472,6 +530,48 @@ class CreatePostModalComponent {
             this.showAlert(error.message || 'Ошибка при создании поста.');
         } finally {
             this.submitButton.disabled = false;
+        }
+    }
+
+    async savePostChanges() {
+        const postId = Number(window.location.pathname.match(/\/post\/(\d+)/)?.[1] || 0);
+        if (!postId) return;
+        this.submitButton.disabled = true;
+        try {
+            const formData = new FormData();
+            formData.append('post_id', String(postId));
+            formData.append('description', this.descriptionField?.value.trim() ?? '');
+            formData.append('collection', this.selectedCollections.join(','));
+            formData.append('tags', this.tags.join(' '));
+            const response = await fetch('/posts/update', { method: 'POST', body: formData });
+            const payload = await response.json();
+            if (!response.ok || !payload.success) throw new Error(payload.error || 'Не удалось сохранить изменения.');
+            this.showSuccessToast('Изменения поста сохранены');
+            window.location.reload();
+        } catch (error) {
+            this.showAlert(error.message || 'Ошибка сохранения.');
+        } finally {
+            this.submitButton.disabled = false;
+        }
+    }
+
+    async deletePost() {
+        const confirmed = window.confirm('После удаления пост не получится восстановить! Удалить его?');
+        if (!confirmed) return;
+        const postId = Number(window.location.pathname.match(/\/post\/(\d+)/)?.[1] || 0);
+        if (!postId) return;
+        try {
+            const response = await fetch('/posts/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+                body: new URLSearchParams({ post_id: String(postId) }).toString()
+            });
+            const payload = await response.json();
+            if (!response.ok || !payload.success) throw new Error(payload.error || 'Не удалось удалить пост.');
+            this.showSuccessToast('Пост удалён');
+            window.location.href = '/';
+        } catch (error) {
+            this.showAlert(error.message || 'Ошибка удаления.');
         }
     }
 

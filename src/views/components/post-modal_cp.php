@@ -22,6 +22,9 @@
                     <span class="post-modal__upload-icon" data-component="post-upload-icon" data-svg-src="assets/images/icons/upload.svg" aria-hidden="true"></span>
                     <span class="post-modal__upload-label">Загрузить*</span>
                 </div>
+                <div class="post-modal__lock-overlay" data-component="post-edit-lock-overlay">
+                    <span class="post-modal__upload-icon" data-svg-src="assets/images/icons/lock.svg" aria-hidden="true"></span>
+                </div>
 
                 <img class="post-modal__preview post-modal__preview--hidden" data-component="post-upload-preview" alt="Предпросмотр изображения">
             </div>

@@ -42,6 +42,12 @@ if ($path === '/hashtags/suggest') {
 if ($path === '/posts/create') {
     handleCreatePost($pdo, $userId);
 }
+if ($path === '/posts/update') {
+    handleUpdatePost($pdo, $userId);
+}
+if ($path === '/posts/delete') {
+    handleDeletePost($pdo, $userId);
+}
 
 if ($path === '/posts/like') {
     handleToggleLike($pdo, $userId);
@@ -144,6 +150,50 @@ function handleHashtagsSuggest(PDO $pdo): never
     $tags = array_map(static fn(array $row) => (string) $row['name'], $stmt->fetchAll());
 
     jsonResponse(['success' => true, 'tags' => $tags]);
+}
+
+function handleUpdatePost(PDO $pdo, int $userId): never
+{
+    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+        jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод.'], 405);
+    }
+    $postId = (int) ($_POST['post_id'] ?? 0);
+    if ($postId <= 0 || !isPostOwner($pdo, $postId, $userId)) {
+        jsonResponse(['success' => false, 'error' => 'Недостаточно прав.'], 403);
+    }
+    $description = trim((string) ($_POST['description'] ?? ''));
+    $tagsRaw = trim((string) ($_POST['tags'] ?? ''));
+    $collectionsRaw = trim((string) ($_POST['collection'] ?? ''));
+
+    $pdo->beginTransaction();
+    try {
+        $upd = $pdo->prepare('UPDATE Posts SET description = ? WHERE id = ?');
+        $upd->execute([$description, $postId]);
+        $pdo->prepare('DELETE FROM Post_Hashtags WHERE post_id = ?')->execute([$postId]);
+        linkHashtagsToPost($pdo, $postId, $tagsRaw);
+        syncPostCollectionsForUser($pdo, $userId, $postId, $collectionsRaw);
+        $pdo->commit();
+    } catch (Throwable $e) {
+        $pdo->rollBack();
+        jsonResponse(['success' => false, 'error' => 'Не удалось сохранить изменения.'], 500);
+    }
+    jsonResponse(['success' => true]);
+}
+
+function handleDeletePost(PDO $pdo, int $userId): never
+{
+    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') jsonResponse(['success' => false], 405);
+    $postId = (int) ($_POST['post_id'] ?? 0);
+    if ($postId <= 0 || !isPostOwner($pdo, $postId, $userId)) jsonResponse(['success' => false, 'error' => 'Недостаточно прав.'], 403);
+    $stmt = $pdo->prepare('SELECT image_path FROM Posts WHERE id = ? LIMIT 1');
+    $stmt->execute([$postId]);
+    $imagePath = (string) ($stmt->fetchColumn() ?: '');
+    $pdo->prepare('DELETE FROM Posts WHERE id = ?')->execute([$postId]);
+    $fullImagePath = realpath(__DIR__ . '/../../htdocs') . '/' . ltrim($imagePath, '/');
+    if ($imagePath !== '' && is_file($fullImagePath)) {
+        @unlink($fullImagePath);
+    }
+    jsonResponse(['success' => true]);
 }
 
 function handleToggleLike(PDO $pdo, int $userId): never
@@ -874,6 +924,40 @@ function parseCollectionNames(string $collectionsInput): ?array
     }
 
     return $normalized;
+}
+
+function syncPostCollectionsForUser(PDO $pdo, int $userId, int $postId, string $collectionsInput): void
+{
+    $collectionNames = parseCollectionNames($collectionsInput) ?? ['Profile'];
+    $profileBoardId = findBoardId($pdo, $userId, 'Profile');
+    if ($profileBoardId === null) {
+        $profileBoardId = createBoard($pdo, $userId, 'Profile');
+    }
+    $targetBoardIds = [$profileBoardId];
+    foreach ($collectionNames as $collectionName) {
+        if ($collectionName === 'Profile') continue;
+        $boardId = findBoardId($pdo, $userId, $collectionName);
+        if ($boardId === null) $boardId = createBoard($pdo, $userId, $collectionName);
+        $targetBoardIds[] = $boardId;
+    }
+    $pdo->prepare('DELETE FROM Saved_Posts WHERE user_id = ? AND post_id = ?')->execute([$userId, $postId]);
+    $ins = $pdo->prepare('INSERT IGNORE INTO Saved_Posts (user_id, post_id, board_id) VALUES (?, ?, ?)');
+    foreach (array_unique($targetBoardIds) as $boardId) {
+        $ins->execute([$userId, $postId, $boardId]);
+    }
+}
+
+function linkHashtagsToPost(PDO $pdo, int $postId, string $tagsInput): void
+{
+    $hashtags = parseHashtags($tagsInput);
+    if (empty($hashtags)) return;
+    $insertHashtag = $pdo->prepare('INSERT INTO Hashtags (name) VALUES (?) ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID(id)');
+    $linkHashtag = $pdo->prepare('INSERT IGNORE INTO Post_Hashtags (post_id, hashtag_id) VALUES (?, ?)');
+    foreach ($hashtags as $hashtag) {
+        $insertHashtag->execute([$hashtag]);
+        $hashtagId = (int) $pdo->lastInsertId();
+        $linkHashtag->execute([$postId, $hashtagId]);
+    }
 }
 
 function parseHashtags(string $tagsInput): array
