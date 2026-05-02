@@ -1,6 +1,6 @@
 /* =========================== Модалка создания поста ========================== */
 
-.create-post-modal {
+.post-modal {
     position: fixed;
     inset: 0;
     z-index: 1200;
@@ -15,7 +15,7 @@
     transition: opacity 0.2s ease, visibility 0.2s ease;
 }
 
-.create-post-modal--hidden {
+.post-modal--hidden {
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
@@ -23,18 +23,22 @@
 
 /* --------------------------- Контент панели -------------------------------- */
 
-.create-post-modal__panel {
+.post-modal__panel {
     position: relative;
     width: min(1300px, calc(100vw - 40px));
     max-width: 85%;
-    height: 700px;
+    height: 730px;
     max-height: 75%;
     background: #fff;
     border-radius: 20px;
     box-shadow: 0 2px 3px rgba(0, 0, 0, 0.07);
 }
+.post-modal__panel--pulse {
+    border: 2px solid rgb(100, 100, 200);
+    transition: border-color 1s ease-out;
+}
 
-.create-post-modal__alert {
+.post-modal__alert {
     position: absolute;
     top: -45px;
     left: 50%;
@@ -55,11 +59,11 @@
     transition: opacity 1s ease;
 }
 
-.create-post-modal__alert--fade-out {
+.post-modal__alert--fade-out {
     opacity: 0;
 }
 
-.create-post-modal__alert--hidden {
+.post-modal__alert--hidden {
     display: none;
 }
 
@@ -90,7 +94,7 @@
     display: none;
 }
 
-.create-post-modal__upload-column {
+.post-modal__upload-column {
     position: absolute;
     left: 0;
     top: 0;
@@ -100,14 +104,14 @@
     gap: 15px;
 }
 
-.create-post-modal__meta-column {
+.post-modal__meta-column {
     position: relative;
     width: 630px;
     min-height: 665px;
     margin-left: auto;
 }
 
-.create-post-modal__title {
+.post-modal__title {
     position: absolute;
     right: 60px;
     top: 30px;
@@ -122,7 +126,7 @@
 
 /* --------------------------- Поля формы ------------------------------------- */
 
-.create-post-modal__input {
+.post-modal__input {
     position: absolute;
     right: 60px;
     width: 630px;
@@ -138,37 +142,37 @@
     transition: border-color 0.2s ease;
 }
 
-.create-post-modal__input:focus {
+.post-modal__input:focus {
     border-color: rgb(100, 100, 200);
 }
 
-.create-post-modal__input:hover {
+.post-modal__input:hover {
     border-color: rgb(150, 150, 250);
 }
 
-.create-post-modal__input:focus:hover {
+.post-modal__input:focus:hover {
     border-color: rgb(100, 100, 200);
 }
 
-.create-post-modal__input::placeholder {
+.post-modal__input::placeholder {
     color: #bbb;
 }
 
-.create-post-modal__collection {
+.post-modal__collection {
     position: absolute;
     top: 270px;
     right: 60px;
     width: 630px;
 }
 
-.create-post-modal__input--description {
+.post-modal__input--description {
     top: 100px;
     height: 150px;
     padding-top: 15px;
     resize: none;
 }
 
-.create-post-modal__input--collection {
+.post-modal__input--collection {
     position: relative;
     left: 0;
     width: 100%;
@@ -180,7 +184,7 @@
     pointer-events: none;
 }
 
-.create-post-modal__collection-list {
+.post-modal__collection-list {
     position: absolute;
     top: 50px;
     left: 0;
@@ -199,12 +203,12 @@
     transition: border-color 0.2s ease;
 }
 
-.create-post-modal__collection:hover .create-post-modal__input--collection,
-.create-post-modal__collection:hover .create-post-modal__collection-list {
+.post-modal__collection:hover .post-modal__input--collection,
+.post-modal__collection:hover .post-modal__collection-list {
     border-color: rgb(150, 150, 250);
 }
 
-.create-post-modal__collection-list button {
+.post-modal__collection-list button {
     width: 100%;
     height: 30px;
     padding: 0 15px;
@@ -218,40 +222,40 @@
     transition: background 0.1s ease, color 0.1s ease;
 }
 
-.create-post-modal__collection-list button:hover {
+.post-modal__collection-list button:hover {
     background: rgba(100, 100, 200, 0.07);
 }
 
-.create-post-modal__collection-list button.is-selected {
+.post-modal__collection-list button.is-selected {
     color: rgb(100, 100, 200);
 }
 
-.create-post-modal__collection-list button[data-is-profile="1"] {
+.post-modal__collection-list button[data-is-profile="1"] {
     color: #999;
     cursor: not-allowed;
     pointer-events: none;
     height: 29px;
 }
 
-.create-post-modal__collection-add-button {
+.post-modal__collection-add-button {
     text-align: center !important;
     font-size: 20px !important;
     color: #bbb !important;
 }
 
-.create-post-modal__tags-wrap {
+.post-modal__tags-wrap {
     position: absolute;
     top: 430px;
     right: 60px;
     width: 630px;
 }
 
-.create-post-modal__tags-input-row {
+.post-modal__tags-input-row {
     position: relative;
     width: 630px;
 }
 
-.create-post-modal__input--tags {
+.post-modal__input--tags {
     position: relative;
     right: 0;
     width: 100%;
@@ -259,7 +263,7 @@
     padding-right: 56px;
 }
 
-.create-post-modal__tags-add-button {
+.post-modal__tags-add-button {
     position: absolute;
     top: 50%;
     right: 10px;
@@ -277,24 +281,24 @@
     transition: border-color 0.2s ease, opacity 0.2s ease, background 0.2s ease, color 0.2s ease;
 }
 
-.create-post-modal__tags-input-row:focus-within .create-post-modal__tags-add-button {
+.post-modal__tags-input-row:focus-within .post-modal__tags-add-button {
     border-color: rgb(100, 100, 200);
     background: rgb(100, 100, 200);
     color: #fff;
 }
 
-.create-post-modal__tags-input-row:hover .create-post-modal__tags-add-button {
+.post-modal__tags-input-row:hover .post-modal__tags-add-button {
     border-color: rgb(150, 150, 250);
     color: rgb(150, 150, 250);
 }
 
-.create-post-modal__tags-input-row:focus-within:hover .create-post-modal__tags-add-button {
+.post-modal__tags-input-row:focus-within:hover .post-modal__tags-add-button {
     border-color: rgb(100, 100, 200);
     background: rgb(100, 100, 200);
     color: #fff;
 }
 
-.create-post-modal__tags-list {
+.post-modal__tags-list {
     display: flex;
     flex-direction: column;
     row-gap: 5px;
@@ -304,7 +308,7 @@
     overflow: hidden;
 }
 
-.create-post-modal__tags-row {
+.post-modal__tags-row {
     display: flex;
     flex-wrap: nowrap;
     justify-content: flex-start;
@@ -312,7 +316,7 @@
     width: 100%;
 }
 
-.create-post-modal__tags-suggest-list {
+.post-modal__tags-suggest-list {
     position: absolute;
     top: 50px;
     left: 0;
@@ -331,16 +335,16 @@
     transition: border-color 0.2s ease;
 }
 
-.create-post-modal__tags-suggest-list--hidden {
+.post-modal__tags-suggest-list--hidden {
     display: none;
 }
 
-.create-post-modal__tags-input-row--suggest-open .create-post-modal__input--tags {
+.post-modal__tags-input-row--suggest-open .post-modal__input--tags {
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
 }
 
-.create-post-modal__tags-suggest-list button {
+.post-modal__tags-suggest-list button {
     width: 100%;
     height: 30px;
     border: none;
@@ -353,15 +357,15 @@
     transition: background 0.2s ease;
 }
 
-.create-post-modal__tags-suggest-list button:hover {
+.post-modal__tags-suggest-list button:hover {
     background: rgba(100, 100, 200, 0.07);
 }
 
-.create-post-modal__tags-suggest-match {
+.post-modal__tags-suggest-match {
     color: rgb(100, 100, 200);
 }
 
-.create-post-modal__tag-item {
+.post-modal__tag-item {
     position: relative;
     display: inline-flex;
     flex: 0 0 auto;
@@ -378,11 +382,11 @@
     user-select: none;
 }
 
-.create-post-modal__tag-label {
+.post-modal__tag-label {
     transition: filter 0.1s ease;
 }
 
-.create-post-modal__tag-item::after {
+.post-modal__tag-item::after {
     content: '×';
     position: absolute;
     inset: 0;
@@ -396,41 +400,43 @@
     pointer-events: none;
 }
 
-.create-post-modal__tag-item:hover .create-post-modal__tag-label {
+.post-modal__tag-item:hover .post-modal__tag-label {
     filter: blur(1px);
     color: #999999;
 }
 
-.create-post-modal__tag-item:hover::after {
+.post-modal__tag-item:hover::after {
     opacity: 1;
 }
 
-.create-post-modal__tag-item--more {
+.post-modal__tag-item--more {
     cursor: default;
 }
 
-.create-post-modal__tag-item--more::after {
+.post-modal__tag-item--more::after {
     content: none;
 }
 
-.create-post-modal__tag-item--more:hover {
+.post-modal__tag-item--more:hover {
     filter: none;
 }
 
 /* ------------------------------ Кнопки -------------------------------------- */
 
-.create-post-modal__actions {
+.post-modal__actions {
     position: relative;
     right: 60px;
     top: 590px;
     width: 630px;
-    height: 50px;
+    height: 110px;
     display: flex;
     gap: 10px;
+    flex-wrap: wrap;
+    align-content: flex-start;
 }
 
-.create-post-modal__button {
-    flex: 1;
+.post-modal__button {
+    flex: 1 1 100%;
     height: 50px;
     border: none;
     border-radius: 10px;
@@ -440,28 +446,49 @@
     transition: border-color 0.2s ease, opacity 0.2s ease;
 }
 
-.create-post-modal__button--cancel {
+.post-modal__button--delete {
+    flex: 1 1 calc(50% - 5px);
+    background: #fff;
+    border: 1.5px solid #e0e0e0;
+    color: rgb(100, 100, 200);
+    display: none;
+}
+.post-modal__button--delete:hover {
+    border-color: rgb(150, 150, 250);
+}
+
+.post-modal--edit .post-modal__button--delete {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.post-modal--edit .post-modal__button--submit {
+    flex: 1 1 calc(50% - 5px);
+}
+
+.post-modal__button--cancel {
     background: #ffffff;
     border: 1.5px solid #e0e0e0;
     color: #555;
 }
 
-.create-post-modal__button--cancel:hover {
+.post-modal__button--cancel:hover {
     border-color: rgb(150, 150, 250);
 }
 
-.create-post-modal__button--submit {
+.post-modal__button--submit {
     background: rgb(100, 100, 200);
     color: #ffffff;
 }
 
-.create-post-modal__button--submit:hover {
+.post-modal__button--submit:hover {
     opacity: 0.8;
 }
 
 /* --------------------------- Зона загрузки ---------------------------------- */
 
-.create-post-modal__upload-dropzone {
+.post-modal__upload-dropzone {
     position: relative;
     width: 520px;
     height: 450px;
@@ -475,33 +502,55 @@
     overflow: hidden;
     transition: border-color 0.2s ease-in-out;
 }
+.post-modal__lock-overlay {
+    position: absolute;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.25);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    cursor: not-allowed;
+    z-index: 3;
+}
+.post-modal--edit .post-modal__lock-overlay {
+    display: flex;
+}
+.post-modal--edit .post-modal__lock-overlay .post-modal__upload-icon svg,
+.post-modal--edit .post-modal__lock-overlay .post-modal__upload-icon svg * {
+    fill: rgba(255,255,255,0.9);
+}
+.post-modal--edit .post-modal__upload-dropzone {
+    cursor: not-allowed;
+}
 
-.create-post-modal__upload-dropzone:hover,
-.create-post-modal__upload-dropzone--dragover {
+.post-modal__upload-dropzone:hover,
+.post-modal__upload-dropzone--dragover {
     border-color: rgb(150, 150, 250);
 }
 
-.create-post-modal__upload-dropzone--filled {
+.post-modal__upload-dropzone--filled {
     height: auto;
     border-style: solid;
     border-color: #333;
 }
 
-.create-post-modal__upload-dropzone--filled:hover {
+.post-modal__upload-dropzone--filled:hover {
     border-color: #555;
 }
 
-.create-post-modal__upload-dropzone:hover::before,
-.create-post-modal__upload-dropzone--dragover::before {
+.post-modal__upload-dropzone:hover::before,
+.post-modal__upload-dropzone--dragover::before {
     opacity: 1;
-    animation: create-post-modal-dash-flow 2.8s linear infinite;
+    animation: post-modal-dash-flow 2.8s linear infinite;
 }
 
-.create-post-modal__upload-dropzone--filled::before {
+.post-modal__upload-dropzone--filled::before {
     display: none;
 }
 
-@keyframes create-post-modal-dash-flow {
+@keyframes post-modal-dash-flow {
     from {
         background-position:
             0 0,
@@ -518,7 +567,7 @@
     }
 }
 
-.create-post-modal__file-input {
+.post-modal__file-input {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -526,7 +575,7 @@
     pointer-events: none;
 }
 
-.create-post-modal__upload-placeholder {
+.post-modal__upload-placeholder {
     position: absolute;
     top: 50%;
     left: 50%;
@@ -537,35 +586,35 @@
     gap: 10px;
 }
 
-.create-post-modal__upload-icon {
+.post-modal__upload-icon {
     width: 52px;
     height: 52px;
     color: #999;
 }
 
-.create-post-modal__upload-icon svg {
+.post-modal__upload-icon svg {
     width: 100%;
     height: 100%;
 }
 
-.create-post-modal__upload-label {
+.post-modal__upload-label {
     font-family: 'SF_def', Arial, sans-serif;
     font-size: 16px;
     color: #999;
 }
 
-.create-post-modal__preview {
+.post-modal__preview {
     display: block;
     width: 100%;
     height: auto;
     object-fit: cover;
 }
 
-.create-post-modal__preview--hidden {
+.post-modal__preview--hidden {
     display: none;
 }
 
-.create-post-modal__hint {
+.post-modal__hint {
     margin: 0 0 0 30px;
     width: 520px;
     height: 10px;
