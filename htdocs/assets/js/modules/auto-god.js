@@ -15,8 +15,10 @@ class AutoGodComponent {
         };
 
         usernameInput.addEventListener('input', applyHint);
-        form.querySelector('[data-component="auth-mode-toggle"]')?.addEventListener('click', () => {
-            window.requestAnimationFrame(applyHint);
+        form.querySelectorAll('[data-component="auth-mode-toggle"]').forEach((button) => {
+            button.addEventListener('click', () => {
+                window.requestAnimationFrame(applyHint);
+            });
         });
         applyHint();
     }

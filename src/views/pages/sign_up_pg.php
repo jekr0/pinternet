@@ -90,11 +90,20 @@ $isRegistrationMode = $authMode === 'registration';
                 </button>
             </div>
 
-            <p class="auth__footer">
-                <span data-component="auth-mode-label"><?= $isRegistrationMode ? 'Уже есть аккаунт?' : 'Ещё нет аккаунта?'; ?></span>
-                <button class="auth__link auth__mode-toggle" type="button" data-component="auth-mode-toggle">
-                    <?= $isRegistrationMode ? 'Войти' : 'Зарегистрироваться'; ?>
-                </button>
+            <p class="auth__footer" aria-label="Режим авторизации">
+                <button
+                    class="auth__link auth__mode-toggle<?= !$isRegistrationMode ? ' is-active' : ''; ?>"
+                    type="button"
+                    data-component="auth-mode-toggle"
+                    data-auth-mode-target="login"
+                >Вход</button>
+                <span class="auth__footer-separator" aria-hidden="true">•</span>
+                <button
+                    class="auth__link auth__mode-toggle<?= $isRegistrationMode ? ' is-active' : ''; ?>"
+                    type="button"
+                    data-component="auth-mode-toggle"
+                    data-auth-mode-target="registration"
+                >Регистрация</button>
             </p>
         </form>
 

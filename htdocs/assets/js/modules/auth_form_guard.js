@@ -19,12 +19,15 @@ class AuthFormGuardComponent {
 
 
     bindModeToggle(form) {
-        const toggleButton = form.querySelector('[data-component="auth-mode-toggle"]');
-        if (!toggleButton) return;
+        const toggleButtons = Array.from(form.querySelectorAll('[data-component="auth-mode-toggle"]'));
+        if (toggleButtons.length === 0) return;
 
-        toggleButton.addEventListener('click', () => {
-            const nextMode = form.dataset.authMode === 'registration' ? 'login' : 'registration';
-            this.applyMode(form, nextMode);
+        toggleButtons.forEach((button) => {
+            button.addEventListener('click', () => {
+                const nextMode = button.dataset.authModeTarget || 'login';
+                if (nextMode === form.dataset.authMode) return;
+                this.applyMode(form, nextMode);
+            });
         });
     }
 
@@ -35,8 +38,7 @@ class AuthFormGuardComponent {
         const identityField = form.querySelector('[data-component="auth-identity-input"]');
         const passwordField = form.querySelector('input[name="password"]');
         const submitButton = form.querySelector('[data-component="auth-submit-button"]');
-        const modeLabel = form.querySelector('[data-component="auth-mode-label"]');
-        const modeToggle = form.querySelector('[data-component="auth-mode-toggle"]');
+        const modeButtons = Array.from(form.querySelectorAll('[data-component="auth-mode-toggle"]'));
 
         form.dataset.authMode = isRegistration ? 'registration' : 'login';
         form.classList.toggle('auth__form--registration', isRegistration);
@@ -61,8 +63,9 @@ class AuthFormGuardComponent {
         }
 
         if (submitButton) submitButton.textContent = isRegistration ? 'Создать аккаунт' : 'Войти';
-        if (modeLabel) modeLabel.textContent = isRegistration ? 'Уже есть аккаунт?' : 'Ещё нет аккаунта?';
-        if (modeToggle) modeToggle.textContent = isRegistration ? 'Войти' : 'Зарегистрироваться';
+        modeButtons.forEach((button) => {
+            button.classList.toggle('is-active', button.dataset.authModeTarget === form.dataset.authMode);
+        });
     }
 
     bindFieldRestrictions(form) {
