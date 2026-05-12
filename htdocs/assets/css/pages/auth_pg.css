@@ -2,37 +2,77 @@
 
 /* Полноэкранная обёртка — центрирует контейнер */
 .auth {
+    position: relative;
     width: 100%;
     min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow: hidden;
+    background: #f5f5f5;
+}
+
+.auth::before {
+    position: fixed;
+    inset: -180px;
+    z-index: 0;
+    content: '';
+    pointer-events: none;
+    background-color: #ebebeb;
+    mask-image: url('../../images/icons/planet.svg');
+    mask-size: 96px 96px;
+    mask-repeat: repeat;
+    mask-position: 0 0;
+    -webkit-mask-image: url('../../images/icons/planet.svg');
+    -webkit-mask-size: 96px 96px;
+    -webkit-mask-repeat: repeat;
+    -webkit-mask-position: 0 0;
+    transform: rotate(20deg);
+    animation: auth-planets-drift 42s linear infinite;
+}
+
+@keyframes auth-planets-drift {
+    from {
+        mask-position: 0 0;
+        -webkit-mask-position: 0 0;
+    }
+
+    to {
+        mask-position: 384px 384px;
+        -webkit-mask-position: 384px 384px;
+    }
 }
 
 /* Фиксированный белый контейнер */
 .auth__container {
-    position: relative; /* Добавляем для позиционирования ошибки */
-    width: 500px;
-    height: 400px;
+    position: relative;
+    z-index: 1;
+    width: 480px;
+    height: 352px;
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
     background: #ffffff;
-    border-radius: 20px;
-    box-shadow: 0 2px 3px rgba(0,0,0,0.07);
+    border-radius: 24px;
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.07);
 }
 
 /* --------------------------- Логотип ----------------------------------- */
 
 .auth__logo {
-    margin-top: 10px;
-    margin-bottom: 10px;
+    width: 376px;
+    height: 52px;
+    margin: 12px auto 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     text-align: center;
     user-select: none;
     letter-spacing: 1px;
     font-family: 'MC_caps', Arial, sans-serif;
-    font-size: 36px;
-    color: rgb(40, 5, 40);
+    font-size: 32px;
+    line-height: 1;
+    color: #000000;
 }
 
 /* --------------------------- Ошибка ------------------------------------ */
@@ -56,7 +96,7 @@
     color: #555;
     background: rgb(255, 255, 255);
     border-radius: 10px;
-    box-shadow: 0 2px 3px rgba(0,0,0,0.07);
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.07);
     backdrop-filter: blur(10px);
     opacity: 1;
     transition: opacity 1s ease;
@@ -77,19 +117,20 @@
 /* --------------------------- Форма ------------------------------------- */
 
 .auth__form {
-    flex: 1;
+    position: absolute;
+    inset: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    padding-top: 76px;
     gap: 12px;
 }
 
 /* --------------------------- Поля ввода -------------------------------- */
 
 .auth__input {
-    width: 380px;
-    height: 50px;
+    width: 376px;
+    height: 40px;
     padding: 0 14px;
     box-sizing: border-box;
     outline: none;
@@ -97,13 +138,14 @@
     font-size: 16px;
     color: #333;
     background: #fff;
-    border: 1.5px solid #e0e0e0;
+    border: 1px solid #bbbbbb;
     border-radius: 10px;
     transition: border-color 0.2s ease;
 }
 
 .auth__input::placeholder {
-    color: #bbb;
+    font-size: 16px;
+    color: #bbbbbb;
 }
 
 .auth__input:hover {
@@ -116,7 +158,8 @@
 
 .auth__password-row {
     position: relative;
-    width: 380px;
+    width: 376px;
+    height: 40px;
 }
 
 .auth__input--password {
@@ -128,10 +171,10 @@
 .auth__password-toggle {
     position: absolute;
     top: 50%;
-    left: calc(100% + 13px);
+    left: -40px;
     transform: translateY(-50%);
-    width: 34px;
-    height: 34px;
+    width: 28px;
+    height: 28px;
     padding: 0;
     border: none;
     color: #333;
@@ -144,8 +187,8 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 34px;
-    height: 34px;
+    width: 28px;
+    height: 28px;
     content: '';
     background-color: rgba(100, 100, 200, 0.1);
     border-radius: 5px;
@@ -162,24 +205,26 @@
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 20px;
-    height: 20px;
+    width: 24px;
+    height: 24px;
     transform: translate(-50%, -50%);
 }
 
 /* --------------------------- Кнопки ------------------------------------ */
 
 .auth__actions {
-    width: 380px;
-    margin-top: 10px;
+    position: absolute;
+    right: 0;
+    bottom: 52px;
+    left: 0;
     display: flex;
     justify-content: center;
-    gap: 10px;
+    gap: 12px;
 }
 
 .auth__button {
-    flex: 1;
-    height: 50px;
+    width: 182px;
+    height: 40px;
     border: none;
     border-radius: 10px;
     font-family: 'SF_def', Arial, sans-serif;
@@ -190,12 +235,12 @@
 
 .auth__button--back {
     background: #ffffff;
-    border: 1.5px solid #e0e0e0;
+    border: 1px solid #bbbbbb;
     color: #555;
 }
 
 .auth__button--back:hover {
-    border: 1.5px solid rgb(150, 150, 250);
+    border: 1px solid rgb(150, 150, 250);
 }
 
 .auth__button--submit {
@@ -210,8 +255,10 @@
 /* --------------------------- Подпись ----------------------------------- */
 
 .auth__footer {
-    margin-top: auto;
-    margin-bottom: 20px;
+    position: absolute;
+    right: 0;
+    bottom: 16px;
+    left: 0;
     text-align: center;
     font-family: 'SF_def', Arial, sans-serif;
     font-size: 14px;

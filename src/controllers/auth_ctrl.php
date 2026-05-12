@@ -21,21 +21,21 @@ match ($action) {
 
 function handleLogin(PDO $pdo): void
 {
-    $email    = trim($_POST['email']    ?? '');
+    $login    = trim($_POST['login'] ?? $_POST['email'] ?? '');
     $password = trim($_POST['password'] ?? '');
 
     // Валидация на пустоту
-    if (!$email || !$password) {
+    if (!$login || !$password) {
         redirectTo('/login', 'Заполните все поля');
     }
 
-    // Ищем пользователя по почте
-    $stmt = $pdo->prepare('SELECT id, username, password_hash, is_banned, role, exp, level FROM Users WHERE email = ?');
-    $stmt->execute([$email]);
+    // Ищем пользователя по логину или почте
+    $stmt = $pdo->prepare('SELECT id, username, password_hash, is_banned, role, exp, level FROM Users WHERE username = ? OR email = ?');
+    $stmt->execute([$login, $login]);
     $user = $stmt->fetch();
 
     if (!$user || !password_verify($password, $user['password_hash'])) {
-        redirectTo('/login', 'Неверная почта или пароль');
+        redirectTo('/login', 'Неверный логин или пароль');
     }
 
     if ($user['is_banned']) {

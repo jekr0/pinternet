@@ -28,10 +28,10 @@ unset($_SESSION['auth_error']);
 
             <input
                 class="auth__input"
-                type="email"
-                name="email"
-                placeholder="example@gmail.com"
-                autocomplete="email"
+                type="text"
+                name="login"
+                placeholder="login"
+                autocomplete="username"
                 required
             >
             <div class="auth__password-row">
@@ -39,7 +39,7 @@ unset($_SESSION['auth_error']);
                     class="auth__input auth__input--password"
                     type="password"
                     name="password"
-                    placeholder="password123"
+                    placeholder="password"
                     autocomplete="current-password"
                     required
                 >

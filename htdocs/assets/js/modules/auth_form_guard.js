@@ -33,10 +33,11 @@ class AuthFormGuardComponent {
         form.addEventListener('submit', async (event) => {
             const action = form.querySelector('input[name="action"]')?.value;
             const email = form.querySelector('input[name="email"]')?.value.trim() || '';
+            const login = form.querySelector('input[name="login"]')?.value.trim() || '';
             const password = form.querySelector('input[name="password"]')?.value || '';
             const username = form.querySelector('input[name="username"]')?.value.trim() || '';
 
-            if (!email || !password || (action === 'registration' && !username)) {
+            if (!password || (action === 'registration' ? (!email || !username) : !login)) {
                 event.preventDefault();
                 this.showBanner(form, 'Заполните все поля');
                 return;
@@ -56,7 +57,7 @@ class AuthFormGuardComponent {
                 }
             }
 
-            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            if (action === 'registration' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
                 event.preventDefault();
                 this.showBanner(form, 'Некорректный формат почты');
                 return;
