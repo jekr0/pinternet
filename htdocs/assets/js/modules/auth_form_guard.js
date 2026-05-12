@@ -9,9 +9,62 @@ class AuthFormGuardComponent {
         if (forms.length === 0) return;
 
         forms.forEach((form) => {
+            this.bindModeToggle(form);
             this.bindFieldRestrictions(form);
             this.bindFormValidation(form);
             this.autoHideExistingBanner(form);
+            this.applyMode(form, form.dataset.authMode === 'registration' ? 'registration' : 'login', false);
+        });
+    }
+
+
+    bindModeToggle(form) {
+        const toggleButtons = Array.from(form.querySelectorAll('[data-component="auth-mode-toggle"]'));
+        if (toggleButtons.length === 0) return;
+
+        toggleButtons.forEach((button) => {
+            button.addEventListener('click', () => {
+                const nextMode = button.dataset.authModeTarget || 'login';
+                if (nextMode === form.dataset.authMode) return;
+                this.applyMode(form, nextMode);
+            });
+        });
+    }
+
+    applyMode(form, mode, animate = true) {
+        const isRegistration = mode === 'registration';
+        const actionInput = form.querySelector('input[name="action"]');
+        const usernameField = form.querySelector('input[name="username"]');
+        const identityField = form.querySelector('[data-component="auth-identity-input"]');
+        const passwordField = form.querySelector('input[name="password"]');
+        const submitButton = form.querySelector('[data-component="auth-submit-button"]');
+        const modeButtons = Array.from(form.querySelectorAll('[data-component="auth-mode-toggle"]'));
+
+        form.dataset.authMode = isRegistration ? 'registration' : 'login';
+        form.classList.toggle('auth__form--registration', isRegistration);
+
+        if (actionInput) actionInput.value = isRegistration ? 'registration' : 'login';
+
+        if (usernameField) {
+            usernameField.disabled = !isRegistration;
+            usernameField.required = isRegistration;
+            if (!isRegistration && animate) usernameField.value = '';
+        }
+
+        if (identityField) {
+            identityField.name = isRegistration ? 'email' : 'login';
+            identityField.type = isRegistration ? 'email' : 'text';
+            identityField.autocomplete = isRegistration ? 'email' : 'username';
+            identityField.placeholder = 'example@gmail.com';
+        }
+
+        if (passwordField) {
+            passwordField.autocomplete = isRegistration ? 'new-password' : 'current-password';
+        }
+
+        if (submitButton) submitButton.textContent = isRegistration ? 'Создать аккаунт' : 'Войти';
+        modeButtons.forEach((button) => {
+            button.classList.toggle('is-active', button.dataset.authModeTarget === form.dataset.authMode);
         });
     }
 
@@ -33,10 +86,11 @@ class AuthFormGuardComponent {
         form.addEventListener('submit', async (event) => {
             const action = form.querySelector('input[name="action"]')?.value;
             const email = form.querySelector('input[name="email"]')?.value.trim() || '';
+            const login = form.querySelector('input[name="login"]')?.value.trim() || '';
             const password = form.querySelector('input[name="password"]')?.value || '';
             const username = form.querySelector('input[name="username"]')?.value.trim() || '';
 
-            if (!email || !password || (action === 'registration' && !username)) {
+            if (!password || (action === 'registration' ? (!email || !username) : !login)) {
                 event.preventDefault();
                 this.showBanner(form, 'Заполните все поля');
                 return;
@@ -56,7 +110,7 @@ class AuthFormGuardComponent {
                 }
             }
 
-            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            if (action === 'registration' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
                 event.preventDefault();
                 this.showBanner(form, 'Некорректный формат почты');
                 return;

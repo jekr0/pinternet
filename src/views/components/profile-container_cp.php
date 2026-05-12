@@ -56,7 +56,7 @@ $isLoggedIn = !empty($_SESSION['user_id']);
 <?php else: ?>
 
     <div class="header__profile-container header__profile-container--guest">
-        <a href="/login" class="header__login-link">Войти</a>
+        <a href="/sign_up" class="header__login-link">Войти</a>
     </div>
 
 <?php endif; ?>

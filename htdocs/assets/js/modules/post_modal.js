@@ -2,6 +2,7 @@ class CreatePostModalComponent {
     constructor() {
         // Modal and upload elements
         this.modal = null;
+        this.panel = null;
         this.dropzone = null;
         this.fileInput = null;
         this.placeholder = null;
@@ -35,13 +36,25 @@ class CreatePostModalComponent {
         this.currentFile = null;
         this.titleElement = null;
         this.cancelButton = null;
+        this.deleteButton = null;
+        this.confirmBox = null;
+        this.confirmMessage = null;
+        this.confirmCancelButton = null;
+        this.confirmSubmitButton = null;
+        this.lockIcon = null;
         this.isEditMode = false;
+        this.editPostId = 0;
+        this.editSnapshot = null;
+        this.closeResetTimer = null;
+        this.confirmAction = null;
+        this.closeBlockedTimer = null;
     }
 
     init() {
         this.modal = document.getElementById('post-modal');
         if (!this.modal) return;
 
+        this.panel = this.modal.querySelector('.post-modal__panel');
         this.dropzone = this.modal.querySelector('[data-component="post-upload-dropzone"]');
         this.fileInput = this.modal.querySelector('[data-component="post-upload-input"]');
         this.placeholder = this.modal.querySelector('[data-component="post-upload-placeholder"]');
@@ -61,6 +74,12 @@ class CreatePostModalComponent {
         this.tagsInputRow = this.modal.querySelector('.post-modal__tags-input-row');
         this.titleElement = this.modal.querySelector('[data-component="post-modal-title"]');
         this.cancelButton = this.modal.querySelector('[data-component="create-post-cancel"]');
+        this.deleteButton = this.modal.querySelector('[data-component="post-edit-delete"]');
+        this.confirmBox = this.modal.querySelector('[data-component="post-modal-confirm"]');
+        this.confirmMessage = this.modal.querySelector('[data-component="post-modal-confirm-message"]');
+        this.confirmCancelButton = this.modal.querySelector('[data-component="post-modal-confirm-cancel"]');
+        this.confirmSubmitButton = this.modal.querySelector('[data-component="post-modal-confirm-submit"]');
+        this.lockIcon = this.modal.querySelector('[data-component="post-upload-lock-icon"]');
 
         if (!this.dropzone || !this.fileInput || !this.placeholder || !this.preview) return;
 
@@ -68,6 +87,13 @@ class CreatePostModalComponent {
             const svgSrc = this.uploadIcon.getAttribute('data-svg-src');
             if (svgSrc) {
                 App.utils.loadSVG(svgSrc, this.uploadIcon);
+            }
+        }
+
+        if (this.lockIcon) {
+            const svgSrc = this.lockIcon.getAttribute('data-svg-src');
+            if (svgSrc) {
+                App.utils.loadSVG(svgSrc, this.lockIcon);
             }
         }
 
@@ -92,11 +118,15 @@ class CreatePostModalComponent {
             const trigger = event.target.closest('[data-component="create-post-open"]');
             if (!trigger) return;
             event.preventDefault();
+            clearTimeout(this.closeResetTimer);
+            this.resetForm();
             this.applyCreateModeUI();
             this.open();
         });
 
         document.addEventListener('post-modal:open', () => {
+            clearTimeout(this.closeResetTimer);
+            this.resetForm();
             this.applyCreateModeUI();
             this.open();
         });
@@ -104,10 +134,14 @@ class CreatePostModalComponent {
     }
 
     bindUploadHandlers() {
-        this.dropzone.addEventListener('click', () => this.fileInput.click());
+        this.dropzone.addEventListener('click', () => {
+            if (this.isEditMode) return;
+            this.fileInput.click();
+        });
         this.dropzone.addEventListener('keydown', (event) => {
             if (event.key === 'Enter' || event.key === ' ') {
                 event.preventDefault();
+                if (this.isEditMode) return;
                 this.fileInput.click();
             }
         });
@@ -119,6 +153,7 @@ class CreatePostModalComponent {
 
         this.dropzone.addEventListener('dragover', (event) => {
             event.preventDefault();
+            if (this.isEditMode) return;
             this.dropzone.classList.add('post-modal__upload-dropzone--dragover');
         });
 
@@ -129,6 +164,7 @@ class CreatePostModalComponent {
         this.dropzone.addEventListener('drop', (event) => {
             event.preventDefault();
             this.dropzone.classList.remove('post-modal__upload-dropzone--dragover');
+            if (this.isEditMode) return;
             const file = event.dataTransfer?.files?.[0];
             this.handleFile(file);
         });
@@ -160,9 +196,21 @@ class CreatePostModalComponent {
     }
 
     bindSubmitHandlers() {
-        if (!this.submitButton) return;
+        if (this.submitButton) {
+            this.submitButton.addEventListener('click', () => this.submitPost());
+        }
 
-        this.submitButton.addEventListener('click', () => this.submitPost());
+        if (this.deleteButton) {
+            this.deleteButton.addEventListener('click', () => this.requestDeleteConfirmation());
+        }
+
+        if (this.confirmCancelButton) {
+            this.confirmCancelButton.addEventListener('click', () => this.runConfirmCancelAction());
+        }
+
+        if (this.confirmSubmitButton) {
+            this.confirmSubmitButton.addEventListener('click', () => this.runConfirmAction());
+        }
     }
 
     bindTagsHandlers() {
@@ -208,30 +256,61 @@ class CreatePostModalComponent {
     bindCloseHandlers() {
         this.modal.addEventListener('click', (event) => {
             if (event.target === this.modal) {
-                this.close();
+                if (this.isEditMode) {
+                    this.blockEditOverlayClose();
+                    return;
+                }
+
+                this.requestClose();
             }
         });
 
         document.addEventListener('click', (event) => {
             const cancelButton = event.target.closest('[data-component="create-post-cancel"]');
             if (cancelButton) {
-                this.close();
+                this.requestClose();
             }
         });
 
         document.addEventListener('keydown', (event) => {
             if (event.key === 'Escape' && !this.modal.classList.contains('post-modal--hidden')) {
-                this.close();
+                this.requestClose();
             }
         });
     }
 
-    open() {
+    async open() {
         if (!this.modal.classList.contains('post-modal--hidden')) return;
+        clearTimeout(this.closeResetTimer);
         this.modal.classList.remove('post-modal--hidden');
         this.modal.setAttribute('aria-hidden', 'false');
         App.utils.lockBodyScroll();
-        this.loadBoards();
+        await this.loadBoards();
+    }
+
+    blockEditOverlayClose() {
+        if (!this.panel) return;
+        clearTimeout(this.closeBlockedTimer);
+        this.panel.classList.remove('post-modal__panel--close-blocked');
+        void this.panel.offsetWidth;
+        this.panel.classList.add('post-modal__panel--close-blocked');
+        this.closeBlockedTimer = setTimeout(() => {
+            this.panel.classList.remove('post-modal__panel--close-blocked');
+            this.closeBlockedTimer = null;
+        }, 1000);
+    }
+
+    requestClose() {
+        if (this.hasUnsavedChanges()) {
+            this.showConfirm(
+                'unsaved',
+                'У вас есть несохранённые изменения!\nСохранить их?',
+                'Сохранить'
+            );
+            return;
+        }
+
+        this.close();
     }
 
     close() {
@@ -239,37 +318,50 @@ class CreatePostModalComponent {
         this.hideAlert();
         this.hideSuccessToast();
         this.hideTagSuggestions();
+        this.hideConfirm();
+        clearTimeout(this.closeBlockedTimer);
+        this.panel?.classList.remove('post-modal__panel--close-blocked');
         this.modal.classList.add('post-modal--hidden');
         this.modal.setAttribute('aria-hidden', 'true');
         App.utils.unlockBodyScroll();
-        this.applyCreateModeUI();
+        clearTimeout(this.closeResetTimer);
+        this.closeResetTimer = setTimeout(() => {
+            this.resetForm();
+            this.applyCreateModeUI();
+        }, 220);
     }
 
     async openEditMode(payload) {
-        this.applyEditModeUI();
-        this.open();
+        clearTimeout(this.closeResetTimer);
+        this.resetForm();
+        this.applyEditModeUI(Number(payload.postId || 0));
         this.fillEditData(payload);
+        await this.open();
         await this.preloadEditCollections(payload.postId);
+        this.captureEditSnapshot();
     }
 
     applyCreateModeUI() {
         this.isEditMode = false;
+        this.editPostId = 0;
+        this.editSnapshot = null;
         this.modal.classList.remove('post-modal--edit');
         if (this.titleElement) this.titleElement.textContent = 'Новый пост';
         if (this.submitButton) this.submitButton.textContent = 'Создать пост';
     }
 
-    applyEditModeUI() {
+    applyEditModeUI(postId = this.editPostId) {
         this.isEditMode = true;
+        this.editPostId = Number(postId || 0);
         this.modal.classList.add('post-modal--edit');
         if (this.titleElement) this.titleElement.textContent = 'Редактировать пост';
-        if (this.submitButton) this.submitButton.textContent = 'Сохранить';
+        if (this.submitButton) this.submitButton.textContent = 'Сохранить изменения';
     }
 
     fillEditData(payload) {
         if (this.descriptionField) this.descriptionField.value = String(payload.description || '');
         if (this.descriptionCounter) this.descriptionCounter.textContent = `${this.descriptionField.value.length}/512`;
-        this.tags = Array.isArray(payload.tags) ? payload.tags.map((tag) => String(tag || '').trim()).filter(Boolean) : [];
+        this.tags = Array.isArray(payload.tags) ? payload.tags.map((tag) => this.normalizeTag(String(tag || ''))).filter(Boolean) : [];
         this.renderTags();
         const imageSrc = String(payload.imageSrc || '');
         if (imageSrc) {
@@ -286,7 +378,9 @@ class CreatePostModalComponent {
             const response = await fetch(`/posts/bookmark/boards?post_id=${encodeURIComponent(String(postId))}`);
             if (!response.ok) return;
             const payload = await response.json();
-            const selectedBoards = Array.isArray(payload.selected) ? payload.selected : [];
+            const selectedBoards = Array.isArray(payload.boards)
+                ? payload.boards.filter((board) => board && board.is_saved).map((board) => board.name)
+                : (Array.isArray(payload.selected) ? payload.selected : []);
             this.selectedCollections = selectedBoards
                 .map((name) => String(name) === 'Profile' ? 'Профиль' : String(name))
                 .filter((name) => name !== 'Профиль');
@@ -298,6 +392,12 @@ class CreatePostModalComponent {
     }
 
     handleFile(file) {
+        if (this.isEditMode) {
+            this.fileInput.value = '';
+            this.showAlert('Изображение поста нельзя изменить при редактировании.');
+            return;
+        }
+
         if (!file) return;
 
         if (!this.allowedMimeTypes.includes(file.type)) {
@@ -357,7 +457,7 @@ class CreatePostModalComponent {
     updateCollectionSelectionUI() {
         this.collectionItems.forEach((item) => {
             const collectionName = item.textContent.trim();
-            item.classList.toggle('is-selected', this.selectedCollections.includes(collectionName));
+            item.classList.toggle('is-selected', collectionName === 'Профиль' || this.selectedCollections.includes(collectionName));
         });
     }
 
@@ -416,6 +516,10 @@ class CreatePostModalComponent {
 
     resetForm() {
         this.fileInput.value = '';
+        if (this.objectUrl) {
+            URL.revokeObjectURL(this.objectUrl);
+            this.objectUrl = null;
+        }
         this.currentFile = null;
         this.preview.src = '';
         this.preview.classList.add('post-modal__preview--hidden');
@@ -433,6 +537,7 @@ class CreatePostModalComponent {
         this.hideAlert();
         this.hideSuccessToast();
         this.hideTagSuggestions();
+        this.hideConfirm();
     }
 
     buildPostFormData() {
@@ -445,6 +550,11 @@ class CreatePostModalComponent {
     }
 
     async submitPost(preparedFormData = null) {
+        if (this.isEditMode) {
+            await this.updatePost();
+            return;
+        }
+
         if (!this.currentFile && !preparedFormData) {
             this.showAlert('Сначала добавьте изображение.');
             return;
@@ -465,7 +575,6 @@ class CreatePostModalComponent {
                 throw new Error(payload.error || 'Не удалось создать пост.');
             }
 
-            this.resetForm();
             this.close();
             this.showSuccessToast('Пост создан');
         } catch (error) {
@@ -473,6 +582,153 @@ class CreatePostModalComponent {
         } finally {
             this.submitButton.disabled = false;
         }
+    }
+
+    buildEditFormData() {
+        const formData = new FormData();
+        formData.append('post_id', String(this.editPostId));
+        formData.append('description', this.descriptionField?.value.trim() ?? '');
+        formData.append('collection', this.selectedCollections.join(','));
+        formData.append('tags', this.tags.join(' '));
+        return formData;
+    }
+
+    async updatePost() {
+        if (!this.editPostId) {
+            this.showAlert('Пост не найден.');
+            return;
+        }
+
+        this.submitButton.disabled = true;
+
+        try {
+            const response = await fetch('/posts/update', {
+                method: 'POST',
+                body: this.buildEditFormData()
+            });
+            const payload = await response.json();
+
+            if (!response.ok || !payload.success) {
+                throw new Error(payload.error || 'Не удалось сохранить изменения.');
+            }
+
+            this.editSnapshot = this.getCurrentSnapshot();
+            this.close();
+            this.showSuccessToast('Изменения сохранены');
+            document.dispatchEvent(new CustomEvent('post-modal:updated', { detail: payload }));
+        } catch (error) {
+            this.showAlert(error.message || 'Ошибка при сохранении изменений.');
+        } finally {
+            this.submitButton.disabled = false;
+        }
+    }
+
+    async deletePost() {
+        if (!this.editPostId) {
+            this.showAlert('Пост не найден.');
+            return;
+        }
+
+        this.deleteButton.disabled = true;
+
+        try {
+            const formData = new FormData();
+            formData.append('post_id', String(this.editPostId));
+
+            const response = await fetch('/posts/delete', {
+                method: 'POST',
+                body: formData
+            });
+            const payload = await response.json();
+
+            if (!response.ok || !payload.success) {
+                throw new Error(payload.error || 'Не удалось удалить пост.');
+            }
+
+            this.editSnapshot = this.getCurrentSnapshot();
+            this.close();
+            this.showSuccessToast('Пост удалён');
+            document.dispatchEvent(new CustomEvent('post-modal:deleted', { detail: payload }));
+        } catch (error) {
+            this.showAlert(error.message || 'Ошибка при удалении поста.');
+        } finally {
+            this.deleteButton.disabled = false;
+        }
+    }
+
+
+    requestDeleteConfirmation() {
+        if (!this.isEditMode) return;
+        this.showConfirm(
+            'delete',
+            'После удаления пост не получится восстановить! Удалить его?',
+            'Удалить'
+        );
+    }
+
+    showConfirm(action, message, submitLabel) {
+        if (!this.confirmBox || !this.confirmMessage || !this.confirmSubmitButton) return;
+        this.confirmAction = action;
+        this.confirmMessage.textContent = message;
+        this.confirmSubmitButton.textContent = submitLabel;
+        this.confirmBox.classList.remove('post-modal__confirm--hidden');
+        this.confirmBox.setAttribute('aria-hidden', 'false');
+    }
+
+    hideConfirm() {
+        if (!this.confirmBox) return;
+        this.confirmAction = null;
+        this.confirmBox.classList.add('post-modal__confirm--hidden');
+        this.confirmBox.setAttribute('aria-hidden', 'true');
+    }
+
+    runConfirmCancelAction() {
+        const action = this.confirmAction;
+        this.hideConfirm();
+
+        if (action === 'unsaved') {
+            this.close();
+        }
+    }
+
+    async runConfirmAction() {
+        const action = this.confirmAction;
+        this.hideConfirm();
+
+        if (action === 'unsaved') {
+            await this.submitPost();
+            return;
+        }
+
+        if (action === 'delete') {
+            await this.deletePost();
+        }
+    }
+
+    getCurrentSnapshot() {
+        return JSON.stringify({
+            description: this.descriptionField?.value.trim() ?? '',
+            collections: [...this.selectedCollections].sort(),
+            tags: [...this.tags].sort(),
+        });
+    }
+
+    captureEditSnapshot() {
+        this.editSnapshot = this.getCurrentSnapshot();
+    }
+
+    hasUnsavedChanges() {
+        if (this.isEditMode) {
+            return this.editSnapshot !== null && this.getCurrentSnapshot() !== this.editSnapshot;
+        }
+
+        return Boolean(
+            this.currentFile ||
+            (this.descriptionField?.value.trim() ?? '') ||
+            this.selectedCollections.length > 0 ||
+            this.tags.length > 0 ||
+            (this.tagsField?.value.trim() ?? '')
+        );
     }
 
     normalizeTag(rawTag) {

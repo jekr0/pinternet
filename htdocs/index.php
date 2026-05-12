@@ -75,11 +75,17 @@ switch ($path) {
         break;
 
         case '/login':
-        $page = 'login_pg.php';
-        $pageTitle = 'Вход';
+        if (session_status() === PHP_SESSION_NONE) session_start();
+        $_SESSION['auth_mode'] = 'login';
+        header('Location: /sign_up');
+        exit;
+
+        case '/sign_up':
+        $page = 'sign_up_pg.php';
+        $pageTitle = 'Авторизация';
         $PHP = [];
         $CSS = ['auth_pg.css'];
-        $JS  = ['password_toggle.js', 'auth_form_guard.js'];
+        $JS  = ['password_toggle.js', 'auth_form_guard.js', 'auto-god.js'];
         break;
 
         case '/logout':
@@ -96,6 +102,8 @@ switch ($path) {
         exit;
 
         case '/posts/create':
+        case '/posts/update':
+        case '/posts/delete':
         case '/posts/list':
         case '/posts/like':
         case '/posts/bookmark':
@@ -114,12 +122,10 @@ switch ($path) {
         exit;
 
         case '/registration':
-        $page = 'registration_pg.php';
-        $pageTitle = 'Регистрация';
-        $PHP = [];
-        $CSS = ['auth_pg.css'];
-        $JS  = ['password_toggle.js', 'auth_form_guard.js', 'auto-god.js'];
-        break;
+        if (session_status() === PHP_SESSION_NONE) session_start();
+        $_SESSION['auth_mode'] = 'registration';
+        header('Location: /sign_up');
+        exit;
 
     default:
         // 404 Not Found

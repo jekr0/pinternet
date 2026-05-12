@@ -2,37 +2,69 @@
 
 /* Полноэкранная обёртка — центрирует контейнер */
 .auth {
+    position: relative;
     width: 100%;
     min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow: hidden;
+    background: #f5f5f5;
+}
+
+.auth::before {
+    position: fixed;
+    inset: -180px;
+    z-index: 0;
+    content: '';
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http%3A//www.w3.org/2000/svg' width='256' height='184' viewBox='0 0 256 184'%3E%3Cg fill='%23f0f0f0'%3E%3Cg transform='translate(64 46) scale(3.3333) translate(-12 -12)'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M19.8097 10.2573C20.7597 9.2357 21.1932 8.35082 20.9488 7.82664C20.7042 7.30224 19.747 7.06555 18.3527 7.13687C19.048 8.04367 19.5534 9.10361 19.8097 10.2573ZM16.4342 5.34028C15.1651 4.49357 13.6402 4 12.0001 4C7.88088 4 4.48883 7.1132 4.04845 11.1151C1.64822 13.1736 0.452598 15.3374 1.23656 17.0186C2.02045 18.6996 4.44614 19.1747 7.56547 18.6594C8.83471 19.5063 10.3597 20 12.0001 20C16.1199 20 19.5125 16.8857 19.9519 12.8829C22.3505 10.825 23.5451 8.66206 22.7614 6.98141C21.9776 5.30067 19.5527 4.8255 16.4342 5.34028ZM8.05162 16.5178C6.79423 15.418 6.00006 13.8018 6.00006 12C6.00006 8.68629 8.68635 6 12.0001 6C15.2733 6 17.9343 8.62106 17.9989 11.8788C16.7276 12.8592 15.1124 13.8583 13.2668 14.7189C11.422 15.5792 9.61925 16.1741 8.05162 16.5178ZM10.7416 17.8678C11.8361 17.512 12.9696 17.0643 14.1121 16.5315C15.2553 15.9984 16.3275 15.4175 17.3041 14.8073C16.2969 16.7065 14.2995 18 12.0001 18C11.5684 18 11.1474 17.9544 10.7416 17.8678ZM5.64729 16.863C4.2519 16.9347 3.29383 16.698 3.04918 16.1734C2.8046 15.6489 3.23878 14.7632 4.18999 13.7408C4.44615 14.8952 4.95174 15.9558 5.64729 16.863Z'/%3E%3C/g%3E%3Cg transform='translate(192 138) scale(3.3333) translate(-12 -12)'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M19.8097 10.2573C20.7597 9.2357 21.1932 8.35082 20.9488 7.82664C20.7042 7.30224 19.747 7.06555 18.3527 7.13687C19.048 8.04367 19.5534 9.10361 19.8097 10.2573ZM16.4342 5.34028C15.1651 4.49357 13.6402 4 12.0001 4C7.88088 4 4.48883 7.1132 4.04845 11.1151C1.64822 13.1736 0.452598 15.3374 1.23656 17.0186C2.02045 18.6996 4.44614 19.1747 7.56547 18.6594C8.83471 19.5063 10.3597 20 12.0001 20C16.1199 20 19.5125 16.8857 19.9519 12.8829C22.3505 10.825 23.5451 8.66206 22.7614 6.98141C21.9776 5.30067 19.5527 4.8255 16.4342 5.34028ZM8.05162 16.5178C6.79423 15.418 6.00006 13.8018 6.00006 12C6.00006 8.68629 8.68635 6 12.0001 6C15.2733 6 17.9343 8.62106 17.9989 11.8788C16.7276 12.8592 15.1124 13.8583 13.2668 14.7189C11.422 15.5792 9.61925 16.1741 8.05162 16.5178ZM10.7416 17.8678C11.8361 17.512 12.9696 17.0643 14.1121 16.5315C15.2553 15.9984 16.3275 15.4175 17.3041 14.8073C16.2969 16.7065 14.2995 18 12.0001 18C11.5684 18 11.1474 17.9544 10.7416 17.8678ZM5.64729 16.863C4.2519 16.9347 3.29383 16.698 3.04918 16.1734C2.8046 15.6489 3.23878 14.7632 4.18999 13.7408C4.44615 14.8952 4.95174 15.9558 5.64729 16.863Z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    background-size: 256px 184px;
+    background-repeat: repeat;
+    background-position: 0 0;
+    animation: auth-planets-drift 56s linear infinite;
+}
+
+@keyframes auth-planets-drift {
+    from {
+        background-position: 0 0;
+    }
+
+    to {
+        background-position: 512px -184px;
+    }
 }
 
 /* Фиксированный белый контейнер */
 .auth__container {
-    position: relative; /* Добавляем для позиционирования ошибки */
-    width: 500px;
-    height: 400px;
+    position: relative;
+    z-index: 1;
+    width: 480px;
+    height: 352px;
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
     background: #ffffff;
-    border-radius: 20px;
-    box-shadow: 0 2px 3px rgba(0,0,0,0.07);
+    border-radius: 24px;
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.07);
 }
 
 /* --------------------------- Логотип ----------------------------------- */
 
 .auth__logo {
-    margin-top: 10px;
-    margin-bottom: 10px;
+    width: 376px;
+    height: 52px;
+    margin: 12px auto 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     text-align: center;
     user-select: none;
-    letter-spacing: 1px;
+    letter-spacing: 0;
     font-family: 'MC_caps', Arial, sans-serif;
-    font-size: 36px;
-    color: rgb(40, 5, 40);
+    font-size: 24px;
+    line-height: 1;
+    color: #000000;
 }
 
 /* --------------------------- Ошибка ------------------------------------ */
@@ -56,7 +88,7 @@
     color: #555;
     background: rgb(255, 255, 255);
     border-radius: 10px;
-    box-shadow: 0 2px 3px rgba(0,0,0,0.07);
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.07);
     backdrop-filter: blur(10px);
     opacity: 1;
     transition: opacity 1s ease;
@@ -77,19 +109,53 @@
 /* --------------------------- Форма ------------------------------------- */
 
 .auth__form {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
+    position: absolute;
+    inset: 0;
+}
+
+.auth__field {
+    position: absolute;
+    left: 50%;
+    width: 376px;
+    height: 40px;
+    transform: translateX(-50%);
+    transition: top 0.22s ease, opacity 0.16s ease, transform 0.22s ease;
+}
+
+.auth__field--username {
+    top: 76px;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(-50%);
+}
+
+.auth__field--identity {
+    top: 76px;
+}
+
+.auth__field--password {
+    top: 128px;
+}
+
+.auth__form--registration .auth__field--username {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(-50%);
+}
+
+.auth__form--registration .auth__field--identity {
+    top: 128px;
+}
+
+.auth__form--registration .auth__field--password {
+    top: 180px;
 }
 
 /* --------------------------- Поля ввода -------------------------------- */
 
 .auth__input {
-    width: 380px;
-    height: 50px;
+    width: 376px;
+    height: 40px;
     padding: 0 14px;
     box-sizing: border-box;
     outline: none;
@@ -97,13 +163,14 @@
     font-size: 16px;
     color: #333;
     background: #fff;
-    border: 1.5px solid #e0e0e0;
+    border: 1px solid #e0e0e0;
     border-radius: 10px;
     transition: border-color 0.2s ease;
 }
 
 .auth__input::placeholder {
-    color: #bbb;
+    font-size: 16px;
+    color: #bbbbbb;
 }
 
 .auth__input:hover {
@@ -115,8 +182,8 @@
 }
 
 .auth__password-row {
-    position: relative;
-    width: 380px;
+    width: 376px;
+    height: 40px;
 }
 
 .auth__input--password {
@@ -128,13 +195,13 @@
 .auth__password-toggle {
     position: absolute;
     top: 50%;
-    left: calc(100% + 13px);
+    right: -40px;
     transform: translateY(-50%);
-    width: 34px;
-    height: 34px;
+    width: 28px;
+    height: 28px;
     padding: 0;
     border: none;
-    color: #333;
+    color: #bbbbbb;
     background: none;
     cursor: pointer;
 }
@@ -144,11 +211,11 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 34px;
-    height: 34px;
+    width: 28px;
+    height: 28px;
     content: '';
     background-color: rgba(100, 100, 200, 0.1);
-    border-radius: 5px;
+    border-radius: 12px;
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.1s ease;
@@ -170,16 +237,18 @@
 /* --------------------------- Кнопки ------------------------------------ */
 
 .auth__actions {
-    width: 380px;
-    margin-top: 10px;
+    position: absolute;
+    right: 0;
+    bottom: 52px;
+    left: 0;
     display: flex;
     justify-content: center;
-    gap: 10px;
+    gap: 12px;
 }
 
 .auth__button {
-    flex: 1;
-    height: 50px;
+    width: 182px;
+    height: 40px;
     border: none;
     border-radius: 10px;
     font-family: 'SF_def', Arial, sans-serif;
@@ -190,12 +259,13 @@
 
 .auth__button--back {
     background: #ffffff;
-    border: 1.5px solid #e0e0e0;
-    color: #555;
+    border: 1px solid #e0e0e0;
+    color: #bbbbbb;
 }
 
 .auth__button--back:hover {
-    border: 1.5px solid rgb(150, 150, 250);
+    border: 1px solid rgb(150, 150, 250);
+    color: rgb(150, 150, 250);
 }
 
 .auth__button--submit {
@@ -210,19 +280,36 @@
 /* --------------------------- Подпись ----------------------------------- */
 
 .auth__footer {
-    margin-top: auto;
-    margin-bottom: 20px;
+    position: absolute;
+    right: 0;
+    bottom: 20px;
+    left: 0;
     text-align: center;
     font-family: 'SF_def', Arial, sans-serif;
-    font-size: 14px;
-    color: #999;
+    font-size: 12px;
+    color: #bbbbbb;
 }
 
 .auth__link {
-    color: rgb(100, 100, 200);
+    padding: 0;
+    border: none;
+    font: inherit;
+    color: #bbbbbb;
+    background: none;
     text-decoration: none;
+    cursor: pointer;
+    transition: color 0.2s ease;
 }
 
 .auth__link:hover {
-    text-decoration: underline;
+    color: rgb(150, 150, 250);
+    text-decoration: none;
+}
+
+.auth__link.is-active {
+    color: rgb(100, 100, 200);
+}
+
+.auth__footer-separator {
+    color: #bbbbbb;
 }
