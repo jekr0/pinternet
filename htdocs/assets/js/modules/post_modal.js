@@ -2,6 +2,7 @@ class CreatePostModalComponent {
     constructor() {
         // Modal and upload elements
         this.modal = null;
+        this.panel = null;
         this.dropzone = null;
         this.fileInput = null;
         this.placeholder = null;
@@ -46,12 +47,14 @@ class CreatePostModalComponent {
         this.editSnapshot = null;
         this.closeResetTimer = null;
         this.confirmAction = null;
+        this.closeBlockedTimer = null;
     }
 
     init() {
         this.modal = document.getElementById('post-modal');
         if (!this.modal) return;
 
+        this.panel = this.modal.querySelector('.post-modal__panel');
         this.dropzone = this.modal.querySelector('[data-component="post-upload-dropzone"]');
         this.fileInput = this.modal.querySelector('[data-component="post-upload-input"]');
         this.placeholder = this.modal.querySelector('[data-component="post-upload-placeholder"]');
@@ -253,6 +256,11 @@ class CreatePostModalComponent {
     bindCloseHandlers() {
         this.modal.addEventListener('click', (event) => {
             if (event.target === this.modal) {
+                if (this.isEditMode) {
+                    this.blockEditOverlayClose();
+                    return;
+                }
+
                 this.requestClose();
             }
         });
@@ -280,6 +288,18 @@ class CreatePostModalComponent {
         await this.loadBoards();
     }
 
+    blockEditOverlayClose() {
+        if (!this.panel) return;
+        clearTimeout(this.closeBlockedTimer);
+        this.panel.classList.remove('post-modal__panel--close-blocked');
+        void this.panel.offsetWidth;
+        this.panel.classList.add('post-modal__panel--close-blocked');
+        this.closeBlockedTimer = setTimeout(() => {
+            this.panel.classList.remove('post-modal__panel--close-blocked');
+            this.closeBlockedTimer = null;
+        }, 1000);
+    }
+
     requestClose() {
         if (this.hasUnsavedChanges()) {
             this.showConfirm(
@@ -299,6 +319,8 @@ class CreatePostModalComponent {
         this.hideSuccessToast();
         this.hideTagSuggestions();
         this.hideConfirm();
+        clearTimeout(this.closeBlockedTimer);
+        this.panel?.classList.remove('post-modal__panel--close-blocked');
         this.modal.classList.add('post-modal--hidden');
         this.modal.setAttribute('aria-hidden', 'true');
         App.utils.unlockBodyScroll();

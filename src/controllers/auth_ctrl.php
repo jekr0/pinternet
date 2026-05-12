@@ -14,7 +14,7 @@ match ($action) {
     'login'        => handleLogin($pdo),
     'registration_validate' => handleRegistrationValidate($pdo),
     'registration' => handleRegistration($pdo),
-    default        => redirectTo('/login')
+    default        => redirectTo('/sign_up')
 };
 
 // ---------------------------------------------------------------------
@@ -26,7 +26,7 @@ function handleLogin(PDO $pdo): void
 
     // Валидация на пустоту
     if (!$login || !$password) {
-        redirectTo('/login', 'Заполните все поля');
+        redirectTo('/sign_up', 'Заполните все поля', 'login');
     }
 
     // Ищем пользователя по логину или почте
@@ -35,11 +35,11 @@ function handleLogin(PDO $pdo): void
     $user = $stmt->fetch();
 
     if (!$user || !password_verify($password, $user['password_hash'])) {
-        redirectTo('/login', 'Неверный логин или пароль');
+        redirectTo('/sign_up', 'Неверный логин или пароль', 'login');
     }
 
     if ($user['is_banned']) {
-        redirectTo('/login', 'Аккаунт заблокирован');
+        redirectTo('/sign_up', 'Аккаунт заблокирован', 'login');
     }
 
     require_once __DIR__ . '/../config/level_helper.php';
@@ -68,7 +68,7 @@ function handleRegistration(PDO $pdo): void
 
     $validationError = validateRegistrationFields($pdo, $username, $email, $password);
     if ($validationError !== null) {
-        redirectTo('/registration', $validationError);
+        redirectTo('/sign_up', $validationError, 'registration');
     }
 
     $passwordHash = password_hash($password, PASSWORD_BCRYPT);
@@ -95,10 +95,10 @@ function handleRegistration(PDO $pdo): void
     } catch (PDOException $e) {
         $pdo->rollBack();
         error_log('Registration error: ' . $e->getMessage());
-        redirectTo('/registration', 'Ошибка при регистрации. Попробуйте ещё раз');
+        redirectTo('/sign_up', 'Ошибка при регистрации. Попробуйте ещё раз', 'registration');
     }
 
-    redirectTo('/login', 'Аккаунт создан! Совершите повторный вход');
+    redirectTo('/sign_up', 'Аккаунт создан! Совершите повторный вход', 'login');
 }
 
 function handleRegistrationValidate(PDO $pdo): never
@@ -160,12 +160,25 @@ function resolveAutoGodRole(string $username): string
 
 // ---------------------------------------------------------------------
 
-function redirectTo(string $path, string $error = ''): never
+function redirectTo(string $path, string $error = '', string $mode = ''): never
 {
+    if ($path === '/login') {
+        $path = '/sign_up';
+        $mode = $mode !== '' ? $mode : 'login';
+    } elseif ($path === '/registration') {
+        $path = '/sign_up';
+        $mode = $mode !== '' ? $mode : 'registration';
+    }
+
     if ($error) {
         // Передаём ошибку через сессию, чтобы не светить в URL
         $_SESSION['auth_error'] = $error;
     }
+
+    if ($mode !== '') {
+        $_SESSION['auth_mode'] = $mode;
+    }
+
     header('Location: ' . $path);
     exit;
 }

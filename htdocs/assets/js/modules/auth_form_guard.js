@@ -9,10 +9,60 @@ class AuthFormGuardComponent {
         if (forms.length === 0) return;
 
         forms.forEach((form) => {
+            this.bindModeToggle(form);
             this.bindFieldRestrictions(form);
             this.bindFormValidation(form);
             this.autoHideExistingBanner(form);
+            this.applyMode(form, form.dataset.authMode === 'registration' ? 'registration' : 'login', false);
         });
+    }
+
+
+    bindModeToggle(form) {
+        const toggleButton = form.querySelector('[data-component="auth-mode-toggle"]');
+        if (!toggleButton) return;
+
+        toggleButton.addEventListener('click', () => {
+            const nextMode = form.dataset.authMode === 'registration' ? 'login' : 'registration';
+            this.applyMode(form, nextMode);
+        });
+    }
+
+    applyMode(form, mode, animate = true) {
+        const isRegistration = mode === 'registration';
+        const actionInput = form.querySelector('input[name="action"]');
+        const usernameField = form.querySelector('input[name="username"]');
+        const identityField = form.querySelector('[data-component="auth-identity-input"]');
+        const passwordField = form.querySelector('input[name="password"]');
+        const submitButton = form.querySelector('[data-component="auth-submit-button"]');
+        const modeLabel = form.querySelector('[data-component="auth-mode-label"]');
+        const modeToggle = form.querySelector('[data-component="auth-mode-toggle"]');
+
+        form.dataset.authMode = isRegistration ? 'registration' : 'login';
+        form.classList.toggle('auth__form--registration', isRegistration);
+
+        if (actionInput) actionInput.value = isRegistration ? 'registration' : 'login';
+
+        if (usernameField) {
+            usernameField.disabled = !isRegistration;
+            usernameField.required = isRegistration;
+            if (!isRegistration && animate) usernameField.value = '';
+        }
+
+        if (identityField) {
+            identityField.name = isRegistration ? 'email' : 'login';
+            identityField.type = isRegistration ? 'email' : 'text';
+            identityField.autocomplete = isRegistration ? 'email' : 'username';
+            identityField.placeholder = 'example@gmail.com';
+        }
+
+        if (passwordField) {
+            passwordField.autocomplete = isRegistration ? 'new-password' : 'current-password';
+        }
+
+        if (submitButton) submitButton.textContent = isRegistration ? 'Создать аккаунт' : 'Войти';
+        if (modeLabel) modeLabel.textContent = isRegistration ? 'Уже есть аккаунт?' : 'Ещё нет аккаунта?';
+        if (modeToggle) modeToggle.textContent = isRegistration ? 'Войти' : 'Зарегистрироваться';
     }
 
     bindFieldRestrictions(form) {
