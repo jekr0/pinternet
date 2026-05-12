@@ -62,7 +62,21 @@ class AuthFormGuardComponent {
             passwordField.autocomplete = isRegistration ? 'new-password' : 'current-password';
         }
 
-        if (submitButton) submitButton.textContent = isRegistration ? 'Создать аккаунт' : 'Войти';
+        if (submitButton) {
+            const nextText = isRegistration ? 'Создать аккаунт' : 'Войти';
+            const textNode = submitButton.querySelector('.auth__button--submit-text');
+            if (textNode && animate) {
+                textNode.classList.add('is-switching');
+                window.setTimeout(() => {
+                    textNode.textContent = nextText;
+                    textNode.classList.remove('is-switching');
+                }, 110);
+            } else if (textNode) {
+                textNode.textContent = nextText;
+            } else {
+                submitButton.textContent = nextText;
+            }
+        }
         modeButtons.forEach((button) => {
             button.classList.toggle('is-active', button.dataset.authModeTarget === form.dataset.authMode);
         });

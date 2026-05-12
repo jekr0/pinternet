@@ -85,7 +85,7 @@ switch ($path) {
         $pageTitle = 'Авторизация';
         $PHP = [];
         $CSS = ['auth_pg.css'];
-        $JS  = ['password_toggle.js', 'auth_form_guard.js', 'auto-god.js'];
+        $JS  = ['password_toggle.js', 'auth_form_guard.js'];
         break;
 
         case '/logout':

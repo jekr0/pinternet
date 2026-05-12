@@ -120,6 +120,7 @@
     height: 40px;
     transform: translateX(-50%);
     transition: top 0.22s ease, opacity 0.16s ease, transform 0.22s ease;
+    transition-delay: 0s;
 }
 
 .auth__field--username {
@@ -141,6 +142,7 @@
     opacity: 1;
     pointer-events: auto;
     transform: translateX(-50%);
+    transition-delay: 0.1s, 0.1s, 0.1s;
 }
 
 .auth__form--registration .auth__field--identity {
@@ -257,14 +259,22 @@
     transition: border-color 0.2s ease, background 0.2s ease;
 }
 
+
 .auth__button--back {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
     background: #ffffff;
     border: 1px solid #e0e0e0;
     color: #bbbbbb;
 }
 
-.auth__button--back:hover {
-    border: 1px solid rgb(150, 150, 250);
+.auth__button--back span {
+    display: inline-block;
+    transition: color 0.2s ease;
+}
+
+.auth__button--back:hover span {
     color: rgb(150, 150, 250);
 }
 
@@ -273,6 +283,17 @@
     color: #ffffff;
 }
 
+.auth__button--submit-text {
+    display: inline-block;
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.22s ease, transform 0.22s ease;
+}
+
+.auth__button--submit-text.is-switching {
+    opacity: 0;
+    transform: translateY(-6px);
+}
 .auth__button--submit:hover {
     background: rgb(120, 120, 220);
 }
@@ -312,4 +333,5 @@
 
 .auth__footer-separator {
     color: #bbbbbb;
+    user-select: none;
 }
