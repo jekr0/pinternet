@@ -62,6 +62,7 @@ class PostFullComponent {
             this.bindFrameActions();
             this.syncStateFromDataset();
             this.bindBookmarkSync();
+            this.bindPostModalSync();
             this.bindCommentInput();
             this.bindCommentActions();
             this.bindReplyStateCancel();
@@ -224,6 +225,23 @@ class PostFullComponent {
 
             this.postFullElement.dataset.bookmarked = !!event.detail?.bookmarked ? '1' : '0';
             this.syncStateFromDataset();
+        });
+    }
+
+
+    bindPostModalSync() {
+        document.addEventListener('post-modal:updated', (event) => {
+            const postId = Number(event.detail?.post_id || 0);
+            const currentPostId = Number(this.postFullElement?.dataset.postId || 0);
+            if (!postId || postId !== currentPostId) return;
+            window.location.reload();
+        });
+
+        document.addEventListener('post-modal:deleted', (event) => {
+            const postId = Number(event.detail?.post_id || 0);
+            const currentPostId = Number(this.postFullElement?.dataset.postId || 0);
+            if (!postId || postId !== currentPostId) return;
+            window.location.href = '/';
         });
     }
 

@@ -417,6 +417,43 @@
     filter: none;
 }
 
+/* ------------------------------ Подтверждения -------------------------------- */
+
+.post-modal__confirm {
+    position: absolute;
+    right: 60px;
+    top: 495px;
+    z-index: 5;
+    width: 630px;
+    padding: 18px;
+    box-sizing: border-box;
+    background: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.post-modal__confirm--hidden {
+    display: none;
+}
+
+.post-modal__confirm-message {
+    margin: 0 0 14px;
+    white-space: pre-line;
+    text-align: center;
+    font-family: 'SF_def', Arial, sans-serif;
+    font-size: 16px;
+    color: #555;
+}
+
+.post-modal__confirm-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.post-modal__confirm-actions .post-modal__button {
+    flex: 1 1 calc(50% - 5px);
+}
+
 /* ------------------------------ Кнопки -------------------------------------- */
 
 .post-modal__actions {
@@ -439,15 +476,19 @@
     font-family: 'SF_def', Arial, sans-serif;
     font-size: 16px;
     cursor: pointer;
-    transition: border-color 0.2s ease, opacity 0.2s ease;
+    transition: border-color 0.2s ease, opacity 0.2s ease, background 0.2s ease;
 }
 
 .post-modal__button--delete {
     flex: 1 1 calc(50% - 5px);
     background: #fff;
     border: 1.5px solid #e0e0e0;
-    color: #d26a6a;
+    color: rgb(100, 100, 200);
     display: none;
+}
+
+.post-modal__button--delete:hover {
+    border-color: rgb(150, 150, 250);
 }
 
 .post-modal--edit .post-modal__button--delete {
@@ -536,6 +577,50 @@
             140px 100%,
             0 140px;
     }
+}
+
+.post-modal--edit .post-modal__upload-dropzone {
+    border-style: solid;
+    cursor: not-allowed;
+}
+
+.post-modal--edit .post-modal__upload-dropzone:hover,
+.post-modal--edit .post-modal__upload-dropzone--dragover {
+    border-color: #333;
+}
+
+.post-modal--edit .post-modal__upload-dropzone::before {
+    display: none;
+}
+
+.post-modal--edit .post-modal__preview {
+    filter: blur(10px) brightness(0.7);
+    transform: scale(1.08);
+}
+
+.post-modal__upload-lock {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 40px;
+    height: 40px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    transform: translate(-50%, -50%);
+    color: #ffffff;
+    background: rgba(0, 0, 0, 0);
+    pointer-events: none;
+}
+
+.post-modal--edit .post-modal__upload-lock {
+    display: flex;
+}
+
+.post-modal__upload-lock-icon,
+.post-modal__upload-lock-icon svg {
+    width: 36px;
+    height: 36px;
 }
 
 .post-modal__file-input {

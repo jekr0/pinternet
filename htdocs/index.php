@@ -96,6 +96,8 @@ switch ($path) {
         exit;
 
         case '/posts/create':
+        case '/posts/update':
+        case '/posts/delete':
         case '/posts/list':
         case '/posts/like':
         case '/posts/bookmark':

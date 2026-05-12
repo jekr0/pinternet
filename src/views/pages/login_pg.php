@@ -30,7 +30,7 @@ unset($_SESSION['auth_error']);
                 class="auth__input"
                 type="text"
                 name="login"
-                placeholder="login"
+                placeholder="example@gmail.com"
                 autocomplete="username"
                 required
             >
@@ -39,7 +39,7 @@ unset($_SESSION['auth_error']);
                     class="auth__input auth__input--password"
                     type="password"
                     name="password"
-                    placeholder="password"
+                    placeholder="password123"
                     autocomplete="current-password"
                     required
                 >

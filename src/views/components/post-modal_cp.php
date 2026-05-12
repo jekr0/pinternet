@@ -24,6 +24,9 @@
                 </div>
 
                 <img class="post-modal__preview post-modal__preview--hidden" data-component="post-upload-preview" alt="Предпросмотр изображения">
+                <div class="post-modal__upload-lock" aria-hidden="true">
+                    <span class="post-modal__upload-lock-icon" data-component="post-upload-lock-icon" data-svg-src="assets/images/icons/lock.svg"></span>
+                </div>
             </div>
 
             <p class="post-modal__hint">*Поддерживаются только PNG, JPEG и GIF изображения до 20МБ.</p>
@@ -83,6 +86,14 @@
                     <ul class="post-modal__tags-suggest-list post-modal__tags-suggest-list--hidden" data-component="post-tags-suggest-list"></ul>
                 </div>
                 <div class="post-modal__tags-list" data-component="post-tags-list" aria-live="polite"></div>
+            </div>
+
+            <div class="post-modal__confirm post-modal__confirm--hidden" data-component="post-modal-confirm" aria-hidden="true">
+                <p class="post-modal__confirm-message" data-component="post-modal-confirm-message"></p>
+                <div class="post-modal__confirm-actions">
+                    <button class="post-modal__button post-modal__button--cancel" type="button" data-component="post-modal-confirm-cancel">Назад</button>
+                    <button class="post-modal__button post-modal__button--submit" type="button" data-component="post-modal-confirm-submit">Сохранить</button>
+                </div>
             </div>
 
             <!-- Действия -->

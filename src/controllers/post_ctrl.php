@@ -43,6 +43,14 @@ if ($path === '/posts/create') {
     handleCreatePost($pdo, $userId);
 }
 
+if ($path === '/posts/update') {
+    handleUpdatePost($pdo, $userId);
+}
+
+if ($path === '/posts/delete') {
+    handleDeletePost($pdo, $userId);
+}
+
 if ($path === '/posts/like') {
     handleToggleLike($pdo, $userId);
 }
@@ -677,6 +685,159 @@ function handleCommentReport(PDO $pdo, int $userId): never
     jsonResponse(['success' => true, 'already_reported' => $alreadyReported]);
 }
 
+
+function handleUpdatePost(PDO $pdo, int $userId): never
+{
+    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+        jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод.'], 405);
+    }
+
+    $postId = (int) ($_POST['post_id'] ?? 0);
+    $description = trim((string) ($_POST['description'] ?? ''));
+    $collectionInput = trim((string) ($_POST['collection'] ?? ''));
+    $tagsInput = trim((string) ($_POST['tags'] ?? ''));
+
+    if ($postId <= 0) {
+        jsonResponse(['success' => false, 'error' => 'Некорректный post_id.'], 422);
+    }
+
+    if (mb_strlen($description) > 512) {
+        jsonResponse(['success' => false, 'error' => 'Описание не должно быть длиннее 512 символов.'], 422);
+    }
+
+    $postStmt = $pdo->prepare('SELECT id FROM Posts WHERE id = ? AND user_id = ? LIMIT 1');
+    $postStmt->execute([$postId, $userId]);
+    if ($postStmt->fetchColumn() === false) {
+        jsonResponse(['success' => false, 'error' => 'Пост не найден.'], 404);
+    }
+
+    $collectionNames = parseCollectionNames($collectionInput);
+    if ($collectionNames === null) {
+        jsonResponse(['success' => false, 'error' => 'Название коллекции: до 32 символов, только латиница, кириллица, цифры, пробел и "_"'], 422);
+    }
+
+    $hashtags = parseHashtags($tagsInput);
+
+    try {
+        $pdo->beginTransaction();
+
+        $updatePost = $pdo->prepare('UPDATE Posts SET description = ? WHERE id = ? AND user_id = ?');
+        $updatePost->execute([$description !== '' ? $description : null, $postId, $userId]);
+
+        $profileBoardId = findBoardId($pdo, $userId, 'Profile');
+        if ($profileBoardId === null) {
+            $profileBoardId = createBoard($pdo, $userId, 'Profile');
+        }
+
+        $deleteOwnSaves = $pdo->prepare('DELETE FROM Saved_Posts WHERE user_id = ? AND post_id = ?');
+        $deleteOwnSaves->execute([$userId, $postId]);
+
+        $savePost = $pdo->prepare('INSERT IGNORE INTO Saved_Posts (user_id, post_id, board_id) VALUES (?, ?, ?)');
+        $savePost->execute([$userId, $postId, $profileBoardId]);
+
+        foreach ($collectionNames as $collectionName) {
+            if ($collectionName === 'Profile') {
+                continue;
+            }
+
+            $targetBoardId = findBoardId($pdo, $userId, $collectionName);
+            if ($targetBoardId === null) {
+                $targetBoardId = createBoard($pdo, $userId, $collectionName);
+            }
+
+            if ($targetBoardId !== $profileBoardId) {
+                $savePost->execute([$userId, $postId, $targetBoardId]);
+            }
+        }
+
+        $deleteTags = $pdo->prepare('DELETE FROM Post_Hashtags WHERE post_id = ?');
+        $deleteTags->execute([$postId]);
+
+        if (!empty($hashtags)) {
+            $insertHashtag = $pdo->prepare('INSERT INTO Hashtags (name) VALUES (?) ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID(id)');
+            $linkHashtag = $pdo->prepare('INSERT IGNORE INTO Post_Hashtags (post_id, hashtag_id) VALUES (?, ?)');
+
+            foreach ($hashtags as $hashtag) {
+                $insertHashtag->execute([$hashtag]);
+                $hashtagId = (int) $pdo->lastInsertId();
+                $linkHashtag->execute([$postId, $hashtagId]);
+            }
+        }
+
+        $pdo->commit();
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        error_log('Post update error: ' . $e->getMessage());
+        jsonResponse(['success' => false, 'error' => 'Не удалось сохранить изменения.'], 500);
+    }
+
+    jsonResponse([
+        'success' => true,
+        'post_id' => $postId,
+        'description' => $description,
+        'tags' => $hashtags,
+        'collections' => array_values(array_filter($collectionNames, static fn(string $name): bool => $name !== 'Profile')),
+    ]);
+}
+
+function handleDeletePost(PDO $pdo, int $userId): never
+{
+    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+        jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод.'], 405);
+    }
+
+    $postId = (int) ($_POST['post_id'] ?? 0);
+    if ($postId <= 0) {
+        jsonResponse(['success' => false, 'error' => 'Некорректный post_id.'], 422);
+    }
+
+    $postStmt = $pdo->prepare('SELECT image_path FROM Posts WHERE id = ? AND user_id = ? LIMIT 1');
+    $postStmt->execute([$postId, $userId]);
+    $imagePath = $postStmt->fetchColumn();
+    if ($imagePath === false) {
+        jsonResponse(['success' => false, 'error' => 'Пост не найден.'], 404);
+    }
+
+    try {
+        $pdo->beginTransaction();
+
+        $deleteCommentReports = $pdo->prepare('DELETE cr FROM Comment_Reports cr INNER JOIN Comments c ON c.id = cr.comment_id WHERE c.post_id = ?');
+        $deleteCommentReports->execute([$postId]);
+
+        $deleteCommentLikes = $pdo->prepare('DELETE cl FROM Comment_Likes cl INNER JOIN Comments c ON c.id = cl.comment_id WHERE c.post_id = ?');
+        $deleteCommentLikes->execute([$postId]);
+
+        $unlinkCommentParents = $pdo->prepare('UPDATE Comments SET parent_comment_id = NULL WHERE post_id = ?');
+        $unlinkCommentParents->execute([$postId]);
+
+        $deleteComments = $pdo->prepare('DELETE FROM Comments WHERE post_id = ?');
+        $deleteComments->execute([$postId]);
+
+        $pdo->prepare('DELETE FROM Post_Reports WHERE post_id = ?')->execute([$postId]);
+        $pdo->prepare('DELETE FROM Post_Like_Exp_Awards WHERE post_id = ?')->execute([$postId]);
+        $pdo->prepare('DELETE FROM Post_Likes WHERE post_id = ?')->execute([$postId]);
+        $pdo->prepare('DELETE FROM Saved_Posts WHERE post_id = ?')->execute([$postId]);
+        $pdo->prepare('DELETE FROM Post_Hashtags WHERE post_id = ?')->execute([$postId]);
+
+        $deletePost = $pdo->prepare('DELETE FROM Posts WHERE id = ? AND user_id = ?');
+        $deletePost->execute([$postId, $userId]);
+
+        $pdo->commit();
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        error_log('Post delete error: ' . $e->getMessage());
+        jsonResponse(['success' => false, 'error' => 'Не удалось удалить пост.'], 500);
+    }
+
+    deletePostImageFile((string) $imagePath);
+
+    jsonResponse(['success' => true, 'post_id' => $postId]);
+}
+
 function handleCreatePost(PDO $pdo, int $userId): never
 {
     if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
@@ -920,6 +1081,20 @@ function parseHashtags(string $tagsInput): array
     }
 
     return array_values($normalized);
+}
+
+
+function deletePostImageFile(string $publicPath): void
+{
+    $relativePath = ltrim(parse_url($publicPath, PHP_URL_PATH) ?: $publicPath, '/');
+    if ($relativePath === '' || str_contains($relativePath, '..')) {
+        return;
+    }
+
+    $fullPath = dirname(__DIR__, 2) . '/htdocs/' . $relativePath;
+    if (is_file($fullPath)) {
+        @unlink($fullPath);
+    }
 }
 
 function jsonResponse(array $payload, int $status = 200): never
