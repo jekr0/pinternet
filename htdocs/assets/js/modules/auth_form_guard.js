@@ -39,6 +39,7 @@ class AuthFormGuardComponent {
         const passwordField = form.querySelector('input[name="password"]');
         const submitButton = form.querySelector('[data-component="auth-submit-button"]');
         const modeButtons = Array.from(form.querySelectorAll('[data-component="auth-mode-toggle"]'));
+        const previousMode = form.dataset.authMode === 'registration' ? 'registration' : 'login';
 
         form.dataset.authMode = isRegistration ? 'registration' : 'login';
         form.classList.toggle('auth__form--registration', isRegistration);
@@ -65,18 +66,38 @@ class AuthFormGuardComponent {
         if (submitButton) {
             const nextText = isRegistration ? 'Создать аккаунт' : 'Войти';
             const textNode = submitButton.querySelector('.auth__button--submit-text');
-            if (textNode && animate) {
-                textNode.classList.add('is-switching');
+            const prevMode = form.dataset.previousAuthMode || previousMode;
+            const switchingToRegistration = prevMode === 'login' && isRegistration;
+            const switchingToLogin = prevMode === 'registration' && !isRegistration;
+
+            if (textNode && animate && (switchingToRegistration || switchingToLogin)) {
+                const outClass = switchingToRegistration ? 'is-switching-down' : 'is-switching-up';
+                const inOffset = switchingToRegistration ? '-22px' : '22px';
+
+                textNode.classList.remove('is-switching-up', 'is-switching-down');
+                textNode.style.animation = 'none';
+                void textNode.offsetWidth;
+                textNode.classList.add(outClass);
+
                 window.setTimeout(() => {
                     textNode.textContent = nextText;
-                    textNode.classList.remove('is-switching');
-                }, 110);
+                    textNode.classList.remove('is-switching-up', 'is-switching-down');
+                    textNode.style.transition = 'none';
+                    textNode.style.transform = `translateY(${inOffset})`;
+                    void textNode.offsetWidth;
+                    textNode.style.transition = 'transform 0.2s ease';
+                    textNode.style.transform = 'translateY(0)';
+                    window.setTimeout(() => {
+                        textNode.style.transition = '';
+                    }, 200);
+                }, 200);
             } else if (textNode) {
                 textNode.textContent = nextText;
             } else {
                 submitButton.textContent = nextText;
             }
         }
+        form.dataset.previousAuthMode = form.dataset.authMode;
         modeButtons.forEach((button) => {
             button.classList.toggle('is-active', button.dataset.authModeTarget === form.dataset.authMode);
         });
