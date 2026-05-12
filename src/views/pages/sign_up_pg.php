@@ -86,7 +86,8 @@ $isRegistrationMode = $authMode === 'registration';
                     <span>Назад</span>
                 </button>
                 <button class="auth__button auth__button--submit" type="submit" data-component="auth-submit-button">
-                    <span class="auth__button--submit-text"><?= $isRegistrationMode ? 'Создать аккаунт' : 'Войти'; ?></span>
+                    <span class="auth__button--submit-text auth__button--submit-text-current"><?= $isRegistrationMode ? 'Создать аккаунт' : 'Войти'; ?></span>
+                    <span class="auth__button--submit-text auth__button--submit-text-next" aria-hidden="true"></span>
                 </button>
             </div>
 

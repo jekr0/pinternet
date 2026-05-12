@@ -65,34 +65,28 @@ class AuthFormGuardComponent {
 
         if (submitButton) {
             const nextText = isRegistration ? 'Создать аккаунт' : 'Войти';
-            const textNode = submitButton.querySelector('.auth__button--submit-text');
+            const currentTextNode = submitButton.querySelector('.auth__button--submit-text-current');
+            const nextTextNode = submitButton.querySelector('.auth__button--submit-text-next');
             const prevMode = form.dataset.previousAuthMode || previousMode;
             const switchingToRegistration = prevMode === 'login' && isRegistration;
             const switchingToLogin = prevMode === 'registration' && !isRegistration;
 
-            if (textNode && animate && (switchingToRegistration || switchingToLogin)) {
-                const outClass = switchingToRegistration ? 'is-switching-down' : 'is-switching-up';
-                const inOffset = switchingToRegistration ? '-22px' : '22px';
-
-                textNode.classList.remove('is-switching-up', 'is-switching-down');
-                textNode.style.animation = 'none';
-                void textNode.offsetWidth;
-                textNode.classList.add(outClass);
+            if (currentTextNode && nextTextNode && animate && (switchingToRegistration || switchingToLogin)) {
+                const switchClass = switchingToRegistration ? 'is-switching-to-registration' : 'is-switching-to-login';
+                submitButton.classList.remove('is-switching-to-registration', 'is-switching-to-login');
+                nextTextNode.textContent = nextText;
+                void submitButton.offsetWidth;
+                submitButton.classList.add(switchClass);
 
                 window.setTimeout(() => {
-                    textNode.textContent = nextText;
-                    textNode.classList.remove('is-switching-up', 'is-switching-down');
-                    textNode.style.transition = 'none';
-                    textNode.style.transform = `translateY(${inOffset})`;
-                    void textNode.offsetWidth;
-                    textNode.style.transition = 'transform 0.2s ease';
-                    textNode.style.transform = 'translateY(0)';
-                    window.setTimeout(() => {
-                        textNode.style.transition = '';
-                    }, 200);
+                    currentTextNode.textContent = nextText;
+                    nextTextNode.textContent = '';
+                    submitButton.classList.remove('is-switching-to-registration', 'is-switching-to-login');
                 }, 200);
-            } else if (textNode) {
-                textNode.textContent = nextText;
+            } else if (currentTextNode) {
+                currentTextNode.textContent = nextText;
+                if (nextTextNode) nextTextNode.textContent = '';
+                submitButton.classList.remove('is-switching-to-registration', 'is-switching-to-login');
             } else {
                 submitButton.textContent = nextText;
             }
