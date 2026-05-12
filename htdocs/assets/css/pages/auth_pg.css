@@ -307,19 +307,19 @@
 }
 
 .auth__button--submit.is-switching-to-registration .auth__button--submit-text-current {
-    animation: auth-submit-current-down 0.2s ease;
+    animation: auth-submit-current-down 0.2s ease forwards;
 }
 
 .auth__button--submit.is-switching-to-registration .auth__button--submit-text-next {
-    animation: auth-submit-next-from-top 0.2s ease;
+    animation: auth-submit-next-from-top 0.2s ease forwards;
 }
 
 .auth__button--submit.is-switching-to-login .auth__button--submit-text-current {
-    animation: auth-submit-current-up 0.2s ease;
+    animation: auth-submit-current-up 0.2s ease forwards;
 }
 
 .auth__button--submit.is-switching-to-login .auth__button--submit-text-next {
-    animation: auth-submit-next-from-bottom 0.2s ease;
+    animation: auth-submit-next-from-bottom 0.2s ease forwards;
 }
 
 @keyframes auth-submit-current-down {

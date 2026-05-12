@@ -74,6 +74,7 @@ class AuthFormGuardComponent {
             if (currentTextNode && nextTextNode && animate && (switchingToRegistration || switchingToLogin)) {
                 const switchClass = switchingToRegistration ? 'is-switching-to-registration' : 'is-switching-to-login';
                 submitButton.classList.remove('is-switching-to-registration', 'is-switching-to-login');
+                nextTextNode.textContent = '';
                 nextTextNode.textContent = nextText;
                 void submitButton.offsetWidth;
                 submitButton.classList.add(switchClass);
@@ -81,7 +82,9 @@ class AuthFormGuardComponent {
                 window.setTimeout(() => {
                     currentTextNode.textContent = nextText;
                     nextTextNode.textContent = '';
-                    submitButton.classList.remove('is-switching-to-registration', 'is-switching-to-login');
+                    window.requestAnimationFrame(() => {
+                        submitButton.classList.remove('is-switching-to-registration', 'is-switching-to-login');
+                    });
                 }, 200);
             } else if (currentTextNode) {
                 currentTextNode.textContent = nextText;
