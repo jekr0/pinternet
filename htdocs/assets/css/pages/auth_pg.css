@@ -173,6 +173,11 @@
 .auth__input::placeholder {
     font-size: 16px;
     color: #bbbbbb;
+    transition: color 0.2s ease;
+}
+
+.auth__input:focus::placeholder {
+    color: #e0e0e0;
 }
 
 .auth__input:hover {
