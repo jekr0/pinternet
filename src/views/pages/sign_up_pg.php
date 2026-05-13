@@ -23,7 +23,7 @@ $isRegistrationMode = $authMode === 'registration';
         <span class="auth__logo">grinderest</span>
 
         <?php if ($error): ?>
-            <p class="auth__error"><?= $error ?></p>
+            <div class="auth__server-error" data-auth-server-error="<?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?>"></div>
         <?php endif; ?>
 
         <form

@@ -123,6 +123,27 @@
     transition-delay: 0s;
 }
 
+.auth__field::before {
+    position: absolute;
+    top: 50%;
+    left: -36px;
+    width: 20px;
+    height: 20px;
+    content: '';
+    background-color: rgb(150, 150, 250);
+    mask: url('/assets/images/icons/L-warning.svg') center / contain no-repeat;
+    -webkit-mask: url('/assets/images/icons/L-warning.svg') center / contain no-repeat;
+    opacity: 0;
+    transform: translateY(-50%) scale(0.92);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    pointer-events: none;
+}
+
+.auth__field.auth__field--warning::before {
+    opacity: 1;
+    transform: translateY(-50%) scale(1);
+}
+
 .auth__field--username {
     top: 76px;
     opacity: 0;

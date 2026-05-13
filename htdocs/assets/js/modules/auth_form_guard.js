@@ -12,7 +12,7 @@ class AuthFormGuardComponent {
             this.bindModeToggle(form);
             this.bindFieldRestrictions(form);
             this.bindFormValidation(form);
-            this.autoHideExistingBanner(form);
+            this.showServerErrorToast(form);
             this.applyMode(form, form.dataset.authMode === 'registration' ? 'registration' : 'login', false);
         });
     }
@@ -114,8 +114,16 @@ class AuthFormGuardComponent {
 
     bindFormValidation(form) {
         form.setAttribute('novalidate', 'novalidate');
+        const usernameField = form.querySelector('input[name="username"]');
+        const identityField = form.querySelector('[data-component="auth-identity-input"]');
+
+        [usernameField, identityField].forEach((field) => {
+            if (!field) return;
+            field.addEventListener('input', () => this.toggleFieldWarning(field, false));
+        });
 
         form.addEventListener('submit', async (event) => {
+            event.preventDefault();
             const action = form.querySelector('input[name="action"]')?.value;
             const email = form.querySelector('input[name="email"]')?.value.trim() || '';
             const login = form.querySelector('input[name="login"]')?.value.trim() || '';
@@ -123,105 +131,101 @@ class AuthFormGuardComponent {
             const username = form.querySelector('input[name="username"]')?.value.trim() || '';
 
             if (!password || (action === 'registration' ? (!email || !username) : !login)) {
-                event.preventDefault();
-                this.showBanner(form, 'Заполните все поля');
+                this.showToast('Заполните все поля');
                 return;
             }
 
             if (action === 'registration') {
                 if (!/^[A-Za-zА-Яа-яЁё0-9_]{3,12}$/u.test(username)) {
-                    event.preventDefault();
-                    this.showBanner(form, 'Только латиница, кириллица, цифры и "_"');
+                    this.toggleFieldWarning(usernameField, true);
+                    this.showToast('Только латиница, кириллица, цифры и "_"');
                     return;
                 }
 
                 if (password.length < 6) {
-                    event.preventDefault();
-                    this.showBanner(form, 'Пароль должен быть не короче 6 символов');
+                    this.showToast('Пароль должен быть не короче 6 символов');
                     return;
                 }
             }
 
             if (action === 'registration' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                event.preventDefault();
-                this.showBanner(form, 'Некорректный формат почты');
+                this.toggleFieldWarning(identityField, true);
+                this.showToast('Некорректный формат почты');
                 return;
             }
 
-            if (action === 'registration') {
-                event.preventDefault();
-                const payload = new URLSearchParams({
-                    action: 'registration_validate',
-                    username,
-                    email,
-                    password
+            const payload = new URLSearchParams({
+                action: action === 'registration' ? 'registration_validate' : 'login_validate',
+                username,
+                email,
+                login,
+                password
+            });
+
+            try {
+                const response = await fetch('/auth', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+                    body: payload.toString()
                 });
-
-                try {
-                    const response = await fetch('/auth', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
-                        body: payload.toString()
-                    });
-                    const data = await response.json();
-                    if (!response.ok || !data.success) {
-                        this.showBanner(form, data.error || 'Ошибка проверки регистрации');
-                        return;
-                    }
-
-                    form.submit();
-                } catch (error) {
-                    this.showBanner(form, 'Ошибка сети. Попробуйте ещё раз');
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    this.applyFieldError(form, action, data.error || 'Ошибка валидации');
+                    return;
                 }
+
+                if (action === 'registration') {
+                    form.submit();
+                    return;
+                }
+
+                if (data.redirect) {
+                    window.location.href = data.redirect;
+                }
+            } catch (error) {
+                this.showToast('Ошибка сети. Попробуйте ещё раз');
             }
         });
     }
 
+    applyFieldError(form, action, errorMessage) {
+        const usernameField = form.querySelector('input[name="username"]');
+        const identityField = form.querySelector('[data-component="auth-identity-input"]');
+        const message = String(errorMessage || 'Ошибка валидации');
 
-    autoHideExistingBanner(form) {
-        const container = form.closest('.auth__container');
-        if (!container) return;
-
-        const banner = container.querySelector('.auth__error');
-        if (!banner || !banner.textContent.trim()) return;
-
-        this.startBannerHideTimer(banner);
-    }
-
-    showBanner(form, message) {
-        const container = form.closest('.auth__container');
-        if (!container) return;
-
-        let banner = container.querySelector('.auth__error');
-        if (!banner) {
-            banner = document.createElement('p');
-            banner.className = 'auth__error';
-            container.insertBefore(banner, form);
+        if (action === 'registration') {
+            if (message.includes('имя') || message.includes('латиница')) {
+                this.toggleFieldWarning(usernameField, true);
+            }
+            if (message.includes('почта') || message.includes('почты') || message.includes('формат')) {
+                this.toggleFieldWarning(identityField, true);
+            }
         }
-        banner.classList.remove('auth__error--hidden', 'auth__error--fade-out');
-        banner.textContent = message;
-        this.startBannerHideTimer(banner);
+
+        this.showToast(message);
     }
 
-    startBannerHideTimer(banner) {
-        const oldFadeTimer = this.fadeTimers.get(banner);
-        const oldHideTimer = this.hideTimers.get(banner);
+    toggleFieldWarning(field, shouldShow) {
+        if (!field) return;
+        const fieldContainer = field.closest('.auth__field');
+        if (!fieldContainer) return;
+        fieldContainer.classList.toggle('auth__field--warning', shouldShow);
+    }
 
-        if (oldFadeTimer) clearTimeout(oldFadeTimer);
-        if (oldHideTimer) clearTimeout(oldHideTimer);
+    showToast(message) {
+        document.dispatchEvent(new CustomEvent('app:toast', {
+            detail: { message }
+        }));
+    }
 
-        const fadeTimer = setTimeout(() => {
-            banner.classList.add('auth__error--fade-out');
-        }, 2500);
 
-        const hideTimer = setTimeout(() => {
-            banner.classList.add('auth__error--hidden');
-            banner.classList.remove('auth__error--fade-out');
-            banner.textContent = '';
-        }, 3000);
-
-        this.fadeTimers.set(banner, fadeTimer);
-        this.hideTimers.set(banner, hideTimer);
+    showServerErrorToast(form) {
+        const container = form.closest('.auth__container');
+        const errorNode = container?.querySelector('[data-auth-server-error]');
+        const serverError = errorNode?.dataset.authServerError?.trim();
+        if (!serverError) return;
+        this.showToast(serverError);
+        errorNode.remove();
     }
 }
 
