@@ -16,22 +16,25 @@
 
 .auth::before {
     position: fixed;
-    inset: 0;
+    inset: -220px;
     z-index: 0;
     content: '';
     pointer-events: none;
-    background-image: url('/assets/images/icons/planet.svg'), url('/assets/images/icons/planet.svg');
-    background-size: 80px 80px, 80px 80px;
-    background-repeat: repeat, repeat;
-    background-position: 0 0, 40px 40px;
-    opacity: 0.5;
-    will-change: transform;
-    animation: auth-planets-drift 110s linear infinite;
+    background-color: #f0f0f0;
+    -webkit-mask-image: url('/assets/images/icons/planet.svg');
+    -webkit-mask-size: 140px 140px;
+    -webkit-mask-repeat: repeat;
+    -webkit-mask-position: 0 0;
+    mask-image: url('/assets/images/icons/planet.svg');
+    mask-size: 140px 140px;
+    mask-repeat: repeat;
+    mask-position: 0 0;
+    animation: auth-planets-drift 32s linear infinite;
 }
 
 .auth::after {
     position: fixed;
-    inset: 0;
+    inset: -220px;
     z-index: 0;
     content: '';
     pointer-events: none;
@@ -40,18 +43,17 @@
         rgba(200, 200, 255, 0.95) 0%,
         rgba(200, 200, 255, 0) 100%
     );
-    -webkit-mask-image: url('/assets/images/icons/planet.svg'), url('/assets/images/icons/planet.svg');
-    -webkit-mask-size: 80px 80px, 80px 80px;
-    -webkit-mask-repeat: repeat, repeat;
-    -webkit-mask-position: 0 0, 40px 40px;
-    mask-image: url('/assets/images/icons/planet.svg'), url('/assets/images/icons/planet.svg');
-    mask-size: 80px 80px, 80px 80px;
-    mask-repeat: repeat, repeat;
-    mask-position: 0 0, 40px 40px;
+    -webkit-mask-image: url('/assets/images/icons/planet.svg');
+    -webkit-mask-size: 140px 140px;
+    -webkit-mask-repeat: repeat;
+    -webkit-mask-position: 0 0;
+    mask-image: url('/assets/images/icons/planet.svg');
+    mask-size: 140px 140px;
+    mask-repeat: repeat;
+    mask-position: 0 0;
     opacity: 1;
     transition: opacity 0.3s ease;
-    will-change: transform;
-    animation: auth-mask-drift 110s linear infinite;
+    animation: auth-mask-drift 32s linear infinite;
 }
 
 .auth.auth--pattern-hidden::after {
@@ -60,21 +62,25 @@
 
 @keyframes auth-mask-drift {
     from {
-        transform: translate3d(0, 0, 0);
+        -webkit-mask-position: 0 0;
+        mask-position: 0 0;
     }
 
     to {
-        transform: translate3d(80px, -80px, 0);
+        -webkit-mask-position: 140px -140px;
+        mask-position: 140px -140px;
     }
 }
 
 @keyframes auth-planets-drift {
     from {
-        transform: translate3d(0, 0, 0);
+        -webkit-mask-position: 0 0;
+        mask-position: 0 0;
     }
 
     to {
-        transform: translate3d(80px, -80px, 0);
+        -webkit-mask-position: 140px -140px;
+        mask-position: 140px -140px;
     }
 }
 

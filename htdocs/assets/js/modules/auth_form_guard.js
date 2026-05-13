@@ -7,7 +7,6 @@ class AuthFormGuardComponent {
     init() {
         const forms = Array.from(document.querySelectorAll('.auth__form'));
         if (forms.length === 0) return;
-        this.bindPatternPointer();
 
         forms.forEach((form) => {
             this.bindModeToggle(form);
@@ -235,26 +234,6 @@ class AuthFormGuardComponent {
         errorNode.remove();
     }
 
-    bindPatternPointer() {
-        const authRoot = document.querySelector('.auth');
-        const container = document.querySelector('.auth__container');
-        if (!authRoot || !container) return;
-
-        const updateMousePosition = (event) => {
-            authRoot.style.setProperty('--auth-mouse-x', `${event.clientX}px`);
-            authRoot.style.setProperty('--auth-mouse-y', `${event.clientY}px`);
-            const bounds = container.getBoundingClientRect();
-            const insideContainer = (
-                event.clientX >= bounds.left
-                && event.clientX <= bounds.right
-                && event.clientY >= bounds.top
-                && event.clientY <= bounds.bottom
-            );
-            authRoot.classList.toggle('auth--pattern-hidden', insideContainer);
-        };
-
-        window.addEventListener('mousemove', updateMousePosition);
-    }
 }
 
 App.register('auth_form_guard.js', AuthFormGuardComponent);
