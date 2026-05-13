@@ -30,11 +30,11 @@ $isLoggedIn = !empty($_SESSION['user_id']);
 
     <div class="header__profile-container">
 
-    <div class="header__level" data-component="adaptive-text">
+    <div class="header__level" data-component="adaptive-text" data-max-font="20">
         <?= $_SESSION['level'] ?>
     </div>
 
-        <span class="header__nickname" data-component="adaptive-text">
+        <span class="header__nickname" data-component="adaptive-text" data-max-font="28">
             @<?= htmlspecialchars($user['username']) ?>
         </span>
 
@@ -47,7 +47,7 @@ $isLoggedIn = !empty($_SESSION['user_id']);
             data-component="profile_button"
             data-profile-img="<?= $hasAvatar ? 1 : 0 ?>"
             data-avatar-src="<?= htmlspecialchars($user['avatar'] ?? '') ?>"
-            data-placeholder-size="36"
+            data-placeholder-size="28"
             data-profile-url="/profile"
         ></button>
 

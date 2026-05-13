@@ -1,73 +1,83 @@
-/* =========================== Верхняя панель ================================================================================= */
+/* =========================== Верхняя панель ========================== */
 
-/* Фоновый прямоугольник под шапкой */
+/* Мягкий фоновый градиент под фиксированной шапкой */
 .header-background {
     position: fixed;
     top: 0;
     left: 0;
     z-index: 1000;
     width: 100%;
-    height: 90px;
+    height: 88px;
     pointer-events: none;
     background: linear-gradient(to top, rgba(0, 0, 0, 0), rgba(245, 245, 245, 0.3));
 }
 
-/*  Сама панель */
+/* Фиксированная белая панель с отступами от краёв экрана */
 .header {
     position: fixed;
     top: 0;
-    left: 50%;
-    transform: translateX(-50%);
+    left: 44px;
+    right: 44px;
     z-index: 1;
-    width: 90%;
-    height: 90px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    height: 88px;
     font-family: 'MC_caps', Arial, sans-serif;
     font-size: 16px;
-    color: #000000;
+    color: #333;
     background: rgb(255, 255, 255);
-    border-bottom-left-radius: 20px;
-    border-bottom-right-radius: 20px;
-    box-shadow: 0 2px 3px rgba(0,0,0,0.07);
+    border-bottom-left-radius: 32px;
+    border-bottom-right-radius: 32px;
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.07);
 }
 
-/* --------------------------- Логотип --------------------------------------------------------------------------------- */
+/* --------------------------- Логотип ----------------------------------- */
 
+/* Бокс логотипа с фиксированной позицией внутри шапки */
 .header__logo {
     position: absolute;
     top: 50%;
-    left: 30px;
+    left: 104px;
     transform: translateY(-50%);
+    width: 272px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    user-select: none;
     font-family: 'MC_caps', Arial, sans-serif;
-    font-size: 30px;
+    font-size: 32px;
     font-weight: normal;
+    line-height: 1;
     letter-spacing: 1px;
     color: #333;
     text-decoration: none;
     transition: opacity 0.2s ease;
 }
 
+/* Лёгкое затемнение логотипа при наведении */
 .header__logo:hover {
     opacity: 0.8;
 }
 
+/* --------------------------- Поиск ------------------------------------- */
+
+/* Центральное поле поиска с фиксированными боковыми отступами от шапки */
 .header__search-field {
     position: absolute;
     top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 45%;
-    height: 50px;
+    left: 468px;
+    right: 468px;
+    transform: translateY(-50%);
+    height: 56px;
 }
 
+/* Нативный input занимает весь бокс поиска */
 .header__search-input {
     width: 100%;
     height: 100%;
     box-sizing: border-box;
     border: 1.5px solid #e0e0e0;
-    border-radius: 10px;
+    border-radius: 16px;
     background: #fff;
     padding: 0 16px;
     font-family: 'SF_def', Arial, sans-serif;
@@ -77,14 +87,17 @@
     transition: border-color 0.2s ease;
 }
 
+/* Подсветка поля поиска при наведении на область label */
 .header__search-field:hover .header__search-input {
     border-color: rgb(150, 150, 250);
 }
 
+/* Подсветка активного поля поиска */
 .header__search-input:focus {
     border-color: rgb(100, 100, 200);
 }
 
+/* Кастомный плейсхолдер поверх пустого input */
 .header__search-placeholder {
     position: absolute;
     inset: 0;
@@ -97,11 +110,13 @@
     transition: opacity 0.15s ease;
 }
 
+/* Скрываем кастомный плейсхолдер при фокусе или введённом тексте */
 .header__search-input:focus + .header__search-placeholder,
 .header__search-input:not(:placeholder-shown) + .header__search-placeholder {
     opacity: 0;
 }
 
+/* Иконка поиска внутри кастомного плейсхолдера */
 .header__search-placeholder-icon {
     width: 16px;
     height: 16px;
@@ -110,53 +125,53 @@
     -webkit-mask: url('/assets/images/icons/L-search.svg') center / contain no-repeat;
 }
 
+/* Текст кастомного плейсхолдера */
 .header__search-placeholder-text {
     font-family: 'SF_def', Arial, sans-serif;
     font-size: 16px;
 }
 
-/* --------------------------- Выпадающее меню --------------------------------------------------------------------------------- */
+/* --------------------------- Выпадающее меню --------------------------- */
 
-/* Кнопка настроек */
+/* Кнопка vertical-dots с фиксированным размером и позицией */
 .header__dropdown-button {
     position: absolute;
     top: 50%;
-    right: 18px;
+    right: 70px;
     transform: translateY(-50%);
-    width: 20px;
+    width: 28px;
     height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     padding: 0;
     border: none;
+    border-radius: 12px;
     color: #333;
     background: none;
     cursor: pointer;
 }
 
+/* Hover-подложка повторяет форму кнопки */
 .header__dropdown-button::after {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 24px;
-    height: 40px;
+    inset: 0;
     content: '';
     background-color: rgba(100, 100, 200, 0.1);
-    border-radius: 5px;
+    border-radius: 12px;
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.1s ease;
 }
 
+/* Показываем hover-подложку */
 .header__dropdown-button:hover::after {
     opacity: 1;
 }
 
-/* Кнопка настроек, иконка */
-.header__dropdown-icon {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 100%;
-    height: 100%;
+/* Инлайн-SVG иконки vertical-dots */
+.header__dropdown-button svg {
+    width: 20px;
+    height: 20px;
+    color: #333;
 }
