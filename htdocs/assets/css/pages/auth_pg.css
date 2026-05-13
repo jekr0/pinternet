@@ -12,12 +12,12 @@
     background: #f5f5f5;
     --aurora-shift-x: 0px;
     --aurora-shift-y: 0px;
-    --aurora-1-x: 20%;
-    --aurora-1-y: 30%;
-    --aurora-2-x: 80%;
-    --aurora-2-y: 20%;
-    --aurora-3-x: 50%;
-    --aurora-3-y: 80%;
+    --aurora-1-x: 24%;
+    --aurora-1-y: 76%;
+    --aurora-2-x: 76%;
+    --aurora-2-y: 24%;
+    --aurora-3-x: 52%;
+    --aurora-3-y: 72%;
 }
 
 .auth::before,
