@@ -10,61 +10,6 @@
     justify-content: center;
     overflow: hidden;
     background: #f5f5f5;
-    --aurora-shift-x: 0px;
-    --aurora-shift-y: 0px;
-    --aurora-1-x: 24%;
-    --aurora-1-y: 76%;
-    --aurora-2-x: 76%;
-    --aurora-2-y: 24%;
-    --aurora-3-x: 52%;
-    --aurora-3-y: 72%;
-}
-
-.auth::before,
-.auth::after {
-    position: fixed;
-    inset: 0;
-    z-index: 0;
-    content: '';
-    pointer-events: none;
-}
-
-.auth::before {
-    background:
-        radial-gradient(circle at var(--aurora-1-x) var(--aurora-1-y), rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0) 55%),
-        radial-gradient(circle at var(--aurora-2-x) var(--aurora-2-y), rgba(200, 200, 255, 0.5) 0%, rgba(200, 200, 255, 0) 52%),
-        radial-gradient(circle at var(--aurora-3-x) var(--aurora-3-y), rgba(150, 150, 250, 0.38) 0%, rgba(150, 150, 250, 0) 58%);
-    transform: translate3d(var(--aurora-shift-x), var(--aurora-shift-y), 0);
-    transition: transform 220ms ease-out, background 1.2s ease;
-}
-
-.auth::after {
-    background:
-        radial-gradient(circle at 15% 65%, rgba(255, 255, 255, 0.44) 0%, rgba(255, 255, 255, 0) 48%),
-        radial-gradient(circle at 72% 72%, rgba(200, 200, 255, 0.32) 0%, rgba(200, 200, 255, 0) 54%),
-        radial-gradient(circle at 56% 22%, rgba(150, 150, 250, 0.24) 0%, rgba(150, 150, 250, 0) 58%);
-    opacity: 0.9;
-    transform: translate3d(calc(var(--aurora-shift-x) * -0.45), calc(var(--aurora-shift-y) * -0.45), 0);
-    transition: transform 260ms ease-out;
-    animation: auth-aurora-float 19s ease-in-out infinite alternate;
-}
-
-@keyframes auth-aurora-float {
-    0% {
-        background-position: 0% 0%, 0% 0%, 0% 0%;
-    }
-    25% {
-        background-position: 6% -4%, -4% 8%, 3% 6%;
-    }
-    50% {
-        background-position: -5% 9%, 7% 12%, -6% -3%;
-    }
-    75% {
-        background-position: 8% 4%, -8% -5%, 5% 10%;
-    }
-    100% {
-        background-position: -6% -7%, 5% -10%, -4% 6%;
-    }
 }
 
 /* Фиксированный белый контейнер */
