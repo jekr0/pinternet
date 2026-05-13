@@ -20,6 +20,8 @@ class AutoGodComponent {
                 window.requestAnimationFrame(applyHint);
             });
         });
+
+        new MutationObserver(applyHint).observe(form, { attributes: true, attributeFilter: ['data-auth-mode'] });
         applyHint();
     }
 }

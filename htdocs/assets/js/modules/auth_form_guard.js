@@ -39,6 +39,7 @@ class AuthFormGuardComponent {
         const passwordField = form.querySelector('input[name="password"]');
         const submitButton = form.querySelector('[data-component="auth-submit-button"]');
         const modeButtons = Array.from(form.querySelectorAll('[data-component="auth-mode-toggle"]'));
+        const previousMode = form.dataset.authMode === 'registration' ? 'registration' : 'login';
 
         form.dataset.authMode = isRegistration ? 'registration' : 'login';
         form.classList.toggle('auth__form--registration', isRegistration);
@@ -62,7 +63,38 @@ class AuthFormGuardComponent {
             passwordField.autocomplete = isRegistration ? 'new-password' : 'current-password';
         }
 
-        if (submitButton) submitButton.textContent = isRegistration ? 'Создать аккаунт' : 'Войти';
+        if (submitButton) {
+            const nextText = isRegistration ? 'Создать аккаунт' : 'Войти';
+            const currentTextNode = submitButton.querySelector('.auth__button--submit-text-current');
+            const nextTextNode = submitButton.querySelector('.auth__button--submit-text-next');
+            const prevMode = form.dataset.previousAuthMode || previousMode;
+            const switchingToRegistration = prevMode === 'login' && isRegistration;
+            const switchingToLogin = prevMode === 'registration' && !isRegistration;
+
+            if (currentTextNode && nextTextNode && animate && (switchingToRegistration || switchingToLogin)) {
+                const switchClass = switchingToRegistration ? 'is-switching-to-registration' : 'is-switching-to-login';
+                submitButton.classList.remove('is-switching-to-registration', 'is-switching-to-login');
+                nextTextNode.textContent = '';
+                nextTextNode.textContent = nextText;
+                void submitButton.offsetWidth;
+                submitButton.classList.add(switchClass);
+
+                window.setTimeout(() => {
+                    currentTextNode.textContent = nextText;
+                    nextTextNode.textContent = '';
+                    window.requestAnimationFrame(() => {
+                        submitButton.classList.remove('is-switching-to-registration', 'is-switching-to-login');
+                    });
+                }, 200);
+            } else if (currentTextNode) {
+                currentTextNode.textContent = nextText;
+                if (nextTextNode) nextTextNode.textContent = '';
+                submitButton.classList.remove('is-switching-to-registration', 'is-switching-to-login');
+            } else {
+                submitButton.textContent = nextText;
+            }
+        }
+        form.dataset.previousAuthMode = form.dataset.authMode;
         modeButtons.forEach((button) => {
             button.classList.toggle('is-active', button.dataset.authModeTarget === form.dataset.authMode);
         });

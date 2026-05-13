@@ -119,7 +119,8 @@
     width: 376px;
     height: 40px;
     transform: translateX(-50%);
-    transition: top 0.22s ease, opacity 0.16s ease, transform 0.22s ease;
+    transition: top 0.2s ease, opacity 0.2s ease, transform 0.2s ease;
+    transition-delay: 0s;
 }
 
 .auth__field--username {
@@ -141,6 +142,7 @@
     opacity: 1;
     pointer-events: auto;
     transform: translateX(-50%);
+    transition-delay: 0.1s, 0.1s, 0.1s;
 }
 
 .auth__form--registration .auth__field--identity {
@@ -201,7 +203,7 @@
     height: 28px;
     padding: 0;
     border: none;
-    color: #bbbbbb;
+    color: #333;
     background: none;
     cursor: pointer;
 }
@@ -218,7 +220,7 @@
     border-radius: 12px;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.1s ease;
+    transition: opacity 0.2s ease;
 }
 
 .auth__password-toggle:hover::after {
@@ -257,14 +259,26 @@
     transition: border-color 0.2s ease, background 0.2s ease;
 }
 
+
 .auth__button--back {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
     background: #ffffff;
     border: 1px solid #e0e0e0;
     color: #bbbbbb;
 }
 
+.auth__button--back span {
+    display: inline-block;
+    transition: color 0.2s ease;
+}
+
 .auth__button--back:hover {
     border: 1px solid rgb(150, 150, 250);
+}
+
+.auth__button--back:hover span {
     color: rgb(150, 150, 250);
 }
 
@@ -273,6 +287,60 @@
     color: #ffffff;
 }
 
+.auth__button--submit {
+    position: relative;
+    overflow: hidden;
+}
+
+.auth__button--submit-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    display: inline-block;
+    transform: translate(-50%, -50%);
+    opacity: 1;
+    white-space: nowrap;
+}
+
+.auth__button--submit-text-next {
+    opacity: 0;
+}
+
+.auth__button--submit.is-switching-to-registration .auth__button--submit-text-current {
+    animation: auth-submit-current-down 0.2s ease forwards;
+}
+
+.auth__button--submit.is-switching-to-registration .auth__button--submit-text-next {
+    animation: auth-submit-next-from-top 0.2s ease forwards;
+}
+
+.auth__button--submit.is-switching-to-login .auth__button--submit-text-current {
+    animation: auth-submit-current-up 0.2s ease forwards;
+}
+
+.auth__button--submit.is-switching-to-login .auth__button--submit-text-next {
+    animation: auth-submit-next-from-bottom 0.2s ease forwards;
+}
+
+@keyframes auth-submit-current-down {
+    from { transform: translate(-50%, -50%); opacity: 1; }
+    to { transform: translate(-50%, calc(-50% + 20px)); opacity: 0; }
+}
+
+@keyframes auth-submit-current-up {
+    from { transform: translate(-50%, -50%); opacity: 1; }
+    to { transform: translate(-50%, calc(-50% - 20px)); opacity: 0; }
+}
+
+@keyframes auth-submit-next-from-top {
+    from { transform: translate(-50%, calc(-50% - 20px)); opacity: 0; }
+    to { transform: translate(-50%, -50%); opacity: 1; }
+}
+
+@keyframes auth-submit-next-from-bottom {
+    from { transform: translate(-50%, calc(-50% + 20px)); opacity: 0; }
+    to { transform: translate(-50%, -50%); opacity: 1; }
+}
 .auth__button--submit:hover {
     background: rgb(120, 120, 220);
 }
@@ -286,7 +354,7 @@
     left: 0;
     text-align: center;
     font-family: 'SF_def', Arial, sans-serif;
-    font-size: 12px;
+    font-size: 14px;
     color: #bbbbbb;
 }
 
@@ -312,4 +380,5 @@
 
 .auth__footer-separator {
     color: #bbbbbb;
+    user-select: none;
 }
