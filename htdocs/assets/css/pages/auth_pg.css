@@ -170,28 +170,22 @@
     transition: border-color 0.2s ease;
 }
 
-.auth__input::placeholder {
+.auth__input::placeholder,
+.auth__input::-webkit-input-placeholder,
+.auth__input::-moz-placeholder,
+.auth__input:-ms-input-placeholder,
+.auth__input::-ms-input-placeholder {
     font-size: 16px;
     color: #bbbbbb;
+    transition: color 0.2s ease;
 }
 
-.auth__input:focus::placeholder {
+.auth__input:focus::placeholder,
+.auth__input:focus::-webkit-input-placeholder,
+.auth__input:focus::-moz-placeholder,
+.auth__input:focus:-ms-input-placeholder,
+.auth__input:focus::-ms-input-placeholder {
     color: #e0e0e0;
-    animation: auth-placeholder-focus 0.2s ease forwards;
-}
-
-.auth__input:not(:focus)::placeholder {
-    animation: auth-placeholder-blur 0.2s ease forwards;
-}
-
-@keyframes auth-placeholder-focus {
-    from { color: #bbbbbb; }
-    to { color: #e0e0e0; }
-}
-
-@keyframes auth-placeholder-blur {
-    from { color: #e0e0e0; }
-    to { color: #bbbbbb; }
 }
 
 .auth__input:hover {
