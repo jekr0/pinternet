@@ -50,6 +50,7 @@
     overflow: hidden;
     white-space: nowrap;
     text-align: center;
+    user-select: none;
     font-family: 'SF_def', Arial, sans-serif;
     font-size: 20px;
     line-height: 1;
@@ -159,10 +160,11 @@
     font-size: 24px;
     color: rgb(100, 100, 200);
     text-decoration: none;
-    transition: opacity 0.2s ease;
+    user-select: none;
+    transition: color 0.2s ease;
 }
 
-/* Лёгкое затемнение ссылки входа при наведении */
+/* Цветовая подсветка ссылки входа при наведении */
 .header__login-link:hover {
-    opacity: 0.7;
+    color: rgb(125, 125, 225);
 }

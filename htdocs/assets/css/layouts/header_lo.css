@@ -68,7 +68,7 @@
     left: 468px;
     right: 468px;
     transform: translateY(-50%);
-    height: 56px;
+    height: 40px;
 }
 
 /* Нативный input занимает весь бокс поиска */
@@ -88,7 +88,7 @@
 }
 
 /* Подсветка поля поиска при наведении на область label */
-.header__search-field:hover .header__search-input {
+.header__search-field:hover .header__search-input:not(:focus) {
     border-color: rgb(150, 150, 250);
 }
 
@@ -106,6 +106,7 @@
     justify-content: center;
     gap: 8px;
     pointer-events: none;
+    user-select: none;
     color: #bbb;
     transition: opacity 0.15s ease;
 }

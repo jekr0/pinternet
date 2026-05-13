@@ -2,13 +2,13 @@
 
 .dropdown-profile {
     position: absolute;
-    top: 100%;
-    right: 56px;
-    width: 290px;
-    margin-top: 10px;
+    top: calc(100% + 12px);
+    right: 104px;
+    width: 272px;
+    margin-top: 0;
     z-index: 0;
     background: white;
-    border-radius: 10px;
+    border-radius: 16px;
     box-shadow: 0 4px 6px rgba(0,0,0,0.14);
     transition: opacity 0.1s ease, visibility 0.1s ease, transform 0.1s ease;
 }
@@ -22,7 +22,7 @@
 
 /* Компактная версия для гостя */
 .dropdown-profile--guest {
-    width: 290px;
+    width: 272px;
     box-shadow: 0 4px 6px rgba(0,0,0,0.14);
 }
 
@@ -50,7 +50,7 @@
     padding: 3px 15px;
     cursor: default;
     user-select: none;
-    font-family: 'SF_def', Arial, sans-serif;
+    font-family: 'NS_def', Arial, sans-serif;
     font-size: 14px;
     color: #999;
 }
