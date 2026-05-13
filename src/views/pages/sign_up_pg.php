@@ -18,12 +18,16 @@ $isRegistrationMode = $authMode === 'registration';
 ?>
 
 <div class="auth">
+    <div class="auth__pattern" aria-hidden="true">
+        <div class="auth__pattern-plane auth__pattern-plane--a"></div>
+        <div class="auth__pattern-plane auth__pattern-plane--b"></div>
+    </div>
     <div class="auth__container">
 
         <span class="auth__logo">grinderest</span>
 
         <?php if ($error): ?>
-            <p class="auth__error"><?= $error ?></p>
+            <div class="auth__server-error" data-auth-server-error="<?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?>"></div>
         <?php endif; ?>
 
         <form
@@ -44,7 +48,6 @@ $isRegistrationMode = $authMode === 'registration';
                     minlength="3"
                     maxlength="12"
                     pattern="[A-Za-zА-Яа-яЁё0-9_]{3,12}"
-                    title="Только латиница, кириллица, цифры и _"
                     <?= $isRegistrationMode ? 'required' : 'disabled'; ?>
                 >
             </div>

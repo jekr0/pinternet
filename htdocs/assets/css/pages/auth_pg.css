@@ -10,29 +10,60 @@
     justify-content: center;
     overflow: hidden;
     background: #f5f5f5;
+    --auth-mouse-x: 50vw;
+    --auth-mouse-y: 50vh;
 }
 
-.auth::before {
+.auth::after {
     position: fixed;
-    inset: -180px;
+    inset: 0;
     z-index: 0;
     content: '';
     pointer-events: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http%3A//www.w3.org/2000/svg' width='256' height='184' viewBox='0 0 256 184'%3E%3Cg fill='%23f0f0f0'%3E%3Cg transform='translate(64 46) scale(3.3333) translate(-12 -12)'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M19.8097 10.2573C20.7597 9.2357 21.1932 8.35082 20.9488 7.82664C20.7042 7.30224 19.747 7.06555 18.3527 7.13687C19.048 8.04367 19.5534 9.10361 19.8097 10.2573ZM16.4342 5.34028C15.1651 4.49357 13.6402 4 12.0001 4C7.88088 4 4.48883 7.1132 4.04845 11.1151C1.64822 13.1736 0.452598 15.3374 1.23656 17.0186C2.02045 18.6996 4.44614 19.1747 7.56547 18.6594C8.83471 19.5063 10.3597 20 12.0001 20C16.1199 20 19.5125 16.8857 19.9519 12.8829C22.3505 10.825 23.5451 8.66206 22.7614 6.98141C21.9776 5.30067 19.5527 4.8255 16.4342 5.34028ZM8.05162 16.5178C6.79423 15.418 6.00006 13.8018 6.00006 12C6.00006 8.68629 8.68635 6 12.0001 6C15.2733 6 17.9343 8.62106 17.9989 11.8788C16.7276 12.8592 15.1124 13.8583 13.2668 14.7189C11.422 15.5792 9.61925 16.1741 8.05162 16.5178ZM10.7416 17.8678C11.8361 17.512 12.9696 17.0643 14.1121 16.5315C15.2553 15.9984 16.3275 15.4175 17.3041 14.8073C16.2969 16.7065 14.2995 18 12.0001 18C11.5684 18 11.1474 17.9544 10.7416 17.8678ZM5.64729 16.863C4.2519 16.9347 3.29383 16.698 3.04918 16.1734C2.8046 15.6489 3.23878 14.7632 4.18999 13.7408C4.44615 14.8952 4.95174 15.9558 5.64729 16.863Z'/%3E%3C/g%3E%3Cg transform='translate(192 138) scale(3.3333) translate(-12 -12)'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M19.8097 10.2573C20.7597 9.2357 21.1932 8.35082 20.9488 7.82664C20.7042 7.30224 19.747 7.06555 18.3527 7.13687C19.048 8.04367 19.5534 9.10361 19.8097 10.2573ZM16.4342 5.34028C15.1651 4.49357 13.6402 4 12.0001 4C7.88088 4 4.48883 7.1132 4.04845 11.1151C1.64822 13.1736 0.452598 15.3374 1.23656 17.0186C2.02045 18.6996 4.44614 19.1747 7.56547 18.6594C8.83471 19.5063 10.3597 20 12.0001 20C16.1199 20 19.5125 16.8857 19.9519 12.8829C22.3505 10.825 23.5451 8.66206 22.7614 6.98141C21.9776 5.30067 19.5527 4.8255 16.4342 5.34028ZM8.05162 16.5178C6.79423 15.418 6.00006 13.8018 6.00006 12C6.00006 8.68629 8.68635 6 12.0001 6C15.2733 6 17.9343 8.62106 17.9989 11.8788C16.7276 12.8592 15.1124 13.8583 13.2668 14.7189C11.422 15.5792 9.61925 16.1741 8.05162 16.5178ZM10.7416 17.8678C11.8361 17.512 12.9696 17.0643 14.1121 16.5315C15.2553 15.9984 16.3275 15.4175 17.3041 14.8073C16.2969 16.7065 14.2995 18 12.0001 18C11.5684 18 11.1474 17.9544 10.7416 17.8678ZM5.64729 16.863C4.2519 16.9347 3.29383 16.698 3.04918 16.1734C2.8046 15.6489 3.23878 14.7632 4.18999 13.7408C4.44615 14.8952 4.95174 15.9558 5.64729 16.863Z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-    background-size: 256px 184px;
-    background-repeat: repeat;
-    background-position: 0 0;
-    animation: auth-planets-drift 56s linear infinite;
+    background-image: radial-gradient(
+        circle 250px at var(--auth-mouse-x) var(--auth-mouse-y),
+        rgba(200, 200, 255, 0.95) 0%,
+        rgba(200, 200, 255, 0) 100%
+    );
+    background-blend-mode: normal;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+    animation: auth-pattern-scroll 20s linear infinite;
 }
 
-@keyframes auth-planets-drift {
-    from {
-        background-position: 0 0;
-    }
+.auth.auth--pattern-hidden::after {
+    opacity: 0;
+}
 
-    to {
-        background-position: 512px -184px;
-    }
+.auth__pattern {
+    position: fixed;
+    inset: -220px;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.auth__pattern-plane {
+    position: absolute;
+    inset: -200px;
+    background-image: url('/assets/images/icons/planet.svg');
+    background-size: 200px 200px;
+    background-repeat: repeat;
+    --auth-pattern-start-x: 0px;
+    --auth-pattern-start-y: 0px;
+    will-change: transform;
+    animation: auth-pattern-scroll 20s linear infinite;
+}
+
+.auth__pattern-plane--b {
+    --auth-pattern-start-x: -200px;
+    --auth-pattern-start-y: 200px;
+    background-position: 100px 100px;
+}
+
+@keyframes auth-pattern-scroll {
+    from { transform: translate3d(var(--auth-pattern-start-x), var(--auth-pattern-start-y), 0); }
+    to { transform: translate3d(calc(var(--auth-pattern-start-x) + 200px), calc(var(--auth-pattern-start-y) - 200px), 0); }
 }
 
 /* Фиксированный белый контейнер */
@@ -123,6 +154,27 @@
     transition-delay: 0s;
 }
 
+.auth__field::before {
+    position: absolute;
+    top: 50%;
+    left: -36px;
+    width: 20px;
+    height: 20px;
+    content: '';
+    background-color: rgb(150, 150, 250);
+    mask: url('/assets/images/icons/L-warning.svg') center / contain no-repeat;
+    -webkit-mask: url('/assets/images/icons/L-warning.svg') center / contain no-repeat;
+    opacity: 0;
+    transform: translateY(-50%) scale(0.92);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    pointer-events: none;
+}
+
+.auth__field.auth__field--warning::before {
+    opacity: 1;
+    transform: translateY(-50%) scale(1);
+}
+
 .auth__field--username {
     top: 76px;
     opacity: 0;
@@ -161,7 +213,7 @@
     padding: 0 14px;
     box-sizing: border-box;
     outline: none;
-    font-family: 'SF_def', Arial, sans-serif;
+    font-family: 'NS_def', Arial, sans-serif;
     font-size: 16px;
     color: #333;
     background: #fff;
@@ -353,9 +405,11 @@
     bottom: 20px;
     left: 0;
     text-align: center;
-    font-family: 'SF_def', Arial, sans-serif;
+    font-family: 'NS_def', Arial, sans-serif;
     font-size: 14px;
     color: #bbbbbb;
+    user-select: none;
+    -webkit-user-select: none;
 }
 
 .auth__link {
