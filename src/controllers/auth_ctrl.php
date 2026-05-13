@@ -12,6 +12,7 @@ $action = $_POST['action'] ?? '';
 
 match ($action) {
     'login'        => handleLogin($pdo),
+    'login_validate' => handleLoginValidate($pdo),
     'registration_validate' => handleRegistrationValidate($pdo),
     'registration' => handleRegistration($pdo),
     default        => redirectTo('/sign_up')
@@ -117,6 +118,52 @@ function handleRegistrationValidate(PDO $pdo): never
     }
 
     echo json_encode(['success' => true], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+function handleLoginValidate(PDO $pdo): never
+{
+    $login    = trim($_POST['login'] ?? $_POST['email'] ?? '');
+    $password = trim($_POST['password'] ?? '');
+
+    header('Content-Type: application/json; charset=utf-8');
+
+    if (!$login || !$password) {
+        http_response_code(422);
+        echo json_encode(['success' => false, 'error' => 'Заполните все поля'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    $stmt = $pdo->prepare('SELECT id, username, password_hash, is_banned, role, exp, level FROM Users WHERE username = ? OR email = ?');
+    $stmt->execute([$login, $login]);
+    $user = $stmt->fetch();
+
+    if (!$user || !password_verify($password, $user['password_hash'])) {
+        http_response_code(422);
+        echo json_encode(['success' => false, 'error' => 'Неверный логин или пароль'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    if ($user['is_banned']) {
+        http_response_code(423);
+        echo json_encode(['success' => false, 'error' => 'Аккаунт заблокирован'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    require_once __DIR__ . '/../config/level_helper.php';
+    $correctLevel = calcLevel((int) $user['exp']);
+    if ($correctLevel !== (int) $user['level']) {
+        $upd = $pdo->prepare('UPDATE Users SET level = ? WHERE id = ?');
+        $upd->execute([$correctLevel, $user['id']]);
+    }
+
+    $_SESSION['user_id']  = $user['id'];
+    $_SESSION['username'] = $user['username'];
+    $_SESSION['role']     = $user['role'];
+    $_SESSION['exp']      = (int) $user['exp'];
+    $_SESSION['level']    = $correctLevel;
+
+    echo json_encode(['success' => true, 'redirect' => '/'], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
