@@ -18,6 +18,10 @@ $isRegistrationMode = $authMode === 'registration';
 ?>
 
 <div class="auth">
+    <div class="auth__pattern" aria-hidden="true">
+        <div class="auth__pattern-plane auth__pattern-plane--a"></div>
+        <div class="auth__pattern-plane auth__pattern-plane--b"></div>
+    </div>
     <div class="auth__container">
 
         <span class="auth__logo">grinderest</span>
