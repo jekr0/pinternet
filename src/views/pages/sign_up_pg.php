@@ -44,7 +44,6 @@ $isRegistrationMode = $authMode === 'registration';
                     minlength="3"
                     maxlength="12"
                     pattern="[A-Za-zА-Яа-яЁё0-9_]{3,12}"
-                    title="Только латиница, кириллица, цифры и _"
                     <?= $isRegistrationMode ? 'required' : 'disabled'; ?>
                 >
             </div>
