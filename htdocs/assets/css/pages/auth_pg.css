@@ -20,12 +20,13 @@
     z-index: 0;
     content: '';
     pointer-events: none;
-    background-image: url('/assets/images/icons/planet.svg');
-    background-size: 256px 184px;
-    background-repeat: repeat;
-    background-position: 0 0;
-    opacity: 0.45;
-    animation: auth-planets-drift 56s linear infinite;
+    background-image: url('/assets/images/icons/planet.svg'), url('/assets/images/icons/planet.svg');
+    background-size: 80px 80px, 80px 80px;
+    background-repeat: repeat, repeat;
+    background-position: 0 0, 40px 40px;
+    opacity: 0.5;
+    will-change: transform;
+    animation: auth-planets-drift 110s linear infinite;
 }
 
 .auth::after {
@@ -39,17 +40,18 @@
         rgba(200, 200, 255, 0.95) 0%,
         rgba(200, 200, 255, 0) 100%
     );
-    -webkit-mask-image: url('/assets/images/icons/planet.svg');
-    -webkit-mask-size: 256px 184px;
-    -webkit-mask-repeat: repeat;
-    -webkit-mask-position: 0 0;
-    mask-image: url('/assets/images/icons/planet.svg');
-    mask-size: 256px 184px;
-    mask-repeat: repeat;
-    mask-position: 0 0;
+    -webkit-mask-image: url('/assets/images/icons/planet.svg'), url('/assets/images/icons/planet.svg');
+    -webkit-mask-size: 80px 80px, 80px 80px;
+    -webkit-mask-repeat: repeat, repeat;
+    -webkit-mask-position: 0 0, 40px 40px;
+    mask-image: url('/assets/images/icons/planet.svg'), url('/assets/images/icons/planet.svg');
+    mask-size: 80px 80px, 80px 80px;
+    mask-repeat: repeat, repeat;
+    mask-position: 0 0, 40px 40px;
     opacity: 1;
     transition: opacity 0.3s ease;
-    animation: auth-mask-drift 56s linear infinite;
+    will-change: transform;
+    animation: auth-mask-drift 110s linear infinite;
 }
 
 .auth.auth--pattern-hidden::after {
@@ -58,23 +60,21 @@
 
 @keyframes auth-mask-drift {
     from {
-        -webkit-mask-position: 0 0;
-        mask-position: 0 0;
+        transform: translate3d(0, 0, 0);
     }
 
     to {
-        -webkit-mask-position: 512px -184px;
-        mask-position: 512px -184px;
+        transform: translate3d(80px, -80px, 0);
     }
 }
 
 @keyframes auth-planets-drift {
     from {
-        background-position: 0 0;
+        transform: translate3d(0, 0, 0);
     }
 
     to {
-        background-position: 512px -184px;
+        transform: translate3d(80px, -80px, 0);
     }
 }
 
