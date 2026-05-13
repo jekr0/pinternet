@@ -22,13 +22,16 @@
     pointer-events: none;
     background-color: #f0f0f0;
     -webkit-mask-image: url('/assets/images/icons/planet.svg');
-    -webkit-mask-size: 140px 140px;
+    -webkit-mask-size: 80px 80px;
     -webkit-mask-repeat: repeat;
     -webkit-mask-position: 0 0;
     mask-image: url('/assets/images/icons/planet.svg');
-    mask-size: 140px 140px;
+    mask-size: 80px 80px;
     mask-repeat: repeat;
     mask-position: 0 0;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    filter: blur(0.2px);
     animation: auth-planets-drift 32s linear infinite;
 }
 
@@ -39,18 +42,21 @@
     content: '';
     pointer-events: none;
     background-image: radial-gradient(
-        circle 250px at var(--auth-mouse-x) var(--auth-mouse-y),
+        circle 250px at calc(var(--auth-mouse-x) + 220px) calc(var(--auth-mouse-y) + 220px),
         rgba(200, 200, 255, 0.95) 0%,
         rgba(200, 200, 255, 0) 100%
     );
     -webkit-mask-image: url('/assets/images/icons/planet.svg');
-    -webkit-mask-size: 140px 140px;
+    -webkit-mask-size: 80px 80px;
     -webkit-mask-repeat: repeat;
     -webkit-mask-position: 0 0;
     mask-image: url('/assets/images/icons/planet.svg');
-    mask-size: 140px 140px;
+    mask-size: 80px 80px;
     mask-repeat: repeat;
     mask-position: 0 0;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    filter: blur(0.2px);
     opacity: 1;
     transition: opacity 0.3s ease;
     animation: auth-mask-drift 32s linear infinite;
@@ -67,8 +73,8 @@
     }
 
     to {
-        -webkit-mask-position: 140px -140px;
-        mask-position: 140px -140px;
+        -webkit-mask-position: 81.5px -81.5px;
+        mask-position: 81.5px -81.5px;
     }
 }
 
@@ -79,8 +85,8 @@
     }
 
     to {
-        -webkit-mask-position: 140px -140px;
-        mask-position: 140px -140px;
+        -webkit-mask-position: 81.5px -81.5px;
+        mask-position: 81.5px -81.5px;
     }
 }
 
