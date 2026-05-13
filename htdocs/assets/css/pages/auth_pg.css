@@ -12,8 +12,6 @@
     background: #f5f5f5;
     --aurora-shift-x: 0px;
     --aurora-shift-y: 0px;
-    --dots-shift-x: 0px;
-    --dots-shift-y: 0px;
 }
 
 .auth::before,
@@ -35,15 +33,32 @@
 }
 
 .auth::after {
-    background-image:
-        radial-gradient(circle, rgba(255, 255, 255, 0.9) 1.2px, rgba(255, 255, 255, 0) 1.3px),
-        radial-gradient(circle, rgba(200, 200, 255, 0.65) 1.2px, rgba(200, 200, 255, 0) 1.3px),
-        radial-gradient(circle, rgba(150, 150, 250, 0.48) 1.2px, rgba(150, 150, 250, 0) 1.3px);
-    background-size: 54px 54px, 72px 72px, 88px 88px;
-    background-position: 0 0, 14px 18px, 32px 20px;
-    opacity: 0.55;
-    transform: translate3d(var(--dots-shift-x), var(--dots-shift-y), 0);
+    background:
+        radial-gradient(circle at 15% 65%, rgba(255, 255, 255, 0.44) 0%, rgba(255, 255, 255, 0) 48%),
+        radial-gradient(circle at 72% 72%, rgba(200, 200, 255, 0.32) 0%, rgba(200, 200, 255, 0) 54%),
+        radial-gradient(circle at 56% 22%, rgba(150, 150, 250, 0.24) 0%, rgba(150, 150, 250, 0) 58%);
+    opacity: 0.9;
+    transform: translate3d(calc(var(--aurora-shift-x) * -0.45), calc(var(--aurora-shift-y) * -0.45), 0);
     transition: transform 260ms ease-out;
+    animation: auth-aurora-float 19s ease-in-out infinite alternate;
+}
+
+@keyframes auth-aurora-float {
+    0% {
+        background-position: 0% 0%, 0% 0%, 0% 0%;
+    }
+    25% {
+        background-position: 6% -4%, -4% 8%, 3% 6%;
+    }
+    50% {
+        background-position: -5% 9%, 7% 12%, -6% -3%;
+    }
+    75% {
+        background-position: 8% 4%, -8% -5%, 5% 10%;
+    }
+    100% {
+        background-position: -6% -7%, 5% -10%, -4% 6%;
+    }
 }
 
 /* Фиксированный белый контейнер */
