@@ -25,14 +25,7 @@
         rgba(200, 200, 255, 0.95) 0%,
         rgba(200, 200, 255, 0) 100%
     );
-    -webkit-mask-image: url('/assets/images/patterns/auth-planets-pattern.svg');
-    -webkit-mask-size: 200px 200px;
-    -webkit-mask-repeat: repeat;
-    -webkit-mask-position: 0 0;
-    mask-image: url('/assets/images/patterns/auth-planets-pattern.svg');
-    mask-size: 200px 200px;
-    mask-repeat: repeat;
-    mask-position: 0 0;
+    background-blend-mode: normal;
     opacity: 1;
     transition: opacity 0.3s ease;
     animation: auth-pattern-scroll 20s linear infinite;
@@ -53,13 +46,9 @@
 .auth__pattern-plane {
     position: absolute;
     inset: -200px;
-    background-color: #f0f0f0;
-    -webkit-mask-image: url('/assets/images/patterns/auth-planets-pattern.svg');
-    -webkit-mask-size: 200px 200px;
-    -webkit-mask-repeat: repeat;
-    mask-image: url('/assets/images/patterns/auth-planets-pattern.svg');
-    mask-size: 200px 200px;
-    mask-repeat: repeat;
+    background-image: url('/assets/images/patterns/auth-planets-pattern.svg');
+    background-size: 200px 200px;
+    background-repeat: repeat;
     --auth-pattern-start-x: 0px;
     --auth-pattern-start-y: 0px;
     will-change: transform;
