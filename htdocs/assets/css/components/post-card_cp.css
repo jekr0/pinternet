@@ -1,35 +1,41 @@
-/* ------------------------------ Модуль карточки поста ------------------------------ */
+/* =========================== Карточка поста ========================== */
 
+/* Основной контейнер карточки с фиксированной шириной */
 .post-card {
     position: relative;
-    width: var(--post-card-width, 256px);
-    border-radius: 20px;
-    background: #fff;
+    width: var(--post-card-width, 248px);
     overflow: hidden;
+    background: #fff;
+    border-radius: 24px;
     transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
 
+/* Подъём карточки при наведении */
 .post-card:hover {
     box-shadow: 0 4px 2px rgba(0, 0, 0, 0.07);
     transform: translateY(-5px);
 }
 
+/* Сохраняем hover-состояние, пока открыт dropdown коллекций */
 .post-card--dropdown-open {
     box-shadow: 0 4px 2px rgba(0, 0, 0, 0.07);
     transform: translateY(-5px);
 }
 
+/* --------------------------- Плашка автора --------------------------- */
+
+/* Плашка автора поверх изображения */
 .post-card__author-badge {
     position: absolute;
     top: 10px;
     left: 50%;
     transform: translateX(-50%);
     z-index: 2;
-    height: 23px;
+    height: 24px;
     padding: 0 10px;
     display: inline-flex;
     align-items: center;
-    border-radius: 10px;
+    border-radius: 8px;
     background: rgba(0, 0, 0, 0.3);
     backdrop-filter: blur(1px);
     -webkit-backdrop-filter: blur(1px);
@@ -43,20 +49,23 @@
     transition: opacity 0.1s ease, text-decoration-color 0.1s ease;
 }
 
+/* Никнейм внутри плашки автора */
 .post-card__author-username {
     line-height: 1;
 }
 
+/* Разделитель между никнеймом и датой */
 .post-card__author-meta-separator {
     width: 4px;
     height: 4px;
     margin-left: 12px;
     margin-right: 12px;
-    border-radius: 50%;
-    background: #bbb;
     flex: 0 0 auto;
+    background: #bbb;
+    border-radius: 50%;
 }
 
+/* Дата публикации внутри плашки автора */
 .post-card__author-published-at {
     font-family: 'SF_def', Arial, sans-serif;
     font-size: 12px;
@@ -65,20 +74,21 @@
     text-decoration: none;
 }
 
-.post-card:hover .post-card__author-badge {
-    opacity: 1;
-    pointer-events: auto;
-}
-
+/* Показываем плашку автора при наведении */
+.post-card:hover .post-card__author-badge,
 .post-card--dropdown-open .post-card__author-badge {
     opacity: 1;
     pointer-events: auto;
 }
 
+/* Подчёркивание ссылки автора при наведении */
 .post-card__author-badge:hover {
     text-decoration: underline;
 }
 
+/* --------------------------- Изображение ------------------------------ */
+
+/* Изображение занимает всю ширину карточки */
 .post-card__image {
     display: block;
     width: 100%;
@@ -86,18 +96,21 @@
     object-fit: cover;
 }
 
+/* --------------------------- Плашка действий -------------------------- */
+
+/* Плашка с кнопками действий в правом нижнем углу */
 .post-card__actions {
     position: absolute;
-    right: 10px;
-    bottom: 10px;
+    right: 12px;
+    bottom: 12px;
     z-index: 2;
-    width: 110px;
+    width: 108px;
     height: 40px;
-    padding: 5px;
+    padding: 6px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    border-radius: 10px;
+    gap: 6px;
+    border-radius: 12px;
     background: rgba(0, 0, 0, 0.3);
     backdrop-filter: blur(1px);
     -webkit-backdrop-filter: blur(1px);
@@ -106,36 +119,36 @@
     transition: opacity 0.1s ease;
 }
 
-.post-card:hover .post-card__actions {
-    opacity: 1;
-    pointer-events: auto;
-}
-
+/* Показываем плашку действий при наведении */
+.post-card:hover .post-card__actions,
 .post-card--dropdown-open .post-card__actions {
     opacity: 1;
     pointer-events: auto;
 }
 
+/* Кнопка действия внутри плашки */
 .post-card__action-button {
-    width: 30px;
-    height: 30px;
-    border: none;
-    border-radius: 10px;
-    background: #fff;
-    color: #bbb;
-    cursor: pointer;
+    width: 28px;
+    height: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
+    border: none;
+    border-radius: 12px;
+    color: #bbb;
+    background: #fff;
+    cursor: pointer;
     transition: color 0.1s ease;
 }
 
+/* Заблокированная кнопка действия */
 .post-card__action-button:disabled {
     cursor: not-allowed;
     color: #bbb;
     opacity: 1;
 }
 
+/* Контейнер SVG-иконки действия */
 .post-card__icon {
     width: 16px;
     height: 16px;
@@ -144,46 +157,55 @@
     justify-content: center;
 }
 
+/* SVG занимает весь контейнер иконки */
 .post-card__icon svg {
     width: 100%;
     height: 100%;
 }
 
+/* Плавная смена цвета SVG */
 .post-card__icon svg,
 .post-card__icon svg * {
     transition: fill 0.1s ease;
 }
 
+/* Базовый цвет неактивных действий */
 .post-card__action-button[data-action="like"]:not(.is-active),
 .post-card__action-button[data-action="bookmark"]:not(.is-active),
 .post-card__action-button[data-action="share"] {
     color: #bbb;
 }
 
+/* Hover-цвет неактивных действий */
 .post-card__action-button[data-action="like"]:not(.is-active):hover,
 .post-card__action-button[data-action="bookmark"]:not(.is-active):not(:disabled):hover,
 .post-card__action-button[data-action="share"]:hover {
     color: rgb(150, 150, 250);
 }
 
+/* Цвет активных действий */
 .post-card__action-button[data-action="like"].is-active,
 .post-card__action-button[data-action="bookmark"].is-active {
     color: rgb(150, 150, 250);
 }
 
+/* Hover-цвет активных действий */
 .post-card__action-button[data-action="like"].is-active:hover,
 .post-card__action-button[data-action="bookmark"].is-active:hover {
     color: rgb(100, 100, 200);
 }
 
+/* Заблокированная кнопка сохранения */
 .post-card__action-button[data-action="bookmark"]:disabled {
     color: #bbb;
 }
 
+/* Плавное состояние кнопки "поделиться" */
 .post-card__action-button[data-action="share"] {
     transition: color 0.3s ease;
 }
 
+/* Состояние успешного копирования */
 .post-card__action-button[data-action="share"].is-copied {
     color: rgb(100, 100, 200);
 }

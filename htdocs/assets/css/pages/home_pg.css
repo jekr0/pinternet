@@ -3,7 +3,7 @@
 .home-post-masonry {
     position: relative;
     min-height: 100vh;
-    padding: 0 25px 120px;
+    padding: 0 0 120px;
 }
 
 .home-post-masonry .post-card {

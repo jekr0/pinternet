@@ -1,18 +1,20 @@
 /* =========================== Выпадающее меню профиля ========================== */
 
+/* Контейнер dropdown профиля под profile-container */
 .dropdown-profile {
     position: absolute;
     top: calc(100% + 12px);
     right: 104px;
+    z-index: 0;
     width: 272px;
     margin-top: 0;
-    z-index: 0;
     background: white;
     border-radius: 16px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.14);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.14);
     transition: opacity 0.1s ease, visibility 0.1s ease, transform 0.1s ease;
 }
 
+/* Скрытое состояние dropdown профиля */
 .dropdown-profile--hidden {
     transform: translateY(-10px);
     opacity: 0;
@@ -23,19 +25,26 @@
 /* Компактная версия для гостя */
 .dropdown-profile--guest {
     width: 272px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.14);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.14);
 }
 
+/* --------------------------- Список ------------------------------------ */
+
+/* Внутренний список с вертикальными отступами */
 .dropdown-profile__list {
     margin: 0;
     padding: 16px 0;
     list-style: none;
 }
 
+/* Элемент списка без собственных отступов */
 .dropdown-profile__item {
     padding: 0;
 }
 
+/* --------------------------- Информация аккаунта ----------------------- */
+
+/* Заголовок текущего аккаунта */
 .dropdown-profile__item--title {
     margin: 0 12px 8px;
     cursor: default;
@@ -46,6 +55,7 @@
     color: #555;
 }
 
+/* Почта и состояние уровня */
 .dropdown-profile__item--info {
     margin: 0 12px;
     cursor: default;
@@ -55,10 +65,12 @@
     color: #999;
 }
 
+/* Расстояние между почтой и уровнем */
 .dropdown-profile__item--info + .dropdown-profile__item--info {
     margin-top: 4px;
 }
 
+/* Счётчик уведомлений */
 .dropdown-profile__badge {
     min-width: 14px;
     margin-left: auto;
@@ -68,10 +80,12 @@
     color: rgb(100, 100, 200);
 }
 
+/* Пустой счётчик уведомлений */
 .dropdown-profile__badge--empty {
     color: #999;
 }
 
+/* Разделительная линия */
 .dropdown-profile__divider {
     height: 2px;
     margin: 11px 12px;
@@ -79,6 +93,9 @@
     border-radius: 1px;
 }
 
+/* --------------------------- Кнопки ------------------------------------ */
+
+/* Ссылка-кнопка dropdown профиля */
 .dropdown-profile__link {
     height: 28px;
     display: flex;
@@ -91,19 +108,25 @@
     transition: background 0.2s ease;
 }
 
+/* Hover-подложка ссылки-кнопки */
 .dropdown-profile__link:hover {
     background: rgba(100, 100, 200, 0.08);
 }
 
+/* Отдельный цвет для выхода из аккаунта */
 .dropdown-profile__link--logout {
     color: rgb(100, 100, 200);
 }
 
+/* --------------------------- Гость ------------------------------------- */
+
+/* Контейнер гостевого сообщения */
 .dropdown-profile__item--guest {
     padding: 0 12px;
     cursor: default;
 }
 
+/* Текст гостевого сообщения */
 .dropdown-profile__guest-message {
     text-align: center;
     line-height: 1.5;
