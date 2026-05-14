@@ -1,9 +1,9 @@
 .dropdown-search {
     position: absolute;
-    top: calc(100% + 36px);
+    top: calc(100% + 28px);
     left: 0;
     width: 100%;
-    height: 300px;
+    height: 256px;
     margin-top: 0;
     z-index: 20;
     background: white;
