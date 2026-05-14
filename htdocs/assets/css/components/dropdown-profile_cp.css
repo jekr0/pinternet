@@ -5,7 +5,6 @@
     top: calc(100% + 12px);
     right: 104px;
     width: 272px;
-    height: 256px;
     margin-top: 0;
     z-index: 0;
     background: white;
@@ -29,7 +28,7 @@
 
 .dropdown-profile__list {
     margin: 0;
-    padding: 8px 0;
+    padding: 16px 0;
     list-style: none;
 }
 
@@ -38,17 +37,17 @@
 }
 
 .dropdown-profile__item--title {
-    padding: 10px 16px 10px;
+    margin: 0 12px 12px;
     cursor: default;
     user-select: none;
     text-align: center;
     font-family: 'SF_def', Arial, sans-serif;
-    font-size: 18px;
+    font-size: 16px;
     color: #555;
 }
 
 .dropdown-profile__item--info {
-    padding: 3px 15px;
+    margin: 0 12px;
     cursor: default;
     user-select: none;
     font-family: 'NS_def', Arial, sans-serif;
@@ -58,7 +57,7 @@
 
 .dropdown-profile__badge {
     min-width: 14px;
-    margin-right: 5px;
+    margin-left: auto;
     text-align: right;
     font-family: 'MC_caps', Arial, sans-serif;
     font-size: 14px;
@@ -70,18 +69,20 @@
 }
 
 .dropdown-profile__divider {
-    width: 90%;
-    height: 1px;
-    margin: 6px auto;
+    height: 2px;
+    margin: 11px 12px;
     background: #E0E0E0;
+    border-radius: 1px;
 }
 
 .dropdown-profile__link {
-    display: block;
-    padding: 5px 15px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
     font-family: 'MC_caps';
-    font-size: 14px;
-    color: #333;
+    font-size: 16px;
+    color: #555;
     text-decoration: none;
     transition: background 0.2s ease;
 }
@@ -95,11 +96,14 @@
 }
 
 .dropdown-profile__item--guest {
-    padding: 1px 16px;
+    padding: 0 12px;
     cursor: default;
-    text-align: center;
+}
+
+.dropdown-profile__guest-message {
+    text-align: justify;
     line-height: 1.5;
     font-family: 'SF_def', Arial, sans-serif;
     font-size: 14px;
-    color: #999;
+    color: #bbb;
 }
