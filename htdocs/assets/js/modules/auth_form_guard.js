@@ -135,8 +135,10 @@ class AuthFormGuardComponent {
                 if (action === 'registration') {
                     if (!username) this.toggleFieldWarning(usernameField, true);
                     if (!email) this.toggleFieldWarning(identityField, true);
-                    if (!password) this.toggleFieldWarning(passwordField, true);
+                } else if (!login) {
+                    this.toggleFieldWarning(identityField, true);
                 }
+                if (!password) this.toggleFieldWarning(passwordField, true);
                 this.showToast('Заполните все поля');
                 return;
             }
@@ -149,6 +151,7 @@ class AuthFormGuardComponent {
                 }
 
                 if (password.length < 6) {
+                    this.toggleFieldWarning(passwordField, true);
                     this.showToast('Пароль должен быть не короче 6 символов');
                     return;
                 }
@@ -197,6 +200,7 @@ class AuthFormGuardComponent {
     applyFieldError(form, action, errorMessage) {
         const usernameField = form.querySelector('input[name="username"]');
         const identityField = form.querySelector('[data-component="auth-identity-input"]');
+        const passwordField = form.querySelector('input[name="password"]');
         const message = String(errorMessage || 'Ошибка валидации');
 
         if (action === 'registration') {
@@ -205,6 +209,14 @@ class AuthFormGuardComponent {
             }
             if (message.includes('почта') || message.includes('почты') || message.includes('формат')) {
                 this.toggleFieldWarning(identityField, true);
+            }
+            if (message.includes('Пароль')) {
+                this.toggleFieldWarning(passwordField, true);
+            }
+        } else {
+            if (message.includes('логин') || message.includes('пароль') || message.includes('поля')) {
+                this.toggleFieldWarning(identityField, true);
+                this.toggleFieldWarning(passwordField, true);
             }
         }
 

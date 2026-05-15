@@ -71,7 +71,9 @@ $isLoggedIn = !empty($_SESSION['user_id']);
     <div class="dropdown-profile dropdown-profile--hidden dropdown-profile--guest" id="header-dropdown-profile">
         <ul class="dropdown-profile__list">
             <li class="dropdown-profile__item dropdown-profile__item--guest">
-                Для доступа к этим функциям необходимо авторизироваться
+                <div class="dropdown-profile__guest-message">
+                    Для доступа к этим функциям необходимо авторизироваться
+                </div>
             </li>
         </ul>
     </div>

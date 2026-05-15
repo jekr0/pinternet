@@ -51,18 +51,19 @@ class ProfileComponent {
         const placeholderAlt = button.dataset.placeholderAlt || 'Profile';
         const placeholderSize = Number(button.dataset.placeholderSize || 0);
 
-        const img = document.createElement('img');
-        img.classList.add(placeholderClass);
-        img.src = placeholderSrc;
-        img.alt = placeholderAlt;
+        const icon = document.createElement('span');
+        icon.classList.add(placeholderClass);
+        icon.setAttribute('aria-label', placeholderAlt);
+        icon.setAttribute('role', 'img');
 
         if (placeholderSize > 0) {
-            img.width = placeholderSize;
-            img.height = placeholderSize;
+            icon.style.width = `${placeholderSize}px`;
+            icon.style.height = `${placeholderSize}px`;
         }
 
         button.innerHTML = '';
-        button.appendChild(img);
+        button.appendChild(icon);
+        App.utils.loadSVG(placeholderSrc, icon);
     }
 
     handleClick(e, button) {

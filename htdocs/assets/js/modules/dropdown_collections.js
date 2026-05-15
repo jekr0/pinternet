@@ -117,8 +117,8 @@ class DropdownCollectionsComponent {
         if (!this.dropdown) return;
 
         const rect = button.getBoundingClientRect();
-        const width = this.dropdown.offsetWidth || 220;
-        const height = this.dropdown.offsetHeight || 170;
+        const width = this.dropdown.offsetWidth || 196;
+        const height = this.dropdown.offsetHeight || 196;
         const spacing = this.activeCard?.dataset.component === 'post-full' ? 10 : 5;
         const viewportPadding = 10;
 

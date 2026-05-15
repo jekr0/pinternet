@@ -1,18 +1,20 @@
 /* =========================== Выпадающее меню профиля ========================== */
 
+/* Контейнер dropdown профиля под profile-container */
 .dropdown-profile {
     position: absolute;
-    top: 100%;
-    right: 56px;
-    width: 290px;
-    margin-top: 10px;
+    top: calc(100% + 12px);
+    right: 104px;
     z-index: 0;
+    width: 272px;
+    margin-top: 0;
     background: white;
-    border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.14);
+    border-radius: 16px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.14);
     transition: opacity 0.1s ease, visibility 0.1s ease, transform 0.1s ease;
 }
 
+/* Скрытое состояние dropdown профиля */
 .dropdown-profile--hidden {
     transform: translateY(-10px);
     opacity: 0;
@@ -22,83 +24,113 @@
 
 /* Компактная версия для гостя */
 .dropdown-profile--guest {
-    width: 290px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.14);
+    width: 272px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.14);
 }
 
+/* --------------------------- Список ------------------------------------ */
+
+/* Внутренний список с вертикальными отступами */
 .dropdown-profile__list {
     margin: 0;
-    padding: 8px 0;
+    padding: 16px 0;
     list-style: none;
 }
 
+/* Элемент списка без собственных отступов */
 .dropdown-profile__item {
     padding: 0;
 }
 
+/* --------------------------- Информация аккаунта ----------------------- */
+
+/* Заголовок текущего аккаунта */
 .dropdown-profile__item--title {
-    padding: 10px 16px 10px;
+    margin: 0 12px 8px;
     cursor: default;
     user-select: none;
     text-align: center;
     font-family: 'SF_def', Arial, sans-serif;
-    font-size: 18px;
+    font-size: 16px;
     color: #555;
 }
 
+/* Почта и состояние уровня */
 .dropdown-profile__item--info {
-    padding: 3px 15px;
+    margin: 0 12px;
     cursor: default;
     user-select: none;
-    font-family: 'SF_def', Arial, sans-serif;
+    font-family: 'NS_def', Arial, sans-serif;
     font-size: 14px;
     color: #999;
 }
 
+/* Расстояние между почтой и уровнем */
+.dropdown-profile__item--info + .dropdown-profile__item--info {
+    margin-top: 4px;
+}
+
+/* Счётчик уведомлений */
 .dropdown-profile__badge {
     min-width: 14px;
-    margin-right: 5px;
+    margin-left: auto;
     text-align: right;
     font-family: 'MC_caps', Arial, sans-serif;
     font-size: 14px;
     color: rgb(100, 100, 200);
 }
 
+/* Пустой счётчик уведомлений */
 .dropdown-profile__badge--empty {
     color: #999;
 }
 
+/* Разделительная линия */
 .dropdown-profile__divider {
-    width: 90%;
-    height: 1px;
-    margin: 6px auto;
+    height: 2px;
+    margin: 11px 12px;
     background: #E0E0E0;
+    border-radius: 1px;
 }
 
+/* --------------------------- Кнопки ------------------------------------ */
+
+/* Ссылка-кнопка dropdown профиля */
 .dropdown-profile__link {
-    display: block;
-    padding: 5px 15px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
     font-family: 'MC_caps';
-    font-size: 14px;
+    font-size: 16px;
     color: #333;
     text-decoration: none;
     transition: background 0.2s ease;
 }
 
+/* Hover-подложка ссылки-кнопки */
 .dropdown-profile__link:hover {
-    background: rgba(100, 100, 200, 0.075);
+    background: rgba(100, 100, 200, 0.08);
 }
 
+/* Отдельный цвет для выхода из аккаунта */
 .dropdown-profile__link--logout {
     color: rgb(100, 100, 200);
 }
 
+/* --------------------------- Гость ------------------------------------- */
+
+/* Контейнер гостевого сообщения */
 .dropdown-profile__item--guest {
-    padding: 1px 16px;
+    padding: 0 12px;
     cursor: default;
+}
+
+/* Текст гостевого сообщения */
+.dropdown-profile__guest-message {
     text-align: center;
     line-height: 1.5;
     font-family: 'SF_def', Arial, sans-serif;
     font-size: 14px;
-    color: #999;
+    color: #bbb;
 }

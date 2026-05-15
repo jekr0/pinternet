@@ -214,7 +214,7 @@
     width: 28px;
     height: 28px;
     content: '';
-    background-color: rgba(100, 100, 200, 0.1);
+    background-color: rgba(100, 100, 200, 0.08);
     border-radius: 12px;
     opacity: 0;
     pointer-events: none;
