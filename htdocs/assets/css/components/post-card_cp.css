@@ -7,19 +7,20 @@
     overflow: hidden;
     background: #fff;
     border-radius: 24px;
+    box-shadow: 0 0px 0px rgba(0, 0, 0, 0.07);
     transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 /* Подъём карточки при наведении */
 .post-card:hover {
     box-shadow: 0 4px 2px rgba(0, 0, 0, 0.07);
-    transform: translateY(-5px);
+    transform: translateY(-4px);
 }
 
 /* Сохраняем hover-состояние, пока открыт dropdown коллекций */
 .post-card--dropdown-open {
     box-shadow: 0 4px 2px rgba(0, 0, 0, 0.07);
-    transform: translateY(-5px);
+    transform: translateY(-4px);
 }
 
 /* --------------------------- Плашка автора --------------------------- */
