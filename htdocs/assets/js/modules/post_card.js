@@ -89,9 +89,28 @@ class PostCardComponent {
         });
     }
 
+
+    isViewerAuthorized() {
+        return !document.querySelector('.header__profile-container--guest');
+    }
+
+    notifyAuthRequired() {
+        this.showToast('Для этого действия нужно войти в аккаунт.');
+        const profileContainer = document.querySelector('.header__profile-container');
+        if (!profileContainer) return;
+
+        profileContainer.classList.remove('header__profile-container--auth-required');
+        void profileContainer.offsetWidth;
+        profileContainer.classList.add('header__profile-container--auth-required');
+    }
+
     async toggleLike(card, button) {
         const postId = Number(card.dataset.postId || 0);
         if (!postId) return;
+        if (!this.isViewerAuthorized()) {
+            this.notifyAuthRequired();
+            return;
+        }
 
         try {
             const response = await fetch('/posts/like', {
@@ -130,6 +149,10 @@ class PostCardComponent {
     async handleBookmark(card, button) {
         const postId = Number(card.dataset.postId || 0);
         if (!postId) return;
+        if (!this.isViewerAuthorized()) {
+            this.notifyAuthRequired();
+            return;
+        }
         const isOwner = card.dataset.owner === '1';
         const isBookmarked = card.dataset.bookmarked === '1';
 

@@ -13,6 +13,7 @@ if (!$selectedPost) {
     data-owner="<?php echo $selectedIsOwner ? '1' : '0'; ?>"
     data-created-at-ts="<?php echo $selectedPostCreatedTimestamp; ?>"
     data-server-now-ts="<?php echo time(); ?>"
+    data-viewer-id="<?php echo (int) $viewerId; ?>"
     data-viewer-username="<?php echo htmlspecialchars($viewerUsername, ENT_QUOTES, 'UTF-8'); ?>"
     data-viewer-avatar-src="<?php echo htmlspecialchars($viewerAvatar, ENT_QUOTES, 'UTF-8'); ?>"
     data-viewer-profile-url="<?php echo htmlspecialchars($viewerProfileUrl, ENT_QUOTES, 'UTF-8'); ?>"
@@ -55,7 +56,7 @@ if (!$selectedPost) {
                 data-profile-url="<?php echo htmlspecialchars($selectedAuthorProfileUrl, ENT_QUOTES, 'UTF-8'); ?>"
                 data-avatar-class="post-full__author-avatar-image"
                 data-placeholder-class="post-full__author-avatar-placeholder"
-                data-placeholder-size="28"
+                data-placeholder-size="24"
                 aria-label="Профиль автора @<?php echo htmlspecialchars($selectedAuthorUsername, ENT_QUOTES, 'UTF-8'); ?>"
             ></button>
             <div class="post-full__author-meta">
@@ -152,7 +153,7 @@ if (!$selectedPost) {
                                     <?php if ($commentHasAvatar): ?>
                                         <img class="post-full__author-avatar-image" src="<?php echo htmlspecialchars($commentAvatar, ENT_QUOTES, 'UTF-8'); ?>" alt="Аватар @<?php echo htmlspecialchars($commentUsername, ENT_QUOTES, 'UTF-8'); ?>">
                                     <?php else: ?>
-                                        <img class="post-full__author-avatar-placeholder" src="/assets/images/icons/planet.svg" alt="Профиль" width="28" height="28">
+                                        <img class="post-full__author-avatar-placeholder" src="/assets/images/icons/planet.svg" alt="Профиль" width="24" height="24">
                                     <?php endif; ?>
                                 </a>
                                 <span class="post-full__comment-rail" aria-hidden="true"></span>
