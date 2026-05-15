@@ -177,5 +177,6 @@
 
 @keyframes header-profile-auth-required {
     0% { border-color: #e0e0e0; }
-    100% { border-color: rgb(100, 100, 200); }
+    12% { border-color: rgb(100, 100, 200); }
+    100% { border-color: #e0e0e0; }
 }
