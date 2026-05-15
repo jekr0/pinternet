@@ -3,7 +3,7 @@
 /* Сохраняем hover-состояние карточки, пока открыт dropdown */
 .post-card--dropdown-open {
     box-shadow: 0 4px 2px rgba(0, 0, 0, 0.07);
-    transform: translateY(-5px);
+    transform: translateY(-4px);
 }
 
 /* Показываем плашку автора при открытом dropdown */
@@ -25,7 +25,7 @@
     position: fixed;
     z-index: 50;
     width: 196px;
-    height: 220px;
+    height: 240px;
     box-sizing: border-box;
     background: #fff;
     border-radius: 12px;
@@ -54,30 +54,16 @@
     transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease;
 }
 
-/* --------------------------- Заголовок --------------------------------- */
-
-/* Заголовок dropdown по центру верхней части */
-.dropdown-collections__title {
-    position: absolute;
-    top: 12px;
-    left: 12px;
-    right: 12px;
-    margin: 0;
-    text-align: center;
-    font-family: 'SF_def', Arial, sans-serif;
-    font-size: 16px;
-    color: #555;
-}
-
 /* --------------------------- Список коллекций -------------------------- */
 
 /* Скролл со списком коллекций */
 .dropdown-collections__collection-list {
     position: absolute;
-    top: 44px;
+    top: 16px;
     left: 12px;
     width: 172px;
     height: 112px;
+    box-sizing: border-box;
     margin: 0;
     padding: 0;
     overflow-y: auto;
@@ -138,27 +124,49 @@
 
 /* Кнопка добавления коллекции */
 .dropdown-collections__collection-item--add {
+    height: 26px;
     text-align: center;
     font-size: 20px;
     color: #bbb;
 }
 
-/* --------------------------- Удалить ----------------------------------- */
+/* --------------------------- Действия ---------------------------------- */
 
-/* Кнопка удаления поста из коллекций */
+/* Общие размеры и типографика кнопок действий */
+.dropdown-collections__save-button,
 .dropdown-collections__clear-button {
     position: absolute;
     left: 12px;
-    bottom: 16px;
     width: 172px;
     height: 36px;
-    border: 1.5px solid rgb(100, 100, 200);
+    box-sizing: border-box;
     border-radius: 8px;
-    background: #fff;
     font-family: 'SF_def', Arial, sans-serif;
     font-size: 16px;
-    color: rgb(100, 100, 200);
     cursor: pointer;
+}
+
+/* Кнопка сохранения и закрытия dropdown */
+.dropdown-collections__save-button {
+    top: 140px;
+    border: 1.5px solid rgb(100, 100, 200);
+    background: rgb(100, 100, 200);
+    color: #fff;
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+/* Hover-состояние кнопки сохранения */
+.dropdown-collections__save-button:hover {
+    border-color: rgb(125, 125, 225);
+    background: rgb(125, 125, 225);
+}
+
+/* Кнопка удаления поста из коллекций */
+.dropdown-collections__clear-button {
+    bottom: 16px;
+    border: 1.5px solid rgb(100, 100, 200);
+    background: #fff;
+    color: rgb(100, 100, 200);
     transition: border-color 0.2s ease, color 0.2s ease;
 }
 

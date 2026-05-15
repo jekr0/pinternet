@@ -3,8 +3,8 @@
 class DropdownCollectionsComponent {
     constructor() {
         this.dropdown = null;
-        this.title = null;
         this.list = null;
+        this.saveButton = null;
         this.clearButton = null;
         this.activeButton = null;
         this.activeCard = null;
@@ -57,16 +57,23 @@ class DropdownCollectionsComponent {
             this.dropdown.className = 'dropdown-collections';
             this.dropdown.setAttribute('aria-hidden', 'true');
             this.dropdown.innerHTML = `
-                <h3 class="dropdown-collections__title">Сохранить пост</h3>
                 <ul class="dropdown-collections__collection-list"></ul>
-                <button class="dropdown-collections__clear-button" type="button">Удалить</button>
+                <button class="dropdown-collections__save-button" type="button">Сохранить</button>
+                <button class="dropdown-collections__clear-button" type="button">Удалить везде</button>
             `;
             document.body.appendChild(this.dropdown);
         }
 
-        this.title = this.dropdown.querySelector('.dropdown-collections__title');
         this.list = this.dropdown.querySelector('.dropdown-collections__collection-list');
+        this.saveButton = this.dropdown.querySelector('.dropdown-collections__save-button');
         this.clearButton = this.dropdown.querySelector('.dropdown-collections__clear-button');
+
+        if (this.saveButton && this.saveButton.dataset.bound !== '1') {
+            this.saveButton.dataset.bound = '1';
+            this.saveButton.addEventListener('click', () => {
+                this.close();
+            });
+        }
 
         if (this.clearButton && this.clearButton.dataset.bound !== '1') {
             this.clearButton.dataset.bound = '1';
