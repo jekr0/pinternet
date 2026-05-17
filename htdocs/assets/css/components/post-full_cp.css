@@ -9,7 +9,8 @@
     min-height: auto;
     border-radius: 24px;
     background: #fff;
-    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.07);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    transform: translateY(-4px);
     display: none;
 }
 
@@ -50,7 +51,7 @@
     position: absolute;
     inset: 0;
     z-index: 1;
-    background: rgba(0, 0, 0, 0.25);
+    background: rgba(0, 0, 0, 0.2);
 }
 
 .post-full__image {
@@ -140,8 +141,8 @@
 
 .post-full__author-meta {
     display: flex;
-    align-items: center;
-    height: 30px;
+    align-items: last baseline;
+    height: 36px;
 }
 
 .post-full__author-avatar {
@@ -164,7 +165,7 @@
     position: absolute;
     inset: 0;
     border-radius: 12px;
-    background-color: rgba(0, 0, 0, 0.1);
+    background-color: rgba(0, 0, 0, 0.2);
     opacity: 0;
     transition: opacity 0.1s ease;
     pointer-events: none;
@@ -199,37 +200,35 @@
 }
 
 .post-full__author-meta-separator {
-    width: 4px;
-    height: 4px;
+    width: 6px;
+    height: 6px;
     margin-left: 12px;
     margin-right: 12px;
     border-radius: 50%;
     background: #bbb;
     flex: 0 0 auto;
+    margin-top: 6px;
     align-self: center;
-    margin-top: 5px;
 }
 
 .post-full__author-published-at {
     font-family: 'SF_def', Arial, sans-serif;
     font-size: 20px;
-    line-height: 1;
+    line-height: 1.5;
     color: #bbb;
     white-space: nowrap;
     user-select: none;
-    margin-bottom: 1px;
-    align-self: flex-end;
 }
 
 /* ------------------------------ Описание и теги ------------------------------ */
 
 .post-full__description {
     width: calc(100% - 32px);
-    margin: 16px 16px 12px;
+    margin: 16px 16px 8px;
     position: relative;
     font-family: 'NS_def', Arial, sans-serif;
-    font-size: 20px;
-    line-height: 1.3;
+    font-size: 22px;
+    line-height: 1;
     color: #333;
     text-align: justify;
     text-align-last: left;
@@ -259,7 +258,7 @@
     transform: translate(-50%, 10px);
     z-index: 60;
     min-width: 180px;
-    height: 34px;
+    height: 36px;
     border: 2px solid #e0e0e0;
     border-radius: 12px;
     background: #fff;
@@ -400,7 +399,7 @@
     flex: 1 1 auto;
     height: 2px;
     background: #e0e0e0;
-    border-radius: 1px;
+    border-radius: 50%;
 }
 
 .post-full__description-divider.has-controls .post-full__description-divider-line {
@@ -418,11 +417,11 @@
 .post-full__comments-empty {
     font-family: 'SF_def', Arial, sans-serif;
     font-size: 20px;
-    line-height: 1.3;
+    line-height: 1;
     color: #bbb;
     text-align: center;
     user-select: none;
-    margin-bottom: 50px;
+    margin-bottom: 32px;
 }
 
 .post-full__comments-list {
@@ -466,11 +465,11 @@
 }
 
 .post-full__comment-rail {
-    width: 2.5px;
+    width: 2px;
     height: 0;
-    margin-top: 5px;
+    margin-top: 4px;
     background: #e0e0e0;
-    border-radius: 1px;
+    border-radius: 2px;
 }
 
 .post-full__comment-content {
@@ -478,16 +477,10 @@
     min-width: 0;
 }
 
-.post-full__comment-meta {
-    display: flex;
-    align-items: center;
-    min-height: 40px;
-}
-
 .post-full__comment-meta-main {
     display: flex;
-    align-items: center;
-    height: 25px;
+    align-items: last baseline;
+    height: 36px;
 }
 
 .post-full__comment-username {
@@ -496,6 +489,7 @@
     line-height: 1;
     color: #333;
     text-decoration: none;
+    margin-bottom: 6px;
 }
 
 .post-full__comment-username:hover {
@@ -505,33 +499,28 @@
 .post-full__comment-meta-separator {
     width: 4px;
     height: 4px;
-    margin-left: 10px;
-    margin-right: 10px;
+    margin-left: 8px;
+    margin-right: 8px;
+    margin-top: 6px;
     border-radius: 50%;
     background: #bbb;
-    flex: 0 0 auto;
     align-self: center;
-    margin-top: 5px;
 }
 
 .post-full__comment-published-at {
     font-family: 'SF_def', Arial, sans-serif;
-    font-size: 16px;
+    font-size: 17px;
     line-height: 1;
     color: #bbb;
     user-select: none;
-    margin-bottom: 1px;
-    align-self: flex-end;
 }
 
 .post-full__comment-reply-label {
     font-family: 'SF_def', Arial, sans-serif;
-    font-size: 16px;
+    font-size: 17px;
     line-height: 1;
     color: #bbb;
     user-select: none;
-    margin-bottom: 1px;
-    align-self: flex-end;
 }
 
 .post-full__comment-reply-target {
@@ -552,8 +541,10 @@
 
 .post-full__comment-text {
     font-family: 'NS_def', sans-serif;
-    font-size: 20px;
-    line-height: 1.3;
+    font-size: 18px;
+    margin-top: 8px;
+    margin-bottom: 12px;
+    line-height: 1;
     color: #333;
     text-align: justify;
     text-align-last: left;
@@ -561,29 +552,30 @@
 }
 
 .post-full__comment-actions {
-    margin-top: 5px;
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 12px;
 }
 
 .post-full__comment-action-button {
     width: auto;
-    min-width: 15px;
+    min-width: 20px;
     height: 20px;
     border: none;
     background: transparent;
     color: #bbb;
+    background-color: rgba(100, 100, 200, 0);
     padding: 0;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: color 0.2s ease;
+    transition: color 0.2s ease, background 0.2s ease;
 }
 
 .post-full__comment-action-button:not(.is-active):hover {
     color: rgb(150, 150, 250);
+    background-color: rgba(100, 100, 200, 0.08);
 }
 
 .post-full__comment-action-button.is-active {
@@ -592,11 +584,12 @@
 
 .post-full__comment-action-button.is-active:hover {
     color: rgb(100, 100, 200);
+    background-color: rgba(100, 100, 200, 0.08);
 }
 
 .post-full__comment-action-icon {
-    width: 15px;
-    height: 15px;
+    width: 16px;
+    height: 16px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -604,11 +597,10 @@
 
 .post-full__comment-action-button--reply {
     font-family: 'SF_def', Arial, sans-serif;
-    font-size: 15px;
-    line-height: 20px;
+    font-size: 16px;
+    line-height: 1;
     color: #bbb;
     text-decoration: none;
-    margin-left: -5px;
 }
 
 .post-full__comment-action-button--reply:hover {
@@ -622,15 +614,13 @@
 }
 
 .post-full__comment-like-count {
-    width: 20px;
-    height: 20px;
-    font-family: 'SF_def', Arial, sans-serif;
-    font-size: 15px;
-    line-height: 20px;
+    font-family: 'NS_def', Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1;
     color: #bbb;
     text-align: center;
     user-select: none;
-    margin-left: -10px;
+    margin-left: -4px;
 }
 
 .post-full__comment-like-count.is-active {
