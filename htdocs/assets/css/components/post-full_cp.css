@@ -1010,15 +1010,18 @@
     font-weight: 400;
     line-height: 40px;
     color: rgb(100, 100, 200);
+    text-align: center;
 }
 
 .post-full-report__description {
     margin: 24px 0 0;
-    min-height: 480px;
+    height: 80px;
     font-family: 'NS_def', Arial, sans-serif;
     font-size: 20px;
     line-height: 1.4;
     color: #333;
+    text-align: justify;
+    text-justify: inter-word;
 }
 
 .post-full-report__actions {
@@ -1034,7 +1037,7 @@
     font-family: 'SF_def', Arial, sans-serif;
     font-size: 16px;
     cursor: pointer;
-    transition: border-color 0.2s ease, background 0.2s ease;
+    transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
 }
 
 .post-full-report__button--cancel {
@@ -1055,5 +1058,5 @@
 }
 
 .post-full-report__button--confirm:hover {
-    opacity: 0.8;
+    background: rgb(125, 125, 225);
 }
