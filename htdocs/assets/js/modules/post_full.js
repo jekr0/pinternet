@@ -253,32 +253,66 @@ class PostFullComponent {
         const commentInput = this.postFullElement?.querySelector('[data-component="post-full-comment-input"]');
         const commentCounter = this.postFullElement?.querySelector('[data-component="post-full-comment-counter"]');
         if (!commentInput || !commentCounter) return;
+        const staticWrap = commentInput.closest('.post-full__comment-input-wrap');
+        if (!staticWrap) return;
 
-        const updateCounter = () => {
-            commentCounter.textContent = `${commentInput.value.length}/256`;
+        let floatingWrap = this.postFullElement.querySelector('[data-component="post-full-comment-input-floating-wrap"]');
+        let floatingInput = floatingWrap?.querySelector('[data-component="post-full-comment-input-floating"]') || null;
+        let floatingCounter = floatingWrap?.querySelector('[data-component="post-full-comment-counter-floating"]') || null;
+
+        if (!floatingWrap) {
+            floatingWrap = document.createElement('div');
+            floatingWrap.className = 'post-full__comment-input-wrap post-full__comment-input-wrap--floating';
+            floatingWrap.dataset.component = 'post-full-comment-input-floating-wrap';
+            floatingWrap.innerHTML = `
+                <textarea class="post-full__comment-input" data-component="post-full-comment-input-floating" placeholder="Оставить комментарий" maxlength="256" aria-label="Оставить комментарий"></textarea>
+                <span class="post-full__comment-counter" data-component="post-full-comment-counter-floating">0/256</span>
+            `;
+            this.postFullElement.appendChild(floatingWrap);
+            floatingInput = floatingWrap.querySelector('[data-component="post-full-comment-input-floating"]');
+            floatingCounter = floatingWrap.querySelector('[data-component="post-full-comment-counter-floating"]');
+        }
+
+        const syncTextAndCounters = (sourceInput, targetInput) => {
+            if (targetInput && targetInput.value !== sourceInput.value) {
+                targetInput.value = sourceInput.value;
+            }
+            const value = sourceInput.value;
+            commentCounter.textContent = `${value.length}/256`;
+            if (floatingCounter) {
+                floatingCounter.textContent = `${value.length}/256`;
+            }
             this.autoResizeCommentInput(commentInput);
+            if (floatingInput) {
+                this.autoResizeCommentInput(floatingInput);
+            }
         };
 
-        commentInput.addEventListener('input', updateCounter);
-        commentInput.addEventListener('keydown', async (event) => {
+        const bindInputHandlers = (input, mirrorInput) => {
+            if (!input) return;
+            input.addEventListener('input', () => syncTextAndCounters(input, mirrorInput));
+            input.addEventListener('keydown', async (event) => {
             if (event.key === 'Tab' && event.ctrlKey) {
                 event.preventDefault();
-                const start = commentInput.selectionStart ?? commentInput.value.length;
-                const end = commentInput.selectionEnd ?? commentInput.value.length;
-                const currentValue = commentInput.value;
-                commentInput.value = `${currentValue.slice(0, start)}\n${currentValue.slice(end)}`;
-                commentInput.selectionStart = commentInput.selectionEnd = start + 1;
-                commentInput.dispatchEvent(new Event('input', { bubbles: true }));
+                const start = input.selectionStart ?? input.value.length;
+                const end = input.selectionEnd ?? input.value.length;
+                const currentValue = input.value;
+                input.value = `${currentValue.slice(0, start)}\n${currentValue.slice(end)}`;
+                input.selectionStart = input.selectionEnd = start + 1;
+                input.dispatchEvent(new Event('input', { bubbles: true }));
                 return;
             }
 
             if (event.key !== 'Enter' || event.shiftKey) return;
 
             event.preventDefault();
-            await this.submitComment(commentInput);
+            await this.submitComment(input);
         });
+        };
 
-        updateCounter();
+        bindInputHandlers(commentInput, floatingInput);
+        bindInputHandlers(floatingInput, commentInput);
+        syncTextAndCounters(commentInput, floatingInput);
     }
 
     bindCommentActions() {
@@ -632,13 +666,12 @@ class PostFullComponent {
     updateCommentInputFloatingPosition() {
         if (!this.postFullElement) return;
         const inputWrap = this.postFullElement.querySelector('.post-full__comment-input-wrap');
+        const floatingWrap = this.postFullElement.querySelector('[data-component="post-full-comment-input-floating-wrap"]');
         const commentsBlock = this.postFullElement.querySelector('.post-full__comments-block');
-        if (!inputWrap || !commentsBlock) return;
+        if (!inputWrap || !commentsBlock || !floatingWrap) return;
 
         if (!this.commentsExpanded) {
-            inputWrap.classList.remove('is-floating');
-            inputWrap.style.left = '';
-            inputWrap.style.width = '';
+            floatingWrap.classList.remove('is-visible');
             return;
         }
 
@@ -647,15 +680,13 @@ class PostFullComponent {
         const shouldFloat = commentsRect.bottom > window.innerHeight && postRect.bottom > (window.innerHeight - 24);
 
         if (!shouldFloat) {
-            inputWrap.classList.remove('is-floating');
-            inputWrap.style.left = '';
-            inputWrap.style.width = '';
+            floatingWrap.classList.remove('is-visible');
             return;
         }
 
-        inputWrap.style.left = `${Math.round(commentsRect.left)}px`;
-        inputWrap.style.width = `${Math.round(commentsRect.width)}px`;
-        inputWrap.classList.add('is-floating');
+        floatingWrap.style.left = `${Math.round(commentsRect.left)}px`;
+        floatingWrap.style.width = `${Math.round(commentsRect.width)}px`;
+        floatingWrap.classList.add('is-visible');
     }
 
     applyCommentChildrenState() {
@@ -909,6 +940,15 @@ class PostFullComponent {
             const commentCounter = this.postFullElement?.querySelector('[data-component="post-full-comment-counter"]');
             if (commentCounter) {
                 commentCounter.textContent = '0/256';
+            }
+            const floatingInput = this.postFullElement?.querySelector('[data-component="post-full-comment-input-floating"]');
+            const floatingCounter = this.postFullElement?.querySelector('[data-component="post-full-comment-counter-floating"]');
+            if (floatingInput) {
+                floatingInput.value = '';
+                this.autoResizeCommentInput(floatingInput);
+            }
+            if (floatingCounter) {
+                floatingCounter.textContent = '0/256';
             }
             this.autoResizeCommentInput(commentInput);
 

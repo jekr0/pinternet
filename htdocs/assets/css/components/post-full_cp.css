@@ -212,7 +212,7 @@
 
 .post-full__author-published-at {
     font-family: 'SF_def', Arial, sans-serif;
-    font-size: 22px;
+    font-size: 20px;
     line-height: 1.5;
     color: #bbb;
     white-space: nowrap;
@@ -597,6 +597,7 @@
 .post-full__comment-action-button--reply:hover {
     color: rgb(150, 150, 250);
     text-decoration: underline;
+    background-color: transparent;
 }
 
 .post-full__comment-action-button--like {
@@ -636,6 +637,18 @@
     position: relative;
     width: 100%;
     margin-bottom: 24px;
+}
+
+.post-full__comment-input-wrap--floating {
+    position: fixed;
+    bottom: 24px;
+    z-index: 20;
+    margin-bottom: 0;
+    display: none;
+}
+
+.post-full__comment-input-wrap--floating.is-visible {
+    display: block;
 }
 
 .post-full__comment-input-wrap.is-floating {
@@ -778,23 +791,23 @@
 
 .post-full__comment-input {
     width: 100%;
-    height: 40px;
     min-height: 40px;
-    padding: 8px 14px;
+    padding: 0 14px;
     box-sizing: border-box;
     outline: none;
     resize: none;
     overflow: hidden;
     font-family: 'NS_def', Arial, sans-serif;
-    font-size: 22px;
+    font-size: 16px;
     color: #333;
     background: #fff;
-    border: 1.5px solid #e0e0e0;
+    border: 1px solid #e0e0e0;
     border-radius: 12px;
     transition: border-color 0.2s ease;
 }
 
 .post-full__comment-input::placeholder {
+    font-size: 16px;
     color: #bbb;
 }
 
@@ -1002,7 +1015,7 @@
 
 .post-full-report__panel {
     width: 584px;
-    height: 300px;
+    height: 248px;
     padding: 40px 52px;
     box-sizing: border-box;
     display: flex;
@@ -1027,7 +1040,7 @@
     margin: 12px 0 0;
     min-height: 0;
     font-family: 'NS_def', Arial, sans-serif;
-    font-size: 20px;
+    font-size: 18px;
     line-height: 1.4;
     color: #333;
     text-align: justify;
