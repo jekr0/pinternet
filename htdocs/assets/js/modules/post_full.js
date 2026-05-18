@@ -332,7 +332,7 @@ class PostFullComponent {
         this.ensureDescriptionHideButtons();
         this.descriptionExpanded = false;
         this.descriptionElement.classList.add('is-collapsed');
-        this.updateDescriptionHideButtonPosition();
+        this.hideDescriptionHideButton();
         this.descriptionElement.addEventListener('click', () => {
             if (!this.descriptionSupportsCollapse || this.descriptionExpanded) return;
             this.expandDescription();
@@ -1046,10 +1046,10 @@ class PostFullComponent {
                 </div>
                 <p class="post-full__comment-text">${this.escapeHtmlWithBreaks(commentData.content || '')}</p>
                 <div class="post-full__comment-actions" aria-label="Действия с комментарием">
-                    <button class="post-full__comment-action-button${isLiked ? ' is-active' : ''}" type="button" data-action="comment-like" aria-label="Лайк комментария">
+                    <button class="post-full__comment-action-button post-full__comment-action-button--like${isLiked ? ' is-active' : ''}" type="button" data-action="comment-like" aria-label="Лайк комментария">
                         <span class="post-full__comment-action-icon" data-svg-src="${isLiked ? '/assets/images/icons/U-heart-fill.svg' : '/assets/images/icons/S-heart.svg'}" aria-hidden="true"></span>
+                        <span class="post-full__comment-like-count${isLiked ? ' is-active' : ''}">${Math.max(0, likesCount)}</span>
                     </button>
-                    <span class="post-full__comment-like-count${isLiked ? ' is-active' : ''}">${Math.max(0, likesCount)}</span>
                     <button class="post-full__comment-action-button post-full__comment-action-button--reply" type="button" data-action="comment-reply" aria-label="Ответить на комментарий">
                         Ответить
                     </button>

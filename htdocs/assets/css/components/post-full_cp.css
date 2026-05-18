@@ -458,7 +458,7 @@
 .post-full__comment-rail {
     width: 2px;
     height: 0;
-    margin-top: 6px;
+    margin-top: 2px;
     background: #e0e0e0;
     border-radius: 2px;
 }
@@ -556,7 +556,8 @@
     background: transparent;
     color: #bbb;
     background-color: rgba(100, 100, 200, 0);
-    padding: 0;
+    padding: 0 6px;
+    border-radius: 8px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -592,11 +593,18 @@
     line-height: 1;
     color: #bbb;
     text-decoration: none;
+    background-color: transparent;
 }
 
 .post-full__comment-action-button--reply:hover {
     color: rgb(150, 150, 250);
     text-decoration: underline;
+    background-color: transparent;
+}
+
+.post-full__comment-action-button--like {
+    gap: 6px;
+    padding-left: 4px;
 }
 
 .post-full__comment-action-icon svg {
@@ -611,7 +619,7 @@
     color: #bbb;
     text-align: center;
     user-select: none;
-    margin-left: -4px;
+    margin-left: 0;
 }
 
 .post-full__comment-like-count.is-active {
