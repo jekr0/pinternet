@@ -212,7 +212,7 @@
 
 .post-full__author-published-at {
     font-family: 'SF_def', Arial, sans-serif;
-    font-size: 20px;
+    font-size: 22px;
     line-height: 1.5;
     color: #bbb;
     white-space: nowrap;
@@ -635,7 +635,14 @@
 .post-full__comment-input-wrap {
     position: relative;
     width: 100%;
-    margin-bottom: 20px;
+    margin-bottom: 24px;
+}
+
+.post-full__comment-input-wrap.is-floating {
+    position: fixed;
+    bottom: 24px;
+    z-index: 20;
+    margin-bottom: 0;
 }
 
 .post-full__comments-toggle-divider {
@@ -771,14 +778,15 @@
 
 .post-full__comment-input {
     width: 100%;
-    min-height: 50px;
-    padding: 12px 14px 24px;
+    height: 40px;
+    min-height: 40px;
+    padding: 8px 14px;
     box-sizing: border-box;
     outline: none;
     resize: none;
     overflow: hidden;
     font-family: 'NS_def', Arial, sans-serif;
-    font-size: 20px;
+    font-size: 22px;
     color: #333;
     background: #fff;
     border: 1.5px solid #e0e0e0;
@@ -994,9 +1002,11 @@
 
 .post-full-report__panel {
     width: 584px;
-    min-height: 300px;
-    padding: 40px 52px 52px;
+    height: 300px;
+    padding: 40px 52px;
     box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
     border-radius: 24px;
     background: #fff;
     box-shadow: 0 2px 3px rgba(0, 0, 0, 0.07);
@@ -1014,8 +1024,8 @@
 }
 
 .post-full-report__description {
-    margin: 24px 0 0;
-    height: 80px;
+    margin: 12px 0 0;
+    min-height: 0;
     font-family: 'NS_def', Arial, sans-serif;
     font-size: 20px;
     line-height: 1.4;
@@ -1025,7 +1035,7 @@
 }
 
 .post-full-report__actions {
-    margin-top: 24px;
+    margin-top: auto;
     display: flex;
     gap: 12px;
 }

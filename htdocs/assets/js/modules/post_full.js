@@ -42,6 +42,7 @@ class PostFullComponent {
         this.scrollTopButton = null;
         this.scrollTopButtonHandler = null;
         this.scrollTopHideTimer = null;
+        this.commentInputFloatingHandler = null;
         this.postEditMode = false;
         this.descriptionEditor = null;
     }
@@ -79,6 +80,9 @@ class PostFullComponent {
             this.descriptionHideScrollHandler = () => this.updateDescriptionHideButtonPosition();
             window.addEventListener('scroll', this.descriptionHideScrollHandler, { passive: true });
             window.addEventListener('resize', this.descriptionHideScrollHandler);
+            this.commentInputFloatingHandler = () => this.updateCommentInputFloatingPosition();
+            window.addEventListener('scroll', this.commentInputFloatingHandler, { passive: true });
+            window.addEventListener('resize', this.commentInputFloatingHandler);
             this.initScrollTopButton();
         }
 
@@ -618,8 +622,40 @@ class PostFullComponent {
         if (hiddenCount > 0 && this.commentsExpanded) {
             toggleButton.textContent = 'Скрыть комментарии';
             toggleButton.style.display = '';
+            this.updateCommentInputFloatingPosition();
             return;
         }
+
+        this.updateCommentInputFloatingPosition();
+    }
+
+    updateCommentInputFloatingPosition() {
+        if (!this.postFullElement) return;
+        const inputWrap = this.postFullElement.querySelector('.post-full__comment-input-wrap');
+        const commentsBlock = this.postFullElement.querySelector('.post-full__comments-block');
+        if (!inputWrap || !commentsBlock) return;
+
+        if (!this.commentsExpanded) {
+            inputWrap.classList.remove('is-floating');
+            inputWrap.style.left = '';
+            inputWrap.style.width = '';
+            return;
+        }
+
+        const commentsRect = commentsBlock.getBoundingClientRect();
+        const postRect = this.postFullElement.getBoundingClientRect();
+        const shouldFloat = commentsRect.bottom > window.innerHeight && postRect.bottom > (window.innerHeight - 24);
+
+        if (!shouldFloat) {
+            inputWrap.classList.remove('is-floating');
+            inputWrap.style.left = '';
+            inputWrap.style.width = '';
+            return;
+        }
+
+        inputWrap.style.left = `${Math.round(commentsRect.left)}px`;
+        inputWrap.style.width = `${Math.round(commentsRect.width)}px`;
+        inputWrap.classList.add('is-floating');
     }
 
     applyCommentChildrenState() {
@@ -1157,7 +1193,7 @@ class PostFullComponent {
 
                 const description = document.createElement('p');
                 description.className = 'post-full-report__description';
-                description.textContent = 'После отправки жалобы комментарий будет проверен модерацией на соответствие правилам площадки. Мы уведомим вас, когда решение будет принято.';
+                description.textContent = 'После отправки жалобы комментарий будет проверен модерацией на несоответствие правилам площадки. Мы уведомим вас, когда решение будет принято.';
 
                 const actions = document.createElement('div');
                 actions.className = 'post-full-report__actions';
@@ -1681,25 +1717,15 @@ class PostFullComponent {
     }
 
     setZoomScale(nextScale) {
-        const previousScale = this.zoomScale;
         const clampedScale = Math.min(3, Math.max(0.5, Number(nextScale.toFixed(2))));
-        if (Math.abs(clampedScale - previousScale) < 0.001) return;
+        if (Math.abs(clampedScale - this.zoomScale) < 0.001) return;
 
         this.zoomScale = clampedScale;
-
-        const viewportCenterX = window.innerWidth / 2;
-        const viewportCenterY = window.innerHeight / 2;
-
-        this.zoomPanX = this.calculateCenteredPanAfterScale(this.zoomPanX, viewportCenterX, previousScale, this.zoomScale);
-        this.zoomPanY = this.calculateCenteredPanAfterScale(this.zoomPanY, viewportCenterY, previousScale, this.zoomScale);
+        this.zoomPanX = 0;
+        this.zoomPanY = 0;
 
         this.clampZoomPan();
         this.applyZoomTransform();
-    }
-
-    calculateCenteredPanAfterScale(currentPan, anchor, previousScale, nextScale) {
-        const center = anchor;
-        return center - ((center - currentPan) * (nextScale / previousScale));
     }
 
     clampZoomPan() {
@@ -1740,7 +1766,7 @@ class PostFullComponent {
 
                 const description = document.createElement('p');
                 description.className = 'post-full-report__description';
-                description.textContent = 'После отправки жалобы пост будет проверен модерацией на соответствие правилам площадки. Мы уведомим вас, когда решение будет принято.';
+                description.textContent = 'После отправки жалобы пост будет проверен модерацией на несоответствие правилам площадки. Мы уведомим вас, когда решение будет принято.';
 
                 const actions = document.createElement('div');
                 actions.className = 'post-full-report__actions';
