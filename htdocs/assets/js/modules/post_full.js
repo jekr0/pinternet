@@ -1152,8 +1152,12 @@ class PostFullComponent {
             panelClass: 'post-full-report__panel',
             buildPanel: (panel, close) => {
                 const text = document.createElement('p');
-                text.className = 'post-full-report__text';
-                text.textContent = 'Пожаловаться на комментарий?';
+                text.className = 'post-full-report__title';
+                text.textContent = 'Подать жалобу на комментарий?';
+
+                const description = document.createElement('p');
+                description.className = 'post-full-report__description';
+                description.textContent = 'После отправки жалобы комментарий будет проверен модерацией на соответствие правилам площадки. Мы уведомим вас, когда решение будет принято.';
 
                 const actions = document.createElement('div');
                 actions.className = 'post-full-report__actions';
@@ -1175,6 +1179,7 @@ class PostFullComponent {
                 actions.appendChild(cancelButton);
                 actions.appendChild(reportButton);
                 panel.appendChild(text);
+                panel.appendChild(description);
                 panel.appendChild(actions);
             }
         });
@@ -1730,8 +1735,12 @@ class PostFullComponent {
             panelClass: 'post-full-report__panel',
             buildPanel: (panel, close) => {
                 const text = document.createElement('p');
-                text.className = 'post-full-report__text';
-                text.textContent = 'Пожаловаться на пост?';
+                text.className = 'post-full-report__title';
+                text.textContent = 'Подать жалобу на пост?';
+
+                const description = document.createElement('p');
+                description.className = 'post-full-report__description';
+                description.textContent = 'После отправки жалобы пост будет проверен модерацией на соответствие правилам площадки. Мы уведомим вас, когда решение будет принято.';
 
                 const actions = document.createElement('div');
                 actions.className = 'post-full-report__actions';
@@ -1753,6 +1762,7 @@ class PostFullComponent {
                 actions.appendChild(cancelButton);
                 actions.appendChild(reportButton);
                 panel.appendChild(text);
+                panel.appendChild(description);
                 panel.appendChild(actions);
             }
         });
