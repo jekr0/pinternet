@@ -10,7 +10,6 @@
     border-radius: 24px;
     background: #fff;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-    transform: translateY(-4px);
     display: none;
 }
 
@@ -399,7 +398,7 @@
     flex: 1 1 auto;
     height: 2px;
     background: #e0e0e0;
-    border-radius: 50%;
+    border-radius: 1px;
 }
 
 .post-full__description-divider.has-controls .post-full__description-divider-line {
@@ -416,12 +415,12 @@
 
 .post-full__comments-empty {
     font-family: 'SF_def', Arial, sans-serif;
-    font-size: 20px;
+    font-size: 18px;
     line-height: 1;
     color: #bbb;
     text-align: center;
     user-select: none;
-    margin-bottom: 32px;
+    margin-top: 8px;
 }
 
 .post-full__comments-list {
@@ -438,7 +437,7 @@
 .post-full__comment-children {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 20px;
     margin-top: 20px;
 }
 
@@ -446,14 +445,6 @@
     display: flex;
     align-items: flex-start;
     gap: 12px;
-}
-
-.post-full__comment-item--reply {
-    margin-left: 0;
-}
-
-.post-full__comment-avatar {
-    flex: 0 0 auto;
 }
 
 .post-full__comment-side {
@@ -467,7 +458,7 @@
 .post-full__comment-rail {
     width: 2px;
     height: 0;
-    margin-top: 4px;
+    margin-top: 6px;
     background: #e0e0e0;
     border-radius: 2px;
 }
@@ -662,10 +653,9 @@
     padding: 0;
     font-family: 'SF_def', Arial, sans-serif;
     font-size: 14px;
-    line-height: 1.2;
+    line-height: 1;
     color: #bbb;
     cursor: pointer;
-    margin-bottom: 3px;
     transition: color 0.2s ease;
 }
 
@@ -683,9 +673,8 @@
 }
 
 .post-full__comment-reply-state {
-    margin-left: 10px;
-    margin-bottom: 10px;
-    min-height: 20px;
+    margin-left: 8px;
+    margin-bottom: 8px;
     visibility: hidden;
     pointer-events: none;
     display: flex;
@@ -702,6 +691,7 @@
     font-family: 'SF_def', Arial, sans-serif;
     font-size: 18px;
     line-height: 1;
+    user-select: none;
     color: #bbb;
 }
 
@@ -711,7 +701,7 @@
     width: 20px;
     height: 20px;
     border: none;
-    border-radius: 5px;
+    border-radius: 8px;
     background: transparent;
     color: #bbb;
     padding: 0;
@@ -742,10 +732,9 @@
     width: 20px;
     height: 20px;
     border: none;
-    border-radius: 5px;
+    border-radius: 8px;
     background: transparent;
     color: rgb(150, 150, 250);
-    margin-top: 0;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -760,7 +749,6 @@
 
 .post-full__comment-children-toggle:focus-visible {
     outline: 1.5px solid rgb(150, 150, 250);
-    outline-offset: 1px;
 }
 
 .post-full__comment-reply-nickname {
