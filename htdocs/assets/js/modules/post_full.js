@@ -783,9 +783,28 @@ class PostFullComponent {
         return Number(this.postFullElement?.dataset.postId || 0);
     }
 
+
+    isViewerAuthorized() {
+        return Number(this.postFullElement?.dataset.viewerId || 0) > 0;
+    }
+
+    notifyAuthRequired() {
+        this.showToast('Для этого действия нужно войти в аккаунт.');
+        const profileContainer = document.querySelector('.header__profile-container');
+        if (!profileContainer) return;
+
+        profileContainer.classList.remove('header__profile-container--auth-required');
+        void profileContainer.offsetWidth;
+        profileContainer.classList.add('header__profile-container--auth-required');
+    }
+
     async toggleLike(button) {
         const postId = this.getPostId();
         if (!postId) return;
+        if (!this.isViewerAuthorized()) {
+            this.notifyAuthRequired();
+            return;
+        }
 
         try {
             const response = await fetch('/posts/like', {
@@ -1012,7 +1031,7 @@ class PostFullComponent {
                 <a class="post-full__author-avatar post-full__comment-avatar" href="${this.escapeHtml(profileUrl)}" aria-label="Профиль автора @${this.escapeHtml(username)}">
                     ${hasAvatar
                         ? `<img class="post-full__author-avatar-image" src="${this.escapeHtml(avatarSrc)}" alt="Аватар @${this.escapeHtml(username)}">`
-                        : '<img class="post-full__author-avatar-placeholder" src="/assets/images/icons/planet.svg" alt="Профиль" width="28" height="28">'}
+                        : '<img class="post-full__author-avatar-placeholder" src="/assets/images/icons/planet.svg" alt="Профиль" width="24" height="24">'}
                 </a>
                 <span class="post-full__comment-rail" aria-hidden="true"></span>
             </div>
@@ -1397,6 +1416,10 @@ class PostFullComponent {
     async handleBookmark(button) {
         const postId = this.getPostId();
         if (!postId) return;
+        if (!this.isViewerAuthorized()) {
+            this.notifyAuthRequired();
+            return;
+        }
 
         const isOwner = this.postFullElement.dataset.owner === '1';
         const isBookmarked = this.postFullElement.dataset.bookmarked === '1';
