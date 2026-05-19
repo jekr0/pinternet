@@ -695,22 +695,22 @@ class PostFullComponent {
         floatingWrap.classList.add('is-visible');
         const commentsRect = commentsBlock.getBoundingClientRect();
         const postRect = this.postFullElement.getBoundingClientRect();
+        const floatingInput = floatingWrap.querySelector('[data-component="post-full-comment-input-floating"]');
+        const inputTopOffset = floatingInput ? Math.round(floatingInput.offsetTop) : 0;
         const floatingHeight = Math.max(0, Math.round(floatingWrap.getBoundingClientRect().height));
         const preferredTop = window.innerHeight - floatingHeight - 24;
         const maxTop = postRect.bottom - floatingHeight - 26;
         const divider = this.postFullElement.querySelector('[data-component="post-full-description-divider"]');
         const dividerRect = divider?.getBoundingClientRect();
-        const minTop = dividerRect ? Math.round(dividerRect.bottom + 48) : Number.NEGATIVE_INFINITY;
+        const minTop = dividerRect ? Math.round(dividerRect.bottom + 48 - inputTopOffset) : Number.NEGATIVE_INFINITY;
         const nextTop = Math.max(minTop, Math.min(preferredTop, maxTop));
 
         floatingWrap.style.left = `${Math.round(commentsRect.left)}px`;
         floatingWrap.style.width = `${Math.round(commentsRect.width)}px`;
         floatingWrap.style.top = `${Math.round(nextTop)}px`;
 
-        const floatingInput = floatingWrap.querySelector('[data-component="post-full-comment-input-floating"]');
         if (floatingInput) {
-            const inputTop = floatingInput.offsetTop;
-            floatingWrap.style.setProperty('--post-full-floating-input-top', `${Math.round(inputTop)}px`);
+            floatingWrap.style.setProperty('--post-full-floating-input-top', `${inputTopOffset}px`);
         }
     }
 
