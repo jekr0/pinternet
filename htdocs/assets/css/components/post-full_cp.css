@@ -646,7 +646,7 @@
 .post-full__comment-input-wrap {
     position: relative;
     width: 100%;
-    margin-bottom: 24px;
+    margin-bottom: 20px;
 }
 
 .post-full__comment-input-wrap--floating {
@@ -668,7 +668,7 @@
     left: 0;
     right: 0;
     top: calc(var(--post-full-floating-input-top, 0px) - 24px);
-    bottom: -24px;
+    bottom: -20px;
     background: #fff;
     pointer-events: none;
     z-index: 0;
@@ -732,7 +732,7 @@
     display: none;
     align-items: center;
     gap: 16px;
-    margin: 16px 0;
+    margin: 16px 0 40px;
 }
 
 .post-full__comments-toggle-divider.is-visible {

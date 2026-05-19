@@ -29,6 +29,7 @@ class PostFullComponent {
         this.replyTargetCommentId = 0;
         this.replyTargetRootCommentId = 0;
         this.replyTargetUsername = '';
+        this.commentComposerMode = 'reply';
         this.pendingCommentReportId = 0;
         this.descriptionElement = null;
         this.descriptionHideButton = null;
@@ -54,6 +55,7 @@ class PostFullComponent {
         this.postFullElement = document.querySelector('.post-full');
         this.postFullFrame = this.postFullElement?.querySelector('.post-full__frame') || null;
         if (this.postFullElement) {
+            this.prepareCommentComposerStateNodes();
             this.initReferenceClock();
             this.initActionIcons();
             this.renderRelativeTimeLabels();
@@ -268,7 +270,7 @@ class PostFullComponent {
                 <div class="post-full__comment-reply-state" data-component="post-full-reply-state-floating" aria-live="polite">
                     <button class="post-full__comment-reply-cancel" type="button" data-action="reply-cancel" aria-label="Отменить ответ">×</button>
                     <span class="post-full__comment-reply-text">
-                        Ответ пользователю <span class="post-full__comment-reply-nickname" data-component="post-full-reply-nickname-floating"></span>
+                        <span data-component="post-full-reply-prefix-floating">Ответ пользователю</span> <span class="post-full__comment-reply-nickname" data-component="post-full-reply-nickname-floating"></span>
                     </span>
                 </div>
                 <textarea class="post-full__comment-input" data-component="post-full-comment-input-floating" placeholder="Оставить комментарий" maxlength="256" aria-label="Оставить комментарий"></textarea>
@@ -321,6 +323,27 @@ class PostFullComponent {
         syncTextAndCounters(commentInput, floatingInput);
     }
 
+    prepareCommentComposerStateNodes() {
+        const stateBlocks = this.postFullElement?.querySelectorAll('[data-component="post-full-reply-state"], [data-component="post-full-reply-state-floating"]');
+        stateBlocks?.forEach((block) => {
+            const textNode = block.querySelector('.post-full__comment-reply-text');
+            if (!textNode) return;
+            let prefixNode = textNode.querySelector('[data-component="post-full-reply-prefix"], [data-component="post-full-reply-prefix-floating"]');
+            const valueNode = textNode.querySelector('[data-component="post-full-reply-nickname"], [data-component="post-full-reply-nickname-floating"]');
+            if (!prefixNode) {
+                prefixNode = document.createElement('span');
+                prefixNode.dataset.component = block.dataset.component === 'post-full-reply-state-floating'
+                    ? 'post-full-reply-prefix-floating'
+                    : 'post-full-reply-prefix';
+                prefixNode.textContent = 'Ответ пользователю';
+                textNode.insertBefore(prefixNode, valueNode || null);
+                if (valueNode) {
+                    textNode.insertBefore(document.createTextNode(' '), valueNode);
+                }
+            }
+        });
+    }
+
     bindCommentActions() {
         if (!this.postFullElement) return;
 
@@ -348,6 +371,11 @@ class PostFullComponent {
 
             if (action === 'comment-reply') {
                 this.activateReplyState(commentId, rootCommentId, commentUsername);
+                return;
+            }
+
+            if (action === 'comment-edit') {
+                this.activateCommentEditState(commentItem);
             }
         });
     }
@@ -698,11 +726,15 @@ class PostFullComponent {
         const floatingInput = floatingWrap.querySelector('[data-component="post-full-comment-input-floating"]');
         const inputTopOffset = floatingInput ? Math.round(floatingInput.offsetTop) : 0;
         const floatingHeight = Math.max(0, Math.round(floatingWrap.getBoundingClientRect().height));
-        const preferredTop = window.innerHeight - floatingHeight - 24;
-        const maxTop = postRect.bottom - floatingHeight - 26;
+        const preferredTop = window.innerHeight - floatingHeight - 20;
+        const maxTop = postRect.bottom - floatingHeight - 24;
         const divider = this.postFullElement.querySelector('[data-component="post-full-description-divider"]');
         const dividerRect = divider?.getBoundingClientRect();
-        const minTop = dividerRect ? Math.round(dividerRect.bottom + 48 - inputTopOffset) : Number.NEGATIVE_INFINITY;
+        const minTopDescription = dividerRect ? Math.round(dividerRect.bottom + 40 - inputTopOffset) : Number.NEGATIVE_INFINITY;
+        const commentsToggleDivider = this.postFullElement.querySelector('[data-component="post-full-comments-toggle-divider"]');
+        const commentsToggleDividerRect = commentsToggleDivider?.getBoundingClientRect();
+        const minTopComments = commentsToggleDividerRect ? Math.round(commentsToggleDividerRect.bottom + 40 - inputTopOffset) : Number.NEGATIVE_INFINITY;
+        const minTop = Math.max(minTopDescription, minTopComments);
         const nextTop = Math.max(minTop, Math.min(preferredTop, maxTop));
 
         floatingWrap.style.left = `${Math.round(commentsRect.left)}px`;
@@ -1182,6 +1214,7 @@ class PostFullComponent {
 
     activateReplyState(commentId, rootCommentId, username) {
         if (!commentId || !username) return;
+        this.commentComposerMode = 'reply';
 
         this.replyTargetCommentId = commentId;
         this.replyTargetRootCommentId = rootCommentId > 0 ? rootCommentId : commentId;
@@ -1191,13 +1224,30 @@ class PostFullComponent {
         const nicknameNodes = this.postFullElement?.querySelectorAll('[data-component="post-full-reply-nickname"], [data-component="post-full-reply-nickname-floating"]');
         if (!stateNodes || stateNodes.length === 0 || !nicknameNodes || nicknameNodes.length === 0) return;
 
-        nicknameNodes.forEach((nicknameNode) => {
-            nicknameNode.textContent = `@${this.replyTargetUsername}`;
-        });
+        this.setCommentComposerStateText('Ответ пользователю', `@${this.replyTargetUsername}`);
         stateNodes.forEach((stateNode) => {
             stateNode.classList.add('is-active');
         });
         this.requestMasonryLayoutUpdate();
+    }
+
+    activateCommentEditState(commentItem) {
+        if (!commentItem) return;
+        const createdNode = commentItem.querySelector('[data-created-at-ts]');
+        const createdAtTs = this.normalizeUnixTimestamp(createdNode?.dataset.createdAtTs || 0);
+        const createdAtLabel = createdAtTs ? this.formatAbsoluteDate(createdAtTs) : '';
+        this.commentComposerMode = 'edit';
+        this.setCommentComposerStateText('Изменение комментария от', createdAtLabel);
+        const stateNodes = this.postFullElement?.querySelectorAll('[data-component="post-full-reply-state"], [data-component="post-full-reply-state-floating"]');
+        stateNodes?.forEach((stateNode) => stateNode.classList.add('is-active'));
+        this.requestMasonryLayoutUpdate();
+    }
+
+    setCommentComposerStateText(prefixText, valueText) {
+        const prefixNodes = this.postFullElement?.querySelectorAll('[data-component="post-full-reply-prefix"], [data-component="post-full-reply-prefix-floating"]');
+        const nicknameNodes = this.postFullElement?.querySelectorAll('[data-component="post-full-reply-nickname"], [data-component="post-full-reply-nickname-floating"]');
+        prefixNodes?.forEach((node) => { node.textContent = prefixText; });
+        nicknameNodes?.forEach((node) => { node.textContent = valueText; });
     }
 
     clearReplyState() {
@@ -1209,9 +1259,8 @@ class PostFullComponent {
         const nicknameNodes = this.postFullElement?.querySelectorAll('[data-component="post-full-reply-nickname"], [data-component="post-full-reply-nickname-floating"]');
         if (!stateNodes || stateNodes.length === 0 || !nicknameNodes || nicknameNodes.length === 0) return;
 
-        nicknameNodes.forEach((nicknameNode) => {
-            nicknameNode.textContent = '';
-        });
+        this.commentComposerMode = 'reply';
+        this.setCommentComposerStateText('Ответ пользователю', '');
         stateNodes.forEach((stateNode) => {
             stateNode.classList.remove('is-active');
         });
