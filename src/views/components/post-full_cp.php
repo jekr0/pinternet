@@ -190,7 +190,7 @@ if (!$selectedPost) {
                                     <button class="post-full__comment-action-button post-full__comment-action-button--reply" type="button" data-action="comment-reply" aria-label="Ответить на комментарий">
                                         Ответить
                                     </button>
-                                    <button class="post-full__comment-action-button" type="button" data-action="comment-report" aria-label="<?php echo $commentIsOwner ? 'Редактировать комментарий' : 'Пожаловаться на комментарий'; ?>">
+                                    <button class="post-full__comment-action-button<?php echo $commentIsOwner ? ' post-full__comment-action-button--edit' : ''; ?>" type="button" data-action="<?php echo $commentIsOwner ? 'comment-edit' : 'comment-report'; ?>" aria-label="<?php echo $commentIsOwner ? 'Редактировать комментарий' : 'Пожаловаться на комментарий'; ?>">
                                         <span class="post-full__comment-action-icon" data-svg-src="<?php echo $commentIsOwner ? '/assets/images/icons/S-edit.svg' : '/assets/images/icons/S-warning.svg'; ?>" aria-hidden="true"></span>
                                     </button>
                                 </div>

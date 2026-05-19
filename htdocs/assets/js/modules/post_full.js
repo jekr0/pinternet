@@ -346,6 +346,11 @@ class PostFullComponent {
                 return;
             }
 
+            if (action === 'comment-edit') {
+                this.activateCommentEditState();
+                return;
+            }
+
             if (action === 'comment-reply') {
                 this.activateReplyState(commentId, rootCommentId, commentUsername);
             }
@@ -1154,8 +1159,8 @@ class PostFullComponent {
                     <button class="post-full__comment-action-button post-full__comment-action-button--reply" type="button" data-action="comment-reply" aria-label="Ответить на комментарий">
                         Ответить
                     </button>
-                    <button class="post-full__comment-action-button" type="button" data-action="comment-report" aria-label="Пожаловаться на комментарий">
-                        <span class="post-full__comment-action-icon" data-svg-src="/assets/images/icons/S-warning.svg" aria-hidden="true"></span>
+                    <button class="post-full__comment-action-button post-full__comment-action-button--edit" type="button" data-action="comment-edit" aria-label="Редактировать комментарий">
+                        <span class="post-full__comment-action-icon" data-svg-src="/assets/images/icons/S-edit.svg" aria-hidden="true"></span>
                     </button>
                 </div>
             </div>
@@ -1183,6 +1188,20 @@ class PostFullComponent {
         this.requestMasonryLayoutUpdate();
     }
 
+    activateCommentEditState() {
+        const stateNodes = this.postFullElement?.querySelectorAll('[data-component="post-full-reply-state"], [data-component="post-full-reply-state-floating"]');
+        if (!stateNodes || stateNodes.length === 0) return;
+
+        stateNodes.forEach((stateNode) => {
+            const textNode = stateNode.querySelector('.post-full__comment-reply-text');
+            if (textNode) {
+                textNode.textContent = 'Изменение комментария...';
+            }
+            stateNode.classList.add('is-active');
+        });
+        this.requestMasonryLayoutUpdate();
+    }
+
     clearReplyState() {
         this.replyTargetCommentId = 0;
         this.replyTargetRootCommentId = 0;
@@ -1196,6 +1215,10 @@ class PostFullComponent {
             nicknameNode.textContent = '';
         });
         stateNodes.forEach((stateNode) => {
+            const textNode = stateNode.querySelector('.post-full__comment-reply-text');
+            if (textNode) {
+                textNode.innerHTML = `Ответ пользователю <span class="post-full__comment-reply-nickname" data-component="${stateNode.dataset.component === 'post-full-reply-state-floating' ? 'post-full-reply-nickname-floating' : 'post-full-reply-nickname'}"></span>`;
+            }
             stateNode.classList.remove('is-active');
         });
         this.requestMasonryLayoutUpdate();
