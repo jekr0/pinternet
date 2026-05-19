@@ -378,19 +378,29 @@
 
 .post-full__description-divider {
     width: calc(100% - 32px);
-    height: 2px;
     margin: 16px;
-    background: #e0e0e0;
-    border-radius: 1px;
-}
-
-.post-full__description-divider.has-controls {
-    height: auto;
+    min-height: 14px;
     display: flex;
     align-items: center;
     gap: 16px;
     background: none;
     position: relative;
+}
+
+.post-full__description-divider::before {
+    content: '';
+    width: 100%;
+    height: 2px;
+    background: #e0e0e0;
+    border-radius: 1px;
+}
+
+.post-full__description-divider.has-controls {
+    min-height: 14px;
+}
+
+.post-full__description-divider.has-controls::before {
+    display: none;
 }
 
 .post-full__description-divider-line {
