@@ -30,6 +30,7 @@ class PostFullComponent {
         this.replyTargetRootCommentId = 0;
         this.replyTargetUsername = '';
         this.commentComposerMode = 'reply';
+        this.editingCommentElement = null;
         this.pendingCommentReportId = 0;
         this.descriptionElement = null;
         this.descriptionHideButton = null;
@@ -298,6 +299,9 @@ class PostFullComponent {
             this.autoResizeCommentInput(commentInput);
             if (floatingInput) {
                 this.autoResizeCommentInput(floatingInput);
+            }
+            if (this.commentsExpanded) {
+                this.updateCommentInputFloatingPosition();
             }
         };
 
@@ -758,6 +762,14 @@ class PostFullComponent {
             return;
         }
 
+        const descriptionDivider = this.postFullElement?.querySelector('[data-component="post-full-description-divider"]');
+        const descriptionDividerRect = descriptionDivider?.getBoundingClientRect();
+        const floatingButtonCenterY = window.innerHeight - 88 - 18;
+        if (descriptionDividerRect && Math.abs(descriptionDividerRect.top - floatingButtonCenterY) <= 1) {
+            this.hideFloatingCommentsButton(true);
+            return;
+        }
+
         const commentsBlock = this.postFullElement?.querySelector('.post-full__comments-block');
         const commentsRect = commentsBlock?.getBoundingClientRect();
         if (!commentsRect) return;
@@ -1064,6 +1076,18 @@ class PostFullComponent {
             return;
         }
 
+        if (this.commentComposerMode === 'edit' && this.editingCommentElement) {
+            const textNode = this.editingCommentElement.querySelector('.post-full__comment-text');
+            if (textNode) {
+                textNode.innerHTML = this.escapeHtmlWithBreaks(text);
+                textNode.classList.remove('post-full__comment-text--editing');
+            }
+            this.clearReplyState({ clearInputs: true, blurInputs: true });
+            this.showToast('Комментарий изменен');
+            this.requestMasonryLayoutUpdate();
+            return;
+        }
+
         commentInput.disabled = true;
         try {
             const response = await fetch('/posts/comment', {
@@ -1120,7 +1144,7 @@ class PostFullComponent {
             });
 
             this.showToast('Комментарий добавлен');
-            this.clearReplyState();
+            this.clearReplyState({ clearInputs: true });
             this.requestMasonryLayoutUpdate();
         } catch (error) {
             console.warn('Unable to submit comment from post-full', error);
@@ -1315,10 +1339,16 @@ class PostFullComponent {
     activateCommentEditState(commentItem) {
         if (!commentItem) return;
         this.commentComposerMode = 'edit';
+        if (this.editingCommentElement) {
+            const prevTextNode = this.editingCommentElement.querySelector('.post-full__comment-text');
+            prevTextNode?.classList.remove('post-full__comment-text--editing');
+        }
+        this.editingCommentElement = commentItem;
         this.setCommentComposerStateText('Изменение комментария...', '');
         const stateNodes = this.postFullElement?.querySelectorAll('[data-component="post-full-reply-state"], [data-component="post-full-reply-state-floating"]');
         stateNodes?.forEach((stateNode) => stateNode.classList.add('is-active'));
         const commentTextNode = commentItem.querySelector('.post-full__comment-text');
+        commentTextNode?.classList.add('post-full__comment-text--editing');
         const sourceText = commentTextNode?.textContent?.trim() || '';
         const staticInput = this.postFullElement?.querySelector('[data-component="post-full-comment-input"]');
         const floatingInput = this.postFullElement?.querySelector('[data-component="post-full-comment-input-floating"]');
@@ -1341,10 +1371,13 @@ class PostFullComponent {
         nicknameNodes?.forEach((node) => { node.textContent = valueText; });
     }
 
-    clearReplyState() {
+    clearReplyState(options = {}) {
+        const { clearInputs = false, blurInputs = false } = options;
         this.replyTargetCommentId = 0;
         this.replyTargetRootCommentId = 0;
         this.replyTargetUsername = '';
+        this.editingCommentElement?.querySelector('.post-full__comment-text')?.classList.remove('post-full__comment-text--editing');
+        this.editingCommentElement = null;
 
         const stateNodes = this.postFullElement?.querySelectorAll('[data-component="post-full-reply-state"], [data-component="post-full-reply-state-floating"]');
         const nicknameNodes = this.postFullElement?.querySelectorAll('[data-component="post-full-reply-nickname"], [data-component="post-full-reply-nickname-floating"]');
@@ -1352,6 +1385,26 @@ class PostFullComponent {
 
         this.commentComposerMode = 'reply';
         this.setCommentComposerStateText('Ответ пользователю', '');
+        const staticInput = this.postFullElement?.querySelector('[data-component="post-full-comment-input"]');
+        const floatingInput = this.postFullElement?.querySelector('[data-component="post-full-comment-input-floating"]');
+        const staticCounter = this.postFullElement?.querySelector('[data-component="post-full-comment-counter"]');
+        const floatingCounter = this.postFullElement?.querySelector('[data-component="post-full-comment-counter-floating"]');
+        if (clearInputs) {
+            if (staticInput) {
+                staticInput.value = '';
+                this.autoResizeCommentInput(staticInput);
+            }
+            if (floatingInput) {
+                floatingInput.value = '';
+                this.autoResizeCommentInput(floatingInput);
+            }
+            if (staticCounter) staticCounter.textContent = '0/256';
+            if (floatingCounter) floatingCounter.textContent = '0/256';
+        }
+        if (blurInputs) {
+            staticInput?.blur();
+            floatingInput?.blur();
+        }
         stateNodes.forEach((stateNode) => {
             stateNode.classList.remove('is-active');
         });

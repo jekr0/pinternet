@@ -829,6 +829,10 @@
     outline-offset: 1px;
 }
 
+.post-full__comment-text--editing {
+    color: rgb(150, 150, 250);
+}
+
 .post-full__comment-children-toggle {
     position: absolute;
     left: 50%;
