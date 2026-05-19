@@ -692,10 +692,23 @@ class PostFullComponent {
             return;
         }
 
+        floatingWrap.classList.add('is-visible');
         const commentsRect = commentsBlock.getBoundingClientRect();
+        const postRect = this.postFullElement.getBoundingClientRect();
+        const floatingHeight = Math.max(0, Math.round(floatingWrap.getBoundingClientRect().height));
+        const preferredTop = window.innerHeight - floatingHeight - 24;
+        const maxTop = postRect.bottom - floatingHeight - 24;
+        const nextTop = Math.min(preferredTop, maxTop);
+
         floatingWrap.style.left = `${Math.round(commentsRect.left)}px`;
         floatingWrap.style.width = `${Math.round(commentsRect.width)}px`;
-        floatingWrap.classList.add('is-visible');
+        floatingWrap.style.top = `${Math.round(nextTop)}px`;
+
+        const floatingInput = floatingWrap.querySelector('[data-component="post-full-comment-input-floating"]');
+        if (floatingInput) {
+            const inputTop = floatingInput.offsetTop;
+            floatingWrap.style.setProperty('--post-full-floating-input-top', `${Math.round(inputTop)}px`);
+        }
     }
 
     updateStaticCommentInputPlaceholder(inputWrap) {
@@ -793,12 +806,13 @@ class PostFullComponent {
     autoResizeCommentInput(commentInput) {
         if (!commentInput) return;
         if (commentInput.value.trim() === '') {
-            commentInput.style.height = '50px';
+            commentInput.style.height = '40px';
             return;
         }
         commentInput.style.height = 'auto';
-        const nextHeight = Math.max(50, commentInput.scrollHeight);
+        const nextHeight = Math.max(40, commentInput.scrollHeight);
         commentInput.style.height = `${nextHeight}px`;
+        this.updateCommentInputFloatingPosition();
     }
 
     togglePostEditMode() {

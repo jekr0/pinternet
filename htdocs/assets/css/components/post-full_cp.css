@@ -641,7 +641,7 @@
 
 .post-full__comment-input-wrap--floating {
     position: fixed;
-    bottom: 24px;
+    top: 0;
     z-index: 20;
     margin-bottom: 0;
     display: none;
@@ -657,8 +657,8 @@
     position: absolute;
     left: 0;
     right: 0;
+    top: calc(var(--post-full-floating-input-top, 0px) - 24px);
     bottom: -24px;
-    height: 104px;
     background: #fff;
     pointer-events: none;
     z-index: 0;
@@ -684,7 +684,7 @@
 }
 
 .post-full__comment-input-wrap.is-placeholder {
-    min-height: var(--post-full-comment-placeholder-height, 50px);
+    min-height: var(--post-full-comment-placeholder-height, 40px);
     background: transparent;
     border-radius: 12px;
     pointer-events: none;
@@ -850,7 +850,7 @@
 
 .post-full__comment-input {
     width: 100%;
-    min-height: 50px;
+    min-height: 40px;
     padding: 14px;
     box-sizing: border-box;
     outline: none;
