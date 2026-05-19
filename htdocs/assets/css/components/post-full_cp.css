@@ -664,6 +664,18 @@
     z-index: 0;
 }
 
+.post-full__comment-input-wrap--floating::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 80px;
+    height: 24px;
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0), #fff);
+    pointer-events: none;
+    z-index: 0;
+}
+
 .post-full__comment-input-wrap.is-floating {
     position: fixed;
     bottom: 24px;
