@@ -646,9 +646,9 @@ class PostFullComponent {
                     <button class="post-full__comments-toggle-button" type="button" data-action="comments-toggle"></button>
                     <span class="post-full__comments-toggle-line" aria-hidden="true"></span>
                 `;
-                const replyState = commentsBlock.querySelector('[data-component="post-full-reply-state"]');
                 const inputWrap = commentsBlock.querySelector('.post-full__comment-input-wrap');
-                const anchorNode = replyState || inputWrap || commentsBlock.querySelector('.post-full__comments-empty');
+                const replyState = commentsBlock.querySelector('[data-component="post-full-reply-state"]');
+                const anchorNode = inputWrap || replyState || commentsBlock.querySelector('.post-full__comments-empty');
                 if (anchorNode) {
                     commentsBlock.insertBefore(createdDivider, anchorNode);
                 } else {
