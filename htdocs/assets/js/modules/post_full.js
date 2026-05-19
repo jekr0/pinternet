@@ -328,19 +328,19 @@ class PostFullComponent {
         stateBlocks?.forEach((block) => {
             const textNode = block.querySelector('.post-full__comment-reply-text');
             if (!textNode) return;
-            let prefixNode = textNode.querySelector('[data-component="post-full-reply-prefix"], [data-component="post-full-reply-prefix-floating"]');
-            const valueNode = textNode.querySelector('[data-component="post-full-reply-nickname"], [data-component="post-full-reply-nickname-floating"]');
-            if (!prefixNode) {
-                prefixNode = document.createElement('span');
-                prefixNode.dataset.component = block.dataset.component === 'post-full-reply-state-floating'
-                    ? 'post-full-reply-prefix-floating'
-                    : 'post-full-reply-prefix';
-                prefixNode.textContent = 'Ответ пользователю';
-                textNode.insertBefore(prefixNode, valueNode || null);
-                if (valueNode) {
-                    textNode.insertBefore(document.createTextNode(' '), valueNode);
-                }
+            const componentSuffix = block.dataset.component === 'post-full-reply-state-floating' ? '-floating' : '';
+            let valueNode = textNode.querySelector('[data-component="post-full-reply-nickname"], [data-component="post-full-reply-nickname-floating"]');
+            if (!valueNode) {
+                valueNode = document.createElement('span');
+                valueNode.className = 'post-full__comment-reply-nickname';
+                valueNode.dataset.component = `post-full-reply-nickname${componentSuffix}`;
             }
+
+            textNode.textContent = '';
+            const prefixNode = document.createElement('span');
+            prefixNode.dataset.component = `post-full-reply-prefix${componentSuffix}`;
+            prefixNode.textContent = 'Ответ пользователю';
+            textNode.append(prefixNode, document.createTextNode(' '), valueNode);
         });
     }
 

@@ -732,15 +732,7 @@
     display: none;
     align-items: center;
     gap: 16px;
-    margin: 16px 0 0;
-}
-
-.post-full__comments-block > .post-full__comment-input-wrap > .post-full__comment-input {
-    margin-top: 40px;
-}
-
-.post-full__comment-input-wrap--floating .post-full__comment-input {
-    margin-top: 0;
+    margin: 16px 0 40px;
 }
 
 .post-full__comments-toggle-divider.is-visible {
