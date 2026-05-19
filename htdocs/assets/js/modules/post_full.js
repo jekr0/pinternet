@@ -1203,7 +1203,7 @@ class PostFullComponent {
                         Ответить
                     </button>
                     ${isOwnComment
-                        ? `<button class="post-full__comment-action-button" type="button" data-action="comment-edit" aria-label="Изменить комментарий">
+                        ? `<button class="post-full__comment-action-button post-full__comment-action-button--edit" type="button" data-action="comment-edit" aria-label="Изменить комментарий">
                             <span class="post-full__comment-action-icon" data-svg-src="/assets/images/icons/S-edit.svg" aria-hidden="true"></span>
                         </button>`
                         : `<button class="post-full__comment-action-button" type="button" data-action="comment-report" aria-label="Пожаловаться на комментарий">
