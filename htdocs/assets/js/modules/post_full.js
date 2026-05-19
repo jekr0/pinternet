@@ -697,8 +697,11 @@ class PostFullComponent {
         const postRect = this.postFullElement.getBoundingClientRect();
         const floatingHeight = Math.max(0, Math.round(floatingWrap.getBoundingClientRect().height));
         const preferredTop = window.innerHeight - floatingHeight - 24;
-        const maxTop = postRect.bottom - floatingHeight - 24;
-        const nextTop = Math.min(preferredTop, maxTop);
+        const maxTop = postRect.bottom - floatingHeight - 26;
+        const divider = this.postFullElement.querySelector('.post-full__comments-toggle-divider');
+        const dividerRect = divider?.getBoundingClientRect();
+        const minTop = dividerRect ? Math.round(dividerRect.bottom + 48) : Number.NEGATIVE_INFINITY;
+        const nextTop = Math.max(minTop, Math.min(preferredTop, maxTop));
 
         floatingWrap.style.left = `${Math.round(commentsRect.left)}px`;
         floatingWrap.style.width = `${Math.round(commentsRect.width)}px`;
