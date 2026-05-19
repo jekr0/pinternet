@@ -291,6 +291,10 @@
     transform: translate(-50%, 0);
 }
 
+.post-full__comments-hide-button {
+    bottom: 88px;
+}
+
 .post-full__description-hide-button--closing {
     opacity: 0;
     visibility: hidden;

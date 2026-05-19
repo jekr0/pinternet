@@ -38,6 +38,8 @@ class PostFullComponent {
         this.descriptionSupportsCollapse = false;
         this.descriptionExpanded = false;
         this.descriptionHideScrollHandler = null;
+        this.commentsHideButton = null;
+        this.commentsHideScrollHandler = null;
         this.commentsExpanded = false;
         this.tagsResizeHandler = null;
         this.scrollTopButton = null;
@@ -85,6 +87,9 @@ class PostFullComponent {
             this.commentInputFloatingHandler = () => this.updateCommentInputFloatingPosition();
             window.addEventListener('scroll', this.commentInputFloatingHandler, { passive: true });
             window.addEventListener('resize', this.commentInputFloatingHandler);
+            this.commentsHideScrollHandler = () => this.updateCommentsHideButtonPosition();
+            window.addEventListener('scroll', this.commentsHideScrollHandler, { passive: true });
+            window.addEventListener('resize', this.commentsHideScrollHandler);
             this.initScrollTopButton();
         }
 
@@ -660,7 +665,12 @@ class PostFullComponent {
         }
 
         const toggleButton = divider?.querySelector('[data-action="comments-toggle"]') || null;
-        if (!divider || !toggleButton) return;
+        if (!divider || !toggleButton) {
+            this.hideFloatingCommentsButton(true);
+            return;
+        }
+
+        this.ensureCommentsHideButton();
 
         const threads = Array.from(commentsList.querySelectorAll('.post-full__comment-thread'));
         const totalThreads = threads.length;
@@ -674,6 +684,7 @@ class PostFullComponent {
         if (totalThreads === 0) {
             divider.classList.remove('is-visible', 'is-solid');
             toggleButton.style.display = 'none';
+            this.hideFloatingCommentsButton(true);
             this.updateCommentInputFloatingPosition();
             return;
         }
@@ -682,6 +693,7 @@ class PostFullComponent {
         if (hiddenCount <= 0) {
             divider.classList.remove('is-visible', 'is-solid');
             toggleButton.style.display = 'none';
+            this.hideFloatingCommentsButton(true);
             this.updateCommentInputFloatingPosition();
             return;
         }
@@ -697,11 +709,73 @@ class PostFullComponent {
         if (hiddenCount > 0 && this.commentsExpanded) {
             toggleButton.textContent = 'Скрыть комментарии';
             toggleButton.style.display = '';
+            this.updateCommentsHideButtonPosition();
             this.updateCommentInputFloatingPosition();
             return;
         }
 
+        this.hideFloatingCommentsButton(true);
         this.updateCommentInputFloatingPosition();
+    }
+
+    ensureCommentsHideButton() {
+        if (!this.postFullElement || this.commentsHideButton) return;
+
+        const floatingButton = document.createElement('button');
+        floatingButton.className = 'post-full__description-hide-button post-full__comments-hide-button';
+        floatingButton.type = 'button';
+        floatingButton.textContent = 'Скрыть комментарии';
+        floatingButton.addEventListener('click', () => {
+            this.commentsExpanded = false;
+            this.applyCommentsPreviewState();
+            this.requestMasonryLayoutUpdate();
+        });
+
+        this.postFullElement.appendChild(floatingButton);
+        this.commentsHideButton = floatingButton;
+    }
+
+    updateCommentsHideButtonPosition() {
+        if (!this.commentsHideButton || !this.commentsExpanded) {
+            this.hideFloatingCommentsButton(true);
+            return;
+        }
+
+        const toggleButton = this.postFullElement?.querySelector('[data-action="comments-toggle"]');
+        if (!toggleButton) {
+            this.hideFloatingCommentsButton(true);
+            return;
+        }
+
+        const dividerRect = toggleButton.getBoundingClientRect();
+        const shouldShowFloating = dividerRect.bottom < 0 || dividerRect.top > window.innerHeight;
+        if (!shouldShowFloating) {
+            this.hideFloatingCommentsButton();
+            return;
+        }
+
+        const commentsBlock = this.postFullElement?.querySelector('.post-full__comments-block');
+        const commentsRect = commentsBlock?.getBoundingClientRect();
+        if (!commentsRect) return;
+
+        this.commentsHideButton.style.left = `${Math.round(commentsRect.left + (commentsRect.width / 2))}px`;
+        this.commentsHideButton.classList.add('is-visible', 'is-open');
+        this.commentsHideButton.classList.remove('post-full__description-hide-button--closing');
+    }
+
+    hideFloatingCommentsButton(immediate = false) {
+        if (!this.commentsHideButton || !this.commentsHideButton.classList.contains('is-visible')) return;
+        if (immediate) {
+            this.commentsHideButton.classList.remove('is-visible', 'is-open', 'post-full__description-hide-button--closing');
+            return;
+        }
+
+        this.commentsHideButton.classList.remove('is-open');
+        this.commentsHideButton.classList.add('post-full__description-hide-button--closing');
+        window.setTimeout(() => {
+            if (!this.commentsHideButton) return;
+            this.commentsHideButton.classList.remove('is-visible', 'post-full__description-hide-button--closing');
+        }, 200);
     }
 
     updateCommentInputFloatingPosition() {
