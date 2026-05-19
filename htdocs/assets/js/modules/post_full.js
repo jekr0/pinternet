@@ -731,10 +731,7 @@ class PostFullComponent {
         const divider = this.postFullElement.querySelector('[data-component="post-full-description-divider"]');
         const dividerRect = divider?.getBoundingClientRect();
         const minTopDescription = dividerRect ? Math.round(dividerRect.bottom + 40 - inputTopOffset) : Number.NEGATIVE_INFINITY;
-        const commentsToggleDivider = this.postFullElement.querySelector('[data-component="post-full-comments-toggle-divider"]');
-        const commentsToggleDividerRect = commentsToggleDivider?.getBoundingClientRect();
-        const minTopComments = commentsToggleDividerRect ? Math.round(commentsToggleDividerRect.bottom + 40 - inputTopOffset) : Number.NEGATIVE_INFINITY;
-        const minTop = Math.max(minTopDescription, minTopComments);
+        const minTop = minTopDescription;
         const nextTop = Math.max(minTop, Math.min(preferredTop, maxTop));
 
         floatingWrap.style.left = `${Math.round(commentsRect.left)}px`;
