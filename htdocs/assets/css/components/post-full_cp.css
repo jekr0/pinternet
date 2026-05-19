@@ -564,7 +564,7 @@
     transition: color 0.2s ease, background 0.2s ease;
 }
 
-.post-full__comment-action-button:not(.is-active):hover {
+.post-full__comment-action-button:not(.post-full__comment-action-button--reply):not(.is-active):hover {
     color: rgb(150, 150, 250);
     background-color: rgba(100, 100, 200, 0.08);
 }
@@ -658,6 +658,29 @@
     margin-bottom: 0;
 }
 
+.post-full__comment-input-wrap.is-placeholder {
+    min-height: var(--post-full-comment-placeholder-height, 50px);
+    background: #fff;
+    border-radius: 12px;
+    pointer-events: none;
+}
+
+.post-full__comment-input-wrap.is-placeholder > * {
+    visibility: hidden;
+}
+
+.post-full__comment-input-wrap--floating .post-full__comment-reply-state:not(.is-active) {
+    display: none;
+}
+
+.post-full__comment-input-wrap--floating .post-full__comment-reply-state.is-active {
+    margin-left: 0;
+}
+
+.post-full__comments-block.has-floating-comment-input > .post-full__comment-reply-state {
+    display: none;
+}
+
 .post-full__comments-toggle-divider {
     width: 100%;
     display: none;
@@ -723,7 +746,7 @@
 
 .post-full__comment-reply-text {
     font-family: 'SF_def', Arial, sans-serif;
-    font-size: 18px;
+    font-size: 16px;
     line-height: 1;
     user-select: none;
     color: #bbb;
@@ -791,8 +814,8 @@
 
 .post-full__comment-input {
     width: 100%;
-    min-height: 40px;
-    padding: 0 14px;
+    min-height: 50px;
+    padding: 14px;
     box-sizing: border-box;
     outline: none;
     resize: none;
@@ -823,8 +846,8 @@
     position: absolute;
     right: 8px;
     bottom: 6px;
-    font-family: 'SF_def', Arial, sans-serif;
-    font-size: 15px;
+    font-family: 'NS_def', Arial, sans-serif;
+    font-size: 16px;
     color: #bbb;
     pointer-events: none;
     user-select: none;

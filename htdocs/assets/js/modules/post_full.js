@@ -265,6 +265,12 @@ class PostFullComponent {
             floatingWrap.className = 'post-full__comment-input-wrap post-full__comment-input-wrap--floating';
             floatingWrap.dataset.component = 'post-full-comment-input-floating-wrap';
             floatingWrap.innerHTML = `
+                <div class="post-full__comment-reply-state" data-component="post-full-reply-state-floating" aria-live="polite">
+                    <button class="post-full__comment-reply-cancel" type="button" data-action="reply-cancel" aria-label="Отменить ответ">×</button>
+                    <span class="post-full__comment-reply-text">
+                        Ответ пользователю <span class="post-full__comment-reply-nickname" data-component="post-full-reply-nickname-floating"></span>
+                    </span>
+                </div>
                 <textarea class="post-full__comment-input" data-component="post-full-comment-input-floating" placeholder="Оставить комментарий" maxlength="256" aria-label="Оставить комментарий"></textarea>
                 <span class="post-full__comment-counter" data-component="post-full-comment-counter-floating">0/256</span>
             `;
@@ -347,11 +353,15 @@ class PostFullComponent {
     }
 
     bindReplyStateCancel() {
-        const cancelButton = this.postFullElement?.querySelector('[data-action="reply-cancel"]');
-        if (!cancelButton) return;
+        const cancelButtons = this.postFullElement?.querySelectorAll('[data-action="reply-cancel"]');
+        if (!cancelButtons || cancelButtons.length === 0) return;
 
-        cancelButton.addEventListener('click', () => {
-            this.clearReplyState();
+        cancelButtons.forEach((cancelButton) => {
+            if (cancelButton.dataset.bound === '1') return;
+            cancelButton.dataset.bound = '1';
+            cancelButton.addEventListener('click', () => {
+                this.clearReplyState();
+            });
         });
     }
 
@@ -636,6 +646,7 @@ class PostFullComponent {
         if (totalThreads === 0) {
             divider.classList.remove('is-visible', 'is-solid');
             toggleButton.style.display = 'none';
+            this.updateCommentInputFloatingPosition();
             return;
         }
 
@@ -643,6 +654,7 @@ class PostFullComponent {
         if (hiddenCount <= 0) {
             divider.classList.remove('is-visible', 'is-solid');
             toggleButton.style.display = 'none';
+            this.updateCommentInputFloatingPosition();
             return;
         }
 
@@ -650,6 +662,7 @@ class PostFullComponent {
         if (hiddenCount > 0 && !this.commentsExpanded) {
             toggleButton.textContent = `Показать все комментарии (+${hiddenCount})`;
             toggleButton.style.display = '';
+            this.updateCommentInputFloatingPosition();
             return;
         }
 
@@ -665,10 +678,14 @@ class PostFullComponent {
 
     updateCommentInputFloatingPosition() {
         if (!this.postFullElement) return;
-        const inputWrap = this.postFullElement.querySelector('.post-full__comment-input-wrap');
+        const inputWrap = this.postFullElement.querySelector('.post-full__comment-input-wrap:not(.post-full__comment-input-wrap--floating)');
         const floatingWrap = this.postFullElement.querySelector('[data-component="post-full-comment-input-floating-wrap"]');
         const commentsBlock = this.postFullElement.querySelector('.post-full__comments-block');
         if (!inputWrap || !commentsBlock || !floatingWrap) return;
+
+        this.updateStaticCommentInputPlaceholder(inputWrap);
+
+        commentsBlock.classList.toggle('has-floating-comment-input', this.commentsExpanded);
 
         if (!this.commentsExpanded) {
             floatingWrap.classList.remove('is-visible');
@@ -676,17 +693,25 @@ class PostFullComponent {
         }
 
         const commentsRect = commentsBlock.getBoundingClientRect();
-        const postRect = this.postFullElement.getBoundingClientRect();
-        const shouldFloat = commentsRect.bottom > window.innerHeight && postRect.bottom > (window.innerHeight - 24);
-
-        if (!shouldFloat) {
-            floatingWrap.classList.remove('is-visible');
-            return;
-        }
-
         floatingWrap.style.left = `${Math.round(commentsRect.left)}px`;
         floatingWrap.style.width = `${Math.round(commentsRect.width)}px`;
         floatingWrap.classList.add('is-visible');
+    }
+
+    updateStaticCommentInputPlaceholder(inputWrap) {
+        if (!inputWrap) return;
+
+        if (!this.commentsExpanded) {
+            inputWrap.classList.remove('is-placeholder');
+            inputWrap.style.removeProperty('--post-full-comment-placeholder-height');
+            return;
+        }
+
+        const currentHeight = Math.max(0, Math.round(inputWrap.getBoundingClientRect().height));
+        if (currentHeight > 0) {
+            inputWrap.style.setProperty('--post-full-comment-placeholder-height', `${currentHeight}px`);
+        }
+        inputWrap.classList.add('is-placeholder');
     }
 
     applyCommentChildrenState() {
@@ -1145,12 +1170,16 @@ class PostFullComponent {
         this.replyTargetRootCommentId = rootCommentId > 0 ? rootCommentId : commentId;
         this.replyTargetUsername = username.replace(/^@+/, '');
 
-        const stateNode = this.postFullElement?.querySelector('[data-component="post-full-reply-state"]');
-        const nicknameNode = this.postFullElement?.querySelector('[data-component="post-full-reply-nickname"]');
-        if (!stateNode || !nicknameNode) return;
+        const stateNodes = this.postFullElement?.querySelectorAll('[data-component="post-full-reply-state"], [data-component="post-full-reply-state-floating"]');
+        const nicknameNodes = this.postFullElement?.querySelectorAll('[data-component="post-full-reply-nickname"], [data-component="post-full-reply-nickname-floating"]');
+        if (!stateNodes || stateNodes.length === 0 || !nicknameNodes || nicknameNodes.length === 0) return;
 
-        nicknameNode.textContent = `@${this.replyTargetUsername}`;
-        stateNode.classList.add('is-active');
+        nicknameNodes.forEach((nicknameNode) => {
+            nicknameNode.textContent = `@${this.replyTargetUsername}`;
+        });
+        stateNodes.forEach((stateNode) => {
+            stateNode.classList.add('is-active');
+        });
         this.requestMasonryLayoutUpdate();
     }
 
@@ -1159,12 +1188,16 @@ class PostFullComponent {
         this.replyTargetRootCommentId = 0;
         this.replyTargetUsername = '';
 
-        const stateNode = this.postFullElement?.querySelector('[data-component="post-full-reply-state"]');
-        const nicknameNode = this.postFullElement?.querySelector('[data-component="post-full-reply-nickname"]');
-        if (!stateNode || !nicknameNode) return;
+        const stateNodes = this.postFullElement?.querySelectorAll('[data-component="post-full-reply-state"], [data-component="post-full-reply-state-floating"]');
+        const nicknameNodes = this.postFullElement?.querySelectorAll('[data-component="post-full-reply-nickname"], [data-component="post-full-reply-nickname-floating"]');
+        if (!stateNodes || stateNodes.length === 0 || !nicknameNodes || nicknameNodes.length === 0) return;
 
-        nicknameNode.textContent = '';
-        stateNode.classList.remove('is-active');
+        nicknameNodes.forEach((nicknameNode) => {
+            nicknameNode.textContent = '';
+        });
+        stateNodes.forEach((stateNode) => {
+            stateNode.classList.remove('is-active');
+        });
         this.requestMasonryLayoutUpdate();
     }
 
