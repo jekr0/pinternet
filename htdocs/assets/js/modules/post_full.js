@@ -748,7 +748,11 @@ class PostFullComponent {
         }
 
         const dividerRect = toggleButton.getBoundingClientRect();
-        const shouldShowFloating = dividerRect.bottom < 0 || dividerRect.top > window.innerHeight;
+        const floatingWrap = this.postFullElement?.querySelector('[data-component="post-full-comment-input-floating-wrap"]');
+        const floatingWrapRect = floatingWrap?.classList.contains('is-visible') ? floatingWrap.getBoundingClientRect() : null;
+        const isOutsideViewport = dividerRect.bottom < 0 || dividerRect.top > window.innerHeight;
+        const isBehindFloatingUnderlay = !!floatingWrapRect && dividerRect.bottom >= floatingWrapRect.top;
+        const shouldShowFloating = isOutsideViewport || isBehindFloatingUnderlay;
         if (!shouldShowFloating) {
             this.hideFloatingCommentsButton();
             return;
@@ -1310,13 +1314,23 @@ class PostFullComponent {
 
     activateCommentEditState(commentItem) {
         if (!commentItem) return;
-        const createdNode = commentItem.querySelector('[data-created-at-ts]');
-        const createdAtTs = this.normalizeUnixTimestamp(createdNode?.dataset.createdAtTs || 0);
-        const createdAtLabel = createdAtTs ? this.formatAbsoluteDate(createdAtTs) : '';
         this.commentComposerMode = 'edit';
-        this.setCommentComposerStateText('Изменение комментария от', createdAtLabel);
+        this.setCommentComposerStateText('Изменение комментария...', '');
         const stateNodes = this.postFullElement?.querySelectorAll('[data-component="post-full-reply-state"], [data-component="post-full-reply-state-floating"]');
         stateNodes?.forEach((stateNode) => stateNode.classList.add('is-active'));
+        const commentTextNode = commentItem.querySelector('.post-full__comment-text');
+        const sourceText = commentTextNode?.textContent?.trim() || '';
+        const staticInput = this.postFullElement?.querySelector('[data-component="post-full-comment-input"]');
+        const floatingInput = this.postFullElement?.querySelector('[data-component="post-full-comment-input-floating"]');
+        if (staticInput) {
+            staticInput.value = sourceText;
+            staticInput.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+        if (floatingInput) {
+            floatingInput.value = sourceText;
+            floatingInput.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+        (floatingInput && this.commentsExpanded ? floatingInput : staticInput)?.focus();
         this.requestMasonryLayoutUpdate();
     }
 
