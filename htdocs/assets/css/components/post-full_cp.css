@@ -645,10 +645,23 @@
     z-index: 20;
     margin-bottom: 0;
     display: none;
+    isolation: isolate;
 }
 
 .post-full__comment-input-wrap--floating.is-visible {
     display: block;
+}
+
+.post-full__comment-input-wrap--floating::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -24px;
+    height: 104px;
+    background: #fff;
+    pointer-events: none;
+    z-index: 0;
 }
 
 .post-full__comment-input-wrap.is-floating {
@@ -660,7 +673,7 @@
 
 .post-full__comment-input-wrap.is-placeholder {
     min-height: var(--post-full-comment-placeholder-height, 50px);
-    background: #fff;
+    background: transparent;
     border-radius: 12px;
     pointer-events: none;
 }
@@ -674,11 +687,22 @@
 }
 
 .post-full__comment-input-wrap--floating .post-full__comment-reply-state.is-active {
-    margin-left: 0;
+    margin-left: 8px;
 }
 
 .post-full__comments-block.has-floating-comment-input > .post-full__comment-reply-state {
-    display: none;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.post-full__comment-input-wrap--floating .post-full__comment-reply-state,
+.post-full__comment-input-wrap--floating .post-full__comment-input {
+    position: relative;
+    z-index: 1;
+}
+
+.post-full__comment-input-wrap--floating .post-full__comment-counter {
+    z-index: 2;
 }
 
 .post-full__comments-toggle-divider {
