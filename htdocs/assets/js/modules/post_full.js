@@ -1148,6 +1148,8 @@ class PostFullComponent {
         const publishedLabel = commentData.publishedLabel || this.formatRelativeTimeLabel(createdAtTs, this.getReferenceNowTs());
         const likesCount = Number(commentData.likesCount || 0);
         const isLiked = !!commentData.isLiked;
+        const viewerUsername = String(this.postFullElement?.dataset.viewerUsername || '').trim().replace(/^@+/, '');
+        const isOwnComment = viewerUsername !== '' && viewerUsername === username.replace(/^@+/, '');
         const rootCommentId = Number(commentData.rootCommentId || commentId || 0);
         const hasReplyLabel = parentCommentId > 0 && parentUsername !== '';
         const metaAfterUsername = commentData.isReply
@@ -1200,9 +1202,13 @@ class PostFullComponent {
                     <button class="post-full__comment-action-button post-full__comment-action-button--reply" type="button" data-action="comment-reply" aria-label="Ответить на комментарий">
                         Ответить
                     </button>
-                    <button class="post-full__comment-action-button" type="button" data-action="comment-report" aria-label="Пожаловаться на комментарий">
-                        <span class="post-full__comment-action-icon" data-svg-src="/assets/images/icons/S-warning.svg" aria-hidden="true"></span>
-                    </button>
+                    ${isOwnComment
+                        ? `<button class="post-full__comment-action-button" type="button" data-action="comment-edit" aria-label="Изменить комментарий">
+                            <span class="post-full__comment-action-icon" data-svg-src="/assets/images/icons/S-edit.svg" aria-hidden="true"></span>
+                        </button>`
+                        : `<button class="post-full__comment-action-button" type="button" data-action="comment-report" aria-label="Пожаловаться на комментарий">
+                            <span class="post-full__comment-action-icon" data-svg-src="/assets/images/icons/S-warning.svg" aria-hidden="true"></span>
+                        </button>`}
                 </div>
             </div>
         `;
