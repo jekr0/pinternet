@@ -615,11 +615,6 @@
     padding: 0 4px 0 2px;
 }
 
-.post-full__comment-action-button--edit:hover {
-    color: rgb(150, 150, 250);
-    background-color: rgba(100, 100, 200, 0.08);
-}
-
 .post-full__comment-action-icon svg {
     width: 100%;
     height: 100%;
@@ -718,7 +713,8 @@
 }
 
 .post-full__comments-block.has-floating-comment-input > .post-full__comment-reply-state {
-    display: none;
+    visibility: hidden;
+    pointer-events: none;
 }
 
 .post-full__comment-input-wrap--floating .post-full__comment-reply-state,
@@ -736,7 +732,7 @@
     display: none;
     align-items: center;
     gap: 16px;
-    margin: 16px 0 32px;
+    margin: 16px 0 14px;
 }
 
 .post-full__comments-toggle-divider.is-visible {

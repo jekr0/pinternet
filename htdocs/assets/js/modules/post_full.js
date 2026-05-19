@@ -730,7 +730,7 @@ class PostFullComponent {
         const maxTop = postRect.bottom - floatingHeight - 24;
         const divider = this.postFullElement.querySelector('[data-component="post-full-description-divider"]');
         const dividerRect = divider?.getBoundingClientRect();
-        const minTopDescription = dividerRect ? Math.round(dividerRect.bottom + 40 - inputTopOffset) : Number.NEGATIVE_INFINITY;
+        const minTopDescription = dividerRect ? Math.round(dividerRect.bottom + 42 - inputTopOffset) : Number.NEGATIVE_INFINITY;
         const minTop = minTopDescription;
         const nextTop = Math.max(minTop, Math.min(preferredTop, maxTop));
 
