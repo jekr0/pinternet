@@ -42,6 +42,7 @@ class PostFullComponent {
         this.scrollTopButton = null;
         this.scrollTopButtonHandler = null;
         this.scrollTopHideTimer = null;
+        this.commentInputFloatingHandler = null;
         this.postEditMode = false;
         this.descriptionEditor = null;
     }
@@ -79,6 +80,9 @@ class PostFullComponent {
             this.descriptionHideScrollHandler = () => this.updateDescriptionHideButtonPosition();
             window.addEventListener('scroll', this.descriptionHideScrollHandler, { passive: true });
             window.addEventListener('resize', this.descriptionHideScrollHandler);
+            this.commentInputFloatingHandler = () => this.updateCommentInputFloatingPosition();
+            window.addEventListener('scroll', this.commentInputFloatingHandler, { passive: true });
+            window.addEventListener('resize', this.commentInputFloatingHandler);
             this.initScrollTopButton();
         }
 
@@ -249,32 +253,66 @@ class PostFullComponent {
         const commentInput = this.postFullElement?.querySelector('[data-component="post-full-comment-input"]');
         const commentCounter = this.postFullElement?.querySelector('[data-component="post-full-comment-counter"]');
         if (!commentInput || !commentCounter) return;
+        const staticWrap = commentInput.closest('.post-full__comment-input-wrap');
+        if (!staticWrap) return;
 
-        const updateCounter = () => {
-            commentCounter.textContent = `${commentInput.value.length}/256`;
+        let floatingWrap = this.postFullElement.querySelector('[data-component="post-full-comment-input-floating-wrap"]');
+        let floatingInput = floatingWrap?.querySelector('[data-component="post-full-comment-input-floating"]') || null;
+        let floatingCounter = floatingWrap?.querySelector('[data-component="post-full-comment-counter-floating"]') || null;
+
+        if (!floatingWrap) {
+            floatingWrap = document.createElement('div');
+            floatingWrap.className = 'post-full__comment-input-wrap post-full__comment-input-wrap--floating';
+            floatingWrap.dataset.component = 'post-full-comment-input-floating-wrap';
+            floatingWrap.innerHTML = `
+                <textarea class="post-full__comment-input" data-component="post-full-comment-input-floating" placeholder="Оставить комментарий" maxlength="256" aria-label="Оставить комментарий"></textarea>
+                <span class="post-full__comment-counter" data-component="post-full-comment-counter-floating">0/256</span>
+            `;
+            this.postFullElement.appendChild(floatingWrap);
+            floatingInput = floatingWrap.querySelector('[data-component="post-full-comment-input-floating"]');
+            floatingCounter = floatingWrap.querySelector('[data-component="post-full-comment-counter-floating"]');
+        }
+
+        const syncTextAndCounters = (sourceInput, targetInput) => {
+            if (targetInput && targetInput.value !== sourceInput.value) {
+                targetInput.value = sourceInput.value;
+            }
+            const value = sourceInput.value;
+            commentCounter.textContent = `${value.length}/256`;
+            if (floatingCounter) {
+                floatingCounter.textContent = `${value.length}/256`;
+            }
             this.autoResizeCommentInput(commentInput);
+            if (floatingInput) {
+                this.autoResizeCommentInput(floatingInput);
+            }
         };
 
-        commentInput.addEventListener('input', updateCounter);
-        commentInput.addEventListener('keydown', async (event) => {
+        const bindInputHandlers = (input, mirrorInput) => {
+            if (!input) return;
+            input.addEventListener('input', () => syncTextAndCounters(input, mirrorInput));
+            input.addEventListener('keydown', async (event) => {
             if (event.key === 'Tab' && event.ctrlKey) {
                 event.preventDefault();
-                const start = commentInput.selectionStart ?? commentInput.value.length;
-                const end = commentInput.selectionEnd ?? commentInput.value.length;
-                const currentValue = commentInput.value;
-                commentInput.value = `${currentValue.slice(0, start)}\n${currentValue.slice(end)}`;
-                commentInput.selectionStart = commentInput.selectionEnd = start + 1;
-                commentInput.dispatchEvent(new Event('input', { bubbles: true }));
+                const start = input.selectionStart ?? input.value.length;
+                const end = input.selectionEnd ?? input.value.length;
+                const currentValue = input.value;
+                input.value = `${currentValue.slice(0, start)}\n${currentValue.slice(end)}`;
+                input.selectionStart = input.selectionEnd = start + 1;
+                input.dispatchEvent(new Event('input', { bubbles: true }));
                 return;
             }
 
             if (event.key !== 'Enter' || event.shiftKey) return;
 
             event.preventDefault();
-            await this.submitComment(commentInput);
+            await this.submitComment(input);
         });
+        };
 
-        updateCounter();
+        bindInputHandlers(commentInput, floatingInput);
+        bindInputHandlers(floatingInput, commentInput);
+        syncTextAndCounters(commentInput, floatingInput);
     }
 
     bindCommentActions() {
@@ -618,8 +656,37 @@ class PostFullComponent {
         if (hiddenCount > 0 && this.commentsExpanded) {
             toggleButton.textContent = 'Скрыть комментарии';
             toggleButton.style.display = '';
+            this.updateCommentInputFloatingPosition();
             return;
         }
+
+        this.updateCommentInputFloatingPosition();
+    }
+
+    updateCommentInputFloatingPosition() {
+        if (!this.postFullElement) return;
+        const inputWrap = this.postFullElement.querySelector('.post-full__comment-input-wrap');
+        const floatingWrap = this.postFullElement.querySelector('[data-component="post-full-comment-input-floating-wrap"]');
+        const commentsBlock = this.postFullElement.querySelector('.post-full__comments-block');
+        if (!inputWrap || !commentsBlock || !floatingWrap) return;
+
+        if (!this.commentsExpanded) {
+            floatingWrap.classList.remove('is-visible');
+            return;
+        }
+
+        const commentsRect = commentsBlock.getBoundingClientRect();
+        const postRect = this.postFullElement.getBoundingClientRect();
+        const shouldFloat = commentsRect.bottom > window.innerHeight && postRect.bottom > (window.innerHeight - 24);
+
+        if (!shouldFloat) {
+            floatingWrap.classList.remove('is-visible');
+            return;
+        }
+
+        floatingWrap.style.left = `${Math.round(commentsRect.left)}px`;
+        floatingWrap.style.width = `${Math.round(commentsRect.width)}px`;
+        floatingWrap.classList.add('is-visible');
     }
 
     applyCommentChildrenState() {
@@ -873,6 +940,15 @@ class PostFullComponent {
             const commentCounter = this.postFullElement?.querySelector('[data-component="post-full-comment-counter"]');
             if (commentCounter) {
                 commentCounter.textContent = '0/256';
+            }
+            const floatingInput = this.postFullElement?.querySelector('[data-component="post-full-comment-input-floating"]');
+            const floatingCounter = this.postFullElement?.querySelector('[data-component="post-full-comment-counter-floating"]');
+            if (floatingInput) {
+                floatingInput.value = '';
+                this.autoResizeCommentInput(floatingInput);
+            }
+            if (floatingCounter) {
+                floatingCounter.textContent = '0/256';
             }
             this.autoResizeCommentInput(commentInput);
 
@@ -1152,8 +1228,12 @@ class PostFullComponent {
             panelClass: 'post-full-report__panel',
             buildPanel: (panel, close) => {
                 const text = document.createElement('p');
-                text.className = 'post-full-report__text';
-                text.textContent = 'Пожаловаться на комментарий?';
+                text.className = 'post-full-report__title';
+                text.textContent = 'Подать жалобу на комментарий?';
+
+                const description = document.createElement('p');
+                description.className = 'post-full-report__description';
+                description.textContent = 'После отправки жалобы комментарий будет проверен модерацией на несоответствие правилам площадки. Мы уведомим вас, когда решение будет принято.';
 
                 const actions = document.createElement('div');
                 actions.className = 'post-full-report__actions';
@@ -1175,6 +1255,7 @@ class PostFullComponent {
                 actions.appendChild(cancelButton);
                 actions.appendChild(reportButton);
                 panel.appendChild(text);
+                panel.appendChild(description);
                 panel.appendChild(actions);
             }
         });
@@ -1676,25 +1757,15 @@ class PostFullComponent {
     }
 
     setZoomScale(nextScale) {
-        const previousScale = this.zoomScale;
         const clampedScale = Math.min(3, Math.max(0.5, Number(nextScale.toFixed(2))));
-        if (Math.abs(clampedScale - previousScale) < 0.001) return;
+        if (Math.abs(clampedScale - this.zoomScale) < 0.001) return;
 
         this.zoomScale = clampedScale;
-
-        const viewportCenterX = window.innerWidth / 2;
-        const viewportCenterY = window.innerHeight / 2;
-
-        this.zoomPanX = this.calculateCenteredPanAfterScale(this.zoomPanX, viewportCenterX, previousScale, this.zoomScale);
-        this.zoomPanY = this.calculateCenteredPanAfterScale(this.zoomPanY, viewportCenterY, previousScale, this.zoomScale);
+        this.zoomPanX = 0;
+        this.zoomPanY = 0;
 
         this.clampZoomPan();
         this.applyZoomTransform();
-    }
-
-    calculateCenteredPanAfterScale(currentPan, anchor, previousScale, nextScale) {
-        const center = anchor;
-        return center - ((center - currentPan) * (nextScale / previousScale));
     }
 
     clampZoomPan() {
@@ -1730,8 +1801,12 @@ class PostFullComponent {
             panelClass: 'post-full-report__panel',
             buildPanel: (panel, close) => {
                 const text = document.createElement('p');
-                text.className = 'post-full-report__text';
-                text.textContent = 'Пожаловаться на пост?';
+                text.className = 'post-full-report__title';
+                text.textContent = 'Подать жалобу на пост?';
+
+                const description = document.createElement('p');
+                description.className = 'post-full-report__description';
+                description.textContent = 'После отправки жалобы пост будет проверен модерацией на несоответствие правилам площадки. Мы уведомим вас, когда решение будет принято.';
 
                 const actions = document.createElement('div');
                 actions.className = 'post-full-report__actions';
@@ -1753,6 +1828,7 @@ class PostFullComponent {
                 actions.appendChild(cancelButton);
                 actions.appendChild(reportButton);
                 panel.appendChild(text);
+                panel.appendChild(description);
                 panel.appendChild(actions);
             }
         });

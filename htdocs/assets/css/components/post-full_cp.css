@@ -597,6 +597,7 @@
 .post-full__comment-action-button--reply:hover {
     color: rgb(150, 150, 250);
     text-decoration: underline;
+    background-color: transparent;
 }
 
 .post-full__comment-action-button--like {
@@ -635,7 +636,26 @@
 .post-full__comment-input-wrap {
     position: relative;
     width: 100%;
-    margin-bottom: 20px;
+    margin-bottom: 24px;
+}
+
+.post-full__comment-input-wrap--floating {
+    position: fixed;
+    bottom: 24px;
+    z-index: 20;
+    margin-bottom: 0;
+    display: none;
+}
+
+.post-full__comment-input-wrap--floating.is-visible {
+    display: block;
+}
+
+.post-full__comment-input-wrap.is-floating {
+    position: fixed;
+    bottom: 24px;
+    z-index: 20;
+    margin-bottom: 0;
 }
 
 .post-full__comments-toggle-divider {
@@ -771,22 +791,23 @@
 
 .post-full__comment-input {
     width: 100%;
-    min-height: 50px;
-    padding: 12px 14px 24px;
+    min-height: 40px;
+    padding: 0 14px;
     box-sizing: border-box;
     outline: none;
     resize: none;
     overflow: hidden;
     font-family: 'NS_def', Arial, sans-serif;
-    font-size: 20px;
+    font-size: 16px;
     color: #333;
     background: #fff;
-    border: 1.5px solid #e0e0e0;
+    border: 1px solid #e0e0e0;
     border-radius: 12px;
     transition: border-color 0.2s ease;
 }
 
 .post-full__comment-input::placeholder {
+    font-size: 16px;
     color: #bbb;
 }
 
@@ -993,47 +1014,64 @@
 }
 
 .post-full-report__panel {
-    width: 450px;
-    padding: 20px;
+    width: 584px;
+    height: 248px;
+    padding: 40px 52px;
     box-sizing: border-box;
-    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
+    border-radius: 24px;
     background: #fff;
     box-shadow: 0 2px 3px rgba(0, 0, 0, 0.07);
 }
 
-.post-full-report__text {
+.post-full-report__title {
     margin: 0;
+    min-height: 40px;
     font-family: 'SF_def', Arial, sans-serif;
-    font-size: 20px;
-    line-height: 1.35;
+    font-size: 24px;
+    font-weight: 400;
+    line-height: 40px;
+    color: rgb(100, 100, 200);
     text-align: center;
+}
+
+.post-full-report__description {
+    margin: 12px 0 0;
+    min-height: 0;
+    font-family: 'NS_def', Arial, sans-serif;
+    font-size: 18px;
+    line-height: 1.4;
     color: #333;
+    text-align: justify;
+    text-justify: inter-word;
 }
 
 .post-full-report__actions {
-    margin-top: 10px;
+    margin-top: auto;
     display: flex;
     gap: 12px;
 }
 
 .post-full-report__button {
     flex: 1 1 0;
-    height: 50px;
-    border-radius: 12px;
+    height: 40px;
+    border-radius: 10px;
     font-family: 'SF_def', Arial, sans-serif;
-    font-size: 24px;
+    font-size: 16px;
     cursor: pointer;
-    transition: border-color 0.2s ease, opacity 0.2s ease;
+    transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
 }
 
 .post-full-report__button--cancel {
-    background: #fff;
-    border: 1.5px solid #e0e0e0;
-    color: #555;
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+    color: #bbbbbb;
 }
 
 .post-full-report__button--cancel:hover {
     border-color: rgb(150, 150, 250);
+    color: rgb(150, 150, 250);
 }
 
 .post-full-report__button--confirm {
@@ -1043,5 +1081,5 @@
 }
 
 .post-full-report__button--confirm:hover {
-    opacity: 0.8;
+    background: rgb(125, 125, 225);
 }
