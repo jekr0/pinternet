@@ -801,6 +801,8 @@
     line-height: 1;
     user-select: none;
     color: #bbb;
+    flex: 1 1 auto;
+    min-width: 0;
 }
 
 .post-full__comment-status-delete-button {
@@ -825,6 +827,7 @@
 
 .post-full__comment-status-delete-button:hover {
     color: rgb(125, 125, 225);
+    text-decoration: underline;
 }
 
 .post-full__comment-reply-cancel {

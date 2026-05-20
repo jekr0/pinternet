@@ -835,10 +835,7 @@ class PostFullComponent {
         const floatingHeight = Math.max(0, Math.round(floatingWrap.getBoundingClientRect().height));
         const preferredTop = window.innerHeight - floatingHeight - 20;
         const maxTop = postRect.bottom - floatingHeight - 24;
-        const commentsToggleDivider = this.postFullElement.querySelector('[data-component="post-full-comments-toggle-divider"]');
-        const commentsToggleRect = commentsToggleDivider?.getBoundingClientRect();
-        const minTopByCommentsDivider = commentsToggleRect ? Math.round(commentsToggleRect.bottom + 24 - inputTopOffset) : Number.NEGATIVE_INFINITY;
-        const minTop = minTopByCommentsDivider;
+        const minTop = Number.NEGATIVE_INFINITY;
         const nextTop = Math.max(minTop, Math.min(preferredTop, maxTop));
 
         floatingWrap.style.left = `${Math.round(commentsRect.left)}px`;
@@ -946,6 +943,7 @@ class PostFullComponent {
         if (!commentInput) return;
         if (commentInput.value.trim() === '') {
             commentInput.style.height = '40px';
+            this.updateCommentInputFloatingPosition();
             return;
         }
         commentInput.style.height = 'auto';
