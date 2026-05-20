@@ -768,6 +768,10 @@ class PostFullComponent {
             return;
         }
 
+        const descriptionDivider = this.postFullElement?.querySelector('[data-component="post-full-description-divider"]');
+        const descriptionLine = descriptionDivider?.querySelector('.post-full__description-divider-line');
+        const descriptionLineRect = descriptionLine?.getBoundingClientRect();
+
         const toggleButton = this.postFullElement?.querySelector('[data-action="comments-toggle"]');
         if (!toggleButton) {
             this.hideFloatingCommentsButton(true);
@@ -785,9 +789,6 @@ class PostFullComponent {
             return;
         }
 
-        const descriptionDivider = this.postFullElement?.querySelector('[data-component="post-full-description-divider"]');
-        const descriptionLine = descriptionDivider?.querySelector('.post-full__description-divider-line');
-        const descriptionLineRect = descriptionLine?.getBoundingClientRect();
         const floatingInput = floatingWrap?.querySelector('[data-component="post-full-comment-input-floating"]');
         const inputTopOffset = floatingInput ? Math.round(floatingInput.offsetTop) : 0;
         const floatingButtonCenterY = floatingWrapRect
@@ -804,6 +805,11 @@ class PostFullComponent {
 
         this.commentsHideButton.style.left = `${Math.round(commentsRect.left + (commentsRect.width / 2))}px`;
         this.commentsHideButton.style.top = `${Math.round(floatingButtonCenterY - 18)}px`;
+        const liveCenterY = Math.round(floatingButtonCenterY);
+        if (descriptionLineRect && liveCenterY <= (descriptionLineRect.bottom + 24)) {
+            this.hideFloatingCommentsButton(true);
+            return;
+        }
         this.commentsHideButton.classList.add('is-visible', 'is-open');
         this.commentsHideButton.classList.remove('post-full__description-hide-button--closing');
     }
@@ -1805,9 +1811,9 @@ class PostFullComponent {
             || actions?.getBoundingClientRect().bottom
             || fallbackBottom;
         if (toggleButton) {
-            return Math.max(0, Math.round(toggleTop - avatarRect.bottom - 5));
+            return Math.max(0, Math.round(toggleTop - avatarRect.bottom - 9));
         }
-        return Math.max(0, Math.round(targetBottom - avatarRect.bottom - 5));
+        return Math.max(0, Math.round(targetBottom - avatarRect.bottom - 9));
     }
 
     getCommentAbsoluteRailBottom(commentItem) {
