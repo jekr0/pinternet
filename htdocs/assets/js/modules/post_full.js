@@ -763,9 +763,10 @@ class PostFullComponent {
         }
 
         const descriptionDivider = this.postFullElement?.querySelector('[data-component="post-full-description-divider"]');
-        const descriptionDividerRect = descriptionDivider?.getBoundingClientRect();
+        const descriptionLine = descriptionDivider?.querySelector('.post-full__description-divider-line');
+        const descriptionLineRect = descriptionLine?.getBoundingClientRect();
         const floatingButtonCenterY = window.innerHeight - 88 - 18;
-        if (descriptionDividerRect && Math.abs(descriptionDividerRect.top - floatingButtonCenterY) <= 1) {
+        if (descriptionLineRect && floatingButtonCenterY >= descriptionLineRect.top && floatingButtonCenterY <= descriptionLineRect.bottom) {
             this.hideFloatingCommentsButton(true);
             return;
         }
@@ -1077,14 +1078,45 @@ class PostFullComponent {
         }
 
         if (this.commentComposerMode === 'edit' && this.editingCommentElement) {
-            const textNode = this.editingCommentElement.querySelector('.post-full__comment-text');
-            if (textNode) {
-                textNode.innerHTML = this.escapeHtmlWithBreaks(text);
-                textNode.classList.remove('post-full__comment-text--editing');
+            const editingCommentId = Number(this.editingCommentElement.dataset.commentId || 0);
+            if (!editingCommentId) {
+                this.showToast('Не удалось определить комментарий для редактирования.');
+                return;
             }
-            this.clearReplyState({ clearInputs: true, blurInputs: true });
-            this.showToast('Комментарий изменен');
-            this.requestMasonryLayoutUpdate();
+            commentInput.disabled = true;
+            try {
+                const response = await fetch('/comments/update', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                        'Accept': 'application/json'
+                    },
+                    body: new URLSearchParams({
+                        comment_id: String(editingCommentId),
+                        content: text
+                    }).toString()
+                });
+
+                const payload = await response.json();
+                if (!response.ok || !payload.success) {
+                    this.showToast(payload?.error || 'Не удалось обновить комментарий.');
+                    return;
+                }
+
+                const textNode = this.editingCommentElement.querySelector('.post-full__comment-text');
+                if (textNode) {
+                    textNode.innerHTML = this.escapeHtmlWithBreaks(text);
+                    textNode.classList.remove('post-full__comment-text--editing');
+                }
+                this.clearReplyState({ clearInputs: true, blurInputs: true });
+                this.showToast('Комментарий изменен');
+                this.requestMasonryLayoutUpdate();
+            } catch (error) {
+                console.warn('Unable to update comment from post-full', error);
+                this.showToast('Не удалось обновить комментарий.');
+            } finally {
+                commentInput.disabled = false;
+            }
             return;
         }
 
@@ -1319,6 +1351,9 @@ class PostFullComponent {
 
     activateReplyState(commentId, rootCommentId, username) {
         if (!commentId || !username) return;
+        if (this.commentComposerMode === 'edit') {
+            this.clearReplyState({ clearInputs: true });
+        }
         this.commentComposerMode = 'reply';
 
         this.replyTargetCommentId = commentId;
@@ -1333,6 +1368,9 @@ class PostFullComponent {
         stateNodes.forEach((stateNode) => {
             stateNode.classList.add('is-active');
         });
+        const staticInput = this.postFullElement?.querySelector('[data-component="post-full-comment-input"]');
+        const floatingInput = this.postFullElement?.querySelector('[data-component="post-full-comment-input-floating"]');
+        (floatingInput && this.commentsExpanded ? floatingInput : staticInput)?.focus();
         this.requestMasonryLayoutUpdate();
     }
 
@@ -1381,7 +1419,6 @@ class PostFullComponent {
 
         const stateNodes = this.postFullElement?.querySelectorAll('[data-component="post-full-reply-state"], [data-component="post-full-reply-state-floating"]');
         const nicknameNodes = this.postFullElement?.querySelectorAll('[data-component="post-full-reply-nickname"], [data-component="post-full-reply-nickname-floating"]');
-        if (!stateNodes || stateNodes.length === 0 || !nicknameNodes || nicknameNodes.length === 0) return;
 
         this.commentComposerMode = 'reply';
         this.setCommentComposerStateText('Ответ пользователю', '');
@@ -1405,7 +1442,7 @@ class PostFullComponent {
             staticInput?.blur();
             floatingInput?.blur();
         }
-        stateNodes.forEach((stateNode) => {
+        stateNodes?.forEach((stateNode) => {
             stateNode.classList.remove('is-active');
         });
         this.requestMasonryLayoutUpdate();

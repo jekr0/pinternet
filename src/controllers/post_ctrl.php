@@ -83,6 +83,10 @@ if ($path === '/comments/report') {
     handleCommentReport($pdo, $userId);
 }
 
+if ($path === '/comments/update') {
+    handleUpdateComment($pdo, $userId);
+}
+
 if ($path === '/posts/list') {
     handlePostsList($pdo);
 }
@@ -683,6 +687,42 @@ function handleCommentReport(PDO $pdo, int $userId): never
     }
 
     jsonResponse(['success' => true, 'already_reported' => $alreadyReported]);
+}
+
+function handleUpdateComment(PDO $pdo, int $userId): never
+{
+    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+        jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод.'], 405);
+    }
+
+    $commentId = (int) ($_POST['comment_id'] ?? 0);
+    $content = trim((string) ($_POST['content'] ?? ''));
+
+    if ($commentId <= 0) {
+        jsonResponse(['success' => false, 'error' => 'Некорректный comment_id.'], 422);
+    }
+    if ($content === '') {
+        jsonResponse(['success' => false, 'error' => 'Комментарий не может быть пустым.'], 422);
+    }
+    if (mb_strlen($content) > 256) {
+        jsonResponse(['success' => false, 'error' => 'Комментарий не должен превышать 256 символов.'], 422);
+    }
+
+    $commentStmt = $pdo->prepare('SELECT id FROM Comments WHERE id = ? AND user_id = ? AND is_deleted = 0 LIMIT 1');
+    $commentStmt->execute([$commentId, $userId]);
+    if ($commentStmt->fetchColumn() === false) {
+        jsonResponse(['success' => false, 'error' => 'Комментарий не найден или недоступен для редактирования.'], 404);
+    }
+
+    try {
+        $updateStmt = $pdo->prepare('UPDATE Comments SET content = ? WHERE id = ? AND user_id = ? LIMIT 1');
+        $updateStmt->execute([$content, $commentId, $userId]);
+    } catch (Throwable $e) {
+        error_log('Comment update error: ' . $e->getMessage());
+        jsonResponse(['success' => false, 'error' => 'Не удалось обновить комментарий.'], 500);
+    }
+
+    jsonResponse(['success' => true, 'comment_id' => $commentId, 'content' => $content]);
 }
 
 
