@@ -350,6 +350,17 @@ class PostFullComponent {
             prefixNode.dataset.component = `post-full-reply-prefix${componentSuffix}`;
             prefixNode.textContent = 'Ответ пользователю';
             textNode.append(prefixNode, document.createTextNode(' '), valueNode);
+
+            let deleteButton = block.querySelector('[data-action="comment-delete"]');
+            if (!deleteButton) {
+                deleteButton = document.createElement('button');
+                deleteButton.className = 'post-full__comment-status-delete-button';
+                deleteButton.type = 'button';
+                deleteButton.dataset.action = 'comment-delete';
+                deleteButton.textContent = 'Удалить комментарий';
+                block.appendChild(deleteButton);
+            }
+            deleteButton.classList.remove('is-visible');
         });
     }
 
@@ -397,7 +408,7 @@ class PostFullComponent {
             if (cancelButton.dataset.bound === '1') return;
             cancelButton.dataset.bound = '1';
             cancelButton.addEventListener('click', () => {
-                this.clearReplyState();
+                this.clearReplyState({ clearInputs: true, blurInputs: true });
             });
         });
     }
@@ -766,7 +777,7 @@ class PostFullComponent {
         const descriptionLine = descriptionDivider?.querySelector('.post-full__description-divider-line');
         const descriptionLineRect = descriptionLine?.getBoundingClientRect();
         const floatingButtonCenterY = window.innerHeight - 88 - 18;
-        if (descriptionLineRect && floatingButtonCenterY >= descriptionLineRect.top && floatingButtonCenterY <= descriptionLineRect.bottom) {
+        if (descriptionLineRect && floatingButtonCenterY <= descriptionLineRect.bottom) {
             this.hideFloatingCommentsButton(true);
             return;
         }
@@ -1365,6 +1376,7 @@ class PostFullComponent {
         if (!stateNodes || stateNodes.length === 0 || !nicknameNodes || nicknameNodes.length === 0) return;
 
         this.setCommentComposerStateText('Ответ пользователю', `@${this.replyTargetUsername}`);
+        this.toggleCommentDeleteButtons(false);
         stateNodes.forEach((stateNode) => {
             stateNode.classList.add('is-active');
         });
@@ -1383,6 +1395,7 @@ class PostFullComponent {
         }
         this.editingCommentElement = commentItem;
         this.setCommentComposerStateText('Изменение комментария...', '');
+        this.toggleCommentDeleteButtons(true);
         const stateNodes = this.postFullElement?.querySelectorAll('[data-component="post-full-reply-state"], [data-component="post-full-reply-state-floating"]');
         stateNodes?.forEach((stateNode) => stateNode.classList.add('is-active'));
         const commentTextNode = commentItem.querySelector('.post-full__comment-text');
@@ -1421,6 +1434,7 @@ class PostFullComponent {
         const nicknameNodes = this.postFullElement?.querySelectorAll('[data-component="post-full-reply-nickname"], [data-component="post-full-reply-nickname-floating"]');
 
         this.commentComposerMode = 'reply';
+        this.toggleCommentDeleteButtons(false);
         this.setCommentComposerStateText('Ответ пользователю', '');
         const staticInput = this.postFullElement?.querySelector('[data-component="post-full-comment-input"]');
         const floatingInput = this.postFullElement?.querySelector('[data-component="post-full-comment-input-floating"]');
@@ -1446,6 +1460,13 @@ class PostFullComponent {
             stateNode.classList.remove('is-active');
         });
         this.requestMasonryLayoutUpdate();
+    }
+
+    toggleCommentDeleteButtons(isVisible) {
+        const deleteButtons = this.postFullElement?.querySelectorAll('[data-action="comment-delete"]');
+        deleteButtons?.forEach((button) => {
+            button.classList.toggle('is-visible', isVisible);
+        });
     }
 
     async toggleCommentLike(button, commentId) {
