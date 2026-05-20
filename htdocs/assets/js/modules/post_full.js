@@ -1367,7 +1367,7 @@ class PostFullComponent {
                             <span class="post-full__comment-action-icon" data-svg-src="/assets/images/icons/S-bin.svg" aria-hidden="true"></span>
                         </button>`
                         : `<button class="post-full__comment-action-button" type="button" data-action="comment-report" aria-label="Пожаловаться на комментарий">
-                            <span class="post-full__comment-action-icon" data-svg-src="/assets/images/icons/S-warning.svg" aria-hidden="true"></span>
+                            <span class="post-full__comment-action-icon" data-svg-src="/assets/images/icons/S-flag.svg" aria-hidden="true"></span>
                         </button>`}
                 </div>
             </div>
