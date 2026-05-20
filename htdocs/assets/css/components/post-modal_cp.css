@@ -25,10 +25,14 @@
 
 .post-modal__panel {
     position: relative;
-    width: min(1300px, calc(100vw - 40px));
-    max-width: 85%;
-    height: 730px;
-    max-height: 75%;
+    width: min(1208px, calc(100vw - 40px));
+    height: min(688px, calc(100vh - 40px));
+    box-sizing: border-box;
+    padding: 64px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: 64px;
+    align-items: start;
     background: #fff;
     border: 1px solid #ffffff;
     border-radius: 20px;
@@ -97,27 +101,24 @@
 }
 
 .post-modal__upload-column {
-    position: absolute;
-    left: 0;
-    top: 0;
+    position: relative;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     gap: 15px;
+    width: 100%;
 }
 
 .post-modal__meta-column {
     position: relative;
-    width: 630px;
-    min-height: 665px;
-    margin-left: auto;
+    width: 100%;
+    min-height: 100%;
 }
 
 .post-modal__title {
-    position: absolute;
-    right: 60px;
-    top: 30px;
-    width: 630px;
+    position: relative;
+    margin: 0 0 20px;
+    width: 100%;
     height: 50px;
     font-family: 'MC_caps', Arial, sans-serif;
     font-size: 26px;
@@ -129,9 +130,9 @@
 /* --------------------------- Поля формы ------------------------------------- */
 
 .post-modal__input {
-    position: absolute;
-    right: 60px;
-    width: 630px;
+    position: relative;
+    right: 0;
+    width: 100%;
     padding: 0 15px;
     box-sizing: border-box;
     outline: none;
@@ -161,14 +162,12 @@
 }
 
 .post-modal__collection {
-    position: absolute;
-    top: 270px;
-    right: 60px;
-    width: 630px;
+    position: relative;
+    width: 100%;
+    margin-top: 16px;
 }
 
 .post-modal__input--description {
-    top: 100px;
     height: 150px;
     padding-top: 15px;
     resize: none;
@@ -191,7 +190,7 @@
     top: 50px;
     left: 0;
     z-index: 1;
-    width: 630px;
+    width: 100%;
     max-height: 90px;
     margin: 0;
     padding: 0;
@@ -246,15 +245,14 @@
 }
 
 .post-modal__tags-wrap {
-    position: absolute;
-    top: 430px;
-    right: 60px;
-    width: 630px;
+    position: relative;
+    width: 100%;
+    margin-top: 16px;
 }
 
 .post-modal__tags-input-row {
     position: relative;
-    width: 630px;
+    width: 100%;
 }
 
 .post-modal__input--tags {
@@ -304,7 +302,7 @@
     display: flex;
     flex-direction: column;
     row-gap: 5px;
-    width: 630px;
+    width: 100%;
     max-height: 79px;
     margin-top: 8px;
     overflow: hidden;
@@ -323,7 +321,7 @@
     top: 50px;
     left: 0;
     z-index: 1;
-    width: 630px;
+    width: 100%;
     height: 90px;
     margin: 0;
     padding: 0 0 29px;
@@ -427,10 +425,12 @@
 
 .post-modal__confirm {
     position: absolute;
-    right: 60px;
-    top: 495px;
+    right: 0;
+    left: 0;
+    top: auto;
+    bottom: 130px;
     z-index: 5;
-    width: 630px;
+    width: 100%;
     padding: 18px;
     box-sizing: border-box;
     background: #ffffff;
@@ -463,10 +463,11 @@
 /* ------------------------------ Кнопки -------------------------------------- */
 
 .post-modal__actions {
-    position: relative;
-    right: 60px;
-    top: 590px;
-    width: 630px;
+    position: absolute;
+    right: 0;
+    left: 0;
+    bottom: 0;
+    width: 100%;
     height: 110px;
     display: flex;
     gap: 10px;
@@ -530,10 +531,10 @@
 
 .post-modal__upload-dropzone {
     position: relative;
-    width: 520px;
-    height: 450px;
-    margin: 30px 0 0 30px;
-    max-height: 610px;
+    width: 100%;
+    height: 404px;
+    max-height: 584px;
+    margin: 0;
     border: 2px dashed #c9c9c9;
     border-radius: 10px;
     background: #e0e0e0;
@@ -549,7 +550,7 @@
 }
 
 .post-modal__upload-dropzone--filled {
-    height: auto;
+    height: min(584px, 100%);
     border-style: solid;
     border-color: #333;
 }
@@ -677,12 +678,12 @@
 }
 
 .post-modal__hint {
-    margin: 0 0 0 30px;
-    width: 520px;
-    height: 10px;
+    margin: 0;
+    width: 100%;
+    min-height: 20px;
     font-family: 'NS_def', Arial, sans-serif;
     text-align: center;
-    font-size: 14px;
+    font-size: 16px;
     color: #999999;
 }
 
