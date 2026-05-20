@@ -776,7 +776,11 @@ class PostFullComponent {
         const descriptionDivider = this.postFullElement?.querySelector('[data-component="post-full-description-divider"]');
         const descriptionLine = descriptionDivider?.querySelector('.post-full__description-divider-line');
         const descriptionLineRect = descriptionLine?.getBoundingClientRect();
-        const floatingButtonCenterY = window.innerHeight - 88 - 18;
+        const floatingInput = floatingWrap?.querySelector('[data-component="post-full-comment-input-floating"]');
+        const inputTopOffset = floatingInput ? Math.round(floatingInput.offsetTop) : 0;
+        const floatingButtonCenterY = floatingWrapRect
+            ? Math.round(floatingWrapRect.top + inputTopOffset - 32 - 18)
+            : (window.innerHeight - 88 - 18);
         if (descriptionLineRect && floatingButtonCenterY <= descriptionLineRect.bottom) {
             this.hideFloatingCommentsButton(true);
             return;
@@ -787,6 +791,7 @@ class PostFullComponent {
         if (!commentsRect) return;
 
         this.commentsHideButton.style.left = `${Math.round(commentsRect.left + (commentsRect.width / 2))}px`;
+        this.commentsHideButton.style.top = `${Math.round(floatingButtonCenterY - 18)}px`;
         this.commentsHideButton.classList.add('is-visible', 'is-open');
         this.commentsHideButton.classList.remove('post-full__description-hide-button--closing');
     }
@@ -830,10 +835,10 @@ class PostFullComponent {
         const floatingHeight = Math.max(0, Math.round(floatingWrap.getBoundingClientRect().height));
         const preferredTop = window.innerHeight - floatingHeight - 20;
         const maxTop = postRect.bottom - floatingHeight - 24;
-        const divider = this.postFullElement.querySelector('[data-component="post-full-description-divider"]');
-        const dividerRect = divider?.getBoundingClientRect();
-        const minTopDescription = dividerRect ? Math.round(dividerRect.bottom + 42 - inputTopOffset) : Number.NEGATIVE_INFINITY;
-        const minTop = minTopDescription;
+        const commentsToggleDivider = this.postFullElement.querySelector('[data-component="post-full-comments-toggle-divider"]');
+        const commentsToggleRect = commentsToggleDivider?.getBoundingClientRect();
+        const minTopByCommentsDivider = commentsToggleRect ? Math.round(commentsToggleRect.bottom + 24 - inputTopOffset) : Number.NEGATIVE_INFINITY;
+        const minTop = minTopByCommentsDivider;
         const nextTop = Math.max(minTop, Math.min(preferredTop, maxTop));
 
         floatingWrap.style.left = `${Math.round(commentsRect.left)}px`;
@@ -944,7 +949,7 @@ class PostFullComponent {
             return;
         }
         commentInput.style.height = 'auto';
-        const nextHeight = Math.max(40, commentInput.scrollHeight);
+        const nextHeight = Math.min(140, Math.max(40, commentInput.scrollHeight));
         commentInput.style.height = `${nextHeight}px`;
         this.updateCommentInputFloatingPosition();
     }
