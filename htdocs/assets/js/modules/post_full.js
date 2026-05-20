@@ -285,6 +285,7 @@ class PostFullComponent {
             this.postFullElement.appendChild(floatingWrap);
             floatingInput = floatingWrap.querySelector('[data-component="post-full-comment-input-floating"]');
             floatingCounter = floatingWrap.querySelector('[data-component="post-full-comment-counter-floating"]');
+            this.prepareCommentComposerStateNodes();
         }
 
         const syncTextAndCounters = (sourceInput, targetInput) => {
@@ -717,6 +718,7 @@ class PostFullComponent {
         if (hiddenCount > 0 && !this.commentsExpanded) {
             toggleButton.textContent = `Показать все комментарии (+${hiddenCount})`;
             toggleButton.style.display = '';
+            this.hideFloatingCommentsButton(true);
             this.updateCommentInputFloatingPosition();
             return;
         }
@@ -779,7 +781,7 @@ class PostFullComponent {
         const floatingInput = floatingWrap?.querySelector('[data-component="post-full-comment-input-floating"]');
         const inputTopOffset = floatingInput ? Math.round(floatingInput.offsetTop) : 0;
         const floatingButtonCenterY = floatingWrapRect
-            ? Math.round(floatingWrapRect.top + inputTopOffset - 32 - 18)
+            ? Math.round(floatingWrapRect.top + inputTopOffset - 16 - 18)
             : (window.innerHeight - 88 - 18);
         if (descriptionLineRect && floatingButtonCenterY <= descriptionLineRect.bottom) {
             this.hideFloatingCommentsButton(true);
@@ -845,6 +847,7 @@ class PostFullComponent {
         if (floatingInput) {
             floatingWrap.style.setProperty('--post-full-floating-input-top', `${inputTopOffset}px`);
         }
+        this.updateCommentsHideButtonPosition();
     }
 
     updateStaticCommentInputPlaceholder(inputWrap) {
