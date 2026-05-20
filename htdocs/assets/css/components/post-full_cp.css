@@ -291,6 +291,10 @@
     transform: translate(-50%, 0);
 }
 
+.post-full__comments-hide-button {
+    bottom: auto;
+}
+
 .post-full__description-hide-button--closing {
     opacity: 0;
     visibility: hidden;
@@ -468,7 +472,7 @@
 .post-full__comment-rail {
     width: 2px;
     height: 0;
-    margin-top: 2px;
+    margin-top: 4px;
     background: #e0e0e0;
     border-radius: 2px;
 }
@@ -778,6 +782,7 @@
 .post-full__comment-reply-state {
     margin-left: 8px;
     margin-bottom: 8px;
+    width: calc(100% - 8px);
     visibility: hidden;
     pointer-events: none;
     display: flex;
@@ -796,6 +801,33 @@
     line-height: 1;
     user-select: none;
     color: #bbb;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.post-full__comment-status-delete-button {
+    display: none;
+    margin-left: auto;
+    margin-right: 12px;
+    flex: 0 0 auto;
+    border: none;
+    background: transparent;
+    padding: 0;
+    font-family: 'SF_def', Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1;
+    color: rgb(100, 100, 200);
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.post-full__comment-status-delete-button.is-visible {
+    display: inline-flex;
+}
+
+.post-full__comment-status-delete-button:hover {
+    color: rgb(125, 125, 225);
+    text-decoration: underline;
 }
 
 .post-full__comment-reply-cancel {
@@ -823,6 +855,11 @@
 .post-full__comment-reply-cancel:focus-visible {
     outline: 1.5px solid rgb(150, 150, 250);
     outline-offset: 1px;
+}
+
+.post-full__comment-text--editing {
+    color: rgb(150, 150, 250);
+    transition: color 0.2s ease;
 }
 
 .post-full__comment-children-toggle {
@@ -861,11 +898,12 @@
 .post-full__comment-input {
     width: 100%;
     min-height: 40px;
+    max-height: 140px;
     padding: 10px 14px;
     box-sizing: border-box;
     outline: none;
     resize: none;
-    overflow: hidden;
+    overflow-y: auto;
     font-family: 'NS_def', Arial, sans-serif;
     font-size: 16px;
     color: #333;

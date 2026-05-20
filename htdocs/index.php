@@ -118,6 +118,8 @@ switch ($path) {
         case '/posts/comment':
         case '/comments/like':
         case '/comments/report':
+        case '/comments/update':
+        case '/comments/delete':
         require_once '../src/controllers/post_ctrl.php';
         exit;
 
