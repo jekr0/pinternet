@@ -768,8 +768,10 @@ function handleDeleteComment(PDO $pdo, int $userId): never
         $deleteLikes->execute($idsToDelete);
         $deleteReports = $pdo->prepare("DELETE FROM Comment_Reports WHERE comment_id IN ($placeholders)");
         $deleteReports->execute($idsToDelete);
-        $softDelete = $pdo->prepare("UPDATE Comments SET is_deleted = 1 WHERE id IN ($placeholders)");
-        $softDelete->execute($idsToDelete);
+        for ($i = count($idsToDelete) - 1; $i >= 0; $i--) {
+            $deleteComment = $pdo->prepare('DELETE FROM Comments WHERE id = ?');
+            $deleteComment->execute([$idsToDelete[$i]]);
+        }
 
         $pdo->commit();
         jsonResponse(['success' => true, 'deleted_ids' => $idsToDelete]);

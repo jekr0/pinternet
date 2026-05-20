@@ -32,6 +32,7 @@ class PostFullComponent {
         this.commentComposerMode = 'reply';
         this.editingCommentElement = null;
         this.pendingCommentReportId = 0;
+        this.pendingCommentDeleteId = 0;
         this.descriptionElement = null;
         this.descriptionHideButton = null;
         this.descriptionDividerButton = null;
@@ -418,7 +419,7 @@ class PostFullComponent {
             if (deleteButton.dataset.bound === '1') return;
             deleteButton.dataset.bound = '1';
             deleteButton.addEventListener('click', async () => {
-                await this.deleteEditingComment();
+                this.openCommentDeleteOverlay();
             });
         });
     }
@@ -792,7 +793,7 @@ class PostFullComponent {
         const floatingButtonCenterY = floatingWrapRect
             ? Math.round(floatingWrapRect.top + inputTopOffset - 16 - 18)
             : (window.innerHeight - 88 - 18);
-        if (descriptionLineRect && floatingButtonCenterY <= descriptionLineRect.bottom) {
+        if (descriptionLineRect && floatingButtonCenterY <= (descriptionLineRect.bottom + 24)) {
             this.hideFloatingCommentsButton(true);
             return;
         }
@@ -1526,6 +1527,71 @@ class PostFullComponent {
         } catch (error) {
             console.warn('Unable to delete comment from post-full', error);
             this.showToast('Не удалось удалить комментарий.');
+        }
+    }
+
+    openCommentDeleteOverlay() {
+        if (!App.overlay || this.commentComposerMode !== 'edit' || !this.editingCommentElement) return;
+        const commentId = Number(this.editingCommentElement.dataset.commentId || 0);
+        if (!commentId) {
+            this.showToast('Не удалось определить комментарий для удаления.');
+            return;
+        }
+        if (App.overlay.get('comment-delete')) return;
+
+        this.pendingCommentDeleteId = commentId;
+        let deleteButton = null;
+
+        App.overlay.open({
+            key: 'comment-delete',
+            overlayClass: 'post-full-report',
+            hiddenClass: 'post-full-report--hidden',
+            panelClass: 'post-full-report__panel',
+            buildPanel: (panel, close) => {
+                const text = document.createElement('p');
+                text.className = 'post-full-report__title';
+                text.textContent = 'Удалить комментарий?';
+
+                const description = document.createElement('p');
+                description.className = 'post-full-report__description';
+                description.textContent = 'После удаления комментарий и все ответы на него будут полностью удалены с сайта без возможности восстановления.';
+
+                const actions = document.createElement('div');
+                actions.className = 'post-full-report__actions';
+
+                const cancelButton = document.createElement('button');
+                cancelButton.className = 'post-full-report__button post-full-report__button--cancel';
+                cancelButton.type = 'button';
+                cancelButton.textContent = 'Отмена';
+                cancelButton.addEventListener('click', close);
+
+                deleteButton = document.createElement('button');
+                deleteButton.className = 'post-full-report__button post-full-report__button--confirm';
+                deleteButton.type = 'button';
+                deleteButton.textContent = 'Удалить';
+                deleteButton.addEventListener('click', async () => {
+                    await this.submitCommentDelete(deleteButton);
+                });
+
+                actions.appendChild(cancelButton);
+                actions.appendChild(deleteButton);
+                panel.appendChild(text);
+                panel.appendChild(description);
+                panel.appendChild(actions);
+            }
+        });
+    }
+
+    async submitCommentDelete(deleteButton) {
+        const commentId = this.pendingCommentDeleteId;
+        if (!commentId || !deleteButton) return;
+        deleteButton.disabled = true;
+        try {
+            await this.deleteEditingComment();
+            App.overlay?.close('comment-delete');
+        } finally {
+            deleteButton.disabled = false;
+            this.pendingCommentDeleteId = 0;
         }
     }
 
