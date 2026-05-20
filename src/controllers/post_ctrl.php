@@ -87,6 +87,10 @@ if ($path === '/comments/update') {
     handleUpdateComment($pdo, $userId);
 }
 
+if ($path === '/comments/delete') {
+    handleDeleteComment($pdo, $userId);
+}
+
 if ($path === '/posts/list') {
     handlePostsList($pdo);
 }
@@ -723,6 +727,57 @@ function handleUpdateComment(PDO $pdo, int $userId): never
     }
 
     jsonResponse(['success' => true, 'comment_id' => $commentId, 'content' => $content]);
+}
+
+function handleDeleteComment(PDO $pdo, int $userId): never
+{
+    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+        jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод.'], 405);
+    }
+
+    $commentId = (int) ($_POST['comment_id'] ?? 0);
+    if ($commentId <= 0) {
+        jsonResponse(['success' => false, 'error' => 'Некорректный comment_id.'], 422);
+    }
+
+    $ownerStmt = $pdo->prepare('SELECT id FROM Comments WHERE id = ? AND user_id = ? AND is_deleted = 0 LIMIT 1');
+    $ownerStmt->execute([$commentId, $userId]);
+    if ($ownerStmt->fetchColumn() === false) {
+        jsonResponse(['success' => false, 'error' => 'Комментарий не найден или недоступен для удаления.'], 404);
+    }
+
+    try {
+        $pdo->beginTransaction();
+
+        $idsToDelete = [$commentId];
+        $cursor = 0;
+        while ($cursor < count($idsToDelete)) {
+            $parentId = $idsToDelete[$cursor++];
+            $childrenStmt = $pdo->prepare('SELECT id FROM Comments WHERE parent_comment_id = ? AND is_deleted = 0');
+            $childrenStmt->execute([$parentId]);
+            $childIds = array_map(static fn(array $row): int => (int) $row['id'], $childrenStmt->fetchAll(PDO::FETCH_ASSOC));
+            foreach ($childIds as $childId) {
+                if (!in_array($childId, $idsToDelete, true)) {
+                    $idsToDelete[] = $childId;
+                }
+            }
+        }
+
+        $placeholders = implode(',', array_fill(0, count($idsToDelete), '?'));
+        $deleteLikes = $pdo->prepare("DELETE FROM Comment_Likes WHERE comment_id IN ($placeholders)");
+        $deleteLikes->execute($idsToDelete);
+        $deleteReports = $pdo->prepare("DELETE FROM Comment_Reports WHERE comment_id IN ($placeholders)");
+        $deleteReports->execute($idsToDelete);
+        $softDelete = $pdo->prepare("UPDATE Comments SET is_deleted = 1 WHERE id IN ($placeholders)");
+        $softDelete->execute($idsToDelete);
+
+        $pdo->commit();
+        jsonResponse(['success' => true, 'deleted_ids' => $idsToDelete]);
+    } catch (Throwable $e) {
+        $pdo->rollBack();
+        error_log('Comment delete error: ' . $e->getMessage());
+        jsonResponse(['success' => false, 'error' => 'Не удалось удалить комментарий.'], 500);
+    }
 }
 
 

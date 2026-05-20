@@ -412,6 +412,15 @@ class PostFullComponent {
                 this.clearReplyState({ clearInputs: true, blurInputs: true });
             });
         });
+
+        const deleteButtons = this.postFullElement?.querySelectorAll('[data-action="comment-delete"]');
+        deleteButtons?.forEach((deleteButton) => {
+            if (deleteButton.dataset.bound === '1') return;
+            deleteButton.dataset.bound = '1';
+            deleteButton.addEventListener('click', async () => {
+                await this.deleteEditingComment();
+            });
+        });
     }
 
     bindDescriptionToggle() {
@@ -837,7 +846,9 @@ class PostFullComponent {
         const floatingHeight = Math.max(0, Math.round(floatingWrap.getBoundingClientRect().height));
         const preferredTop = window.innerHeight - floatingHeight - 20;
         const maxTop = postRect.bottom - floatingHeight - 24;
-        const minTop = Number.NEGATIVE_INFINITY;
+        const divider = this.postFullElement.querySelector('[data-component="post-full-description-divider"]');
+        const dividerRect = divider?.getBoundingClientRect();
+        const minTop = dividerRect ? Math.round(dividerRect.bottom + 42 - inputTopOffset) : Number.NEGATIVE_INFINITY;
         const nextTop = Math.max(minTop, Math.min(preferredTop, maxTop));
 
         floatingWrap.style.left = `${Math.round(commentsRect.left)}px`;
@@ -1473,6 +1484,49 @@ class PostFullComponent {
         deleteButtons?.forEach((button) => {
             button.classList.toggle('is-visible', isVisible);
         });
+    }
+
+    async deleteEditingComment() {
+        if (this.commentComposerMode !== 'edit' || !this.editingCommentElement) return;
+        const commentId = Number(this.editingCommentElement.dataset.commentId || 0);
+        if (!commentId) {
+            this.showToast('Не удалось определить комментарий для удаления.');
+            return;
+        }
+
+        try {
+            const response = await fetch('/comments/delete', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                    'Accept': 'application/json'
+                },
+                body: new URLSearchParams({ comment_id: String(commentId) }).toString()
+            });
+            const payload = await response.json();
+            if (!response.ok || !payload.success) {
+                this.showToast(payload?.error || 'Не удалось удалить комментарий.');
+                return;
+            }
+
+            const deletedIds = Array.isArray(payload.deleted_ids) ? payload.deleted_ids.map((id) => Number(id || 0)).filter((id) => id > 0) : [commentId];
+            deletedIds.forEach((id) => {
+                const nodes = this.postFullElement?.querySelectorAll(`.post-full__comment-item[data-comment-id="${id}"]`) || [];
+                nodes.forEach((node) => node.remove());
+            });
+            this.postFullElement?.querySelectorAll('.post-full__comment-thread').forEach((thread) => {
+                const rootItem = thread.querySelector('.post-full__comment-item:not(.post-full__comment-item--reply)');
+                const replies = thread.querySelectorAll('.post-full__comment-item--reply');
+                if (!rootItem && replies.length === 0) thread.remove();
+            });
+
+            this.clearReplyState({ clearInputs: true, blurInputs: true });
+            this.showToast('Комментарий удален');
+            this.requestMasonryLayoutUpdate();
+        } catch (error) {
+            console.warn('Unable to delete comment from post-full', error);
+            this.showToast('Не удалось удалить комментарий.');
+        }
     }
 
     async toggleCommentLike(button, commentId) {
