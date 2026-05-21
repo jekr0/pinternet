@@ -37,7 +37,7 @@
             <h2 class="post-modal__title" id="post-modal-title" data-component="post-modal-title">Новый пост</h2>
 
             <!-- Описание -->
-            <div style="position:relative; width:100%; height:150px;">
+            <div class="post-modal__description-wrap">
                 <textarea
                     class="post-modal__input post-modal__input--description"
                     name="post-description"
@@ -45,11 +45,10 @@
                     autocomplete="off"
                     maxlength="512"
                     data-component="post-description"
-                    style="position:relative; top:0; right:0; width:100%; height:100%;"
                 ></textarea>
                 <span
                     data-component="post-description-counter"
-                    style="position:absolute; right:5px; bottom:5px; font-size:14px; color:#bbb; pointer-events:none;"
+                    class="post-modal__description-counter"
                 >0/512</span>
             </div>
 

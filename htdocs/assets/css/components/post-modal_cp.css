@@ -169,10 +169,53 @@
     margin-top: 16px;
 }
 
+.post-modal__description-wrap {
+    position: relative;
+    width: 100%;
+    height: 144px;
+}
+
 .post-modal__input--description {
-    height: 150px;
-    padding-top: 15px;
+    width: 100%;
+    height: 100%;
+    min-height: 144px;
+    max-height: 144px;
+    padding: 10px 14px;
+    box-sizing: border-box;
+    outline: none;
     resize: none;
+    overflow-y: auto;
+    font-family: 'NS_def', Arial, sans-serif;
+    font-size: 16px;
+    color: #333;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    transition: border-color 0.2s ease;
+}
+
+.post-modal__input--description::placeholder {
+    font-size: 16px;
+    color: #bbb;
+}
+
+.post-modal__input--description:hover {
+    border-color: rgb(150, 150, 250);
+}
+
+.post-modal__input--description:focus {
+    border-color: rgb(100, 100, 200);
+}
+
+.post-modal__description-counter {
+    position: absolute;
+    right: 8px;
+    bottom: 6px;
+    font-family: 'NS_def', Arial, sans-serif;
+    font-size: 16px;
+    color: #bbb;
+    pointer-events: none;
+    user-select: none;
 }
 
 .post-modal__input--collection {
@@ -471,7 +514,8 @@
     bottom: 52px;
     width: 100%;
     display: flex;
-    gap: 12px;
+    column-gap: 12px;
+    row-gap: 0;
     flex-wrap: wrap;
     align-content: flex-start;
 }
