@@ -88,11 +88,13 @@
             </div>
 
             <div class="post-modal__confirm post-modal__confirm--hidden" data-component="post-modal-confirm" aria-hidden="true">
-                <h3 class="post-modal__confirm-title" data-component="post-modal-confirm-title"></h3>
-                <p class="post-modal__confirm-message" data-component="post-modal-confirm-message"></p>
-                <div class="post-modal__confirm-actions">
-                    <button class="post-modal__button post-modal__button--cancel" type="button" data-component="post-modal-confirm-cancel">Назад</button>
-                    <button class="post-modal__button post-modal__button--submit" type="button" data-component="post-modal-confirm-submit">Закрыть окно</button>
+                <div class="post-modal__confirm-panel">
+                    <h3 class="post-modal__confirm-title" data-component="post-modal-confirm-title"></h3>
+                    <p class="post-modal__confirm-message" data-component="post-modal-confirm-message"></p>
+                    <div class="post-modal__confirm-actions">
+                        <button class="post-modal__button post-modal__button--cancel" type="button" data-component="post-modal-confirm-cancel">Назад</button>
+                        <button class="post-modal__button post-modal__button--submit" type="button" data-component="post-modal-confirm-submit">Закрыть окно</button>
+                    </div>
                 </div>
             </div>
 
