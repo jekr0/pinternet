@@ -256,7 +256,7 @@ class CreatePostModalComponent {
     bindCloseHandlers() {
         this.modal.addEventListener('click', (event) => {
             if (event.target === this.modal) {
-                if (this.isEditMode) {
+                if (this.isEditMode || this.hasUnsavedChanges()) {
                     this.blockEditOverlayClose();
                     return;
                 }

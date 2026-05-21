@@ -43,7 +43,13 @@
 }
 
 .post-modal__panel--close-blocked {
-    border-color: rgb(150, 150, 250);
+    animation: post-modal-close-blocked 1s ease-out;
+}
+
+@keyframes post-modal-close-blocked {
+    0% { border-color: #ffffff; }
+    12% { border-color: rgb(100, 100, 200); }
+    100% { border-color: #ffffff; }
 }
 
 .post-modal__alert {
@@ -250,7 +256,7 @@
     padding: 0;
     list-style: none;
     background: #ffffff;
-    border-radius: 0 0 8px 8px;
+    border-radius: 0 0 12px 12px;
     border: 1.5px solid #e0e0e0;
     border-top: none;
     overflow-y: auto;
@@ -389,7 +395,7 @@
     padding: 0;
     list-style: none;
     background: #fff;
-    border-radius: 0 0 8px 8px;
+    border-radius: 0 0 12px 12px;
     border: 1.5px solid #e0e0e0;
     border-top: none;
     display: block;
@@ -423,6 +429,18 @@
 
 .post-modal__tags-suggest-list button:hover {
     background: rgba(100, 100, 200, 0.08);
+}
+
+.post-modal__tags-input-row:hover .post-modal__input--tags,
+.post-modal__tags-input-row:hover .post-modal__tags-suggest-list,
+.post-modal__tags-input-row:focus-within .post-modal__input--tags,
+.post-modal__tags-input-row:focus-within .post-modal__tags-suggest-list {
+    border-color: rgb(150, 150, 250);
+}
+
+.post-modal__tags-input-row:focus-within .post-modal__input--tags,
+.post-modal__tags-input-row:focus-within .post-modal__tags-suggest-list {
+    border-color: rgb(100, 100, 200);
 }
 
 .post-modal__tags-suggest-match {
