@@ -310,7 +310,7 @@
     position: relative;
     width: 100%;
     margin-top: 0;
-    margin-bottom: 0;
+    margin-bottom: 4px;
 }
 
 .post-modal__tags-input-row {

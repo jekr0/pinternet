@@ -23,8 +23,8 @@
 .dropdown-collections {
     position: fixed;
     z-index: 50;
-    width: 196px;
-    height: 240px;
+    width: 220px;
+    height: 250px;
     box-sizing: border-box;
     background: #fff;
     border-radius: 12px;
@@ -58,10 +58,10 @@
 /* Скролл со списком коллекций */
 .dropdown-collections__collection-list {
     position: absolute;
-    top: 16px;
-    left: 12px;
-    width: 172px;
-    height: 112px;
+    top: 12px;
+    left: 16px;
+    width: calc(100% - 32px);
+    height: 130px;
     box-sizing: border-box;
     margin: 0;
     padding: 0;
@@ -91,7 +91,7 @@
 /* Кнопка коллекции внутри скролла */
 .dropdown-collections__collection-item {
     width: 100%;
-    height: 28px;
+    height: 26px;
     padding: 0 10px;
     border: none;
     border-radius: 0;
@@ -116,6 +116,7 @@
 
 /* Системная коллекция владельца недоступна для клика */
 .dropdown-collections__collection-item[data-is-profile="1"] {
+    height: 26px;
     color: #999;
     cursor: not-allowed;
     pointer-events: none;
@@ -135,8 +136,8 @@
 .dropdown-collections__save-button,
 .dropdown-collections__clear-button {
     position: absolute;
-    left: 12px;
-    width: 172px;
+    left: 16px;
+    width: calc(100% - 32px);
     height: 36px;
     box-sizing: border-box;
     border-radius: 8px;
@@ -147,7 +148,7 @@
 
 /* Кнопка сохранения и закрытия dropdown */
 .dropdown-collections__save-button {
-    top: 140px;
+    top: 154px;
     border: 1.5px solid rgb(100, 100, 200);
     background: rgb(100, 100, 200);
     color: #fff;
@@ -162,7 +163,7 @@
 
 /* Кнопка удаления поста из коллекций */
 .dropdown-collections__clear-button {
-    bottom: 16px;
+    bottom: 12px;
     border: 1.5px solid rgb(100, 100, 200);
     background: #fff;
     color: rgb(100, 100, 200);
