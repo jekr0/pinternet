@@ -25,8 +25,10 @@
 
 .post-modal__panel {
     position: relative;
-    width: min(1208px, calc(100vw - 40px));
-    height: min(688px, calc(100vh - 40px));
+    width: 1208px;
+    max-width: calc(100vw - 40px);
+    height: 688px;
+    max-height: calc(100vh - 40px);
     box-sizing: border-box;
     padding: 64px;
     display: grid;
@@ -35,7 +37,7 @@
     align-items: start;
     background: #fff;
     border: 1px solid #ffffff;
-    border-radius: 20px;
+    border-radius: 24px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08);
     transition: border-color 1s ease-out;
 }
@@ -669,7 +671,7 @@
 .post-modal__preview {
     display: block;
     width: 100%;
-    height: auto;
+    height: 100%;
     object-fit: cover;
 }
 
