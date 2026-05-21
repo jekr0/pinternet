@@ -33,6 +33,7 @@ class PostFullComponent {
         this.editingCommentElement = null;
         this.pendingCommentReportId = 0;
         this.pendingCommentDeleteId = 0;
+        this.pendingCommentDeleteElement = null;
         this.descriptionElement = null;
         this.descriptionHideButton = null;
         this.descriptionDividerButton = null;
@@ -353,16 +354,6 @@ class PostFullComponent {
             prefixNode.textContent = 'Ответ пользователю';
             textNode.append(prefixNode, document.createTextNode(' '), valueNode);
 
-            let deleteButton = block.querySelector('[data-action="comment-delete"]');
-            if (!deleteButton) {
-                deleteButton = document.createElement('button');
-                deleteButton.className = 'post-full__comment-status-delete-button';
-                deleteButton.type = 'button';
-                deleteButton.dataset.action = 'comment-delete';
-                deleteButton.textContent = 'Удалить комментарий';
-                block.appendChild(deleteButton);
-            }
-            deleteButton.classList.remove('is-visible');
         });
     }
 
@@ -398,6 +389,11 @@ class PostFullComponent {
 
             if (action === 'comment-edit') {
                 this.activateCommentEditState(commentItem);
+                return;
+            }
+
+            if (action === 'comment-delete') {
+                this.openCommentDeleteOverlay(commentItem);
             }
         });
     }
@@ -414,14 +410,6 @@ class PostFullComponent {
             });
         });
 
-        const deleteButtons = this.postFullElement?.querySelectorAll('[data-action="comment-delete"]');
-        deleteButtons?.forEach((deleteButton) => {
-            if (deleteButton.dataset.bound === '1') return;
-            deleteButton.dataset.bound = '1';
-            deleteButton.addEventListener('click', async () => {
-                this.openCommentDeleteOverlay();
-            });
-        });
     }
 
     bindDescriptionToggle() {
@@ -1374,9 +1362,12 @@ class PostFullComponent {
                     ${isOwnComment
                         ? `<button class="post-full__comment-action-button post-full__comment-action-button--edit" type="button" data-action="comment-edit" aria-label="Изменить комментарий">
                             <span class="post-full__comment-action-icon" data-svg-src="/assets/images/icons/S-edit.svg" aria-hidden="true"></span>
+                        </button>
+                        <button class="post-full__comment-action-button post-full__comment-action-button--delete" type="button" data-action="comment-delete" aria-label="Удалить комментарий">
+                            <span class="post-full__comment-action-icon" data-svg-src="/assets/images/icons/S-bin.svg" aria-hidden="true"></span>
                         </button>`
                         : `<button class="post-full__comment-action-button" type="button" data-action="comment-report" aria-label="Пожаловаться на комментарий">
-                            <span class="post-full__comment-action-icon" data-svg-src="/assets/images/icons/S-warning.svg" aria-hidden="true"></span>
+                            <span class="post-full__comment-action-icon" data-svg-src="/assets/images/icons/S-flag.svg" aria-hidden="true"></span>
                         </button>`}
                 </div>
             </div>
@@ -1400,7 +1391,6 @@ class PostFullComponent {
         if (!stateNodes || stateNodes.length === 0 || !nicknameNodes || nicknameNodes.length === 0) return;
 
         this.setCommentComposerStateText('Ответ пользователю', `@${this.replyTargetUsername}`);
-        this.toggleCommentDeleteButtons(false);
         stateNodes.forEach((stateNode) => {
             stateNode.classList.add('is-active');
         });
@@ -1419,7 +1409,6 @@ class PostFullComponent {
         }
         this.editingCommentElement = commentItem;
         this.setCommentComposerStateText('Изменение комментария...', '');
-        this.toggleCommentDeleteButtons(true);
         const stateNodes = this.postFullElement?.querySelectorAll('[data-component="post-full-reply-state"], [data-component="post-full-reply-state-floating"]');
         stateNodes?.forEach((stateNode) => stateNode.classList.add('is-active'));
         const commentTextNode = commentItem.querySelector('.post-full__comment-text');
@@ -1458,7 +1447,6 @@ class PostFullComponent {
         const nicknameNodes = this.postFullElement?.querySelectorAll('[data-component="post-full-reply-nickname"], [data-component="post-full-reply-nickname-floating"]');
 
         this.commentComposerMode = 'reply';
-        this.toggleCommentDeleteButtons(false);
         this.setCommentComposerStateText('Ответ пользователю', '');
         const staticInput = this.postFullElement?.querySelector('[data-component="post-full-comment-input"]');
         const floatingInput = this.postFullElement?.querySelector('[data-component="post-full-comment-input-floating"]');
@@ -1486,16 +1474,8 @@ class PostFullComponent {
         this.requestMasonryLayoutUpdate();
     }
 
-    toggleCommentDeleteButtons(isVisible) {
-        const deleteButtons = this.postFullElement?.querySelectorAll('[data-action="comment-delete"]');
-        deleteButtons?.forEach((button) => {
-            button.classList.toggle('is-visible', isVisible);
-        });
-    }
-
-    async deleteEditingComment() {
-        if (this.commentComposerMode !== 'edit' || !this.editingCommentElement) return;
-        const commentId = Number(this.editingCommentElement.dataset.commentId || 0);
+    async deleteCommentByElement(commentElement) {
+        const commentId = Number(commentElement?.dataset.commentId || 0);
         if (!commentId) {
             this.showToast('Не удалось определить комментарий для удаления.');
             return;
@@ -1536,9 +1516,9 @@ class PostFullComponent {
         }
     }
 
-    openCommentDeleteOverlay() {
-        if (!App.overlay || this.commentComposerMode !== 'edit' || !this.editingCommentElement) return;
-        const commentId = Number(this.editingCommentElement.dataset.commentId || 0);
+    openCommentDeleteOverlay(commentElement) {
+        if (!App.overlay || !commentElement) return;
+        const commentId = Number(commentElement.dataset.commentId || 0);
         if (!commentId) {
             this.showToast('Не удалось определить комментарий для удаления.');
             return;
@@ -1546,6 +1526,7 @@ class PostFullComponent {
         if (App.overlay.get('comment-delete')) return;
 
         this.pendingCommentDeleteId = commentId;
+        this.pendingCommentDeleteElement = commentElement;
         let deleteButton = null;
 
         App.overlay.open({
@@ -1593,11 +1574,12 @@ class PostFullComponent {
         if (!commentId || !deleteButton) return;
         deleteButton.disabled = true;
         try {
-            await this.deleteEditingComment();
+            await this.deleteCommentByElement(this.pendingCommentDeleteElement);
             App.overlay?.close('comment-delete');
         } finally {
             deleteButton.disabled = false;
             this.pendingCommentDeleteId = 0;
+            this.pendingCommentDeleteElement = null;
         }
     }
 
@@ -1807,8 +1789,8 @@ class PostFullComponent {
         const toggleTop = toggleButton
             ? toggleButton.getBoundingClientRect().top
             : 0;
-        const targetBottom = likeCount?.getBoundingClientRect().bottom
-            || actions?.getBoundingClientRect().bottom
+        const targetBottom = actions?.getBoundingClientRect().bottom
+            || likeCount?.getBoundingClientRect().bottom
             || fallbackBottom;
         if (toggleButton) {
             return Math.max(0, Math.round(toggleTop - avatarRect.bottom - 9));

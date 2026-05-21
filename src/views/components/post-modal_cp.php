@@ -37,7 +37,7 @@
             <h2 class="post-modal__title" id="post-modal-title" data-component="post-modal-title">Новый пост</h2>
 
             <!-- Описание -->
-            <div style="position:absolute; top:100px; right:60px; width:630px; height:150px;">
+            <div style="position:relative; width:100%; height:150px;">
                 <textarea
                     class="post-modal__input post-modal__input--description"
                     name="post-description"
