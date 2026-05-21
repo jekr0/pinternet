@@ -87,10 +87,10 @@ function handleRegistration(PDO $pdo): void
         $userId = $pdo->lastInsertId();
 
         $stmt = $pdo->prepare('
-            INSERT INTO Boards (user_id, name, description)
-            VALUES (?, ?, ?)
+            INSERT INTO Collections (user_id, name)
+            VALUES (?, ?)
         ');
-        $stmt->execute([$userId, 'Profile', 'Системная коллекция профиля']);
+        $stmt->execute([$userId, 'Profile']);
 
         $pdo->commit();
     } catch (PDOException $e) {

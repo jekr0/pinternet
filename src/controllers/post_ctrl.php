@@ -251,8 +251,8 @@ function handleBookmarkPost(PDO $pdo, int $userId): never
         $collectionId = $collectionStmt->fetchColumn();
 
         if ($collectionId === false) {
-            $createCollection = $pdo->prepare('INSERT INTO Collections (user_id, name, description) VALUES (?, ?, ?)');
-            $createCollection->execute([$userId, 'Profile', 'Системная коллекция профиля']);
+            $createCollection = $pdo->prepare('INSERT INTO Collections (user_id, name) VALUES (?, ?)');
+            $createCollection->execute([$userId, 'Profile']);
             $collectionId = (int) $pdo->lastInsertId();
         }
 
@@ -1072,8 +1072,8 @@ function findCollectionId(PDO $pdo, int $userId, string $collectionName): ?int
 
 function createCollection(PDO $pdo, int $userId, string $collectionName): int
 {
-    $insert = $pdo->prepare('INSERT INTO Collections (user_id, name, description) VALUES (?, ?, ?)');
-    $insert->execute([$userId, $collectionName, 'Создано автоматически при публикации поста']);
+    $insert = $pdo->prepare('INSERT INTO Collections (user_id, name) VALUES (?, ?)');
+    $insert->execute([$userId, $collectionName]);
 
     return (int) $pdo->lastInsertId();
 }
