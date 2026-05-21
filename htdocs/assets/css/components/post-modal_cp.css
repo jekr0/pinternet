@@ -170,7 +170,7 @@
     position: relative;
     width: 100%;
     margin-top: 0;
-    margin-bottom: 116px;
+    margin-bottom: 96px;
 }
 
 .post-modal__description-wrap {
@@ -234,14 +234,9 @@
     font-family: 'NS_def', Arial, sans-serif;
     font-size: 16px;
     border: 1px solid #e0e0e0;
-    border-radius: 12px;
+    border-radius: 12px 12px 0 0;
     cursor: default;
     pointer-events: none;
-}
-
-.post-modal__collection:focus-within .post-modal__input--collection {
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
 }
 
 .post-modal__collection-list {
@@ -250,7 +245,7 @@
     left: 0;
     z-index: 1;
     width: 100%;
-    height: 104px;
+    height: 84px;
     margin: 0;
     padding: 0;
     list-style: none;
@@ -307,7 +302,8 @@
 .post-modal__tags-wrap {
     position: relative;
     width: 100%;
-    margin-top: 0;
+    margin-top: 12px;
+    margin-bottom: 108px;
 }
 
 .post-modal__tags-input-row {
@@ -366,7 +362,7 @@
 .post-modal__tags-list {
     display: flex;
     flex-direction: column;
-    row-gap: 5px;
+    row-gap: 8px;
     width: 100%;
     max-height: 79px;
     margin-top: 8px;
@@ -377,22 +373,22 @@
     display: flex;
     flex-wrap: nowrap;
     justify-content: flex-start;
-    column-gap: 5px;
+    column-gap: 12px;
     width: 100%;
 }
 
 .post-modal__tags-suggest-list {
     position: absolute;
-    top: 50px;
+    top: 40px;
     left: 0;
     z-index: 1;
     width: 100%;
-    height: 90px;
+    height: 84px;
     margin: 0;
-    padding: 0 0 29px;
+    padding: 0;
     list-style: none;
     background: #fff;
-    border-radius: 0 0 10px 10px;
+    border-radius: 0 0 8px 8px;
     border: 1.5px solid #e0e0e0;
     border-top: none;
     display: block;
@@ -411,19 +407,21 @@
 
 .post-modal__tags-suggest-list button {
     width: 100%;
-    height: 30px;
+    height: 28px;
+    padding: 0 10px;
     border: none;
+    border-radius: 0;
     background: transparent;
     text-align: left;
-    padding: 0 15px;
-    font-family: 'SF_def', Arial, sans-serif;
-    font-size: 16px;
+    font-family: 'NS_def', Arial, sans-serif;
+    font-size: 14px;
+    color: #333;
     cursor: pointer;
-    transition: background 0.2s ease;
+    transition: background 0.1s ease, color 0.1s ease;
 }
 
 .post-modal__tags-suggest-list button:hover {
-    background: rgba(100, 100, 200, 0.07);
+    background: rgba(100, 100, 200, 0.08);
 }
 
 .post-modal__tags-suggest-match {
@@ -438,11 +436,11 @@
     justify-content: center;
     height: 23px;
     padding: 0 8px;
-    font-family: 'SF_def', Arial, sans-serif;
+    font-family: 'NS_def', Arial, sans-serif;
     font-size: 14px;
-    color: #555;
-    background: #efefef;
-    border-radius: 5px;
+    color: #777;
+    background: #f5f5f5;
+    border-radius: 8px;
     cursor: pointer;
     user-select: none;
 }
@@ -600,11 +598,11 @@
 .post-modal__upload-dropzone {
     position: relative;
     width: 100%;
-    height: 404px;
+    height: 508px;
     max-height: 584px;
     margin: 0;
     border: 2px dashed #c9c9c9;
-    border-radius: 10px;
+    border-radius: 24px;
     background: #e0e0e0;
     color: #c9c9c9;
     cursor: pointer;
