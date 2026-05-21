@@ -1133,19 +1133,19 @@
 }
 
 .post-full-report__title {
-    margin: 0;
+    margin: 24px 0 12px;
     min-height: 24px;
     font-family: 'SF_def', Arial, sans-serif;
     font-size: 24px;
     font-weight: 400;
-    line-height: 40px;
+    line-height: 24px;
     color: rgb(100, 100, 200);
     text-align: center;
 }
 
 .post-full-report__description {
-    margin: 12px 0 0;
-    min-height: 0;
+    margin: 0 0 12px;
+    height: 100px;
     font-family: 'NS_def', Arial, sans-serif;
     font-size: 18px;
     line-height: 1.4;
@@ -1155,7 +1155,7 @@
 }
 
 .post-full-report__actions {
-    margin-top: auto;
+    margin-top: 0;
     display: flex;
     gap: 12px;
 }

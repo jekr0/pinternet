@@ -48,7 +48,7 @@
 
 @keyframes post-modal-close-blocked {
     0% { border-color: rgb(100, 100, 200); }
-    100% { border-color: rgba(100, 100, 200, 0); }
+    100% { border-color: #ffffff; }
 }
 
 .post-modal__alert {
@@ -517,31 +517,46 @@
     backdrop-filter: blur(8px);
 }
 
+.post-modal__confirm-title,
 .post-modal__confirm-message,
 .post-modal__confirm-actions {
     width: 584px;
     max-width: 100%;
 }
 
-.post-modal__confirm-message {
-    margin: 0;
-    padding: 20px 52px 0;
+.post-modal__confirm-title {
+    margin: 24px 0 12px;
+    padding: 0 52px;
     box-sizing: border-box;
-    min-height: 176px;
+    min-height: 24px;
+    font-family: 'SF_def', Arial, sans-serif;
+    font-size: 24px;
+    font-weight: 400;
+    line-height: 24px;
+    color: rgb(100, 100, 200);
+    text-align: center;
     background: #fff;
     border-radius: 24px 24px 0 0;
+}
+
+.post-modal__confirm-message {
+    margin: 0 0 12px;
+    padding: 0 52px;
+    box-sizing: border-box;
+    height: 100px;
     font-family: 'NS_def', Arial, sans-serif;
     font-size: 18px;
     line-height: 1.4;
     color: #333;
     text-align: justify;
     text-justify: inter-word;
-    white-space: pre-line;
+    white-space: normal;
+    background: #fff;
 }
 
 .post-modal__confirm-actions {
     margin-top: 0;
-    padding: 12px 52px 20px;
+    padding: 0 52px 20px;
     box-sizing: border-box;
     display: flex;
     gap: 12px;
@@ -667,6 +682,11 @@
 
 .post-modal__upload-dropzone--filled:hover::after {
     background: rgba(0, 0, 0, 0.25);
+}
+
+.post-modal__upload-dropzone--filled:hover,
+.post-modal__upload-dropzone--filled.post-modal__upload-dropzone--dragover {
+    border-color: transparent;
 }
 
 .post-modal__upload-dropzone:hover::before,

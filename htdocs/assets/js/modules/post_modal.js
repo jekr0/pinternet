@@ -76,6 +76,7 @@ class CreatePostModalComponent {
         this.cancelButton = this.modal.querySelector('[data-component="create-post-cancel"]');
         this.deleteButton = this.modal.querySelector('[data-component="post-edit-delete"]');
         this.confirmBox = this.modal.querySelector('[data-component="post-modal-confirm"]');
+        this.confirmTitle = this.modal.querySelector('[data-component="post-modal-confirm-title"]');
         this.confirmMessage = this.modal.querySelector('[data-component="post-modal-confirm-message"]');
         this.confirmCancelButton = this.modal.querySelector('[data-component="post-modal-confirm-cancel"]');
         this.confirmSubmitButton = this.modal.querySelector('[data-component="post-modal-confirm-submit"]');
@@ -303,9 +304,11 @@ class CreatePostModalComponent {
     requestClose() {
         if (this.hasUnsavedChanges()) {
             this.showConfirm(
-                'unsaved',
-                'У вас есть несохранённые изменения!\nСохранить их?',
-                'Сохранить'
+                'unsaved-close',
+                'Закрыть окно?',
+                'У вас есть несохранённые изменения. После закрытия они не сохранятся.',
+                'Закрыть окно',
+                'Назад'
             );
             return;
         }
@@ -661,16 +664,20 @@ class CreatePostModalComponent {
         if (!this.isEditMode) return;
         this.showConfirm(
             'delete',
-            'После удаления пост не получится восстановить! Удалить его?',
-            'Удалить'
+            'Удалить пост?',
+            'После удаления пост не получится восстановить.',
+            'Удалить',
+            'Назад'
         );
     }
 
-    showConfirm(action, message, submitLabel) {
+    showConfirm(action, title, message, submitLabel, cancelLabel = "Назад") {
         if (!this.confirmBox || !this.confirmMessage || !this.confirmSubmitButton) return;
         this.confirmAction = action;
+        if (this.confirmTitle) this.confirmTitle.textContent = title;
         this.confirmMessage.textContent = message;
         this.confirmSubmitButton.textContent = submitLabel;
+        if (this.confirmCancelButton) this.confirmCancelButton.textContent = cancelLabel;
         this.confirmBox.classList.remove('post-modal__confirm--hidden');
         this.confirmBox.setAttribute('aria-hidden', 'false');
     }
@@ -686,17 +693,14 @@ class CreatePostModalComponent {
         const action = this.confirmAction;
         this.hideConfirm();
 
-        if (action === 'unsaved') {
-            this.close();
-        }
     }
 
     async runConfirmAction() {
         const action = this.confirmAction;
         this.hideConfirm();
 
-        if (action === 'unsaved') {
-            await this.submitPost();
+        if (action === 'unsaved-close') {
+            this.close();
             return;
         }
 
