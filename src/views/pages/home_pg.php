@@ -20,13 +20,13 @@
                    EXISTS(
                        SELECT 1
                        FROM Saved_Posts sp
-                       INNER JOIN Boards b ON b.id = sp.board_id AND b.user_id = sp.user_id
+                       INNER JOIN Collections b ON b.id = sp.collection_id AND b.user_id = sp.user_id
                        WHERE sp.post_id = p.id AND sp.user_id = ?
                    ) AS has_any_bookmark,
                    EXISTS(
                        SELECT 1
                        FROM Saved_Posts sp
-                       INNER JOIN Boards b ON b.id = sp.board_id AND b.user_id = sp.user_id
+                       INNER JOIN Collections b ON b.id = sp.collection_id AND b.user_id = sp.user_id
                        WHERE sp.post_id = p.id
                          AND sp.user_id = ?
                          AND LOWER(b.name) <> LOWER(?)

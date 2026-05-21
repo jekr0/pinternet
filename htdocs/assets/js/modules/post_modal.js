@@ -109,8 +109,8 @@ class CreatePostModalComponent {
 
         document.addEventListener('create-collection:created', async (event) => {
             if (event.detail?.source !== 'post-modal') return;
-            const createdBoard = String(event.detail?.board || '').trim();
-            await this.loadBoards(createdBoard);
+            const createdCollection = String(event.detail?.collection || '').trim();
+            await this.loadCollections(createdCollection);
         });
     }
 
@@ -286,7 +286,7 @@ class CreatePostModalComponent {
         this.modal.classList.remove('post-modal--hidden');
         this.modal.setAttribute('aria-hidden', 'false');
         App.utils.lockBodyScroll();
-        await this.loadBoards();
+        await this.loadCollections();
     }
 
     blockEditOverlayClose() {
@@ -378,13 +378,13 @@ class CreatePostModalComponent {
     async preloadEditCollections(postId) {
         if (!postId) return;
         try {
-            const response = await fetch(`/posts/bookmark/boards?post_id=${encodeURIComponent(String(postId))}`);
+            const response = await fetch(`/posts/bookmark/collections?post_id=${encodeURIComponent(String(postId))}`);
             if (!response.ok) return;
             const payload = await response.json();
-            const selectedBoards = Array.isArray(payload.boards)
-                ? payload.boards.filter((board) => board && board.is_saved).map((board) => board.name)
+            const selectedCollections = Array.isArray(payload.collections)
+                ? payload.collections.filter((collection) => collection && collection.is_saved).map((collection) => collection.name)
                 : (Array.isArray(payload.selected) ? payload.selected : []);
-            this.selectedCollections = selectedBoards
+            this.selectedCollections = selectedCollections
                 .map((name) => String(name) === 'Profile' ? 'Профиль' : String(name))
                 .filter((name) => name !== 'Профиль');
             this.updateCollectionFieldValue();
@@ -464,11 +464,11 @@ class CreatePostModalComponent {
         });
     }
 
-    async loadBoards(boardToSelect = '') {
+    async loadCollections(collectionToSelect = '') {
         if (!this.collectionList || !this.collectionTrigger) return;
 
         try {
-            const response = await fetch('/boards/list', {
+            const response = await fetch('/collections/list', {
                 method: 'GET',
                 headers: { 'Accept': 'application/json' }
             });
@@ -476,28 +476,28 @@ class CreatePostModalComponent {
             if (!response.ok) return;
 
             const payload = await response.json();
-            if (!payload.success || !Array.isArray(payload.boards)) return;
+            if (!payload.success || !Array.isArray(payload.collections)) return;
 
-            const localizedBoards = payload.boards.map((board) => (
-                board === 'Profile' ? 'Профиль' : board
+            const localizedCollections = payload.collections.map((collection) => (
+                collection === 'Profile' ? 'Профиль' : collection
             ));
-            const hasProfileBoard = localizedBoards.includes('Профиль');
-            if (!hasProfileBoard) {
-                localizedBoards.unshift('Профиль');
+            const hasProfileCollection = localizedCollections.includes('Профиль');
+            if (!hasProfileCollection) {
+                localizedCollections.unshift('Профиль');
             }
 
-            this.collectionList.innerHTML = localizedBoards.map((board) => (
-                `<li><button type="button" data-component="post-collection-item" ${board === 'Профиль' ? 'data-is-profile="1"' : ''}>${board}</button></li>`
+            this.collectionList.innerHTML = localizedCollections.map((collection) => (
+                `<li><button type="button" data-component="post-collection-item" ${collection === 'Профиль' ? 'data-is-profile="1"' : ''}>${collection}</button></li>`
             )).join('') + `
                 <li><button type="button" class="post-modal__collection-add-button" data-component="post-collection-add-button">+</button></li>
             `;
 
             this.collectionItems = Array.from(this.modal.querySelectorAll('[data-component="post-collection-item"]'));
             this.attachCollectionItemHandlers();
-            if (boardToSelect) {
-                const normalizedBoard = boardToSelect === 'Profile' ? 'Профиль' : boardToSelect;
-                if (normalizedBoard !== 'Профиль' && !this.selectedCollections.includes(normalizedBoard)) {
-                    this.selectedCollections.push(normalizedBoard);
+            if (collectionToSelect) {
+                const normalizedCollection = collectionToSelect === 'Profile' ? 'Профиль' : collectionToSelect;
+                if (normalizedCollection !== 'Профиль' && !this.selectedCollections.includes(normalizedCollection)) {
+                    this.selectedCollections.push(normalizedCollection);
                 }
             }
             this.updateCollectionFieldValue();
@@ -513,7 +513,7 @@ class CreatePostModalComponent {
             }
 
         } catch (error) {
-            console.warn('Unable to load boards list', error);
+            console.warn('Unable to load collections list', error);
         }
     }
 

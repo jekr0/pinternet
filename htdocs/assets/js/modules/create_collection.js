@@ -106,8 +106,8 @@ class CreateCollectionComponent {
     }
 
     async createCollection() {
-        const boardName = this.input?.value.trim() || '';
-        if (!boardName || !this.createButton) return;
+        const collectionName = this.input?.value.trim() || '';
+        if (!collectionName || !this.createButton) return;
 
         const requestPostId = this.activePostId;
         const requestSource = this.openSource;
@@ -116,9 +116,9 @@ class CreateCollectionComponent {
 
         try {
             const endpoint = requestPostId > 0
-                ? '/posts/bookmark/board-create'
-                : '/boards/create';
-            const bodyData = new URLSearchParams({ board: boardName });
+                ? '/posts/bookmark/collection-create'
+                : '/collections/create';
+            const bodyData = new URLSearchParams({ collection: collectionName });
             if (requestPostId > 0) {
                 bodyData.append('post_id', String(requestPostId));
             }
@@ -138,7 +138,7 @@ class CreateCollectionComponent {
             document.dispatchEvent(new CustomEvent('create-collection:created', {
                 detail: {
                     postId: requestPostId,
-                    board: payload.board || boardName,
+                    collection: payload.collection || collectionName,
                     source: requestSource
                 }
             }));

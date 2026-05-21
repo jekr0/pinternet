@@ -36,19 +36,19 @@
     column-gap: 64px;
     align-items: start;
     background: #fff;
-    border: 2px solid #ffffff;
     border-radius: 32px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08);
-    transition: border-color 1s ease-out;
+    transition: transform 0.2s ease-out;
 }
 
 .post-modal__panel--close-blocked {
-    animation: post-modal-close-blocked 1s ease-out;
+    animation: post-modal-shake 0.2s ease-in-out;
 }
 
-@keyframes post-modal-close-blocked {
-    0% { border-color: rgb(100, 100, 200); }
-    100% { border-color: #ffffff; }
+@keyframes post-modal-shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-8px); }
+    75% { transform: translateX(8px); }
 }
 
 .post-modal__alert {

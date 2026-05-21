@@ -31,7 +31,7 @@ class DropdownCollectionsComponent {
                 this.activeCard.classList.add('post-card--dropdown-open');
             }
 
-            await this.loadBoards();
+            await this.loadCollections();
             this.positionToButton(button);
             this.open();
         });
@@ -40,7 +40,7 @@ class DropdownCollectionsComponent {
             const postId = Number(event.detail?.postId || 0);
             if (!postId || postId !== this.activePostId) return;
 
-            await this.loadBoards();
+            await this.loadCollections();
             document.dispatchEvent(new CustomEvent('post-card:bookmark-updated', {
                 detail: { postId: this.activePostId, bookmarked: true }
             }));
@@ -140,54 +140,54 @@ class DropdownCollectionsComponent {
         this.dropdown.style.top = `${top}px`;
     }
 
-    async loadBoards() {
+    async loadCollections() {
         if (!this.list || !this.activePostId) return;
 
-        let boards = [];
+        let collections = [];
         try {
-            const response = await fetch(`/posts/bookmark/boards?post_id=${encodeURIComponent(String(this.activePostId))}`);
+            const response = await fetch(`/posts/bookmark/collections?post_id=${encodeURIComponent(String(this.activePostId))}`);
             const payload = await response.json();
-            if (response.ok && payload.success && Array.isArray(payload.boards)) {
-                boards = payload.boards;
+            if (response.ok && payload.success && Array.isArray(payload.collections)) {
+                collections = payload.collections;
             }
         } catch (error) {
-            console.warn('Unable to load boards', error);
+            console.warn('Unable to load collections', error);
         }
 
-        this.renderBoards(boards);
+        this.renderCollections(collections);
     }
 
-    isProfileBoardName(boardName) {
-        return String(boardName || '').trim().toLowerCase() === 'profile'
-            || String(boardName || '').trim().toLowerCase() === 'профиль';
+    isProfileCollectionName(collectionName) {
+        return String(collectionName || '').trim().toLowerCase() === 'profile'
+            || String(collectionName || '').trim().toLowerCase() === 'профиль';
     }
 
-    renderBoards(boards) {
+    renderCollections(collections) {
         if (!this.list) return;
 
         this.list.innerHTML = '';
 
-        boards.forEach((boardData) => {
-            const boardName = typeof boardData?.name === 'string'
-                ? boardData.name
-                : typeof boardData === 'string' ? boardData : '';
-            if (!boardName) return;
+        collections.forEach((collectionData) => {
+            const collectionName = typeof collectionData?.name === 'string'
+                ? collectionData.name
+                : typeof collectionData === 'string' ? collectionData : '';
+            if (!collectionName) return;
 
             const item = document.createElement('li');
             const button = document.createElement('button');
             button.type = 'button';
             button.className = 'dropdown-collections__collection-item';
-            const isProfileBoard = this.isProfileBoardName(boardName);
+            const isProfileCollection = this.isProfileCollectionName(collectionName);
             const isOwnerPost = this.activeCard?.dataset.owner === '1';
-            button.textContent = isProfileBoard ? 'Профиль' : boardName;
-            button.dataset.board = boardName;
-            if (isProfileBoard && isOwnerPost) {
+            button.textContent = isProfileCollection ? 'Профиль' : collectionName;
+            button.dataset.collection = collectionName;
+            if (isProfileCollection && isOwnerPost) {
                 button.dataset.isProfile = '1';
                 button.setAttribute('aria-disabled', 'true');
             }
-            button.classList.toggle('is-selected', !!boardData?.is_saved);
+            button.classList.toggle('is-selected', !!collectionData?.is_saved);
             button.addEventListener('click', async () => {
-                await this.toggleBoard(button);
+                await this.toggleCollection(button);
             });
 
             item.appendChild(button);
@@ -209,14 +209,14 @@ class DropdownCollectionsComponent {
         this.list.appendChild(addItem);
     }
 
-    async toggleBoard(button) {
+    async toggleCollection(button) {
         if (!button || !this.activePostId) return;
 
-        const boardName = button.dataset.board || '';
-        if (!boardName || button.dataset.isProfile === '1') return;
+        const collectionName = button.dataset.collection || '';
+        if (!collectionName || button.dataset.isProfile === '1') return;
 
         try {
-            const response = await fetch('/posts/bookmark/board-toggle', {
+            const response = await fetch('/posts/bookmark/collection-toggle', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
@@ -224,7 +224,7 @@ class DropdownCollectionsComponent {
                 },
                 body: new URLSearchParams({
                     post_id: String(this.activePostId),
-                    board: boardName
+                    collection: collectionName
                 }).toString()
             });
 
@@ -237,7 +237,7 @@ class DropdownCollectionsComponent {
                 detail: { postId: this.activePostId, bookmarked: isBookmarked }
             }));
         } catch (error) {
-            console.warn('Unable to toggle board', error);
+            console.warn('Unable to toggle collection', error);
         }
     }
 
@@ -265,7 +265,7 @@ class DropdownCollectionsComponent {
             }));
             this.close();
         } catch (error) {
-            console.warn('Unable to clear post from boards', error);
+            console.warn('Unable to clear post from collections', error);
         }
     }
 

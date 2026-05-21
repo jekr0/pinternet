@@ -107,12 +107,12 @@ switch ($path) {
         case '/posts/list':
         case '/posts/like':
         case '/posts/bookmark':
-        case '/posts/bookmark/boards':
-        case '/posts/bookmark/board-toggle':
-        case '/posts/bookmark/board-create':
+        case '/posts/bookmark/collections':
+        case '/posts/bookmark/collection-toggle':
+        case '/posts/bookmark/collection-create':
         case '/posts/bookmark/clear':
-        case '/boards/list':
-        case '/boards/create':
+        case '/collections/list':
+        case '/collections/create':
         case '/hashtags/suggest':
         case '/posts/report':
         case '/posts/comment':

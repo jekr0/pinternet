@@ -116,25 +116,24 @@ END$$
 DELIMITER ;
 
 -- ---------------------------------------------------------------------
--- Boards
+-- Collections
 -- ---------------------------------------------------------------------
 
-CREATE TABLE Boards (
+CREATE TABLE Collections (
     id          INT AUTO_INCREMENT PRIMARY KEY,
     user_id     INT NOT NULL,
     name        VARCHAR(50) NOT NULL,
-    description VARCHAR(256),
-    created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE NO ACTION
 );
 
-CREATE TABLE Board_Hashtags (
-    board_id   INT NOT NULL,
+CREATE TABLE Collection_Hashtags (
+    collection_id   INT NOT NULL,
     hashtag_id INT NOT NULL,
-    PRIMARY KEY (board_id, hashtag_id),
+    PRIMARY KEY (collection_id, hashtag_id),
 
-    FOREIGN KEY (board_id) REFERENCES Boards(id) ON DELETE CASCADE,
+    FOREIGN KEY (collection_id) REFERENCES Collections(id) ON DELETE CASCADE,
     FOREIGN KEY (hashtag_id) REFERENCES Hashtags(id) ON DELETE CASCADE
 );
 
@@ -146,13 +145,13 @@ CREATE TABLE Saved_Posts (
     id       INT AUTO_INCREMENT PRIMARY KEY,
     user_id  INT NOT NULL,
     post_id  INT NOT NULL,
-    board_id INT NULL,
+    collection_id INT NULL,
 
-    UNIQUE KEY uq_saved (user_id, post_id, board_id),
+    UNIQUE KEY uq_saved (user_id, post_id, collection_id),
 
     FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE,
     FOREIGN KEY (post_id) REFERENCES Posts(id) ON DELETE CASCADE,
-    FOREIGN KEY (board_id) REFERENCES Boards(id) ON DELETE CASCADE
+    FOREIGN KEY (collection_id) REFERENCES Collections(id) ON DELETE CASCADE
 );
 
 -- ---------------------------------------------------------------------
