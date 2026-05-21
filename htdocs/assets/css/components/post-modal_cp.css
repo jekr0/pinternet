@@ -47,9 +47,8 @@
 }
 
 @keyframes post-modal-close-blocked {
-    0% { border-color: #ffffff; }
-    12% { border-color: rgb(100, 100, 200); }
-    100% { border-color: #ffffff; }
+    0% { border-color: rgb(100, 100, 200); }
+    100% { border-color: rgba(100, 100, 200, 0); }
 }
 
 .post-modal__alert {
@@ -151,7 +150,7 @@
     font-size: 16px;
     color: #333;
     background: #fff;
-    border: 1.5px solid #e0e0e0;
+    border: 1px solid #e0e0e0;
     border-radius: 10px;
     transition: border-color 0.2s ease;
 }
@@ -257,7 +256,7 @@
     list-style: none;
     background: #ffffff;
     border-radius: 0 0 12px 12px;
-    border: 1.5px solid #e0e0e0;
+    border: 1px solid #e0e0e0;
     border-top: none;
     overflow-y: auto;
     display: block;
@@ -338,7 +337,7 @@
     width: 24px;
     height: 24px;
     transform: translateY(-50%);
-    border: 1.5px solid #e0e0e0;
+    border: 1px solid #e0e0e0;
     border-radius: 8px;
     background: #fff;
     color: #e0e0e0;
@@ -396,7 +395,7 @@
     list-style: none;
     background: #fff;
     border-radius: 0 0 12px 12px;
-    border: 1.5px solid #e0e0e0;
+    border: 1px solid #e0e0e0;
     border-top: none;
     display: block;
     overflow-y: auto;
@@ -506,36 +505,54 @@
 /* ------------------------------ Подтверждения -------------------------------- */
 
 .post-modal__confirm {
-    position: absolute;
-    right: 0;
-    left: 0;
-    top: auto;
-    bottom: 130px;
-    z-index: 5;
-    width: 100%;
-    padding: 18px;
+    position: fixed;
+    inset: 0;
+    z-index: 1500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
     box-sizing: border-box;
-    background: #ffffff;
-    border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(8px);
 }
 
-.post-modal__confirm--hidden {
-    display: none;
+.post-modal__confirm-message,
+.post-modal__confirm-actions {
+    width: 584px;
+    max-width: 100%;
 }
 
 .post-modal__confirm-message {
-    margin: 0 0 14px;
+    margin: 0;
+    padding: 20px 52px 0;
+    box-sizing: border-box;
+    min-height: 176px;
+    background: #fff;
+    border-radius: 24px 24px 0 0;
+    font-family: 'NS_def', Arial, sans-serif;
+    font-size: 18px;
+    line-height: 1.4;
+    color: #333;
+    text-align: justify;
+    text-justify: inter-word;
     white-space: pre-line;
-    text-align: center;
-    font-family: 'SF_def', Arial, sans-serif;
-    font-size: 16px;
-    color: #555;
 }
 
 .post-modal__confirm-actions {
+    margin-top: 0;
+    padding: 12px 52px 20px;
+    box-sizing: border-box;
     display: flex;
-    gap: 10px;
+    gap: 12px;
+    background: #fff;
+    border-radius: 0 0 24px 24px;
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.07);
+}
+
+
+.post-modal__confirm--hidden {
+    display: none;
 }
 
 .post-modal__confirm-actions .post-modal__button {
@@ -572,7 +589,7 @@
 .post-modal__button--delete {
     flex: 1 1 calc(50% - 6px);
     background: #fff;
-    border: 1.5px solid rgb(100, 100, 200);
+    border: 1px solid rgb(100, 100, 200);
     color: rgb(100, 100, 200);
     display: none;
 }
@@ -620,7 +637,7 @@
     height: 404px;
     max-height: 560px;
     margin: 0;
-    border: 2px dashed #c9c9c9;
+    border: 1px dashed #c9c9c9;
     border-radius: 24px;
     background: #e0e0e0;
     color: #c9c9c9;
@@ -636,12 +653,20 @@
 
 .post-modal__upload-dropzone--filled {
     height: min(560px, 100%);
-    border-style: solid;
-    border-color: #333;
+    border-color: transparent;
 }
 
-.post-modal__upload-dropzone--filled:hover {
-    border-color: #555;
+.post-modal__upload-dropzone--filled::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0);
+    transition: background 0.2s ease;
+    pointer-events: none;
+}
+
+.post-modal__upload-dropzone--filled:hover::after {
+    background: rgba(0, 0, 0, 0.25);
 }
 
 .post-modal__upload-dropzone:hover::before,
