@@ -26,6 +26,18 @@ if ($path === '/collections/list') {
 if ($path === '/collections/create') {
     handleCollectionsCreate($pdo, $userId);
 }
+if ($path === '/collections/update') {
+    handleCollectionsUpdate($pdo, $userId);
+}
+
+if ($path === '/collections/delete') {
+    handleCollectionsDelete($pdo, $userId);
+}
+
+if ($path === '/collections/tags') {
+    handleCollectionTags($pdo, $userId);
+}
+
 
 if ($path === '/posts/bookmark/collections') {
     handleBookmarkCollections($pdo, $userId);
@@ -160,6 +172,108 @@ function handleCollectionsCreate(PDO $pdo, int $userId): never
 
     $responseCollectionName = $validatedCollectionName === 'Profile' ? 'Профиль' : $validatedCollectionName;
     jsonResponse(['success' => true, 'collection' => $responseCollectionName]);
+}
+
+function handleCollectionTags(PDO $pdo, int $userId): never
+{
+    $collectionName = normalizeCollectionName(trim((string) ($_GET['collection'] ?? '')));
+    if ($collectionName === '') {
+        jsonResponse(['success' => true, 'tags' => []]);
+    }
+
+    $collectionId = findCollectionId($pdo, $userId, $collectionName);
+    if ($collectionId === null) {
+        jsonResponse(['success' => true, 'tags' => []]);
+    }
+
+    $stmt = $pdo->prepare('SELECT h.name FROM Collection_Hashtags ch INNER JOIN Hashtags h ON h.id = ch.hashtag_id WHERE ch.collection_id = ? ORDER BY h.name ASC');
+    $stmt->execute([$collectionId]);
+    $tags = array_map(static fn(array $row): string => (string) $row['name'], $stmt->fetchAll());
+    jsonResponse(['success' => true, 'tags' => $tags]);
+}
+
+function handleCollectionsUpdate(PDO $pdo, int $userId): never
+{
+    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+        jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод.'], 405);
+    }
+
+    $oldName = validateAndNormalizeCollectionName(normalizeCollectionName(trim((string) ($_POST['old_collection'] ?? ''))));
+    $newName = validateAndNormalizeCollectionName(normalizeCollectionName(trim((string) ($_POST['collection'] ?? ''))));
+    if ($oldName === null || $newName === null || $oldName === '') {
+        jsonResponse(['success' => false, 'error' => 'Некорректные параметры.'], 422);
+    }
+
+    if ($oldName === 'Profile') {
+        jsonResponse(['success' => false, 'error' => 'Коллекцию "Профиль" нельзя редактировать.'], 403);
+    }
+
+    $tagsInput = trim((string) ($_POST['tags'] ?? ''));
+    $hashtags = parseHashtags($tagsInput);
+
+    try {
+        $pdo->beginTransaction();
+        $collectionId = findCollectionId($pdo, $userId, $oldName);
+        if ($collectionId === null) {
+            $pdo->rollBack();
+            jsonResponse(['success' => false, 'error' => 'Коллекция не найдена.'], 404);
+        }
+
+        $existsId = findCollectionId($pdo, $userId, $newName);
+        if ($existsId !== null && $existsId !== $collectionId) {
+            $pdo->rollBack();
+            jsonResponse(['success' => false, 'error' => 'Коллекция с таким названием уже существует.'], 409);
+        }
+
+        $update = $pdo->prepare('UPDATE Collections SET name = ? WHERE id = ? AND user_id = ?');
+        $update->execute([$newName, $collectionId, $userId]);
+
+        $clearCollectionTags = $pdo->prepare('DELETE FROM Collection_Hashtags WHERE collection_id = ?');
+        $clearCollectionTags->execute([$collectionId]);
+
+        if (!empty($hashtags)) {
+            $insertHashtag = $pdo->prepare('INSERT INTO Hashtags (name) VALUES (?) ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID(id)');
+            $linkHashtag = $pdo->prepare('INSERT IGNORE INTO Collection_Hashtags (collection_id, hashtag_id) VALUES (?, ?)');
+            foreach ($hashtags as $hashtag) {
+                $insertHashtag->execute([$hashtag]);
+                $hashtagId = (int) $pdo->lastInsertId();
+                $linkHashtag->execute([(int) $collectionId, $hashtagId]);
+            }
+        }
+
+        $pdo->commit();
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        error_log('Collection update error: ' . $e->getMessage());
+        jsonResponse(['success' => false, 'error' => 'Не удалось обновить коллекцию.'], 500);
+    }
+
+    $responseCollectionName = $newName === 'Profile' ? 'Профиль' : $newName;
+    jsonResponse(['success' => true, 'collection' => $responseCollectionName]);
+}
+
+function handleCollectionsDelete(PDO $pdo, int $userId): never
+{
+    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+        jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод.'], 405);
+    }
+
+    $collectionName = validateAndNormalizeCollectionName(normalizeCollectionName(trim((string) ($_POST['collection'] ?? ''))));
+    if ($collectionName === null || $collectionName === '') {
+        jsonResponse(['success' => false, 'error' => 'Некорректное название коллекции.'], 422);
+    }
+    if ($collectionName === 'Profile') {
+        jsonResponse(['success' => false, 'error' => 'Коллекцию "Профиль" нельзя удалить.'], 403);
+    }
+
+    $collectionId = findCollectionId($pdo, $userId, $collectionName);
+    if ($collectionId === null) {
+        jsonResponse(['success' => false, 'error' => 'Коллекция не найдена.'], 404);
+    }
+
+    $delete = $pdo->prepare('DELETE FROM Collections WHERE id = ? AND user_id = ?');
+    $delete->execute([$collectionId, $userId]);
+    jsonResponse(['success' => true]);
 }
 
 function handleHashtagsSuggest(PDO $pdo): never
