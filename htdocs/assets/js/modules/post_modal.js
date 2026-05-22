@@ -103,7 +103,6 @@ class CreatePostModalComponent {
         this.bindUploadHandlers();
         this.bindDescriptionHandlers();
         this.bindCollectionHandlers();
-        if (this.collectionEditButton) { const src=this.collectionEditButton.getAttribute('data-svg-src'); if(src) App.utils.loadSVG(src,this.collectionEditButton); this.collectionEditButton.addEventListener('click',()=>document.dispatchEvent(new CustomEvent('collection-modal:open'))); }
         this.bindTagsHandlers();
         this.bindInputRestrictions();
         this.bindSubmitHandlers();
@@ -112,12 +111,6 @@ class CreatePostModalComponent {
         App.modalCtrl?.register('post-modal', {
             show: () => this.showOnly(),
             hide: () => this.hideOnly()
-        });
-
-        document.addEventListener('create-collection:created', async (event) => {
-            if (event.detail?.source !== 'post-modal') return;
-            const createdCollection = String(event.detail?.collection || '').trim();
-            await this.loadCollections(createdCollection);
         });
     }
 
@@ -138,7 +131,14 @@ class CreatePostModalComponent {
             this.applyCreateModeUI();
             if (App.modalCtrl) { App.modalCtrl.open('post-modal'); } else { this.open(); }
         });
-        document.addEventListener('post-modal:open-edit', async (event) => this.openEditMode(event.detail || {}));
+        document.addEventListener('post-modal:open-edit', async (event) => {
+            if (App.modalCtrl) {
+                App.modalCtrl.open('post-modal');
+                await this.openEditMode(event.detail || {}, true);
+                return;
+            }
+            await this.openEditMode(event.detail || {}, false);
+        });
     }
 
     bindUploadHandlers() {
@@ -339,12 +339,16 @@ class CreatePostModalComponent {
         }, 220);
     }
 
-    async openEditMode(payload) {
+    async openEditMode(payload, alreadyShown = false) {
         clearTimeout(this.closeResetTimer);
         this.resetForm();
         this.applyEditModeUI(Number(payload.postId || 0));
         this.fillEditData(payload);
-        await this.open();
+        if (!alreadyShown) {
+            await this.open();
+        } else {
+            await this.loadCollections();
+        }
         await this.preloadEditCollections(payload.postId);
         this.captureEditSnapshot();
     }
@@ -511,9 +515,7 @@ class CreatePostModalComponent {
             const addButton = this.modal.querySelector('[data-component="post-collection-add-button"]');
             if (addButton) {
                 addButton.addEventListener('click', () => {
-                    document.dispatchEvent(new CustomEvent('create-collection:open', {
-                        detail: { source: 'post-modal' }
-                    }));
+                    document.dispatchEvent(new CustomEvent('collection-modal:open'));
                 });
             }
 

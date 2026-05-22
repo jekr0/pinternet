@@ -63,7 +63,6 @@
                     readonly
                     tabindex="-1"
                 >
-                <button type="button" class="post-modal__collection-edit-button" data-component="post-collection-edit" data-svg-src="assets/images/icons/L-edit.svg" aria-label="Редактировать коллекции"></button>
 
                 <ul class="post-modal__collection-list" data-component="post-collection-list">
                     <li><button type="button" data-component="post-collection-item" data-is-profile="1">Профиль</button></li>

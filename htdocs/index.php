@@ -51,7 +51,6 @@ switch ($path) {
             'post-card_cp.css',
             'post-full_cp.css',
             'dropdown-collections_cp.css',
-            'create-collection_cp.css',
             'collection-modul_cp.css',
             'toast-stack_cp.css',
             'home_pg.css',
@@ -68,7 +67,6 @@ switch ($path) {
             'post_card.js',
             'post_full.js',
             'dropdown_collections.js',
-            'create_collection.js',
             'collection_modul.js',
             'masonry_feed.js',
             'adaptive_text.js'
