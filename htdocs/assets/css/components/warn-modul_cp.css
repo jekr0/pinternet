@@ -1,11 +1,11 @@
 .warn-modul{position:fixed;inset:0;z-index:1450;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.3);backdrop-filter:blur(6px);opacity:1;visibility:visible;pointer-events:auto;transition:opacity .2s ease,visibility .2s ease}
 .warn-modul--hidden{opacity:0;visibility:hidden;pointer-events:none}
-.warn-modul__panel{width:492px;height:228px;padding:0 48px;box-sizing:border-box;background:#fff;border-radius:24px;display:flex;flex-direction:column}
-.warn-modul__title{height:36px;margin:12px 0;font-family:'NS_def',Arial,sans-serif;font-size:20px;font-weight:400;color:rgb(100,100,200);display:flex;align-items:center}
-.warn-modul__description{height:84px;margin:0 0 12px;font-family:'NS_def',Arial,sans-serif;font-size:14px;color:#333;line-height:1.4}
+.warn-modul__panel{width:468px;height:228px;padding:0 36px;box-sizing:border-box;background:#fff;border-radius:24px;display:flex;flex-direction:column}
+.warn-modul__title{height:36px;margin:24px 0 12px;font-family:'NS_def',Arial,sans-serif;font-size:20px;font-weight:400;color:rgb(100,100,200);display:flex;align-items:center;justify-content:center;text-align:center}
+.warn-modul__description{height:84px;margin:0 0 12px;font-family:'NS_def',Arial,sans-serif;font-size:16px;color:#333;line-height:1.4;text-align:justify}
 .warn-modul__actions{display:flex;gap:12px}
-.warn-modul__button{flex:1;height:36px;border:none;border-radius:10px;font-family:'SF_def',Arial,sans-serif;font-size:16px;cursor:pointer}
+.warn-modul__button{flex:1;height:36px;border:none;border-radius:10px;font-family:'SF_def',Arial,sans-serif;font-size:16px;cursor:pointer;transition:border-color .2s ease,background .2s ease,color .2s ease}
 .warn-modul__button--cancel{background:#fff;border:1px solid #e0e0e0;color:#bbb}
-.warn-modul__button--cancel:hover{border-color:rgb(150,150,250)}
+.warn-modul__button--cancel:hover{border-color:rgb(150,150,250);color:rgb(150,150,250)}
 .warn-modul__button--confirm{background:rgb(100,100,200);color:#fff}
-.warn-modul__button--confirm:hover{background:rgb(120,120,220)}
+.warn-modul__button--confirm:hover{background:rgb(125,125,225)}
