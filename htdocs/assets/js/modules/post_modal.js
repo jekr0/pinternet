@@ -61,7 +61,6 @@ class CreatePostModalComponent {
         this.preview = this.modal.querySelector('[data-component="post-upload-preview"]');
         this.uploadIcon = this.modal.querySelector('[data-component="post-upload-icon"]');
         this.collectionTrigger = this.modal.querySelector('[data-component="post-collection-trigger"]');
-        this.collectionEditButton = this.modal.querySelector('[data-component="post-collection-edit"]');
         this.collectionList = this.modal.querySelector('[data-component="post-collection-list"]');
         this.collectionItems = Array.from(this.modal.querySelectorAll('[data-component="post-collection-item"]'));
         this.descriptionField = this.modal.querySelector('[data-component="post-description"]');
@@ -119,26 +118,29 @@ class CreatePostModalComponent {
             const trigger = event.target.closest('[data-component="create-post-open"]');
             if (!trigger) return;
             event.preventDefault();
-            clearTimeout(this.closeResetTimer);
-            this.resetForm();
-            this.applyCreateModeUI();
-            if (App.modalCtrl) { App.modalCtrl.open('post-modal'); } else { this.open(); }
+            this.openCreateMode();
         });
 
         document.addEventListener('post-modal:open', () => {
-            clearTimeout(this.closeResetTimer);
-            this.resetForm();
-            this.applyCreateModeUI();
-            if (App.modalCtrl) { App.modalCtrl.open('post-modal'); } else { this.open(); }
+            this.openCreateMode();
         });
+
         document.addEventListener('post-modal:open-edit', async (event) => {
-            if (App.modalCtrl) {
-                App.modalCtrl.open('post-modal');
-                await this.openEditMode(event.detail || {}, true);
-                return;
-            }
-            await this.openEditMode(event.detail || {}, false);
+            await this.openEditMode(event.detail || {});
         });
+    }
+
+    openCreateMode() {
+        clearTimeout(this.closeResetTimer);
+        this.resetForm();
+        this.applyCreateModeUI();
+        if (App.modalCtrl) {
+            App.modalCtrl.open('post-modal');
+            this.showOnly();
+            this.loadCollections();
+            return;
+        }
+        this.open();
     }
 
     bindUploadHandlers() {
@@ -332,16 +334,20 @@ class CreatePostModalComponent {
         }, 220);
     }
 
-    async openEditMode(payload, alreadyShown = false) {
+    async openEditMode(payload) {
         clearTimeout(this.closeResetTimer);
         this.resetForm();
         this.applyEditModeUI(Number(payload.postId || 0));
         this.fillEditData(payload);
-        if (!alreadyShown) {
-            await this.open();
-        } else {
+
+        if (App.modalCtrl) {
+            App.modalCtrl.open('post-modal');
+            this.showOnly();
             await this.loadCollections();
+        } else {
+            await this.open();
         }
+
         await this.preloadEditCollections(payload.postId);
         this.captureEditSnapshot();
     }
