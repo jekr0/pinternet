@@ -1,6 +1,8 @@
 .collection-modal{position:fixed;inset:0;z-index:1250;display:flex;align-items:center;justify-content:center;opacity:1;visibility:visible;pointer-events:auto;transition:opacity .2s ease,visibility .2s ease}
 .collection-modal--hidden{opacity:0;visibility:hidden;pointer-events:none}
-.collection-modal__panel{width:1000px;height:456px;box-sizing:border-box;padding:0 64px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:64px;background:#fff;border-radius:32px;box-shadow:0 4px 6px rgba(0,0,0,.08)}
+.collection-modal__panel{width:1000px;height:456px;box-sizing:border-box;padding:0 64px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:64px;background:#fff;border-radius:32px;box-shadow:0 4px 6px rgba(0,0,0,.08);transition:transform .2s ease-out}
+.collection-modal__panel--close-blocked{animation:collection-modal-shake .1s ease-in-out}
+@keyframes collection-modal-shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)} }
 .collection-modal__left-column,.collection-modal__right-column{width:100%}
 
 /* left collections list: dropdown-collections behavior with preserved block geom */
@@ -47,8 +49,7 @@
 .collection-modal__tag-item--more::after{content:none}
 .collection-modal__tag-item--more:hover{filter:none}
 
-/* 12px gap from tag dropdown zone to actions */
-.collection-modal__actions{margin-top:4px;display:flex;column-gap:12px;row-gap:12px;flex-wrap:wrap;align-content:flex-start}
+.collection-modal__actions{margin-top:116px;display:flex;column-gap:12px;row-gap:12px;flex-wrap:wrap;align-content:flex-start}
 .collection-modal__button{flex:1 1 100%;width:100%;height:40px;border:none;border-radius:10px;font-family:'SF_def',Arial,sans-serif;font-size:16px;cursor:pointer;transition:border-color .2s ease,background .2s ease,color .2s ease}
 .collection-modal__button--cancel{background:#fff;border:1px solid #e0e0e0;color:#bbb}
 .collection-modal__button--cancel:hover{border-color:rgb(150,150,250);color:rgb(150,150,250)}

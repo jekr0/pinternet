@@ -1,5 +1,5 @@
 class CollectionModalComponent {
-  constructor(){this.root=null;this.list=null;this.nameInput=null;this.tagsField=null;this.tagsList=null;this.tagsSuggestList=null;this.tagsInputRow=null;this.tagsAddButton=null;this.submitButton=null;this.deleteButton=null;this.tags=[];this.maxTags=24;this.maxVisibleTagRows=3;this.mode='create';this.selectedCollection='';}
+  constructor(){this.root=null;this.list=null;this.nameInput=null;this.tagsField=null;this.tagsList=null;this.tagsSuggestList=null;this.tagsInputRow=null;this.tagsAddButton=null;this.submitButton=null;this.deleteButton=null;this.panel=null;this.tags=[];this.maxTags=24;this.maxVisibleTagRows=3;this.mode='create';this.selectedCollection='';}
   init(){
     this.root=document.getElementById('collection-modal'); if(!this.root) return;
     this.list=this.root.querySelector('[data-component="collection-modal-list"]');
@@ -11,9 +11,10 @@ class CollectionModalComponent {
     this.tagsAddButton=this.root.querySelector('[data-component="collection-modal-tags-add-button"]');
     this.submitButton=this.root.querySelector('.collection-modal__button--submit');
     this.deleteButton=this.root.querySelector('[data-component="collection-modal-delete"]');
+    this.panel=this.root.querySelector('.collection-modal__panel');
 
-    document.addEventListener('collection-modal:open',()=>{ if (App.modalCtrl) { App.modalCtrl.open('collection-modal'); return; } this.open(); });
-    this.root.addEventListener('click',(e)=>{if(e.target===this.root||e.target.closest('[data-component="collection-modal-cancel"]')) this.close();});
+    document.addEventListener('collection-modal:open', async ()=>{ if (App.modalCtrl) { App.modalCtrl.open('collection-modal'); await this.open(); return; } await this.open(); });
+    this.root.addEventListener('click',(e)=>{if(e.target===this.root){ if(this.hasUnsavedChanges()){ this.blockOverlayClose(); return; } this.close(); } if(e.target.closest('[data-component="collection-modal-cancel"]')) this.requestClose();});
     this.nameInput?.addEventListener('input',()=>{const n=this.nameInput.value.replace(/[^a-zа-яё0-9_ ]/gi,'').slice(0,32);if(n!==this.nameInput.value)this.nameInput.value=n;});
     this.bindTagsHandlers();
     this.submitButton?.addEventListener('click',()=>this.submitByMode());
@@ -27,8 +28,8 @@ class CollectionModalComponent {
   showOnly(){ this.root.classList.remove('collection-modal--hidden'); this.root.setAttribute('aria-hidden','false'); }
   hideOnly(){ this.root.classList.add('collection-modal--hidden'); this.root.setAttribute('aria-hidden','true'); }
 
-  setCreateMode(clear=true){ this.mode='create'; this.selectedCollection=''; this.list?.querySelectorAll('.collection-modal__collection-item.is-selected').forEach((el)=>el.classList.remove('is-selected')); if(clear){this.nameInput.value=''; this.tags=[]; if(this.tagsField)this.tagsField.value=''; this.renderTags();} if(this.submitButton) this.submitButton.textContent='Создать коллекцию'; this.root.classList.remove('collection-modal--edit'); }
-  setEditMode(collectionName,tags){ this.mode='edit'; this.selectedCollection=collectionName; this.nameInput.value=collectionName==='Профиль'?'Profile':collectionName; this.tags=Array.isArray(tags)?tags:[]; this.renderTags(); if(this.submitButton) this.submitButton.textContent='Сохранить'; this.root.classList.add('collection-modal--edit'); }
+  setCreateMode(clear=true){ this.mode='create'; this.selectedCollection=''; this.list?.querySelectorAll('.collection-modal__collection-item.is-selected').forEach((el)=>el.classList.remove('is-selected')); if(clear){this.nameInput.value=''; this.tags=[]; if(this.tagsField)this.tagsField.value=''; this.renderTags();} if(this.submitButton) this.submitButton.textContent='Создать коллекцию'; this.root.classList.remove('collection-modal--edit'); this.captureSnapshot(); }
+  setEditMode(collectionName,tags){ this.mode='edit'; this.selectedCollection=collectionName; this.nameInput.value=collectionName==='Профиль'?'Profile':collectionName; this.tags=Array.isArray(tags)?tags:[]; this.renderTags(); if(this.submitButton) this.submitButton.textContent='Сохранить'; this.root.classList.add('collection-modal--edit'); this.captureSnapshot(); }
 
   async load(){
     if(!this.list) return; this.list.innerHTML='';
@@ -56,9 +57,34 @@ class CollectionModalComponent {
   escapeHtml(v){return String(v).replace(/[&<>'"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[m]));}
   escapeRegex(v){return v.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');}
 
+  requestClose(){ if(this.hasUnsavedChanges()){ App.warn?.open({title:'Осторожно!',description:'У вас остались несохранённые изменения. После закрытия окна они будут сброшены. Хотите продолжить?',confirmLabel:'Закрыть окно',cancelLabel:'Назад',onConfirm:async()=>this.close()}); return;} this.close(); }
+  blockOverlayClose(){ if(!this.panel) return; this.panel.classList.remove('collection-modal__panel--close-blocked'); void this.panel.offsetWidth; this.panel.classList.add('collection-modal__panel--close-blocked'); setTimeout(()=>this.panel?.classList.remove('collection-modal__panel--close-blocked'),1000); }
+  showToast(message){ document.dispatchEvent(new CustomEvent('app:toast',{detail:{message}})); }
+  getSnapshot(){ return JSON.stringify({mode:this.mode,name:(this.nameInput?.value||'').trim(),tags:[...this.tags].sort(),selected:this.selectedCollection}); }
+  captureSnapshot(){ this.savedSnapshot=this.getSnapshot(); }
+  hasUnsavedChanges(){ return this.getSnapshot()!==this.savedSnapshot; }
   async submitByMode(){ if(this.mode==='edit') return this.updateCollection(); return this.createCollection(); }
-  async createCollection(){ const name=(this.nameInput?.value||'').trim(); if(!name||!this.submitButton) return; this.submitButton.disabled=true; try{const r=await fetch('/collections/create',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8','Accept':'application/json'},body:new URLSearchParams({collection:name,tags:this.tags.join(' ')}).toString()}); const p=await r.json(); if(!r.ok||!p.success) return; this.setCreateMode(true); await this.load();}catch(e){console.warn(e);} finally{this.submitButton.disabled=false;} }
-  async updateCollection(){ const oldName=this.selectedCollection; const newName=(this.nameInput?.value||'').trim(); if(!oldName||!newName||!this.submitButton) return; this.submitButton.disabled=true; try{const r=await fetch('/collections/update',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8','Accept':'application/json'},body:new URLSearchParams({old_collection:oldName,collection:newName,tags:this.tags.join(' ')}).toString()}); const p=await r.json(); if(!r.ok||!p.success) return; await this.load(); const match=Array.from(this.list.querySelectorAll('.collection-modal__collection-item')).find(b=>b.textContent.trim()===(p.collection||newName==='Profile'?'Профиль':newName)); if(match) await this.selectCollection(match);}catch(e){console.warn(e);} finally{this.submitButton.disabled=false;} }
-  async deleteCurrentCollection(){ if(this.mode!=='edit'||!this.selectedCollection||this.isProfileCollectionName(this.selectedCollection)||!this.deleteButton) return; this.deleteButton.disabled=true; try{const r=await fetch('/collections/delete',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8','Accept':'application/json'},body:new URLSearchParams({collection:this.selectedCollection}).toString()}); const p=await r.json(); if(!r.ok||!p.success) return; this.setCreateMode(true); await this.load();}catch(e){console.warn(e);} finally{this.deleteButton.disabled=false;} }
+  async createCollection(){ const name=(this.nameInput?.value||'').trim(); if(!name||!this.submitButton) return; this.submitButton.disabled=true; try{const r=await fetch('/collections/create',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8','Accept':'application/json'},body:new URLSearchParams({collection:name,tags:this.tags.join(' ')}).toString()}); const p=await r.json(); if(!r.ok||!p.success) return; this.setCreateMode(true); await this.load(); this.showToast('Коллекция создана');}catch(e){console.warn(e);} finally{this.submitButton.disabled=false;} }
+  async updateCollection(){ const oldName=this.selectedCollection; const newName=(this.nameInput?.value||'').trim(); if(!oldName||!newName||!this.submitButton) return; this.submitButton.disabled=true; try{const r=await fetch('/collections/update',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8','Accept':'application/json'},body:new URLSearchParams({old_collection:oldName,collection:newName,tags:this.tags.join(' ')}).toString()}); const p=await r.json(); if(!r.ok||!p.success) return; await this.load(); const target=((p.collection||newName)==='Profile')?'Профиль':(p.collection||newName); const match=Array.from(this.list.querySelectorAll('.collection-modal__collection-item')).find(b=>b.textContent.trim()===target); if(match) await this.selectCollection(match); this.showToast('Коллекция обновлена');}catch(e){console.warn(e);} finally{this.submitButton.disabled=false;} }
+  async deleteCurrentCollection(){
+    if(this.mode!=='edit'||!this.selectedCollection||this.isProfileCollectionName(this.selectedCollection)||!this.deleteButton) return;
+    App.warn?.open({
+      title:'Удалить коллекцию?',
+      description:'После удаления коллекция и связанные с ней сохранения будут удалены без возможности восстановления.',
+      confirmLabel:'Удалить',
+      cancelLabel:'Назад',
+      onConfirm: async()=>{
+        this.deleteButton.disabled=true;
+        try{
+          const r=await fetch('/collections/delete',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8','Accept':'application/json'},body:new URLSearchParams({collection:this.selectedCollection}).toString()});
+          const p=await r.json();
+          if(!r.ok||!p.success) return;
+          this.setCreateMode(true);
+          await this.load();
+          this.showToast('Коллекция удалена');
+        }catch(e){console.warn(e);} finally{this.deleteButton.disabled=false;}
+      }
+    });
+  }
 }
 App.register('collection_modul.js', CollectionModalComponent);
