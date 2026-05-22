@@ -124,12 +124,36 @@ function handleCollectionsCreate(PDO $pdo, int $userId): never
         jsonResponse(['success' => false, 'error' => 'Название коллекции: до 32 символов, только латиница, кириллица, цифры, пробел и "_"'], 422);
     }
 
+    $tagsInput = trim((string) ($_POST['tags'] ?? ''));
+    $hashtags = parseHashtags($tagsInput);
+
     try {
+        $pdo->beginTransaction();
+
         $collectionId = findCollectionId($pdo, $userId, $validatedCollectionName);
         if ($collectionId === null) {
-            createCollection($pdo, $userId, $validatedCollectionName);
+            $collectionId = createCollection($pdo, $userId, $validatedCollectionName);
         }
+
+        $clearCollectionTags = $pdo->prepare('DELETE FROM Collection_Hashtags WHERE collection_id = ?');
+        $clearCollectionTags->execute([$collectionId]);
+
+        if (!empty($hashtags)) {
+            $insertHashtag = $pdo->prepare('INSERT INTO Hashtags (name) VALUES (?) ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID(id)');
+            $linkHashtag = $pdo->prepare('INSERT IGNORE INTO Collection_Hashtags (collection_id, hashtag_id) VALUES (?, ?)');
+
+            foreach ($hashtags as $hashtag) {
+                $insertHashtag->execute([$hashtag]);
+                $hashtagId = (int) $pdo->lastInsertId();
+                $linkHashtag->execute([(int) $collectionId, $hashtagId]);
+            }
+        }
+
+        $pdo->commit();
     } catch (Throwable $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
         error_log('Collection create error: ' . $e->getMessage());
         jsonResponse(['success' => false, 'error' => 'Не удалось создать коллекцию.'], 500);
     }

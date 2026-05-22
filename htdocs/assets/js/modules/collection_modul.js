@@ -1,5 +1,5 @@
 class CollectionModalComponent {
-  constructor(){this.root=null;this.list=null;this.nameInput=null;this.tagsField=null;this.tagsList=null;this.tagsSuggestList=null;this.tagsInputRow=null;this.tagsAddButton=null;this.tags=[];this.maxTags=24;this.maxVisibleTagRows=3;}
+  constructor(){this.root=null;this.list=null;this.nameInput=null;this.tagsField=null;this.tagsList=null;this.tagsSuggestList=null;this.tagsInputRow=null;this.tagsAddButton=null;this.submitButton=null;this.tags=[];this.maxTags=24;this.maxVisibleTagRows=3;}
   init(){
     this.root=document.getElementById('collection-modal'); if(!this.root) return;
     this.list=this.root.querySelector('[data-component="collection-modal-list"]');
@@ -9,11 +9,13 @@ class CollectionModalComponent {
     this.tagsSuggestList=this.root.querySelector('[data-component="collection-modal-tags-suggest-list"]');
     this.tagsInputRow=this.root.querySelector('[data-component="collection-modal-tags-input-row"]');
     this.tagsAddButton=this.root.querySelector('[data-component="collection-modal-tags-add-button"]');
+    this.submitButton=this.root.querySelector('.collection-modal__button--submit');
 
     document.addEventListener('collection-modal:open',()=>{ if (App.modalCtrl) { App.modalCtrl.open('collection-modal'); return; } this.open(); });
     this.root.addEventListener('click',(e)=>{if(e.target===this.root||e.target.closest('[data-component="collection-modal-cancel"]')) this.close();});
     this.nameInput?.addEventListener('input',()=>{const n=this.nameInput.value.replace(/[^a-zа-яё0-9_ ]/gi,'').slice(0,32);if(n!==this.nameInput.value)this.nameInput.value=n;});
     this.bindTagsHandlers();
+    this.submitButton?.addEventListener('click',()=>this.createCollection());
 
     App.modalCtrl?.register('collection-modal', { show: () => this.showOnly(), hide: () => this.hideOnly() });
   }
@@ -95,5 +97,28 @@ class CollectionModalComponent {
   highlightSuggestionMatch(tag, query){ const escapedTag=this.escapeHtml(tag); const normalizedQuery=this.escapeRegex(query); if(!normalizedQuery) return escapedTag; return escapedTag.replace(new RegExp(`(${normalizedQuery})`,'i'), '<span class="collection-modal__tags-suggest-match">$1</span>'); }
   escapeHtml(v){return String(v).replace(/[&<>'"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[m]));}
   escapeRegex(value){return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');}
+  async createCollection(){
+    const collectionName=(this.nameInput?.value||'').trim();
+    if(!collectionName || !this.submitButton) return;
+    this.submitButton.disabled=true;
+    try{
+      const response=await fetch('/collections/create',{
+        method:'POST',
+        headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8','Accept':'application/json'},
+        body:new URLSearchParams({collection:collectionName,tags:this.tags.join(' ')}).toString()
+      });
+      const payload=await response.json();
+      if(!response.ok || !payload.success) return;
+      this.nameInput.value='';
+      this.tags=[];
+      if(this.tagsField) this.tagsField.value='';
+      this.hideTagSuggestions();
+      this.renderTags();
+      await this.load();
+    }catch(e){console.warn('Unable to create collection from collection-modal',e);}
+    finally{this.submitButton.disabled=false;}
+  }
+
 }
+
 App.register('collection_modul.js', CollectionModalComponent);
