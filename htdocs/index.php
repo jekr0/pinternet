@@ -4,6 +4,11 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
+// Сессия должна стартовать до любого вывода (иначе предупреждение headers already sent)
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 // Получаем запрошенный URI без параметров
 $request = $_SERVER['REQUEST_URI'];
 $path = parse_url($request, PHP_URL_PATH);
