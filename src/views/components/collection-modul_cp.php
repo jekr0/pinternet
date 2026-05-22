@@ -21,7 +21,7 @@
       </div>
 
       <div class="collection-modal__actions">
-        <button class="collection-modal__button collection-modal__button--submit" type="button">Сохранить</button>
+        <button class="collection-modal__button collection-modal__button--submit" type="button">Создать коллекцию</button>
         <button class="collection-modal__button collection-modal__button--cancel" type="button" data-component="collection-modal-cancel">Назад</button>
       </div>
     </div>

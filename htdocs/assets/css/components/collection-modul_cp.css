@@ -9,24 +9,37 @@
 .collection-modal__collection-item.is-selected{background:rgba(100,100,200,.16)}
 .collection-modal__title{margin:52px 0 12px;height:40px;display:flex;align-items:center;justify-content:center;font-family:'MC_caps',Arial,sans-serif;font-size:20px;color:#333}
 .collection-modal__name-wrap{margin-bottom:12px}
-.collection-modal__input{width:100%;height:40px;padding:10px 14px;box-sizing:border-box;outline:none;font-family:'NS_def',Arial,sans-serif;font-size:16px;color:#333;background:#fff;border:1px solid #e0e0e0;border-radius:12px;transition:border-color .2s ease}
+.collection-modal__input{width:100%;height:40px;padding:0 15px;box-sizing:border-box;outline:none;font-family:'SF_def',Arial,sans-serif;font-size:16px;color:#333;background:#fff;border:1px solid #e0e0e0;border-radius:10px;transition:border-color .2s ease}
 .collection-modal__input:hover{border-color:rgb(150,150,250)}
 .collection-modal__input:focus{border-color:rgb(100,100,200)}
 .collection-modal__input::placeholder{color:#bbb}
-.collection-modal__tags-wrap{margin-bottom:116px}
-.collection-modal__tags-input-row{position:relative}
+.collection-modal__tags-wrap{position:relative;width:100%;margin-top:0;margin-bottom:0}
+.collection-modal__tags-input-row{position:relative;width:100%}
 .collection-modal__input--tags{padding-right:56px}
 .collection-modal__tags-add-button{position:absolute;top:6px;right:8px;width:28px;height:28px;border:none;border-radius:10px;background:#fff;color:#bbb;font-size:28px;line-height:1;cursor:pointer;transition:color .2s ease,background-color .2s ease}
-.collection-modal__tags-add-button:hover{color:rgb(100,100,200);background:rgba(100,100,200,.08)}
+.collection-modal__tags-input-row:focus-within .collection-modal__tags-add-button{color:rgb(100,100,200);background:rgba(100,100,200,.08)}
+.collection-modal__tags-input-row:hover .collection-modal__tags-add-button{color:rgb(150,150,250);background:rgba(100,100,200,.08)}
+.collection-modal__tags-input-row:focus-within:hover .collection-modal__tags-add-button{color:rgb(100,100,200);background:rgba(100,100,200,.08)}
 .collection-modal__tags-list{margin-top:12px;min-height:40px;max-height:88px;display:flex;flex-direction:column;gap:6px}
 .collection-modal__tags-row{display:flex;gap:6px;min-height:40px}
-.collection-modal__tag-item{position:relative;display:flex;align-items:center;height:40px;padding:0 14px;border:1px solid #e0e0e0;border-radius:12px;cursor:pointer}
-.collection-modal__tag-item::after{content:'×';margin-left:8px;color:#bbb}
 .collection-modal__tags-suggest-list{position:absolute;top:40px;left:0;z-index:3;width:100%;max-height:104px;margin:0;padding:0;overflow-y:auto;list-style:none;background:#fff;border:1px solid #e0e0e0;border-top:none;border-radius:0 0 12px 12px}
 .collection-modal__tags-suggest-list--hidden{display:none}
+.collection-modal__tags-input-row--suggest-open .collection-modal__input--tags{border-bottom-left-radius:0;border-bottom-right-radius:0}
 .collection-modal__tags-suggest-list button{width:100%;height:33px;padding:0 10px;border:none;background:transparent;text-align:left;font-family:'NS_def',Arial,sans-serif;font-size:16px;color:#999;cursor:pointer}
 .collection-modal__tags-suggest-list button:hover{background:rgba(100,100,200,.08);color:#333}
-.collection-modal__actions{display:flex;flex-direction:column;gap:12px}
-.collection-modal__button{width:100%;height:40px;border:none;border-radius:10px;font-family:'SF_def',Arial,sans-serif;font-size:16px;cursor:pointer}
-.collection-modal__button--submit{background:rgb(100,100,200);color:#fff}
+.collection-modal__tags-input-row:hover .collection-modal__input--tags,.collection-modal__tags-input-row:hover .collection-modal__tags-suggest-list,.collection-modal__tags-input-row:focus-within .collection-modal__input--tags,.collection-modal__tags-input-row:focus-within .collection-modal__tags-suggest-list{border-color:rgb(150,150,250)}
+.collection-modal__tags-input-row:focus-within .collection-modal__input--tags,.collection-modal__tags-input-row:focus-within .collection-modal__tags-suggest-list{border-color:rgb(100,100,200)}
+.collection-modal__tags-suggest-match{color:rgb(100,100,200)}
+.collection-modal__tag-item{position:relative;display:flex;align-items:center;height:40px;padding:0 14px;border:1px solid #e0e0e0;border-radius:12px;background:#fff;cursor:pointer}
+.collection-modal__tag-label{font-family:'NS_def',Arial,sans-serif;font-size:16px;color:#333;transition:color .15s ease,filter .15s ease}
+.collection-modal__tag-item::after{position:absolute;content:'×';top:50%;left:50%;transform:translate(-50%,-50%);font-family:'NS_def',Arial,sans-serif;font-size:28px;color:rgb(100,100,200);opacity:0;transition:opacity .15s ease}
+.collection-modal__tag-item:hover .collection-modal__tag-label{filter:blur(1px);color:rgba(51,51,51,.55)}
+.collection-modal__tag-item:hover::after{opacity:1}
+.collection-modal__tag-item--more{cursor:default;color:#999}
+.collection-modal__tag-item--more::after{display:none}
+.collection-modal__actions{margin-top:116px;display:flex;flex-direction:column;gap:12px}
+.collection-modal__button{width:100%;height:40px;border:none;border-radius:10px;font-family:'SF_def',Arial,sans-serif;font-size:16px;cursor:pointer;transition:border-color .2s ease,background .2s ease,color .2s ease}
 .collection-modal__button--cancel{background:#fff;border:1px solid #e0e0e0;color:#bbb}
+.collection-modal__button--cancel:hover{border-color:rgb(150,150,250);color:rgb(150,150,250)}
+.collection-modal__button--submit{background:rgb(100,100,200);color:#fff}
+.collection-modal__button--submit:hover{background:rgb(125,125,225)}
