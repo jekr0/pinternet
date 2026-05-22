@@ -245,6 +245,12 @@
     pointer-events: none;
 }
 
+
+.post-modal__collection-edit-button{position:absolute;top:6px;right:-40px;transform:none;width:28px;height:28px;padding:0;border:none;color:#333;background:none;cursor:pointer}
+.post-modal__collection-edit-button::after{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:28px;height:28px;content:'';background-color:rgba(100,100,200,.08);border-radius:12px;opacity:0;pointer-events:none;transition:opacity .2s ease}
+.post-modal__collection-edit-button:hover::after{opacity:1}
+.post-modal__collection-edit-button svg{position:absolute;top:50%;left:50%;width:20px;height:20px;transform:translate(-50%,-50%)}
+
 .post-modal__collection-list {
     position: absolute;
     top: 40px;

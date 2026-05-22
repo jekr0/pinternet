@@ -61,6 +61,7 @@ class CreatePostModalComponent {
         this.preview = this.modal.querySelector('[data-component="post-upload-preview"]');
         this.uploadIcon = this.modal.querySelector('[data-component="post-upload-icon"]');
         this.collectionTrigger = this.modal.querySelector('[data-component="post-collection-trigger"]');
+        this.collectionEditButton = this.modal.querySelector('[data-component="post-collection-edit"]');
         this.collectionList = this.modal.querySelector('[data-component="post-collection-list"]');
         this.collectionItems = Array.from(this.modal.querySelectorAll('[data-component="post-collection-item"]'));
         this.descriptionField = this.modal.querySelector('[data-component="post-description"]');
@@ -102,6 +103,7 @@ class CreatePostModalComponent {
         this.bindUploadHandlers();
         this.bindDescriptionHandlers();
         this.bindCollectionHandlers();
+        if (this.collectionEditButton) { const src=this.collectionEditButton.getAttribute('data-svg-src'); if(src) App.utils.loadSVG(src,this.collectionEditButton); this.collectionEditButton.addEventListener('click',()=>document.dispatchEvent(new CustomEvent('collection-modul:open'))); }
         this.bindTagsHandlers();
         this.bindInputRestrictions();
         this.bindSubmitHandlers();

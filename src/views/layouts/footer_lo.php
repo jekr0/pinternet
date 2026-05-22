@@ -7,3 +7,5 @@
 
 
 <?php include '../src/views/components/dropdown-collections_cp.php'; ?>
+
+<?php include '../src/views/components/collection-modul_cp.php'; ?>
