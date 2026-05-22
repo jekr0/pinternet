@@ -818,7 +818,7 @@ function handleUpdatePost(PDO $pdo, int $userId): never
     try {
         $pdo->beginTransaction();
 
-        $updatePost = $pdo->prepare('UPDATE Posts SET description = ? WHERE id = ? AND user_id = ?');
+        $updatePost = $pdo->prepare('UPDATE Posts SET description = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?');
         $updatePost->execute([$description !== '' ? $description : null, $postId, $userId]);
 
         $profileCollectionId = findCollectionId($pdo, $userId, 'Profile');

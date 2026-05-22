@@ -72,6 +72,10 @@ if (!$selectedPost) {
                         data-component="post-full-published-at"
                         data-created-at-ts="<?php echo $selectedPostCreatedTimestamp; ?>"
                     ><?php echo htmlspecialchars($selectedPostPublishedLabel, ENT_QUOTES, 'UTF-8'); ?></span>
+                    <?php if (!empty($selectedPostIsEdited)): ?>
+                        <span class="post-full__author-meta-separator" aria-hidden="true"></span>
+                        <span class="post-full__author-published-at">Изменено</span>
+                    <?php endif; ?>
                 <?php endif; ?>
             </div>
         </div>

@@ -15,7 +15,7 @@
 
     if ($viewerId > 0) {
         $stmt = $pdo->prepare('
-            SELECT p.id, p.image_path, p.description, p.created_at, UNIX_TIMESTAMP(p.created_at) AS created_at_ts, u.username, u.avatar AS user_avatar,
+            SELECT p.id, p.image_path, p.description, p.created_at, p.updated_at, UNIX_TIMESTAMP(p.created_at) AS created_at_ts, UNIX_TIMESTAMP(p.updated_at) AS updated_at_ts, u.username, u.avatar AS user_avatar,
                    (pl.id IS NOT NULL) AS is_liked,
                    EXISTS(
                        SELECT 1
@@ -41,7 +41,7 @@
         $stmt->execute([$viewerId, $viewerId, 'Profile', $viewerId, $viewerId]);
     } else {
         $stmt = $pdo->query('
-            SELECT p.id, p.image_path, p.description, p.created_at, UNIX_TIMESTAMP(p.created_at) AS created_at_ts, u.username, u.avatar AS user_avatar,
+            SELECT p.id, p.image_path, p.description, p.created_at, p.updated_at, UNIX_TIMESTAMP(p.created_at) AS created_at_ts, UNIX_TIMESTAMP(p.updated_at) AS updated_at_ts, u.username, u.avatar AS user_avatar,
                    0 AS is_liked,
                    0 AS is_bookmarked,
                    (SELECT COUNT(*) FROM Post_Likes pl_all WHERE pl_all.post_id = p.id) AS likes_count,
@@ -478,6 +478,8 @@
             $selectedPostDescription = trim((string) ($selectedPost['description'] ?? ''));
             $selectedPostCreatedTimestamp = (int) ($selectedPost['created_at_ts'] ?? 0);
             $selectedPostPublishedLabel = $formatPostPublishedLabel($selectedPostCreatedTimestamp);
+            $selectedPostUpdatedTimestamp = (int) ($selectedPost['updated_at_ts'] ?? 0);
+            $selectedPostIsEdited = $selectedPostUpdatedTimestamp > $selectedPostCreatedTimestamp;
             $selectedHasComments = $selectedPostCommentsCount > 0;
             include '../src/views/components/post-full_cp.php';
         ?>
