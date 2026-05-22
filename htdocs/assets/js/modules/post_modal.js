@@ -212,13 +212,6 @@ class CreatePostModalComponent {
             this.deleteButton.addEventListener('click', () => this.requestDeleteConfirmation());
         }
 
-        if (this.confirmCancelButton) {
-            this.confirmCancelButton.addEventListener('click', () => this.runConfirmCancelAction());
-        }
-
-        if (this.confirmSubmitButton) {
-            this.confirmSubmitButton.addEventListener('click', () => this.runConfirmAction());
-        }
     }
 
     bindTagsHandlers() {
@@ -671,48 +664,33 @@ class CreatePostModalComponent {
         if (!this.isEditMode) return;
         this.showConfirm(
             'delete',
-            'Удалить пост?',
-            'После удаления пост не получится восстановить.',
+            'Удалить пость?',
+            'После удаления пост и все комментарии к нему будут полностью удалены с сайта без возможности восстановления.',
             'Удалить',
             'Назад'
         );
     }
 
-    showConfirm(action, title, message, submitLabel, cancelLabel = "Назад") {
-        if (!this.confirmBox || !this.confirmMessage || !this.confirmSubmitButton) return;
+    async showConfirm(action, title, message, submitLabel, cancelLabel = 'Назад') {
         this.confirmAction = action;
-        if (this.confirmTitle) this.confirmTitle.textContent = title;
-        this.confirmMessage.textContent = message;
-        this.confirmSubmitButton.textContent = submitLabel;
-        if (this.confirmCancelButton) this.confirmCancelButton.textContent = cancelLabel;
-        this.confirmBox.classList.remove('post-modal__confirm--hidden');
-        this.confirmBox.setAttribute('aria-hidden', 'false');
-    }
+        const confirmed = await (App.warn?.open({
+            title,
+            description: message,
+            confirmLabel: submitLabel,
+            cancelLabel,
+            onConfirm: async () => {
+                if (action === 'unsaved-close') {
+                    if (App.modalCtrl) { App.modalCtrl.close('post-modal'); } else { this.close(); }
+                    return;
+                }
+                if (action === 'delete') {
+                    await this.deletePost();
+                }
+            }
+        }) || Promise.resolve(false));
 
-    hideConfirm() {
-        if (!this.confirmBox) return;
-        this.confirmAction = null;
-        this.confirmBox.classList.add('post-modal__confirm--hidden');
-        this.confirmBox.setAttribute('aria-hidden', 'true');
-    }
-
-    runConfirmCancelAction() {
-        const action = this.confirmAction;
-        this.hideConfirm();
-
-    }
-
-    async runConfirmAction() {
-        const action = this.confirmAction;
-        this.hideConfirm();
-
-        if (action === 'unsaved-close') {
-            if (App.modalCtrl) { App.modalCtrl.close('post-modal'); } else { this.close(); }
-            return;
-        }
-
-        if (action === 'delete') {
-            await this.deletePost();
+        if (!confirmed) {
+            this.confirmAction = null;
         }
     }
 

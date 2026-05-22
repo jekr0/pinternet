@@ -52,6 +52,7 @@ switch ($path) {
             'post-full_cp.css',
             'dropdown-collections_cp.css',
             'collection-modul_cp.css',
+            'warn-modul_cp.css',
             'toast-stack_cp.css',
             'home_pg.css',
             'footer_lo.css'
@@ -59,6 +60,7 @@ switch ($path) {
         $JS = [
             'overlay_manager.js',
             'modal_ctrl.js',
+            'warn_modul.js',
             'toast_stack.js',
             'profile_button.js',
             'dropdown_profile.js',
@@ -91,8 +93,10 @@ switch ($path) {
         $page = 'sign_up_pg.php';
         $pageTitle = 'Авторизация';
         $PHP = [];
-        $CSS = ['toast-stack_cp.css', 'auth_pg.css'];
-        $JS  = ['toast_stack.js', 'password_toggle.js', 'auth_form_guard.js', 'auto-god.js'];
+        $CSS = ['warn-modul_cp.css',
+            'toast-stack_cp.css', 'auth_pg.css'];
+        $JS  = ['warn_modul.js',
+            'toast_stack.js', 'password_toggle.js', 'auth_form_guard.js', 'auto-god.js'];
         break;
 
         case '/logout':
@@ -152,10 +156,12 @@ switch ($path) {
             'profile-container_cp.css',
             'dropdown-profile_cp.css',
             'post-modal_cp.css',
+            'warn-modul_cp.css',
             'toast-stack_cp.css',
             'footer_lo.css'
         ];
         $JS = [
+            'warn_modul.js',
             'toast_stack.js',
             'profile_button.js',
             'dropdown_profile.js',

@@ -1517,54 +1517,23 @@ class PostFullComponent {
     }
 
     openCommentDeleteOverlay(commentElement) {
-        if (!App.overlay || !commentElement) return;
+        if (!commentElement) return;
         const commentId = Number(commentElement.dataset.commentId || 0);
         if (!commentId) {
             this.showToast('Не удалось определить комментарий для удаления.');
             return;
         }
-        if (App.overlay.get('comment-delete')) return;
 
         this.pendingCommentDeleteId = commentId;
         this.pendingCommentDeleteElement = commentElement;
-        let deleteButton = null;
 
-        App.overlay.open({
-            key: 'comment-delete',
-            overlayClass: 'post-full-report',
-            hiddenClass: 'post-full-report--hidden',
-            panelClass: 'post-full-report__panel',
-            buildPanel: (panel, close) => {
-                const text = document.createElement('p');
-                text.className = 'post-full-report__title';
-                text.textContent = 'Удалить комментарий?';
-
-                const description = document.createElement('p');
-                description.className = 'post-full-report__description';
-                description.textContent = 'После удаления комментарий и все ответы на него будут полностью удалены с сайта без возможности восстановления.';
-
-                const actions = document.createElement('div');
-                actions.className = 'post-full-report__actions';
-
-                const cancelButton = document.createElement('button');
-                cancelButton.className = 'post-full-report__button post-full-report__button--cancel';
-                cancelButton.type = 'button';
-                cancelButton.textContent = 'Отмена';
-                cancelButton.addEventListener('click', close);
-
-                deleteButton = document.createElement('button');
-                deleteButton.className = 'post-full-report__button post-full-report__button--confirm';
-                deleteButton.type = 'button';
-                deleteButton.textContent = 'Удалить';
-                deleteButton.addEventListener('click', async () => {
-                    await this.submitCommentDelete(deleteButton);
-                });
-
-                actions.appendChild(cancelButton);
-                actions.appendChild(deleteButton);
-                panel.appendChild(text);
-                panel.appendChild(description);
-                panel.appendChild(actions);
+        App.warn?.open({
+            title: 'Удалить комментарий?',
+            description: 'После удаления комментарий и все ответы на него будут полностью удалены с сайта без возможности восстановления.',
+            confirmLabel: 'Удалить',
+            cancelLabel: 'Назад',
+            onConfirm: async () => {
+                await this.submitCommentDelete({ disabled: false });
             }
         });
     }
@@ -1575,8 +1544,7 @@ class PostFullComponent {
         deleteButton.disabled = true;
         try {
             await this.deleteCommentByElement(this.pendingCommentDeleteElement);
-            App.overlay?.close('comment-delete');
-        } finally {
+                    } finally {
             deleteButton.disabled = false;
             this.pendingCommentDeleteId = 0;
             this.pendingCommentDeleteElement = null;
@@ -1630,48 +1598,16 @@ class PostFullComponent {
     }
 
     openCommentReportOverlay(commentId) {
-        if (!App.overlay || !commentId) return;
-        if (App.overlay.get('comment-report')) return;
+        if (!commentId) return;
 
         this.pendingCommentReportId = commentId;
-        let reportButton = null;
-
-        App.overlay.open({
-            key: 'comment-report',
-            overlayClass: 'post-full-report',
-            hiddenClass: 'post-full-report--hidden',
-            panelClass: 'post-full-report__panel',
-            buildPanel: (panel, close) => {
-                const text = document.createElement('p');
-                text.className = 'post-full-report__title';
-                text.textContent = 'Подать жалобу на комментарий?';
-
-                const description = document.createElement('p');
-                description.className = 'post-full-report__description';
-                description.textContent = 'После отправки жалобы комментарий будет проверен модерацией на несоответствие правилам площадки. Мы уведомим вас, когда решение будет принято.';
-
-                const actions = document.createElement('div');
-                actions.className = 'post-full-report__actions';
-
-                const cancelButton = document.createElement('button');
-                cancelButton.className = 'post-full-report__button post-full-report__button--cancel';
-                cancelButton.type = 'button';
-                cancelButton.textContent = 'Отмена';
-                cancelButton.addEventListener('click', close);
-
-                reportButton = document.createElement('button');
-                reportButton.className = 'post-full-report__button post-full-report__button--confirm';
-                reportButton.type = 'button';
-                reportButton.textContent = 'Пожаловаться';
-                reportButton.addEventListener('click', async () => {
-                    await this.submitCommentReport(reportButton);
-                });
-
-                actions.appendChild(cancelButton);
-                actions.appendChild(reportButton);
-                panel.appendChild(text);
-                panel.appendChild(description);
-                panel.appendChild(actions);
+        App.warn?.open({
+            title: 'Подать жалобу на комментарий?',
+            description: 'После отправки жалобы комментарий будет проверен модерацией на несоответствие правилам площадки. Мы уведомим вас, когда решение будет принято.',
+            confirmLabel: 'Пожаловаться',
+            cancelLabel: 'Назад',
+            onConfirm: async () => {
+                await this.submitCommentReport({ disabled: false });
             }
         });
     }
@@ -1703,8 +1639,7 @@ class PostFullComponent {
                 this.showToast('Жалоба отправлена');
             }
 
-            App.overlay?.close('comment-report');
-        } catch (error) {
+                    } catch (error) {
             console.warn('Unable to report comment from post-full', error);
             this.showToast('Не удалось отправить жалобу.');
         } finally {
@@ -2204,47 +2139,13 @@ class PostFullComponent {
     }
 
     openReportOverlay() {
-        if (!App.overlay) return;
-        if (App.overlay.get('post-report')) return;
-
-        let reportButton = null;
-
-        App.overlay.open({
-            key: 'post-report',
-            overlayClass: 'post-full-report',
-            hiddenClass: 'post-full-report--hidden',
-            panelClass: 'post-full-report__panel',
-            buildPanel: (panel, close) => {
-                const text = document.createElement('p');
-                text.className = 'post-full-report__title';
-                text.textContent = 'Подать жалобу на пост?';
-
-                const description = document.createElement('p');
-                description.className = 'post-full-report__description';
-                description.textContent = 'После отправки жалобы пост будет проверен модерацией на несоответствие правилам площадки. Мы уведомим вас, когда решение будет принято.';
-
-                const actions = document.createElement('div');
-                actions.className = 'post-full-report__actions';
-
-                const cancelButton = document.createElement('button');
-                cancelButton.className = 'post-full-report__button post-full-report__button--cancel';
-                cancelButton.type = 'button';
-                cancelButton.textContent = 'Отмена';
-                cancelButton.addEventListener('click', close);
-
-                reportButton = document.createElement('button');
-                reportButton.className = 'post-full-report__button post-full-report__button--confirm';
-                reportButton.type = 'button';
-                reportButton.textContent = 'Пожаловаться';
-                reportButton.addEventListener('click', async () => {
-                    await this.submitPostReport(reportButton);
-                });
-
-                actions.appendChild(cancelButton);
-                actions.appendChild(reportButton);
-                panel.appendChild(text);
-                panel.appendChild(description);
-                panel.appendChild(actions);
+        App.warn?.open({
+            title: 'Подать жалобу на пост?',
+            description: 'После отправки жалобы пост будет проверен модерацией на несоответствие правилам площадки. Мы уведомим вас, когда решение будет принято.',
+            confirmLabel: 'Пожаловаться',
+            cancelLabel: 'Назад',
+            onConfirm: async () => {
+                await this.submitPostReport({ disabled: false });
             }
         });
     }
@@ -2277,8 +2178,7 @@ class PostFullComponent {
                 this.showToast('Жалоба отправлена');
             }
 
-            App.overlay?.close('post-report');
-        } catch (error) {
+                    } catch (error) {
             console.warn('Unable to report post from post-full', error);
             this.showToast('Не удалось отправить жалобу.');
         } finally {
