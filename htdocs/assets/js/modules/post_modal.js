@@ -677,6 +677,11 @@ class CreatePostModalComponent {
         );
     }
 
+
+    hideConfirm() {
+        this.confirmAction = null;
+    }
+
     async showConfirm(action, title, message, submitLabel, cancelLabel = 'Назад') {
         this.confirmAction = action;
         const confirmed = await (App.warn?.open({
