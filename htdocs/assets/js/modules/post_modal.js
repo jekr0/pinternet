@@ -103,7 +103,7 @@ class CreatePostModalComponent {
         this.bindUploadHandlers();
         this.bindDescriptionHandlers();
         this.bindCollectionHandlers();
-        if (this.collectionEditButton) { const src=this.collectionEditButton.getAttribute('data-svg-src'); if(src) App.utils.loadSVG(src,this.collectionEditButton); this.collectionEditButton.addEventListener('click',()=>document.dispatchEvent(new CustomEvent('collection-modul:open'))); }
+        if (this.collectionEditButton) { const src=this.collectionEditButton.getAttribute('data-svg-src'); if(src) App.utils.loadSVG(src,this.collectionEditButton); this.collectionEditButton.addEventListener('click',()=>document.dispatchEvent(new CustomEvent('collection-modal:open'))); }
         this.bindTagsHandlers();
         this.bindInputRestrictions();
         this.bindSubmitHandlers();
