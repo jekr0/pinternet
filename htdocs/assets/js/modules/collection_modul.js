@@ -37,7 +37,49 @@ class CollectionModalComponent {
   close(){ if (App.modalCtrl) { App.modalCtrl.close('collection-modal'); return; } this.hideOnly(); this.hideTagSuggestions(); }
   showOnly(){ this.root.classList.remove('collection-modal--hidden'); this.root.setAttribute('aria-hidden','false'); }
   hideOnly(){ this.root.classList.add('collection-modal--hidden'); this.root.setAttribute('aria-hidden','true'); }
-  async load(){ if(!this.list) return; this.list.innerHTML=''; try{const r=await fetch('/collections/list',{method:'POST',headers:{'X-Requested-With':'XMLHttpRequest'}}); const p=await r.json(); if(p.success&&Array.isArray(p.collections)){this.list.innerHTML=p.collections.map(c=>`<li><button type="button" class="collection-modal__collection-item">${this.escapeHtml(c==='Profile'?'Профиль':c)}</button></li>`).join('');}}catch(e){console.warn(e);} }
+  async load(){
+    if(!this.list) return;
+    this.list.innerHTML='';
+    let collections=[];
+    try{
+      const r=await fetch('/collections/list',{method:'POST',headers:{'X-Requested-With':'XMLHttpRequest'}});
+      const p=await r.json();
+      if(r.ok && p.success && Array.isArray(p.collections)) collections=p.collections;
+    }catch(e){console.warn('Unable to load collections for collection-modal',e);}
+
+    collections.forEach((nameRaw)=>{
+      const collectionName=String(nameRaw||'').trim();
+      if(!collectionName) return;
+      const isProfile=this.isProfileCollectionName(collectionName);
+      const li=document.createElement('li');
+      const btn=document.createElement('button');
+      btn.type='button';
+      btn.className='collection-modal__collection-item';
+      btn.textContent=isProfile?'Профиль':collectionName;
+      btn.dataset.collection=collectionName;
+      if(isProfile){btn.dataset.isProfile='1';btn.setAttribute('aria-disabled','true');}
+      btn.addEventListener('click',()=>{
+        if(btn.dataset.isProfile==='1') return;
+        btn.classList.toggle('is-selected');
+      });
+      li.appendChild(btn);
+      this.list.appendChild(li);
+    });
+
+    const addItem=document.createElement('li');
+    const addButton=document.createElement('button');
+    addButton.type='button';
+    addButton.className='collection-modal__collection-item collection-modal__collection-item--add';
+    addButton.textContent='+';
+    addButton.addEventListener('click',()=>this.nameInput?.focus());
+    addItem.appendChild(addButton);
+    this.list.appendChild(addItem);
+  }
+
+  isProfileCollectionName(collectionName){
+    return String(collectionName||'').trim().toLowerCase()==='profile' || String(collectionName||'').trim().toLowerCase()==='профиль';
+  }
+
   normalizeTag(rawTag){return String(rawTag||'').replace(/^#/, '').trim().toLowerCase().replace(/[^a-zа-яё0-9_]/gi, '').slice(0,20);}
   addTagFromInput(){ if(!this.tagsField) return; if(this.tags.length>=this.maxTags){this.tagsField.value=''; this.hideTagSuggestions(); return;} const candidate=this.normalizeTag(this.tagsField.value); if(!candidate){this.tagsField.value=''; this.hideTagSuggestions(); return;} if(!this.tags.includes(candidate)) this.tags.push(candidate); this.tagsField.value=''; this.hideTagSuggestions(); this.renderTags(); }
   renderTags(){ if(!this.tagsList) return; this.tagsList.innerHTML=''; const availableWidth=this.tagsList.clientWidth||370; let currentRow=this.createTagRow(); let rowWidth=0; let hiddenCount=0; this.tags.forEach((tag,index)=>{ const tagEl=document.createElement('button'); tagEl.type='button'; tagEl.className='collection-modal__tag-item'; tagEl.innerHTML=`<span class="collection-modal__tag-label">#${this.escapeHtml(tag)}</span>`; tagEl.addEventListener('click',()=>this.removeTag(index)); currentRow.appendChild(tagEl); const tagWidth=tagEl.offsetWidth||this.estimateTagWidth(tag); if(rowWidth+tagWidth+6>availableWidth&&rowWidth>0){ currentRow.removeChild(tagEl); if(this.tagsList.children.length>=this.maxVisibleTagRows){hiddenCount+=1;return;} currentRow=this.createTagRow(); rowWidth=0; currentRow.appendChild(tagEl);} rowWidth+=tagWidth+6; }); if(hiddenCount>0) this.appendMoreTag(hiddenCount); }
