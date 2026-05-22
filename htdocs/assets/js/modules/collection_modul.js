@@ -47,17 +47,20 @@ class CollectionModalComponent {
       if(r.ok && p.success && Array.isArray(p.collections)) collections=p.collections;
     }catch(e){console.warn('Unable to load collections for collection-modal',e);}
 
-    collections.forEach((nameRaw)=>{
-      const collectionName=String(nameRaw||'').trim();
-      if(!collectionName) return;
-      const isProfile=this.isProfileCollectionName(collectionName);
+    const localized = collections.map((nameRaw)=> String(nameRaw||'').trim()).filter(Boolean).map((n)=> this.isProfileCollectionName(n)?'Профиль':n);
+    if (!localized.includes('Профиль')) localized.unshift('Профиль');
+
+    localized.forEach((collectionName)=>{
       const li=document.createElement('li');
       const btn=document.createElement('button');
       btn.type='button';
       btn.className='collection-modal__collection-item';
-      btn.textContent=isProfile?'Профиль':collectionName;
+      btn.textContent=collectionName;
       btn.dataset.collection=collectionName;
-      if(isProfile){btn.dataset.isProfile='1';btn.setAttribute('aria-disabled','true');}
+      if(collectionName==='Профиль'){
+        btn.dataset.isProfile='1';
+        btn.setAttribute('aria-disabled','true');
+      }
       btn.addEventListener('click',()=>{
         if(btn.dataset.isProfile==='1') return;
         btn.classList.toggle('is-selected');
@@ -71,7 +74,7 @@ class CollectionModalComponent {
     addButton.type='button';
     addButton.className='collection-modal__collection-item collection-modal__collection-item--add';
     addButton.textContent='+';
-    addButton.addEventListener('click',()=>this.nameInput?.focus());
+    addButton.addEventListener('click',()=>{});
     addItem.appendChild(addButton);
     this.list.appendChild(addItem);
   }

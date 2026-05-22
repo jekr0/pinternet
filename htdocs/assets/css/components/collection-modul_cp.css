@@ -38,7 +38,7 @@
 .collection-modal__tags-input-row:hover .collection-modal__input--tags,.collection-modal__tags-input-row:hover .collection-modal__tags-suggest-list,.collection-modal__tags-input-row:focus-within .collection-modal__input--tags,.collection-modal__tags-input-row:focus-within .collection-modal__tags-suggest-list{border-color:rgb(150,150,250)}
 .collection-modal__tags-input-row:focus-within .collection-modal__input--tags,.collection-modal__tags-input-row:focus-within .collection-modal__tags-suggest-list{border-color:rgb(100,100,200)}
 .collection-modal__tags-suggest-match{color:rgb(100,100,200)}
-.collection-modal__tag-item{position:relative;display:inline-flex;flex:0 0 auto;align-items:center;justify-content:center;height:20px;padding:0 8px;font-family:'SF_def',Arial,sans-serif;font-size:14px;color:#555;background:#efefef;border-radius:8px;cursor:pointer;user-select:none}
+.collection-modal__tag-item{position:relative;display:inline-flex;flex:0 0 auto;align-items:center;justify-content:center;height:20px;padding:0 8px;font-family:'SF_def',Arial,sans-serif;font-size:14px;color:#555;background:#efefef;border:none;border-radius:8px;cursor:pointer;user-select:none}
 .collection-modal__tag-label{transition:filter .1s ease}
 .collection-modal__tag-item::after{content:'×';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:16px;color:rgb(100,100,200);opacity:0;transition:opacity .1s ease,color .1s;pointer-events:none}
 .collection-modal__tag-item:hover .collection-modal__tag-label{filter:blur(1px);color:#999999}
@@ -48,7 +48,7 @@
 .collection-modal__tag-item--more:hover{filter:none}
 
 /* 12px gap from tag dropdown zone to actions */
-.collection-modal__actions{margin-top:12px;display:flex;flex-direction:column;gap:12px}
+.collection-modal__actions{margin-top:116px;display:flex;flex-direction:column;gap:12px}
 .collection-modal__button{width:100%;height:40px;border:none;border-radius:10px;font-family:'SF_def',Arial,sans-serif;font-size:16px;cursor:pointer;transition:border-color .2s ease,background .2s ease,color .2s ease}
 .collection-modal__button--cancel{background:#fff;border:1px solid #e0e0e0;color:#bbb}
 .collection-modal__button--cancel:hover{border-color:rgb(150,150,250);color:rgb(150,150,250)}
