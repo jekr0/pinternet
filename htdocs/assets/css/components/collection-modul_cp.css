@@ -1,4 +1,4 @@
-.collection-modal{position:fixed;inset:0;z-index:1250;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.3);backdrop-filter:blur(15px);opacity:1;visibility:visible;pointer-events:auto;transition:opacity .2s ease,visibility .2s ease}
+.collection-modal{position:fixed;inset:0;z-index:1250;display:flex;align-items:center;justify-content:center;opacity:1;visibility:visible;pointer-events:auto;transition:opacity .2s ease,visibility .2s ease}
 .collection-modal--hidden{opacity:0;visibility:hidden;pointer-events:none}
 .collection-modal__panel{width:1000px;height:456px;box-sizing:border-box;padding:0 64px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:64px;background:#fff;border-radius:32px;box-shadow:0 4px 6px rgba(0,0,0,.08)}
 .collection-modal__left-column,.collection-modal__right-column{width:100%}

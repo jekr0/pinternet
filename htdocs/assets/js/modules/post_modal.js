@@ -109,6 +109,11 @@ class CreatePostModalComponent {
         this.bindSubmitHandlers();
         this.bindCloseHandlers();
 
+        App.modalCtrl?.register('post-modal', {
+            show: () => this.showOnly(),
+            hide: () => this.hideOnly()
+        });
+
         document.addEventListener('create-collection:created', async (event) => {
             if (event.detail?.source !== 'post-modal') return;
             const createdCollection = String(event.detail?.collection || '').trim();
@@ -124,14 +129,14 @@ class CreatePostModalComponent {
             clearTimeout(this.closeResetTimer);
             this.resetForm();
             this.applyCreateModeUI();
-            this.open();
+            if (App.modalCtrl) { App.modalCtrl.open('post-modal'); } else { this.open(); }
         });
 
         document.addEventListener('post-modal:open', () => {
             clearTimeout(this.closeResetTimer);
             this.resetForm();
             this.applyCreateModeUI();
-            this.open();
+            if (App.modalCtrl) { App.modalCtrl.open('post-modal'); } else { this.open(); }
         });
         document.addEventListener('post-modal:open-edit', async (event) => this.openEditMode(event.detail || {}));
     }
@@ -287,7 +292,6 @@ class CreatePostModalComponent {
         clearTimeout(this.closeResetTimer);
         this.modal.classList.remove('post-modal--hidden');
         this.modal.setAttribute('aria-hidden', 'false');
-        App.utils.lockBodyScroll();
         await this.loadCollections();
     }
 
@@ -315,7 +319,7 @@ class CreatePostModalComponent {
             return;
         }
 
-        this.close();
+        if (App.modalCtrl) { App.modalCtrl.close('post-modal'); } else { this.close(); }
     }
 
     close() {
@@ -328,7 +332,6 @@ class CreatePostModalComponent {
         this.panel?.classList.remove('post-modal__panel--close-blocked');
         this.modal.classList.add('post-modal--hidden');
         this.modal.setAttribute('aria-hidden', 'true');
-        App.utils.unlockBodyScroll();
         clearTimeout(this.closeResetTimer);
         this.closeResetTimer = setTimeout(() => {
             this.resetForm();
@@ -580,7 +583,7 @@ class CreatePostModalComponent {
                 throw new Error(payload.error || 'Не удалось создать пост.');
             }
 
-            this.close();
+            if (App.modalCtrl) { App.modalCtrl.close('post-modal'); } else { this.close(); }
             this.showSuccessToast('Пост создан');
         } catch (error) {
             this.showAlert(error.message || 'Ошибка при создании поста.');
@@ -618,7 +621,7 @@ class CreatePostModalComponent {
             }
 
             this.editSnapshot = this.getCurrentSnapshot();
-            this.close();
+            if (App.modalCtrl) { App.modalCtrl.close('post-modal'); } else { this.close(); }
             this.showSuccessToast('Изменения сохранены');
             document.dispatchEvent(new CustomEvent('post-modal:updated', { detail: payload }));
         } catch (error) {
@@ -651,7 +654,7 @@ class CreatePostModalComponent {
             }
 
             this.editSnapshot = this.getCurrentSnapshot();
-            this.close();
+            if (App.modalCtrl) { App.modalCtrl.close('post-modal'); } else { this.close(); }
             this.showSuccessToast('Пост удалён');
             document.dispatchEvent(new CustomEvent('post-modal:deleted', { detail: payload }));
         } catch (error) {
@@ -702,7 +705,7 @@ class CreatePostModalComponent {
         this.hideConfirm();
 
         if (action === 'unsaved-close') {
-            this.close();
+            if (App.modalCtrl) { App.modalCtrl.close('post-modal'); } else { this.close(); }
             return;
         }
 
@@ -977,6 +980,17 @@ class CreatePostModalComponent {
 
     escapeRegex(value) {
         return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    showOnly() {
+        clearTimeout(this.closeResetTimer);
+        this.modal.classList.remove('post-modal--hidden');
+        this.modal.setAttribute('aria-hidden', 'false');
+    }
+
+    hideOnly() {
+        this.modal.classList.add('post-modal--hidden');
+        this.modal.setAttribute('aria-hidden', 'true');
     }
 }
 

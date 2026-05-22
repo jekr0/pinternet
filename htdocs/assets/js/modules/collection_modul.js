@@ -11,23 +11,20 @@ class CollectionModalComponent {
     this.tagsInputRow=this.root.querySelector('[data-component="collection-modal-tags-input-row"]');
     this.addTagButton=this.root.querySelector('[data-component="collection-modal-tags-add-button"]');
 
-    document.addEventListener('collection-modal:open',()=>this.open());
+    document.addEventListener('collection-modal:open',()=>{ if (App.modalCtrl) { App.modalCtrl.open('collection-modal'); return; } this.open(); });
     this.root.addEventListener('click',(e)=>{if(e.target===this.root||e.target.closest('[data-component="collection-modal-cancel"]')) this.close();});
     this.nameInput?.addEventListener('input',()=>{const n=this.nameInput.value.replace(/[^a-zа-яё0-9_ ]/gi,'').slice(0,32);if(n!==this.nameInput.value)this.nameInput.value=n;});
     this.tagsInput?.addEventListener('input',()=>this.handleTagsInput());
     this.tagsInput?.addEventListener('keydown',(e)=>{if(e.key==='Enter'||e.key===','){e.preventDefault();this.addTag(this.tagsInput.value);}});
     this.addTagButton?.addEventListener('click',()=>this.addTag(this.tagsInput.value));
     this.tagsSuggestList?.addEventListener('click',(e)=>{const btn=e.target.closest('button[data-tag]'); if(!btn) return; this.addTag(btn.dataset.tag||'');});
+
+    App.modalCtrl?.register('collection-modal', { show: () => this.showOnly(), hide: () => this.hideOnly() });
   }
-  async open(){
-    const postModal=document.getElementById('post-modal');
-    const hasOtherOpen = !!postModal && !postModal.classList.contains('post-modal--hidden');
-    if(hasOtherOpen){ postModal.classList.add('post-modal--hidden'); postModal.setAttribute('aria-hidden','true'); this.root.style.backdropFilter='none'; this.root.style.background='transparent'; }
-    else { this.root.style.backdropFilter='blur(15px)'; this.root.style.background='rgba(0,0,0,.3)'; App.utils.lockBodyScroll(); }
-    this.root.classList.remove('collection-modal--hidden'); this.root.setAttribute('aria-hidden','false');
-    await this.load(); this.renderTags(); this.nameInput?.focus();
-  }
-  close(){ this.root.classList.add('collection-modal--hidden'); this.root.setAttribute('aria-hidden','true'); this.hideTagSuggestions(); App.utils.unlockBodyScroll(); }
+  async open(){ this.showOnly(); await this.load(); this.renderTags(); this.nameInput?.focus(); }
+  close(){ if (App.modalCtrl) { App.modalCtrl.close('collection-modal'); return; } this.hideOnly(); this.hideTagSuggestions(); }
+  showOnly(){ this.root.classList.remove('collection-modal--hidden'); this.root.setAttribute('aria-hidden','false'); }
+  hideOnly(){ this.root.classList.add('collection-modal--hidden'); this.root.setAttribute('aria-hidden','true'); }
   async load(){ if(!this.list) return; this.list.innerHTML=''; try{const r=await fetch('/collections/list',{method:'POST',headers:{'X-Requested-With':'XMLHttpRequest'}}); const p=await r.json(); if(p.success&&Array.isArray(p.collections)){this.list.innerHTML=p.collections.map(c=>`<li><button type="button" class="collection-modal__collection-item">${this.escapeHtml(c==='Profile'?'Профиль':c)}</button></li>`).join('');}}catch(e){console.warn(e);} }
   normalizeTag(v){return String(v||'').toLowerCase().replace(/[^a-zа-яё0-9_#]/gi,'').replace(/^#+/,'').slice(0,20).trim();}
   addTag(raw){const t=this.normalizeTag(raw); if(!t||this.tags.includes(t)||this.tags.length>=10) return; this.tags.push(t); if(this.tagsInput) this.tagsInput.value=''; this.hideTagSuggestions(); this.renderTags();}

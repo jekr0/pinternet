@@ -43,6 +43,7 @@ switch ($path) {
         ];
         $CSS = [
             'header_lo.css',
+            'blur_lo.css',
             'dropdown-search_cp.css',
             'profile-container_cp.css',
             'dropdown-profile_cp.css',
@@ -58,6 +59,7 @@ switch ($path) {
         ];
         $JS = [
             'overlay_manager.js',
+            'modal_ctrl.js',
             'toast_stack.js',
             'profile_button.js',
             'dropdown_profile.js',
@@ -147,6 +149,7 @@ switch ($path) {
         ];
         $CSS = [
             'header_lo.css',
+            'blur_lo.css',
             'dropdown-search_cp.css',
             'profile-container_cp.css',
             'dropdown-profile_cp.css',

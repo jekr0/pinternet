@@ -7,9 +7,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(15px);
-    opacity: 1;
+        opacity: 1;
     visibility: visible;
     pointer-events: auto;
     transition: opacity 0.2s ease, visibility 0.2s ease;

@@ -1,5 +1,6 @@
 <!-- src/views/layouts/header.php -->
 <div class="header-background" aria-hidden="true"></div>
+<?php include '../src/views/layouts/blur_lo.php'; ?>
 <header class="header">
     <a href="/" class="header__logo">grinderest</a>
     <label class="header__search-field" aria-label="Поиск">
