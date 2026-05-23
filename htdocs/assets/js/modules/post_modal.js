@@ -128,6 +128,9 @@ class CreatePostModalComponent {
         document.addEventListener('post-modal:open-edit', async (event) => {
             await this.openEditMode(event.detail || {});
         });
+        document.addEventListener('collections:changed', async () => {
+            await this.loadCollections();
+        });
     }
 
     openCreateMode() {
@@ -259,7 +262,7 @@ class CreatePostModalComponent {
     bindCloseHandlers() {
         this.modal.addEventListener('click', (event) => {
             if (event.target === this.modal) {
-                if (this.isEditMode || this.hasUnsavedChanges()) {
+                if (this.hasUnsavedChanges()) {
                     this.blockEditOverlayClose();
                     return;
                 }
