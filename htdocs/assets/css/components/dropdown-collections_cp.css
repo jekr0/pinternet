@@ -124,7 +124,7 @@
 
 /* Кнопка добавления коллекции */
 .dropdown-collections__collection-item--add {
-    height: 26px;
+    height: 24px;
     text-align: center;
     font-size: 20px;
     color: #bbb;

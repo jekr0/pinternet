@@ -4,6 +4,7 @@
 .collection-modal__panel--close-blocked{animation:collection-modal-shake .1s ease-in-out}
 @keyframes collection-modal-shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)} }
 .collection-modal__left-column,.collection-modal__right-column{width:100%}
+.collection-modal__right-column{display:flex;flex-direction:column;height:100%}
 
 /* left collections list: dropdown-collections behavior with preserved block geom */
 .collection-modal__collection-list{margin:52px 0 0;padding:0;list-style:none;height:352px;overflow-y:auto;border:1.5px solid #e0e0e0;border-radius:24px;transition:border-color .2s ease}
@@ -13,7 +14,7 @@
 .collection-modal__collection-item:hover{background:rgba(100,100,200,.08)}
 .collection-modal__collection-item.is-selected{color:rgb(100,100,200)}
 .collection-modal__collection-item[data-is-profile="1"]{height:26px;color:#999;cursor:not-allowed;pointer-events:none}
-.collection-modal__collection-item--add{height:26px;text-align:center;font-size:20px;color:#bbb}
+.collection-modal__collection-item--add{height:24px;text-align:center;font-size:20px;color:#bbb}
 
 .collection-modal__title{margin:52px 0 12px;height:40px;display:flex;align-items:center;justify-content:center;font-family:'MC_caps',Arial,sans-serif;font-size:20px;color:#333}
 .collection-modal__name-wrap{margin-bottom:12px}
@@ -49,7 +50,7 @@
 .collection-modal__tag-item--more::after{content:none}
 .collection-modal__tag-item--more:hover{filter:none}
 
-.collection-modal__actions{margin-top:116px;display:flex;column-gap:12px;row-gap:12px;flex-wrap:wrap;align-content:flex-start}
+.collection-modal__actions{margin-top:auto;margin-bottom:52px;display:flex;column-gap:12px;row-gap:12px;flex-wrap:wrap;align-content:flex-start}
 .collection-modal__button{flex:1 1 100%;width:100%;height:40px;border:none;border-radius:10px;font-family:'SF_def',Arial,sans-serif;font-size:16px;cursor:pointer;transition:border-color .2s ease,background .2s ease,color .2s ease}
 .collection-modal__button--cancel{background:#fff;border:1px solid #e0e0e0;color:#bbb}
 .collection-modal__button--cancel:hover{border-color:rgb(150,150,250);color:rgb(150,150,250)}

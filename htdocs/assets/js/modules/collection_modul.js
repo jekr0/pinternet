@@ -41,7 +41,7 @@ class CollectionModalComponent {
     const addItem=document.createElement('li'); const addButton=document.createElement('button'); addButton.type='button'; addButton.className='collection-modal__collection-item collection-modal__collection-item--add'; addButton.textContent='+'; addButton.addEventListener('click',()=>{if(this.mode==='create'){this.nameInput?.focus();return;} this.setCreateMode(true); this.nameInput?.focus();}); addItem.appendChild(addButton); this.list.appendChild(addItem);
   }
   async selectCollection(btn){ if(!btn||btn.dataset.isProfile==='1') return; this.list?.querySelectorAll('.collection-modal__collection-item.is-selected').forEach((el)=>el.classList.remove('is-selected')); btn.classList.add('is-selected'); const name=btn.dataset.collection||btn.textContent.trim(); const tags=await this.loadCollectionTags(name); this.setEditMode(name,tags); }
-  async loadCollectionTags(collectionName){ try{const r=await fetch(`/collections/tags?collection=${encodeURIComponent(collectionName)}`); const p=await r.json(); if(r.ok&&p.success&&Array.isArray(p.tags)) return p.tags.map((t)=>this.normalizeTag(t)).filter(Boolean);}catch(e){console.warn(e);} return []; }
+  async loadCollectionTags(collectionName){ try{const r=await fetch(`/collections/tags?collection=${encodeURIComponent(collectionName)}`); const p=await r.json(); if(!r.ok||!p.success) return []; const rawTags=Array.isArray(p.tags)?p.tags:(typeof p.tags==='string'?p.tags.split(/\s+/):[]); return rawTags.map((t)=>this.normalizeTag(t)).filter(Boolean);}catch(e){console.warn(e);} return []; }
 
   isProfileCollectionName(v){ const n=String(v||'').trim().toLowerCase(); return n==='profile'||n==='профиль'; }
   normalizeTag(raw){return String(raw||'').replace(/^#/,'').trim().toLowerCase().replace(/[^a-zа-яё0-9_]/gi,'').slice(0,20);}
@@ -65,12 +65,12 @@ class CollectionModalComponent {
   hasUnsavedChanges(){ return this.getSnapshot()!==this.savedSnapshot; }
   async submitByMode(){ if(this.mode==='edit') return this.updateCollection(); return this.createCollection(); }
   async createCollection(){ const name=(this.nameInput?.value||'').trim(); if(!name||!this.submitButton) return; this.submitButton.disabled=true; try{const r=await fetch('/collections/create',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8','Accept':'application/json'},body:new URLSearchParams({collection:name,tags:this.tags.join(' ')}).toString()}); const p=await r.json(); if(!r.ok||!p.success) return; this.setCreateMode(true); await this.load(); this.showToast('Коллекция создана');}catch(e){console.warn(e);} finally{this.submitButton.disabled=false;} }
-  async updateCollection(){ const oldName=this.selectedCollection; const newName=(this.nameInput?.value||'').trim(); if(!oldName||!newName||!this.submitButton) return; this.submitButton.disabled=true; try{const r=await fetch('/collections/update',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8','Accept':'application/json'},body:new URLSearchParams({old_collection:oldName,collection:newName,tags:this.tags.join(' ')}).toString()}); const p=await r.json(); if(!r.ok||!p.success) return; await this.load(); const target=((p.collection||newName)==='Profile')?'Профиль':(p.collection||newName); const match=Array.from(this.list.querySelectorAll('.collection-modal__collection-item')).find(b=>b.textContent.trim()===target); if(match) await this.selectCollection(match); this.showToast('Коллекция обновлена');}catch(e){console.warn(e);} finally{this.submitButton.disabled=false;} }
+  async updateCollection(){ const oldName=this.selectedCollection; const newName=(this.nameInput?.value||'').trim(); if(!oldName||!newName||!this.submitButton) return; this.submitButton.disabled=true; try{const r=await fetch('/collections/update',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8','Accept':'application/json'},body:new URLSearchParams({old_collection:oldName,collection:newName,tags:this.tags.join(' ')}).toString()}); const p=await r.json(); if(!r.ok||!p.success) return; await this.load(); const target=((p.collection||newName)==='Profile')?'Профиль':(p.collection||newName); const match=Array.from(this.list.querySelectorAll('.collection-modal__collection-item')).find(b=>b.textContent.trim()===target); if(match) await this.selectCollection(match); document.dispatchEvent(new CustomEvent('collections:changed')); this.showToast('Коллекция обновлена');}catch(e){console.warn(e);} finally{this.submitButton.disabled=false;} }
   async deleteCurrentCollection(){
     if(this.mode!=='edit'||!this.selectedCollection||this.isProfileCollectionName(this.selectedCollection)||!this.deleteButton) return;
     App.warn?.open({
       title:'Удалить коллекцию?',
-      description:'После удаления коллекция и связанные с ней сохранения будут удалены без возможности восстановления.',
+      description:`Коллекция «${this.selectedCollection}» будет удалена без возможности восстановления.`,
       confirmLabel:'Удалить',
       cancelLabel:'Назад',
       onConfirm: async()=>{
@@ -81,6 +81,7 @@ class CollectionModalComponent {
           if(!r.ok||!p.success) return;
           this.setCreateMode(true);
           await this.load();
+          document.dispatchEvent(new CustomEvent('collections:changed'));
           this.showToast('Коллекция удалена');
         }catch(e){console.warn(e);} finally{this.deleteButton.disabled=false;}
       }
