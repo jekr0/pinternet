@@ -10,11 +10,11 @@
 .collection-modal__collection-list{margin:52px 0 0;padding:0;list-style:none;height:352px;overflow-y:auto;border:1.5px solid #e0e0e0;border-radius:24px;transition:border-color .2s ease}
 .collection-modal__collection-list:hover{border-color:rgb(150,150,250)}
 .collection-modal__collection-list li{margin:0;padding:0}
-.collection-modal__collection-item{width:100%;height:40px;padding:0 8px;border:none;border-radius:0;background:transparent;text-align:center;font-family:'NS_def',Arial,sans-serif;font-size:20px;color:#333;cursor:pointer;transition:background .1s ease,color .1s ease}
+.collection-modal__collection-item{width:100%;height:36px;padding:0 12px;border:none;border-radius:0;background:transparent;text-align:left;font-family:'NS_def',Arial,sans-serif;font-size:18px;color:#333;cursor:pointer;transition:background .1s ease,color .1s ease}
 .collection-modal__collection-item:hover{background:rgba(100,100,200,.08)}
 .collection-modal__collection-item.is-selected{color:rgb(100,100,200)}
-.collection-modal__collection-item[data-is-profile="1"]{height:40px;color:#999;cursor:not-allowed;pointer-events:none}
-.collection-modal__collection-item--add{height:40px;text-align:center;font-size:20px;color:#bbb}
+.collection-modal__collection-item[data-is-profile="1"]{height:36px;color:#999;cursor:not-allowed;pointer-events:none}
+.collection-modal__collection-item--add{height:36px;text-align:left;font-size:18px;color:#bbb}
 
 .collection-modal__title{margin:52px 0 12px;height:40px;display:flex;align-items:center;justify-content:center;font-family:'MC_caps',Arial,sans-serif;font-size:20px;color:#333}
 .collection-modal__name-wrap{margin-bottom:12px}
