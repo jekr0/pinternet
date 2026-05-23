@@ -4,6 +4,11 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
+// Сессия должна стартовать до любого вывода (иначе предупреждение headers already sent)
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 // Получаем запрошенный URI без параметров
 $request = $_SERVER['REQUEST_URI'];
 $path = parse_url($request, PHP_URL_PATH);
@@ -38,6 +43,7 @@ switch ($path) {
         ];
         $CSS = [
             'header_lo.css',
+            'blur_lo.css',
             'dropdown-search_cp.css',
             'profile-container_cp.css',
             'dropdown-profile_cp.css',
@@ -45,14 +51,16 @@ switch ($path) {
             'post-card_cp.css',
             'post-full_cp.css',
             'dropdown-collections_cp.css',
-            'create-collection_cp.css',
             'collection-modul_cp.css',
+            'warn-modal_cp.css',
             'toast-stack_cp.css',
             'home_pg.css',
             'footer_lo.css'
         ];
         $JS = [
             'overlay_manager.js',
+            'modal_ctrl.js',
+            'warn_modal.js',
             'toast_stack.js',
             'profile_button.js',
             'dropdown_profile.js',
@@ -61,7 +69,6 @@ switch ($path) {
             'post_card.js',
             'post_full.js',
             'dropdown_collections.js',
-            'create_collection.js',
             'collection_modul.js',
             'masonry_feed.js',
             'adaptive_text.js'
@@ -86,8 +93,10 @@ switch ($path) {
         $page = 'sign_up_pg.php';
         $pageTitle = 'Авторизация';
         $PHP = [];
-        $CSS = ['toast-stack_cp.css', 'auth_pg.css'];
-        $JS  = ['toast_stack.js', 'password_toggle.js', 'auth_form_guard.js', 'auto-god.js'];
+        $CSS = ['warn-modal_cp.css',
+            'toast-stack_cp.css', 'auth_pg.css'];
+        $JS  = ['warn_modal.js',
+            'toast_stack.js', 'password_toggle.js', 'auth_form_guard.js', 'auto-god.js'];
         break;
 
         case '/logout':
@@ -142,14 +151,17 @@ switch ($path) {
         ];
         $CSS = [
             'header_lo.css',
+            'blur_lo.css',
             'dropdown-search_cp.css',
             'profile-container_cp.css',
             'dropdown-profile_cp.css',
             'post-modal_cp.css',
+            'warn-modal_cp.css',
             'toast-stack_cp.css',
             'footer_lo.css'
         ];
         $JS = [
+            'warn_modal.js',
             'toast_stack.js',
             'profile_button.js',
             'dropdown_profile.js',

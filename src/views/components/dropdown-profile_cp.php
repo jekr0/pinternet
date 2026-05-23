@@ -1,7 +1,7 @@
 <?php
 // src/views/components/dropdown-profile_cp.php
 
-if (session_status() === PHP_SESSION_NONE) session_start();
+if (session_status() === PHP_SESSION_NONE && !headers_sent()) session_start();
 
 $isLoggedIn = !empty($_SESSION['user_id']);
 ?>

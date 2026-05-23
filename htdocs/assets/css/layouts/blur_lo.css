@@ -1,0 +1,2 @@
+.blur-lo{position:fixed;inset:0;z-index:1190;background:rgba(0,0,0,.3);backdrop-filter:blur(15px);opacity:1;visibility:visible;pointer-events:none;transition:opacity .2s ease,visibility .2s ease}
+.blur-lo--hidden{opacity:0;visibility:hidden}

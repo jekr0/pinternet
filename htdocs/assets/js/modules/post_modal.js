@@ -61,7 +61,6 @@ class CreatePostModalComponent {
         this.preview = this.modal.querySelector('[data-component="post-upload-preview"]');
         this.uploadIcon = this.modal.querySelector('[data-component="post-upload-icon"]');
         this.collectionTrigger = this.modal.querySelector('[data-component="post-collection-trigger"]');
-        this.collectionEditButton = this.modal.querySelector('[data-component="post-collection-edit"]');
         this.collectionList = this.modal.querySelector('[data-component="post-collection-list"]');
         this.collectionItems = Array.from(this.modal.querySelectorAll('[data-component="post-collection-item"]'));
         this.descriptionField = this.modal.querySelector('[data-component="post-description"]');
@@ -103,16 +102,14 @@ class CreatePostModalComponent {
         this.bindUploadHandlers();
         this.bindDescriptionHandlers();
         this.bindCollectionHandlers();
-        if (this.collectionEditButton) { const src=this.collectionEditButton.getAttribute('data-svg-src'); if(src) App.utils.loadSVG(src,this.collectionEditButton); this.collectionEditButton.addEventListener('click',()=>document.dispatchEvent(new CustomEvent('collection-modul:open'))); }
         this.bindTagsHandlers();
         this.bindInputRestrictions();
         this.bindSubmitHandlers();
         this.bindCloseHandlers();
 
-        document.addEventListener('create-collection:created', async (event) => {
-            if (event.detail?.source !== 'post-modal') return;
-            const createdCollection = String(event.detail?.collection || '').trim();
-            await this.loadCollections(createdCollection);
+        App.modalCtrl?.register('post-modal', {
+            show: () => this.showOnly(),
+            hide: () => this.hideOnly()
         });
     }
 
@@ -121,19 +118,29 @@ class CreatePostModalComponent {
             const trigger = event.target.closest('[data-component="create-post-open"]');
             if (!trigger) return;
             event.preventDefault();
-            clearTimeout(this.closeResetTimer);
-            this.resetForm();
-            this.applyCreateModeUI();
-            this.open();
+            this.openCreateMode();
         });
 
         document.addEventListener('post-modal:open', () => {
-            clearTimeout(this.closeResetTimer);
-            this.resetForm();
-            this.applyCreateModeUI();
-            this.open();
+            this.openCreateMode();
         });
-        document.addEventListener('post-modal:open-edit', async (event) => this.openEditMode(event.detail || {}));
+
+        document.addEventListener('post-modal:open-edit', async (event) => {
+            await this.openEditMode(event.detail || {});
+        });
+    }
+
+    openCreateMode() {
+        clearTimeout(this.closeResetTimer);
+        this.resetForm();
+        this.applyCreateModeUI();
+        if (App.modalCtrl) {
+            App.modalCtrl.open('post-modal');
+            this.showOnly();
+            this.loadCollections();
+            return;
+        }
+        this.open();
     }
 
     bindUploadHandlers() {
@@ -207,13 +214,6 @@ class CreatePostModalComponent {
             this.deleteButton.addEventListener('click', () => this.requestDeleteConfirmation());
         }
 
-        if (this.confirmCancelButton) {
-            this.confirmCancelButton.addEventListener('click', () => this.runConfirmCancelAction());
-        }
-
-        if (this.confirmSubmitButton) {
-            this.confirmSubmitButton.addEventListener('click', () => this.runConfirmAction());
-        }
     }
 
     bindTagsHandlers() {
@@ -287,7 +287,6 @@ class CreatePostModalComponent {
         clearTimeout(this.closeResetTimer);
         this.modal.classList.remove('post-modal--hidden');
         this.modal.setAttribute('aria-hidden', 'false');
-        App.utils.lockBodyScroll();
         await this.loadCollections();
     }
 
@@ -315,7 +314,7 @@ class CreatePostModalComponent {
             return;
         }
 
-        this.close();
+        if (App.modalCtrl) { App.modalCtrl.close('post-modal'); } else { this.close(); }
     }
 
     close() {
@@ -328,7 +327,6 @@ class CreatePostModalComponent {
         this.panel?.classList.remove('post-modal__panel--close-blocked');
         this.modal.classList.add('post-modal--hidden');
         this.modal.setAttribute('aria-hidden', 'true');
-        App.utils.unlockBodyScroll();
         clearTimeout(this.closeResetTimer);
         this.closeResetTimer = setTimeout(() => {
             this.resetForm();
@@ -341,7 +339,15 @@ class CreatePostModalComponent {
         this.resetForm();
         this.applyEditModeUI(Number(payload.postId || 0));
         this.fillEditData(payload);
-        await this.open();
+
+        if (App.modalCtrl) {
+            App.modalCtrl.open('post-modal');
+            this.showOnly();
+            await this.loadCollections();
+        } else {
+            await this.open();
+        }
+
         await this.preloadEditCollections(payload.postId);
         this.captureEditSnapshot();
     }
@@ -508,9 +514,7 @@ class CreatePostModalComponent {
             const addButton = this.modal.querySelector('[data-component="post-collection-add-button"]');
             if (addButton) {
                 addButton.addEventListener('click', () => {
-                    document.dispatchEvent(new CustomEvent('create-collection:open', {
-                        detail: { source: 'post-modal' }
-                    }));
+                    document.dispatchEvent(new CustomEvent('collection-modal:open'));
                 });
             }
 
@@ -580,7 +584,7 @@ class CreatePostModalComponent {
                 throw new Error(payload.error || 'Не удалось создать пост.');
             }
 
-            this.close();
+            if (App.modalCtrl) { App.modalCtrl.close('post-modal'); } else { this.close(); }
             this.showSuccessToast('Пост создан');
         } catch (error) {
             this.showAlert(error.message || 'Ошибка при создании поста.');
@@ -618,7 +622,7 @@ class CreatePostModalComponent {
             }
 
             this.editSnapshot = this.getCurrentSnapshot();
-            this.close();
+            if (App.modalCtrl) { App.modalCtrl.close('post-modal'); } else { this.close(); }
             this.showSuccessToast('Изменения сохранены');
             document.dispatchEvent(new CustomEvent('post-modal:updated', { detail: payload }));
         } catch (error) {
@@ -651,7 +655,7 @@ class CreatePostModalComponent {
             }
 
             this.editSnapshot = this.getCurrentSnapshot();
-            this.close();
+            if (App.modalCtrl) { App.modalCtrl.close('post-modal'); } else { this.close(); }
             this.showSuccessToast('Пост удалён');
             document.dispatchEvent(new CustomEvent('post-modal:deleted', { detail: payload }));
         } catch (error) {
@@ -666,48 +670,38 @@ class CreatePostModalComponent {
         if (!this.isEditMode) return;
         this.showConfirm(
             'delete',
-            'Удалить пост?',
-            'После удаления пост не получится восстановить.',
+            'Удалить пость?',
+            'После удаления пост и все комментарии к нему будут полностью удалены с сайта без возможности восстановления.',
             'Удалить',
             'Назад'
         );
     }
 
-    showConfirm(action, title, message, submitLabel, cancelLabel = "Назад") {
-        if (!this.confirmBox || !this.confirmMessage || !this.confirmSubmitButton) return;
-        this.confirmAction = action;
-        if (this.confirmTitle) this.confirmTitle.textContent = title;
-        this.confirmMessage.textContent = message;
-        this.confirmSubmitButton.textContent = submitLabel;
-        if (this.confirmCancelButton) this.confirmCancelButton.textContent = cancelLabel;
-        this.confirmBox.classList.remove('post-modal__confirm--hidden');
-        this.confirmBox.setAttribute('aria-hidden', 'false');
-    }
 
     hideConfirm() {
-        if (!this.confirmBox) return;
         this.confirmAction = null;
-        this.confirmBox.classList.add('post-modal__confirm--hidden');
-        this.confirmBox.setAttribute('aria-hidden', 'true');
     }
 
-    runConfirmCancelAction() {
-        const action = this.confirmAction;
-        this.hideConfirm();
+    async showConfirm(action, title, message, submitLabel, cancelLabel = 'Назад') {
+        this.confirmAction = action;
+        const confirmed = await (App.warn?.open({
+            title,
+            description: message,
+            confirmLabel: submitLabel,
+            cancelLabel,
+            onConfirm: async () => {
+                if (action === 'unsaved-close') {
+                    if (App.modalCtrl) { App.modalCtrl.close('post-modal'); } else { this.close(); }
+                    return;
+                }
+                if (action === 'delete') {
+                    await this.deletePost();
+                }
+            }
+        }) || Promise.resolve(false));
 
-    }
-
-    async runConfirmAction() {
-        const action = this.confirmAction;
-        this.hideConfirm();
-
-        if (action === 'unsaved-close') {
-            this.close();
-            return;
-        }
-
-        if (action === 'delete') {
-            await this.deletePost();
+        if (!confirmed) {
+            this.confirmAction = null;
         }
     }
 
@@ -977,6 +971,17 @@ class CreatePostModalComponent {
 
     escapeRegex(value) {
         return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    showOnly() {
+        clearTimeout(this.closeResetTimer);
+        this.modal.classList.remove('post-modal--hidden');
+        this.modal.setAttribute('aria-hidden', 'false');
+    }
+
+    hideOnly() {
+        this.modal.classList.add('post-modal--hidden');
+        this.modal.setAttribute('aria-hidden', 'true');
     }
 }
 

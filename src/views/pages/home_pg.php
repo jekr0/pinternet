@@ -1,7 +1,7 @@
 <?php
     require_once __DIR__ . '/../../config/database_conf.php';
 
-    if (session_status() === PHP_SESSION_NONE) {
+    if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
         session_start();
     }
 

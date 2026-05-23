@@ -201,7 +201,7 @@ class DropdownCollectionsComponent {
         addButton.textContent = '+';
         addButton.addEventListener('click', () => {
             if (!this.activePostId) return;
-            document.dispatchEvent(new CustomEvent('create-collection:open', {
+            document.dispatchEvent(new CustomEvent('collection-modal:open', {
                 detail: { postId: this.activePostId }
             }));
         });
