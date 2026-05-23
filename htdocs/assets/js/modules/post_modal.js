@@ -746,7 +746,7 @@ class CreatePostModalComponent {
         if (!this.tagsField) return;
 
         if (this.tags.length >= this.maxTags) {
-            this.showAlert('Можно добавить не больше 24 тегов.');
+            this.showSuccessToast('Можно добавить не больше 24 тегов.');
             return;
         }
 
