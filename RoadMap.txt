@@ -76,7 +76,7 @@
 
 ### 5.3 Устранение утечек
 - [ ] Для каждого модуля добавить/проверить `destroy()`:
-  - [ ] очистка `setInterval`/`setTimeout`,
+  - [x] очистка `setInterval`/`setTimeout`,
   - [ ] снятие `window/document` listeners,
   - [ ] снятие подписок на custom events.
 
