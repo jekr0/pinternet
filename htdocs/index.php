@@ -23,6 +23,49 @@ if (strpos($path, $base) === 0) {
     }
 }
 
+
+$redirectPermanent = static function (string $to): void {
+    header('Location: ' . $to, true, 302);
+    exit;
+};
+
+
+
+// Этап 1 (routing prep): канонизация URL и алиасы совместимости.
+if ($path === '/home') {
+    $redirectPermanent('/');
+}
+
+if ($path === '/login') {
+    $redirectPermanent('/auth/login');
+}
+
+if ($path === '/registration') {
+    $redirectPermanent('/auth/registration');
+}
+
+if ($path === '/sign_up') {
+    $authMode = $_SESSION['auth_mode'] ?? 'login';
+    $redirectPermanent($authMode === 'registration' ? '/auth/registration' : '/auth/login');
+}
+
+$postEditMatches = [];
+if (preg_match('#^/post/(\d+)/edit$#', $path, $postEditMatches)) {
+    $redirectPermanent('/post/' . ((int) $postEditMatches[1]) . '?modal=edit');
+}
+
+if ($path === '/post/create') {
+    $redirectPermanent('/?modal=post-create');
+}
+
+if ($path === '/collections-editing') {
+    $redirectPermanent('/?modal=collections-editing');
+}
+
+if ($path === '/profile-editing') {
+    $redirectPermanent('/profile?modal=editing');
+}
+
 // Определяем, какая страница нужна
 $selectedPostId = 0;
 if (preg_match('#^/post/(\d+)$#', $path, $matches)) {
@@ -83,13 +126,19 @@ switch ($path) {
         $JS  = [];
         break;
 
-        case '/login':
-        if (session_status() === PHP_SESSION_NONE) session_start();
+        case '/auth/login':
         $_SESSION['auth_mode'] = 'login';
-        header('Location: /sign_up');
-        exit;
+        $page = 'sign_up_pg.php';
+        $pageTitle = 'Авторизация';
+        $PHP = [];
+        $CSS = ['warn-modal_cp.css',
+            'toast-stack_cp.css', 'auth_pg.css'];
+        $JS  = ['warn_modal.js',
+            'toast_stack.js', 'password_toggle.js', 'auth_form_guard.js', 'auto-god.js'];
+        break;
 
-        case '/sign_up':
+        case '/auth/registration':
+        $_SESSION['auth_mode'] = 'registration';
         $page = 'sign_up_pg.php';
         $pageTitle = 'Авторизация';
         $PHP = [];
@@ -135,12 +184,6 @@ switch ($path) {
         case '/comments/update':
         case '/comments/delete':
         require_once '../src/controllers/post_ctrl.php';
-        exit;
-
-        case '/registration':
-        if (session_status() === PHP_SESSION_NONE) session_start();
-        $_SESSION['auth_mode'] = 'registration';
-        header('Location: /sign_up');
         exit;
 
     default:
