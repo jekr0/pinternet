@@ -24,6 +24,8 @@ const App = {
             const ComponentClass = this.registry[moduleFile];
             if (ComponentClass) {
                 try {
+                    this.destroyComponent(moduleFile);
+
                     const instance = new ComponentClass();
                     instance.init();               // компонент сам ищет свои элементы
                     this.components[moduleFile] = instance; // опционально, для хранения экземпляров
@@ -34,6 +36,23 @@ const App = {
                 console.warn(`No registered class for module: ${moduleFile}`);
             }
         });
+    },
+    destroyComponent: function (moduleFile) {
+        const instance = this.components[moduleFile];
+        if (!instance) return;
+
+        if (typeof instance.destroy === 'function') {
+            try {
+                instance.destroy();
+            } catch (error) {
+                console.warn(`Component destroy error ${moduleFile}:`, error);
+            }
+        }
+
+        delete this.components[moduleFile];
+    },
+    destroyAllComponents: function () {
+        Object.keys(this.components).forEach((moduleFile) => this.destroyComponent(moduleFile));
     },
     initWithSvgPreload: async function () {
         const svgNodes = Array.from(document.querySelectorAll('[data-svg-src]'));
@@ -161,6 +180,14 @@ document.addEventListener('DOMContentLoaded', () => {
             document.documentElement.classList.remove('app-preloading');
             openUrlDrivenModalState();
         });
+});
+
+
+document.addEventListener('htmx:beforeSwap', (event) => {
+    const target = event.detail?.target;
+    if (!target || target.id !== 'app-main') return;
+
+    App.destroyAllComponents();
 });
 
 
