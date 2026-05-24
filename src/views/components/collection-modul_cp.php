@@ -8,12 +8,12 @@
       <h2 class="collection-modal__title" id="collection-modal-title">Управление коллекциями</h2>
 
       <div class="collection-modal__name-wrap">
-        <input class="collection-modal__input collection-modal__input--name" type="text" placeholder="Название коллекции" maxlength="32" data-component="collection-modal-name">
+        <input class="collection-modal__input collection-modal__input--name ui-input" type="text" placeholder="Название коллекции" maxlength="32" data-component="collection-modal-name">
       </div>
 
       <div class="collection-modal__tags-wrap">
         <div class="collection-modal__tags-input-row" data-component="collection-modal-tags-input-row">
-          <input class="collection-modal__input collection-modal__input--tags" type="text" placeholder="Добавить теги" maxlength="20" data-component="collection-modal-tags-input">
+          <input class="collection-modal__input collection-modal__input--tags ui-input" type="text" placeholder="Добавить теги" maxlength="20" data-component="collection-modal-tags-input">
           <button type="button" class="collection-modal__tags-add-button" data-component="collection-modal-tags-add-button">+</button>
           <ul class="collection-modal__tags-suggest-list collection-modal__tags-suggest-list--hidden" data-component="collection-modal-tags-suggest-list"></ul>
         </div>

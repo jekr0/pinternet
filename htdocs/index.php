@@ -23,18 +23,59 @@ if (strpos($path, $base) === 0) {
     }
 }
 
+
+$redirectToCanonical = static function (string $to): void {
+    header('Location: ' . $to, true, 302);
+    exit;
+};
+
+
+
+
+
+// Нормализация trailing slash для канонического поведения URL.
+if ($path !== '/' && $path !== '' && str_ends_with($path, '/')) {
+    $path = rtrim($path, '/');
+    $redirectToCanonical($path === '' ? '/' : $path);
+}
+
+// Этап 1 (routing prep): канонизация URL и алиасы совместимости.
+if ($path === '/home') {
+    $redirectToCanonical('/');
+}
+
+if ($path === '/login') {
+    $redirectToCanonical('/auth/login');
+}
+
+if ($path === '/registration') {
+    $redirectToCanonical('/auth/registration');
+}
+
+if ($path === '/sign_up') {
+    $redirectToCanonical('/auth/login');
+}
+
+// Этап 2 (partial rendering): определяем HTMX-запросы для возврата фрагментов.
+$isHtmxRequest = isset($_SERVER['HTTP_HX_REQUEST']) && $_SERVER['HTTP_HX_REQUEST'] === 'true';
+
 // Определяем, какая страница нужна
 $selectedPostId = 0;
 if (preg_match('#^/post/(\d+)$#', $path, $matches)) {
     $selectedPostId = (int) $matches[1];
     $path = '/post/:id';
+} elseif (preg_match('#^/post/(\d+)/edit$#', $path, $matches)) {
+    $selectedPostId = (int) $matches[1];
+    $path = '/post/:id/edit';
 }
 
 switch ($path) {
     case '':
     case '/':
-    case '/home':
     case '/post/:id':
+    case '/post/:id/edit':
+    case '/post/create':
+    case '/collections-editing':
         $page = 'home_pg.php';
         $pageTitle = 'Главная';
         $PHP = [
@@ -76,6 +117,7 @@ switch ($path) {
         break;
 
         case '/profile':
+        case '/profile-editing':
         $page = 'profile_pg.php';
         $pageTitle = 'Профиль';
         $PHP = [];
@@ -83,13 +125,19 @@ switch ($path) {
         $JS  = [];
         break;
 
-        case '/login':
-        if (session_status() === PHP_SESSION_NONE) session_start();
+        case '/auth/login':
         $_SESSION['auth_mode'] = 'login';
-        header('Location: /sign_up');
-        exit;
+        $page = 'sign_up_pg.php';
+        $pageTitle = 'Авторизация';
+        $PHP = [];
+        $CSS = ['warn-modal_cp.css',
+            'toast-stack_cp.css', 'auth_pg.css'];
+        $JS  = ['warn_modal.js',
+            'toast_stack.js', 'password_toggle.js', 'auth_form_guard.js', 'auto-god.js'];
+        break;
 
-        case '/sign_up':
+        case '/auth/registration':
+        $_SESSION['auth_mode'] = 'registration';
         $page = 'sign_up_pg.php';
         $pageTitle = 'Авторизация';
         $PHP = [];
@@ -137,12 +185,6 @@ switch ($path) {
         require_once '../src/controllers/post_ctrl.php';
         exit;
 
-        case '/registration':
-        if (session_status() === PHP_SESSION_NONE) session_start();
-        $_SESSION['auth_mode'] = 'registration';
-        header('Location: /sign_up');
-        exit;
-
     default:
         // 404 Not Found
         http_response_code(404);
@@ -177,6 +219,15 @@ switch ($path) {
 }
 
 // Начинаем вывод HTML
+if ($isHtmxRequest) {
+    ?>
+    <main id="app-main" class="main-content" data-render-mode="partial" data-active-modules='<?php echo htmlspecialchars(json_encode($JS), ENT_QUOTES, 'UTF-8'); ?>'>
+        <?php include '../src/views/pages/' . $page; ?>
+    </main>
+    <?php
+    exit;
+}
+
 ?><!DOCTYPE html>
 <html lang="ru">
 
@@ -209,6 +260,9 @@ switch ($path) {
         window.activeModules = <?php echo json_encode($JS); ?>;
     </script>
 
+    <!-- HTMX для partial navigation -->
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+
     <!-- Основной скрипт приложения (определяет App) -->
     <script src="/assets/js/main.js" defer></script>
 
@@ -218,14 +272,14 @@ switch ($path) {
     <?php endforeach; ?>
 </head>
 
-<body>
+<body hx-boost="true" hx-target="#app-main" hx-swap="outerHTML">
     <!-- Подключаем layout-файлы (шапка, подвал) -->
     <?php foreach ($PHP as $layout): ?>
         <?php include '../src/views/layouts/' . $layout; ?>
     <?php endforeach; ?>
 
     <!-- Основной контент страницы -->
-    <main class="main-content">
+    <main id="app-main" class="main-content" data-render-mode="full" data-active-modules='<?php echo htmlspecialchars(json_encode($JS), ENT_QUOTES, 'UTF-8'); ?>'>
         <?php include '../src/views/pages/' . $page; ?>
     </main>
 </body>

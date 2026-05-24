@@ -110,7 +110,8 @@ class PostFullComponent {
             const postId = Number(card.dataset.postId || 0);
             if (!postId) return;
 
-            window.location.href = `/post/${postId}`;
+            const nextUrl = `/post/${postId}`;
+            App.nav.navigate(nextUrl, { pushUrl: true });
         });
     }
 
@@ -210,7 +211,7 @@ class PostFullComponent {
                 if (window.history.length > 1) {
                     window.history.back();
                 } else {
-                    window.location.href = '/';
+                    App.nav.navigate('/', { pushUrl: true });
                 }
                 return;
             }
@@ -255,7 +256,7 @@ class PostFullComponent {
             const postId = Number(event.detail?.post_id || 0);
             const currentPostId = Number(this.postFullElement?.dataset.postId || 0);
             if (!postId || postId !== currentPostId) return;
-            window.location.href = '/';
+            App.nav.navigate('/', { pushUrl: true });
         });
     }
 
@@ -2191,6 +2192,54 @@ class PostFullComponent {
             detail: { message }
         }));
     }
-}
 
+    destroy() {
+        if (this.relativeTimeTimer) {
+            clearInterval(this.relativeTimeTimer);
+            this.relativeTimeTimer = null;
+        }
+        if (this.shareActiveTimer) {
+            clearTimeout(this.shareActiveTimer);
+            this.shareActiveTimer = null;
+        }
+        if (this.scrollTopHideTimer) {
+            clearTimeout(this.scrollTopHideTimer);
+            this.scrollTopHideTimer = null;
+        }
+        if (this.zoomHideTimer) {
+            clearTimeout(this.zoomHideTimer);
+            this.zoomHideTimer = null;
+        }
+
+        if (this.tagsResizeHandler) {
+            window.removeEventListener('resize', this.tagsResizeHandler);
+        }
+        if (this.descriptionHideScrollHandler) {
+            window.removeEventListener('scroll', this.descriptionHideScrollHandler);
+            window.removeEventListener('resize', this.descriptionHideScrollHandler);
+        }
+        if (this.commentInputFloatingHandler) {
+            window.removeEventListener('scroll', this.commentInputFloatingHandler);
+            window.removeEventListener('resize', this.commentInputFloatingHandler);
+        }
+        if (this.commentsHideScrollHandler) {
+            window.removeEventListener('scroll', this.commentsHideScrollHandler);
+            window.removeEventListener('resize', this.commentsHideScrollHandler);
+        }
+        if (this.scrollTopButtonHandler) {
+            window.removeEventListener('scroll', this.scrollTopButtonHandler);
+            window.removeEventListener('resize', this.scrollTopButtonHandler);
+        }
+        if (this.zoomDragMoveHandler) {
+            window.removeEventListener('mousemove', this.zoomDragMoveHandler);
+        }
+        if (this.zoomDragEndHandler) {
+            window.removeEventListener('mouseup', this.zoomDragEndHandler);
+        }
+        if (this.zoomResizeHandler) {
+            window.removeEventListener('resize', this.zoomResizeHandler);
+        }
+    }
+
+}
 App.register('post_full.js', PostFullComponent);

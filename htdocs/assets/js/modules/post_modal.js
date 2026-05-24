@@ -48,6 +48,14 @@ class CreatePostModalComponent {
         this.closeResetTimer = null;
         this.confirmAction = null;
         this.closeBlockedTimer = null;
+        this.lastNonModalUrl = window.location.pathname + window.location.search;
+        this.openTriggerClickHandler = null;
+        this.openCreateEventHandler = null;
+        this.openEditEventHandler = null;
+        this.collectionsChangedHandler = null;
+        this.modalBackdropClickHandler = null;
+        this.cancelClickHandler = null;
+        this.escapeKeyHandler = null;
     }
 
     init() {
@@ -113,28 +121,52 @@ class CreatePostModalComponent {
         });
     }
 
+
+    setModalUrl(nextUrl) {
+        if (!nextUrl) return;
+        const currentUrl = window.location.pathname + window.location.search;
+        if (currentUrl === nextUrl) return;
+        this.lastNonModalUrl = currentUrl;
+        window.history.pushState({}, '', nextUrl);
+    }
+
+    restoreNonModalUrl() {
+        const fallback = '/';
+        const targetUrl = this.lastNonModalUrl || fallback;
+        const currentUrl = window.location.pathname + window.location.search;
+        if (currentUrl === targetUrl) return;
+        window.history.replaceState({}, '', targetUrl);
+    }
+
     bindOpenHandlers() {
-        document.addEventListener('click', (event) => {
+        this.openTriggerClickHandler = (event) => {
             const trigger = event.target.closest('[data-component="create-post-open"]');
             if (!trigger) return;
             event.preventDefault();
             this.openCreateMode();
-        });
+        };
 
-        document.addEventListener('post-modal:open', () => {
+        this.openCreateEventHandler = () => {
             this.openCreateMode();
-        });
+        };
 
-        document.addEventListener('post-modal:open-edit', async (event) => {
+        this.openEditEventHandler = async (event) => {
             await this.openEditMode(event.detail || {});
-        });
-        document.addEventListener('collections:changed', async () => {
+        };
+
+        this.collectionsChangedHandler = async () => {
             await this.loadCollections();
-        });
+        };
+
+        document.addEventListener('click', this.openTriggerClickHandler);
+        document.addEventListener('post-modal:open', this.openCreateEventHandler);
+        document.addEventListener('post-modal:open-edit', this.openEditEventHandler);
+        document.addEventListener('collections:changed', this.collectionsChangedHandler);
     }
 
     openCreateMode() {
         clearTimeout(this.closeResetTimer);
+        this.setModalUrl('/post/create');
         this.resetForm();
         this.applyCreateModeUI();
         if (App.modalCtrl) {
@@ -260,7 +292,7 @@ class CreatePostModalComponent {
     }
 
     bindCloseHandlers() {
-        this.modal.addEventListener('click', (event) => {
+        this.modalBackdropClickHandler = (event) => {
             if (event.target === this.modal) {
                 if (this.hasUnsavedChanges()) {
                     this.blockEditOverlayClose();
@@ -269,20 +301,24 @@ class CreatePostModalComponent {
 
                 this.requestClose();
             }
-        });
+        };
 
-        document.addEventListener('click', (event) => {
+        this.cancelClickHandler = (event) => {
             const cancelButton = event.target.closest('[data-component="create-post-cancel"]');
             if (cancelButton) {
                 this.requestClose();
             }
-        });
+        };
 
-        document.addEventListener('keydown', (event) => {
+        this.escapeKeyHandler = (event) => {
             if (event.key === 'Escape' && !this.modal.classList.contains('post-modal--hidden')) {
                 this.requestClose();
             }
-        });
+        };
+
+        this.modal.addEventListener('click', this.modalBackdropClickHandler);
+        document.addEventListener('click', this.cancelClickHandler);
+        document.addEventListener('keydown', this.escapeKeyHandler);
     }
 
     async open() {
@@ -317,11 +353,23 @@ class CreatePostModalComponent {
             return;
         }
 
-        if (App.modalCtrl) { App.modalCtrl.close('post-modal'); } else { this.close(); }
+        const pathname = window.location.pathname;
+        const isModalRoute = pathname === '/post/create' || /^\/post\/\d+\/edit$/.test(pathname);
+        if (isModalRoute && window.history.length > 1) {
+            window.history.back();
+            return;
+        }
+
+        this.close();
     }
 
-    close() {
+    close(options = {}) {
+        const { skipHistorySync = false } = options;
         if (this.modal.classList.contains('post-modal--hidden')) return;
+        if (!skipHistorySync) {
+            this.restoreNonModalUrl();
+        }
+        if (App.modalCtrl) App.modalCtrl.close('post-modal');
         this.hideAlert();
         this.hideSuccessToast();
         this.hideTagSuggestions();
@@ -330,6 +378,9 @@ class CreatePostModalComponent {
         this.panel?.classList.remove('post-modal__panel--close-blocked');
         this.modal.classList.add('post-modal--hidden');
         this.modal.setAttribute('aria-hidden', 'true');
+        if (App.modalCtrl && !App.modalCtrl.isBlurVisible()) {
+            App.utils.unlockBodyScroll();
+        }
         clearTimeout(this.closeResetTimer);
         this.closeResetTimer = setTimeout(() => {
             this.resetForm();
@@ -338,6 +389,10 @@ class CreatePostModalComponent {
     }
 
     async openEditMode(payload) {
+        const modalPostId = Number(payload?.postId || 0);
+        if (modalPostId > 0) {
+            this.setModalUrl(`/post/${modalPostId}/edit`);
+        }
         clearTimeout(this.closeResetTimer);
         this.resetForm();
         this.applyEditModeUI(Number(payload.postId || 0));
@@ -587,7 +642,7 @@ class CreatePostModalComponent {
                 throw new Error(payload.error || 'Не удалось создать пост.');
             }
 
-            if (App.modalCtrl) { App.modalCtrl.close('post-modal'); } else { this.close(); }
+            this.close();
             this.showSuccessToast('Пост создан');
         } catch (error) {
             this.showAlert(error.message || 'Ошибка при создании поста.');
@@ -625,7 +680,7 @@ class CreatePostModalComponent {
             }
 
             this.editSnapshot = this.getCurrentSnapshot();
-            if (App.modalCtrl) { App.modalCtrl.close('post-modal'); } else { this.close(); }
+            this.close();
             this.showSuccessToast('Изменения сохранены');
             document.dispatchEvent(new CustomEvent('post-modal:updated', { detail: payload }));
         } catch (error) {
@@ -658,7 +713,7 @@ class CreatePostModalComponent {
             }
 
             this.editSnapshot = this.getCurrentSnapshot();
-            if (App.modalCtrl) { App.modalCtrl.close('post-modal'); } else { this.close(); }
+            this.close();
             this.showSuccessToast('Пост удалён');
             document.dispatchEvent(new CustomEvent('post-modal:deleted', { detail: payload }));
         } catch (error) {
@@ -694,7 +749,7 @@ class CreatePostModalComponent {
             cancelLabel,
             onConfirm: async () => {
                 if (action === 'unsaved-close') {
-                    if (App.modalCtrl) { App.modalCtrl.close('post-modal'); } else { this.close(); }
+                    this.close();
                     return;
                 }
                 if (action === 'delete') {
@@ -986,6 +1041,35 @@ class CreatePostModalComponent {
         this.modal.classList.add('post-modal--hidden');
         this.modal.setAttribute('aria-hidden', 'true');
     }
-}
 
+    destroy() {
+        clearTimeout(this.alertHideTimer);
+        clearTimeout(this.alertFadeTimer);
+        clearTimeout(this.closeResetTimer);
+        clearTimeout(this.closeBlockedTimer);
+
+        if (this.modal && this.modalBackdropClickHandler) {
+            this.modal.removeEventListener('click', this.modalBackdropClickHandler);
+        }
+        if (this.openTriggerClickHandler) {
+            document.removeEventListener('click', this.openTriggerClickHandler);
+        }
+        if (this.openCreateEventHandler) {
+            document.removeEventListener('post-modal:open', this.openCreateEventHandler);
+        }
+        if (this.openEditEventHandler) {
+            document.removeEventListener('post-modal:open-edit', this.openEditEventHandler);
+        }
+        if (this.collectionsChangedHandler) {
+            document.removeEventListener('collections:changed', this.collectionsChangedHandler);
+        }
+        if (this.cancelClickHandler) {
+            document.removeEventListener('click', this.cancelClickHandler);
+        }
+        if (this.escapeKeyHandler) {
+            document.removeEventListener('keydown', this.escapeKeyHandler);
+        }
+    }
+
+}
 App.register('post_modal.js', CreatePostModalComponent);

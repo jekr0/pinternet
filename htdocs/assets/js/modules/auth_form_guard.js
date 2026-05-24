@@ -189,7 +189,7 @@ class AuthFormGuardComponent {
                 }
 
                 if (data.redirect) {
-                    window.location.href = data.redirect;
+                    App.nav.navigate(data.redirect, { pushUrl: true });
                 }
             } catch (error) {
                 this.showToast('Ошибка сети. Попробуйте ещё раз');
