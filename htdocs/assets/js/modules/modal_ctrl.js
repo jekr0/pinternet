@@ -15,8 +15,7 @@ class ModalCtrlComponent {
       this.stack.splice(existingIndex,1);
     }
 
-    const current=this.stack[this.stack.length-1];
-    if(current){ this.registry.get(current)?.hide?.(); }
+    this.stack.forEach((modalKey)=>{ this.registry.get(modalKey)?.hide?.(); });
 
     this.stack.push(key);
     if(!this.isBlurVisible()) this.showBlur();
