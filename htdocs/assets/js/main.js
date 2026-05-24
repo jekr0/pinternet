@@ -261,7 +261,9 @@ window.addEventListener('popstate', () => {
             window.location.reload();
             return;
         }
+        return;
     }
+
     openUrlDrivenModalState();
 });
 
@@ -276,7 +278,7 @@ function openUrlDrivenModalState() {
     const isCollectionsEditing = pathname === '/collections-editing';
 
     if (!isPostCreate && !isPostEdit && postModalInstance?.modal && !postModalInstance.modal.classList.contains('post-modal--hidden')) {
-        postModalInstance.close();
+        postModalInstance.close({ skipHistorySync: true });
     }
 
     if (!isCollectionsEditing && collectionModalInstance?.root && !collectionModalInstance.root.classList.contains('collection-modal--hidden')) {

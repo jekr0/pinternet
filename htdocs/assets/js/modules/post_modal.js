@@ -353,12 +353,22 @@ class CreatePostModalComponent {
             return;
         }
 
+        const pathname = window.location.pathname;
+        const isModalRoute = pathname === '/post/create' || /^\/post\/\d+\/edit$/.test(pathname);
+        if (isModalRoute && window.history.length > 1) {
+            window.history.back();
+            return;
+        }
+
         this.close();
     }
 
-    close() {
+    close(options = {}) {
+        const { skipHistorySync = false } = options;
         if (this.modal.classList.contains('post-modal--hidden')) return;
-        this.restoreNonModalUrl();
+        if (!skipHistorySync) {
+            this.restoreNonModalUrl();
+        }
         if (App.modalCtrl) {
             App.modalCtrl.close('post-modal');
         }
