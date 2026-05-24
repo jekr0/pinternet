@@ -266,7 +266,8 @@ window.addEventListener('popstate', () => {
 
     if (isPostDirty || isCollectionDirty) {
         isHistoryGuardRedirecting = true;
-        window.history.pushState({}, '', window.location.pathname + window.location.search);
+        window.history.forward();
+
         App.warn?.open({
             title: 'Осторожно!',
             description: 'У вас остались несохранённые изменения. После закрытия окна они будут сброшены. Хотите продолжить?',
@@ -279,6 +280,8 @@ window.addEventListener('popstate', () => {
                 if (isCollectionModalOpen) {
                     collectionModalInstance?.close({ skipHistorySync: true });
                 }
+
+                isHistoryGuardRedirecting = true;
                 window.history.back();
             }
         });
