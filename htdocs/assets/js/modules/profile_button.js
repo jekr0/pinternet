@@ -69,7 +69,7 @@ class ProfileComponent {
     handleClick(e, button) {
         e.preventDefault();
         const url = button.dataset.profileUrl || '/profile';
-        window.location.href = url;
+        App.nav.navigate(url, { pushUrl: true });
     }
 }
 

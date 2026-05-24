@@ -172,6 +172,21 @@ const App = {
         }
     },
 
+
+    nav: {
+        navigate: function (url, options = {}) {
+            const { pushUrl = true, target = '#app-main', swap = 'outerHTML' } = options;
+            if (!url) return;
+
+            if (window.htmx) {
+                window.htmx.ajax('GET', url, { target, swap, pushUrl });
+                return;
+            }
+
+            window.location.href = url;
+        }
+    },
+
     /* Хранилище данных приложения */
     store: {
         profile: {
