@@ -161,3 +161,20 @@ document.addEventListener('DOMContentLoaded', () => {
             document.documentElement.classList.remove('app-preloading');
         });
 });
+
+
+document.addEventListener('htmx:afterSwap', (event) => {
+    const target = event.detail?.target;
+    if (!target || target.id !== 'app-main') return;
+
+    try {
+        const modulesJson = target.getAttribute('data-active-modules') || '[]';
+        const parsedModules = JSON.parse(modulesJson);
+        window.activeModules = Array.isArray(parsedModules) ? parsedModules : [];
+    } catch (error) {
+        console.warn('Failed to parse active modules from swapped fragment', error);
+        window.activeModules = [];
+    }
+
+    App.initWithSvgPreload();
+});

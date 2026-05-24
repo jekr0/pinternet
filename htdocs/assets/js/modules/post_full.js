@@ -110,7 +110,17 @@ class PostFullComponent {
             const postId = Number(card.dataset.postId || 0);
             if (!postId) return;
 
-            window.location.href = `/post/${postId}`;
+            const nextUrl = `/post/${postId}`;
+            if (window.htmx) {
+                window.htmx.ajax('GET', nextUrl, {
+                    target: '#app-main',
+                    swap: 'outerHTML',
+                    pushUrl: true
+                });
+                return;
+            }
+
+            window.location.href = nextUrl;
         });
     }
 

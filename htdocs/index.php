@@ -270,6 +270,9 @@ if ($isHtmxRequest) {
         window.activeModules = <?php echo json_encode($JS); ?>;
     </script>
 
+    <!-- HTMX для partial navigation -->
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+
     <!-- Основной скрипт приложения (определяет App) -->
     <script src="/assets/js/main.js" defer></script>
 
@@ -279,7 +282,7 @@ if ($isHtmxRequest) {
     <?php endforeach; ?>
 </head>
 
-<body>
+<body hx-boost="true" hx-target="#app-main" hx-swap="outerHTML">
     <!-- Подключаем layout-файлы (шапка, подвал) -->
     <?php foreach ($PHP as $layout): ?>
         <?php include '../src/views/layouts/' . $layout; ?>
