@@ -81,7 +81,7 @@
   - [x] снятие подписок на custom events.
 
 ## 6) Навигация внутри модулей (без костылей)
-- [ ] Убрать прямые `window.location.href` из UI-модулей там, где нужна HTMX-навигация.
+- [ ] Убрать прямые `window.location.href` из UI-модулей там, где нужна HTMX-навигация. (частично: auth back navigation переведена на обычную ссылку `/` без inline JS)
 - [ ] Вынести переходы в единый navigation helper (push/replace/back fallback).
 - [ ] Вынести общие правила открытия/закрытия overlay в единый state manager.
 

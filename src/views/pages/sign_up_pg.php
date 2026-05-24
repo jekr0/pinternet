@@ -81,9 +81,9 @@ $isRegistrationMode = $authMode === 'registration';
             </div>
 
             <div class="auth__actions">
-                <button class="auth__button auth__button--back" type="button" onclick="window.location.href='/home'">
+                <a class="auth__button auth__button--back" href="/">
                     <span>Назад</span>
-                </button>
+                </a>
                 <button class="auth__button auth__button--submit" type="submit" data-component="auth-submit-button">
                     <span class="auth__button--submit-text auth__button--submit-text-current"><?= $isRegistrationMode ? 'Создать аккаунт' : 'Войти'; ?></span>
                     <span class="auth__button--submit-text auth__button--submit-text-next" aria-hidden="true"></span>
