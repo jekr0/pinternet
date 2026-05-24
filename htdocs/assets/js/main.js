@@ -181,6 +181,12 @@ const App = {
             if (window.htmx) {
                 const nextUrl = String(url);
                 const currentUrl = window.location.pathname + window.location.search;
+                const swapTarget = typeof target === 'string' ? document.querySelector(target) : target;
+                if (!swapTarget) {
+                    window.location.href = nextUrl;
+                    return;
+                }
+
                 if (nextUrl !== currentUrl) {
                     if (replaceUrl) {
                         window.history.replaceState({}, '', nextUrl);
@@ -189,7 +195,7 @@ const App = {
                     }
                 }
 
-                window.htmx.ajax('GET', nextUrl, { target, swap });
+                window.htmx.ajax('GET', nextUrl, { target: swapTarget, swap });
                 return;
             }
 
@@ -245,10 +251,16 @@ document.addEventListener('htmx:afterSwap', (event) => {
 
 window.addEventListener('popstate', () => {
     if (window.htmx) {
-        window.htmx.ajax('GET', window.location.pathname + window.location.search, {
-            target: '#app-main',
-            swap: 'outerHTML'
-        });
+        const swapTarget = document.getElementById('app-main');
+        if (swapTarget) {
+            window.htmx.ajax('GET', window.location.pathname + window.location.search, {
+                target: swapTarget,
+                swap: 'outerHTML'
+            });
+        } else {
+            window.location.reload();
+            return;
+        }
     }
     openUrlDrivenModalState();
 });
