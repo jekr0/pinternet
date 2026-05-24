@@ -179,7 +179,7 @@ const App = {
             if (!url) return;
 
             if (window.htmx) {
-                window.htmx.ajax('GET', url, { target, swap, pushUrl });
+                window.htmx.ajax('GET', url, { target, swap, pushURL: pushUrl });
                 return;
             }
 
@@ -233,16 +233,34 @@ document.addEventListener('htmx:afterSwap', (event) => {
     openUrlDrivenModalState();
 });
 
+window.addEventListener('popstate', () => {
+    openUrlDrivenModalState();
+});
+
 
 function openUrlDrivenModalState() {
     const pathname = window.location.pathname;
+    const postModalInstance = App.components['post_modal.js'];
+    const collectionModalInstance = App.components['collection_modul.js'];
 
-    if (pathname === '/post/create') {
+    const isPostCreate = pathname === '/post/create';
+    const isPostEdit = /^\/post\/(\d+)\/edit$/.test(pathname);
+    const isCollectionsEditing = pathname === '/collections-editing';
+
+    if (!isPostCreate && !isPostEdit && postModalInstance?.modal && !postModalInstance.modal.classList.contains('post-modal--hidden')) {
+        postModalInstance.hideOnly();
+    }
+
+    if (!isCollectionsEditing && collectionModalInstance?.root && !collectionModalInstance.root.classList.contains('collection-modal--hidden')) {
+        collectionModalInstance.hideOnly();
+    }
+
+    if (isPostCreate) {
         document.dispatchEvent(new CustomEvent('post-modal:open'));
         return;
     }
 
-    if (pathname === '/collections-editing') {
+    if (isCollectionsEditing) {
         document.dispatchEvent(new CustomEvent('collection-modal:open'));
         return;
     }

@@ -353,12 +353,15 @@ class CreatePostModalComponent {
             return;
         }
 
-        if (App.modalCtrl) { App.modalCtrl.close('post-modal'); } else { this.close(); }
+        this.close();
     }
 
     close() {
         if (this.modal.classList.contains('post-modal--hidden')) return;
         this.restoreNonModalUrl();
+        if (App.modalCtrl) {
+            App.modalCtrl.close('post-modal');
+        }
         this.hideAlert();
         this.hideSuccessToast();
         this.hideTagSuggestions();
@@ -628,7 +631,7 @@ class CreatePostModalComponent {
                 throw new Error(payload.error || 'Не удалось создать пост.');
             }
 
-            if (App.modalCtrl) { App.modalCtrl.close('post-modal'); } else { this.close(); }
+            this.close();
             this.showSuccessToast('Пост создан');
         } catch (error) {
             this.showAlert(error.message || 'Ошибка при создании поста.');
@@ -666,7 +669,7 @@ class CreatePostModalComponent {
             }
 
             this.editSnapshot = this.getCurrentSnapshot();
-            if (App.modalCtrl) { App.modalCtrl.close('post-modal'); } else { this.close(); }
+            this.close();
             this.showSuccessToast('Изменения сохранены');
             document.dispatchEvent(new CustomEvent('post-modal:updated', { detail: payload }));
         } catch (error) {
@@ -699,7 +702,7 @@ class CreatePostModalComponent {
             }
 
             this.editSnapshot = this.getCurrentSnapshot();
-            if (App.modalCtrl) { App.modalCtrl.close('post-modal'); } else { this.close(); }
+            this.close();
             this.showSuccessToast('Пост удалён');
             document.dispatchEvent(new CustomEvent('post-modal:deleted', { detail: payload }));
         } catch (error) {
@@ -735,7 +738,7 @@ class CreatePostModalComponent {
             cancelLabel,
             onConfirm: async () => {
                 if (action === 'unsaved-close') {
-                    if (App.modalCtrl) { App.modalCtrl.close('post-modal'); } else { this.close(); }
+                    this.close();
                     return;
                 }
                 if (action === 'delete') {

@@ -56,23 +56,6 @@ if ($path === '/sign_up') {
     $redirectToCanonical('/auth/login');
 }
 
-$postEditMatches = [];
-if (preg_match('#^/post/(\d+)/edit$#', $path, $postEditMatches)) {
-    $redirectToCanonical('/post/' . ((int) $postEditMatches[1]) . '?modal=edit');
-}
-
-if ($path === '/post/create') {
-    $redirectToCanonical('/?modal=post-create');
-}
-
-if ($path === '/collections-editing') {
-    $redirectToCanonical('/?modal=collections-editing');
-}
-
-if ($path === '/profile-editing') {
-    $redirectToCanonical('/profile?modal=editing');
-}
-
 // Этап 2 (partial rendering): определяем HTMX-запросы для возврата фрагментов.
 $isHtmxRequest = isset($_SERVER['HTTP_HX_REQUEST']) && $_SERVER['HTTP_HX_REQUEST'] === 'true';
 
@@ -81,12 +64,18 @@ $selectedPostId = 0;
 if (preg_match('#^/post/(\d+)$#', $path, $matches)) {
     $selectedPostId = (int) $matches[1];
     $path = '/post/:id';
+} elseif (preg_match('#^/post/(\d+)/edit$#', $path, $matches)) {
+    $selectedPostId = (int) $matches[1];
+    $path = '/post/:id/edit';
 }
 
 switch ($path) {
     case '':
     case '/':
     case '/post/:id':
+    case '/post/:id/edit':
+    case '/post/create':
+    case '/collections-editing':
         $page = 'home_pg.php';
         $pageTitle = 'Главная';
         $PHP = [
@@ -128,6 +117,7 @@ switch ($path) {
         break;
 
         case '/profile':
+        case '/profile-editing':
         $page = 'profile_pg.php';
         $pageTitle = 'Профиль';
         $PHP = [];
