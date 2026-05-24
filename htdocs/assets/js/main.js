@@ -175,11 +175,21 @@ const App = {
 
     nav: {
         navigate: function (url, options = {}) {
-            const { pushUrl = true, target = '#app-main', swap = 'outerHTML' } = options;
+            const { pushUrl = true, target = '#app-main', swap = 'outerHTML', replaceUrl = false } = options;
             if (!url) return;
 
             if (window.htmx) {
-                window.htmx.ajax('GET', url, { target, swap, pushURL: pushUrl });
+                const nextUrl = String(url);
+                const currentUrl = window.location.pathname + window.location.search;
+                if (nextUrl !== currentUrl) {
+                    if (replaceUrl) {
+                        window.history.replaceState({}, '', nextUrl);
+                    } else if (pushUrl) {
+                        window.history.pushState({}, '', nextUrl);
+                    }
+                }
+
+                window.htmx.ajax('GET', nextUrl, { target, swap });
                 return;
             }
 
@@ -234,6 +244,12 @@ document.addEventListener('htmx:afterSwap', (event) => {
 });
 
 window.addEventListener('popstate', () => {
+    if (window.htmx) {
+        window.htmx.ajax('GET', window.location.pathname + window.location.search, {
+            target: '#app-main',
+            swap: 'outerHTML'
+        });
+    }
     openUrlDrivenModalState();
 });
 
@@ -248,11 +264,20 @@ function openUrlDrivenModalState() {
     const isCollectionsEditing = pathname === '/collections-editing';
 
     if (!isPostCreate && !isPostEdit && postModalInstance?.modal && !postModalInstance.modal.classList.contains('post-modal--hidden')) {
-        postModalInstance.hideOnly();
+        postModalInstance.close();
     }
 
     if (!isCollectionsEditing && collectionModalInstance?.root && !collectionModalInstance.root.classList.contains('collection-modal--hidden')) {
-        collectionModalInstance.hideOnly();
+        collectionModalInstance.close();
+    }
+
+    if (!isPostCreate && !isPostEdit && !isCollectionsEditing) {
+        const blurOverlay = document.getElementById('app-blur-overlay');
+        if (blurOverlay) {
+            blurOverlay.classList.add('blur-lo--hidden');
+            blurOverlay.setAttribute('aria-hidden', 'true');
+        }
+        App.utils.unlockBodyScroll();
     }
 
     if (isPostCreate) {
