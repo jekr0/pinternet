@@ -73,6 +73,9 @@ if ($path === '/profile-editing') {
     $redirectToCanonical('/profile?modal=editing');
 }
 
+// Этап 2 (partial rendering): определяем HTMX-запросы для возврата фрагментов.
+$isHtmxRequest = isset($_SERVER['HTTP_HX_REQUEST']) && $_SERVER['HTTP_HX_REQUEST'] === 'true';
+
 // Определяем, какая страница нужна
 $selectedPostId = 0;
 if (preg_match('#^/post/(\d+)$#', $path, $matches)) {
@@ -226,6 +229,15 @@ switch ($path) {
 }
 
 // Начинаем вывод HTML
+if ($isHtmxRequest) {
+    ?>
+    <main id="app-main" class="main-content" data-render-mode="partial" data-active-modules='<?php echo htmlspecialchars(json_encode($JS), ENT_QUOTES, 'UTF-8'); ?>'>
+        <?php include '../src/views/pages/' . $page; ?>
+    </main>
+    <?php
+    exit;
+}
+
 ?><!DOCTYPE html>
 <html lang="ru">
 
@@ -274,7 +286,7 @@ switch ($path) {
     <?php endforeach; ?>
 
     <!-- Основной контент страницы -->
-    <main class="main-content">
+    <main id="app-main" class="main-content" data-render-mode="full" data-active-modules='<?php echo htmlspecialchars(json_encode($JS), ENT_QUOTES, 'UTF-8'); ?>'>
         <?php include '../src/views/pages/' . $page; ?>
     </main>
 </body>
