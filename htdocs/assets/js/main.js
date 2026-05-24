@@ -281,7 +281,6 @@ window.addEventListener('popstate', () => {
                     collectionModalInstance?.close({ skipHistorySync: true });
                 }
 
-                isHistoryGuardRedirecting = true;
                 window.history.back();
             }
         });
