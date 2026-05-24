@@ -249,7 +249,42 @@ document.addEventListener('htmx:afterSwap', (event) => {
     openUrlDrivenModalState();
 });
 
+let isHistoryGuardRedirecting = false;
+
 window.addEventListener('popstate', () => {
+    if (isHistoryGuardRedirecting) {
+        isHistoryGuardRedirecting = false;
+        return;
+    }
+
+    const postModalInstance = App.components['post_modal.js'];
+    const collectionModalInstance = App.components['collection_modul.js'];
+    const isPostModalOpen = !!(postModalInstance?.modal && !postModalInstance.modal.classList.contains('post-modal--hidden'));
+    const isCollectionModalOpen = !!(collectionModalInstance?.root && !collectionModalInstance.root.classList.contains('collection-modal--hidden'));
+    const isPostDirty = !!(isPostModalOpen && typeof postModalInstance.hasUnsavedChanges === 'function' && postModalInstance.hasUnsavedChanges());
+    const isCollectionDirty = !!(isCollectionModalOpen && typeof collectionModalInstance.hasUnsavedChanges === 'function' && collectionModalInstance.hasUnsavedChanges());
+
+    if (isPostDirty || isCollectionDirty) {
+        isHistoryGuardRedirecting = true;
+        window.history.pushState({}, '', window.location.pathname + window.location.search);
+        App.warn?.open({
+            title: 'Осторожно!',
+            description: 'У вас остались несохранённые изменения. После закрытия окна они будут сброшены. Хотите продолжить?',
+            confirmLabel: 'Закрыть окно',
+            cancelLabel: 'Назад',
+            onConfirm: async () => {
+                if (isPostModalOpen) {
+                    postModalInstance?.close({ skipHistorySync: true });
+                }
+                if (isCollectionModalOpen) {
+                    collectionModalInstance?.close({ skipHistorySync: true });
+                }
+                window.history.back();
+            }
+        });
+        return;
+    }
+
     if (window.htmx) {
         const swapTarget = document.getElementById('app-main');
         if (swapTarget) {
