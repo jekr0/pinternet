@@ -282,7 +282,7 @@ function openUrlDrivenModalState() {
     }
 
     if (!isCollectionsEditing && collectionModalInstance?.root && !collectionModalInstance.root.classList.contains('collection-modal--hidden')) {
-        collectionModalInstance.close();
+        collectionModalInstance.close({ skipHistorySync: true });
     }
 
     if (!isPostCreate && !isPostEdit && !isCollectionsEditing) {

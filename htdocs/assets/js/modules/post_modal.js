@@ -369,9 +369,7 @@ class CreatePostModalComponent {
         if (!skipHistorySync) {
             this.restoreNonModalUrl();
         }
-        if (App.modalCtrl) {
-            App.modalCtrl.close('post-modal');
-        }
+        if (App.modalCtrl) App.modalCtrl.close('post-modal');
         this.hideAlert();
         this.hideSuccessToast();
         this.hideTagSuggestions();
@@ -380,6 +378,9 @@ class CreatePostModalComponent {
         this.panel?.classList.remove('post-modal__panel--close-blocked');
         this.modal.classList.add('post-modal--hidden');
         this.modal.setAttribute('aria-hidden', 'true');
+        if (App.modalCtrl && !App.modalCtrl.isBlurVisible()) {
+            App.utils.unlockBodyScroll();
+        }
         clearTimeout(this.closeResetTimer);
         this.closeResetTimer = setTimeout(() => {
             this.resetForm();
