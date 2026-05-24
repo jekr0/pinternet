@@ -159,6 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
     App.initWithSvgPreload()
         .finally(() => {
             document.documentElement.classList.remove('app-preloading');
+            openUrlDrivenModalState();
         });
 });
 
@@ -177,4 +178,35 @@ document.addEventListener('htmx:afterSwap', (event) => {
     }
 
     App.initWithSvgPreload();
+    openUrlDrivenModalState();
 });
+
+
+function openUrlDrivenModalState() {
+    const pathname = window.location.pathname;
+
+    if (pathname === '/post/create') {
+        document.dispatchEvent(new CustomEvent('post-modal:open'));
+        return;
+    }
+
+    if (pathname === '/collections-editing') {
+        document.dispatchEvent(new CustomEvent('collection-modal:open'));
+        return;
+    }
+
+    const postEditMatch = pathname.match(/^\/post\/(\d+)\/edit$/);
+    if (postEditMatch) {
+        const postId = Number(postEditMatch[1] || 0);
+        const postFull = document.querySelector('.post-full');
+        const description = postFull?.querySelector('.post-full__description-text')?.textContent?.trim() || '';
+        const imageSrc = postFull?.dataset.postImageSrc || postFull?.querySelector('.post-full__image')?.getAttribute('src') || '';
+        const tags = Array.from(postFull?.querySelectorAll('.post-full__tag-label') || [])
+            .map((node) => String(node.textContent || '').replace(/^#/, '').trim())
+            .filter(Boolean);
+
+        document.dispatchEvent(new CustomEvent('post-modal:open-edit', {
+            detail: { postId, description, imageSrc, tags }
+        }));
+    }
+}

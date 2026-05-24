@@ -48,6 +48,7 @@ class CreatePostModalComponent {
         this.closeResetTimer = null;
         this.confirmAction = null;
         this.closeBlockedTimer = null;
+        this.lastNonModalUrl = window.location.pathname + window.location.search;
     }
 
     init() {
@@ -113,6 +114,23 @@ class CreatePostModalComponent {
         });
     }
 
+
+    setModalUrl(nextUrl) {
+        if (!nextUrl) return;
+        const currentUrl = window.location.pathname + window.location.search;
+        if (currentUrl === nextUrl) return;
+        this.lastNonModalUrl = currentUrl;
+        window.history.pushState({}, '', nextUrl);
+    }
+
+    restoreNonModalUrl() {
+        const fallback = '/';
+        const targetUrl = this.lastNonModalUrl || fallback;
+        const currentUrl = window.location.pathname + window.location.search;
+        if (currentUrl === targetUrl) return;
+        window.history.replaceState({}, '', targetUrl);
+    }
+
     bindOpenHandlers() {
         document.addEventListener('click', (event) => {
             const trigger = event.target.closest('[data-component="create-post-open"]');
@@ -135,6 +153,7 @@ class CreatePostModalComponent {
 
     openCreateMode() {
         clearTimeout(this.closeResetTimer);
+        this.setModalUrl('/post/create');
         this.resetForm();
         this.applyCreateModeUI();
         if (App.modalCtrl) {
@@ -322,6 +341,7 @@ class CreatePostModalComponent {
 
     close() {
         if (this.modal.classList.contains('post-modal--hidden')) return;
+        this.restoreNonModalUrl();
         this.hideAlert();
         this.hideSuccessToast();
         this.hideTagSuggestions();
@@ -338,6 +358,10 @@ class CreatePostModalComponent {
     }
 
     async openEditMode(payload) {
+        const modalPostId = Number(payload?.postId || 0);
+        if (modalPostId > 0) {
+            this.setModalUrl(`/post/${modalPostId}/edit`);
+        }
         clearTimeout(this.closeResetTimer);
         this.resetForm();
         this.applyEditModeUI(Number(payload.postId || 0));

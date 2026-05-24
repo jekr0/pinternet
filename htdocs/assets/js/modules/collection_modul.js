@@ -1,5 +1,5 @@
 class CollectionModalComponent {
-  constructor(){this.root=null;this.list=null;this.nameInput=null;this.tagsField=null;this.tagsList=null;this.tagsSuggestList=null;this.tagsInputRow=null;this.tagsAddButton=null;this.submitButton=null;this.deleteButton=null;this.panel=null;this.tags=[];this.maxTags=24;this.maxVisibleTagRows=3;this.mode='create';this.selectedCollection='';}
+  constructor(){this.root=null;this.list=null;this.nameInput=null;this.tagsField=null;this.tagsList=null;this.tagsSuggestList=null;this.tagsInputRow=null;this.tagsAddButton=null;this.submitButton=null;this.deleteButton=null;this.panel=null;this.tags=[];this.maxTags=24;this.maxVisibleTagRows=3;this.mode='create';this.selectedCollection='';this.lastNonModalUrl=window.location.pathname + window.location.search;}
   init(){
     this.root=document.getElementById('collection-modal'); if(!this.root) return;
     this.list=this.root.querySelector('[data-component="collection-modal-list"]');
@@ -22,9 +22,12 @@ class CollectionModalComponent {
 
     App.modalCtrl?.register('collection-modal', { show: () => this.showOnly(), hide: () => this.hideOnly() });
   }
+
+  setModalUrl(nextUrl){ if(!nextUrl) return; const current=window.location.pathname + window.location.search; if(current===nextUrl) return; this.lastNonModalUrl=current; window.history.pushState({},'',nextUrl); }
+  restoreNonModalUrl(){ const target=this.lastNonModalUrl||'/'; const current=window.location.pathname + window.location.search; if(current===target) return; window.history.replaceState({},'',target); }
   bindTagsHandlers(){ if (!this.tagsField || !this.tagsAddButton) return; this.tagsField.addEventListener('keydown',(event)=>{ if(event.key==='Enter'){event.preventDefault();this.addTagFromInput();return;} if (event.key==='Tab'&&!event.shiftKey){const b=this.tagsSuggestList?.querySelector('button');const open=this.tagsSuggestList && !this.tagsSuggestList.classList.contains('collection-modal__tags-suggest-list--hidden'); if(!open||!b) return; event.preventDefault(); this.tagsField.value=b.dataset.tag||''; this.addTagFromInput();}}); this.tagsField.addEventListener('input',()=>{const normalized=this.tagsField.value.replace(/[^a-zа-яё0-9_#]/gi,'').slice(0,20); if(normalized!==this.tagsField.value)this.tagsField.value=normalized; this.loadTagSuggestions();}); this.tagsAddButton.addEventListener('click',()=>this.addTagFromInput()); }
-  async open(){ this.showOnly(); await this.load(); this.renderTags(); this.setCreateMode(false); this.nameInput?.focus(); }
-  close(){ if (App.modalCtrl) { App.modalCtrl.close('collection-modal'); this.resetForm(); return; } this.hideOnly(); this.hideTagSuggestions(); this.resetForm(); }
+  async open(){ this.setModalUrl('/collections-editing'); this.showOnly(); await this.load(); this.renderTags(); this.setCreateMode(false); this.nameInput?.focus(); }
+  close(){ this.restoreNonModalUrl(); if (App.modalCtrl) { App.modalCtrl.close('collection-modal'); this.resetForm(); return; } this.hideOnly(); this.hideTagSuggestions(); this.resetForm(); }
   showOnly(){ this.root.classList.remove('collection-modal--hidden'); this.root.setAttribute('aria-hidden','false'); }
   hideOnly(){ this.root.classList.add('collection-modal--hidden'); this.root.setAttribute('aria-hidden','true'); }
 

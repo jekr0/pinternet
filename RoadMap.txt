@@ -88,13 +88,13 @@
 ## 7) Модалки как URL-state
 
 ### 7.1 Post modal
-- [ ] Открытие create-mode: `/post/create`.
-- [ ] Открытие edit-mode: `/post/{id}/edit`.
-- [ ] Закрытие модалки -> корректный возврат URL (back или replace по правилу).
+- [x] Открытие create-mode: `/post/create`.
+- [x] Открытие edit-mode: `/post/{id}/edit`.
+- [x] Закрытие модалки -> корректный возврат URL (back или replace по правилу).
 
 ### 7.2 Collections modal
-- [ ] Поддержка URL `/collections-editing`.
-- [ ] Восстановление модалки на back/forward.
+- [x] Поддержка URL `/collections-editing`.
+- [x] Восстановление модалки на back/forward.
 
 ### 7.3 Profile editing modal/page
 - [ ] Поддержка URL `/profile-editing`.
@@ -143,8 +143,8 @@
 - [x] Реализовать `hx-push-url` для переходов в пост и обратно.
 
 ### 11.4 Этап 4 — URL-state для модалок
-- [ ] Post create/edit.
-- [ ] Collections editing.
+- [x] Post create/edit.
+- [x] Collections editing.
 - [ ] Profile editing.
 
 ### 11.5 Этап 5 — lifecycle модулей
