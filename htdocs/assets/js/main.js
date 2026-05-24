@@ -261,7 +261,6 @@ window.addEventListener('popstate', () => {
             window.location.reload();
             return;
         }
-        return;
     }
 
     openUrlDrivenModalState();
