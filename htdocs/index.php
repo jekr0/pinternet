@@ -124,6 +124,9 @@ switch ($path) {
         case '/posts/bookmark/clear':
         case '/collections/list':
         case '/collections/create':
+        case '/collections/update':
+        case '/collections/delete':
+        case '/collections/tags':
         case '/hashtags/suggest':
         case '/posts/report':
         case '/posts/comment':

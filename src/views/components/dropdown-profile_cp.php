@@ -23,10 +23,6 @@ $isLoggedIn = !empty($_SESSION['user_id']);
 
     $progress = getExpProgress((int) $_SESSION['exp'], (int) $_SESSION['level']);
 
-    // Считаем непрочитанные уведомления
-    $stmt = $pdo->prepare('SELECT COUNT(*) FROM Notifications WHERE user_id = ? AND is_read = 0');
-    $stmt->execute([$_SESSION['user_id']]);
-    $unreadCount = (int) $stmt->fetchColumn();
     ?>
 
     <div class="dropdown-profile dropdown-profile--hidden" id="header-dropdown-profile">
@@ -42,25 +38,6 @@ $isLoggedIn = !empty($_SESSION['user_id']);
 
             <li class="dropdown-profile__item dropdown-profile__item--info">
                     <?= $progress['current'] ?>/<?= $progress['needed'] ?> exp до <?= $progress['next_level'] ?> уровня
-            </li>
-
-            <li class="dropdown-profile__divider"></li>
-
-            <li class="dropdown-profile__item">
-                <a href="/profile?tab=notifications" class="dropdown-profile__link">
-                    Уведомления
-                    <span class="dropdown-profile__badge <?= $unreadCount === 0 ? 'dropdown-profile__badge--empty' : '' ?>">
-                        <?= $unreadCount ?>
-                    </span>
-                </a>
-            </li>
-
-            <li class="dropdown-profile__item">
-                <a href="/profile?tab=settings" class="dropdown-profile__link">Настройки</a>
-            </li>
-
-            <li class="dropdown-profile__item">
-                <a href="/logout" class="dropdown-profile__link dropdown-profile__link--logout">Выйти из аккаунта</a>
             </li>
 
         </ul>
