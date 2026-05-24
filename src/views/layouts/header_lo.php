@@ -4,7 +4,7 @@
 <header class="header">
     <a href="/" class="header__logo">grinderest</a>
     <label class="header__search-field" aria-label="Поиск">
-        <input class="header__search-input" type="text" name="header-search" autocomplete="off" placeholder=" ">
+        <input class="header__search-input ui-input" type="text" name="header-search" autocomplete="off" placeholder=" ">
         <span class="header__search-placeholder" aria-hidden="true">
             <span class="header__search-placeholder-icon"></span>
             <span class="header__search-placeholder-text">Поиск</span>

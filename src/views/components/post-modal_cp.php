@@ -39,7 +39,7 @@
             <!-- Описание -->
             <div class="post-modal__description-wrap">
                 <textarea
-                    class="post-modal__input post-modal__input--description"
+                    class="post-modal__input post-modal__input--description ui-textarea"
                     name="post-description"
                     placeholder="Добавить описание к посту"
                     autocomplete="off"
@@ -55,7 +55,7 @@
             <!-- Коллекция и список выбора -->
             <div class="post-modal__collection" data-component="post-collection">
                 <input
-                    class="post-modal__input post-modal__input--collection"
+                    class="post-modal__input post-modal__input--collection ui-input"
                     type="text"
                     placeholder="Добавить в коллекцию (&quot;Профиль&quot; по умолчанию)"
                     data-component="post-collection-trigger"
@@ -73,7 +73,7 @@
             <div class="post-modal__tags-wrap">
                 <div class="post-modal__tags-input-row">
                     <input
-                        class="post-modal__input post-modal__input--tags"
+                        class="post-modal__input post-modal__input--tags ui-input"
                         type="text"
                         name="post-tags"
                         placeholder="Добавить теги"

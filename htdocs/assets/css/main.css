@@ -45,3 +45,40 @@ body.body--scroll-locked {
 html.app-preloading body {
     opacity: 0;
 }
+
+
+/* Базовые UI-примитивы форм (Stage 11.6) */
+:root {
+    --ui-input-bg: #ffffff;
+    --ui-input-border: #d7d7d7;
+    --ui-input-border-focus: #9f9f9f;
+    --ui-input-radius: 10px;
+    --ui-input-padding-x: 12px;
+    --ui-input-padding-y: 10px;
+    --ui-input-font-size: 14px;
+}
+
+.ui-input,
+.ui-textarea {
+    background-color: var(--ui-input-bg);
+    border: 1px solid var(--ui-input-border);
+    border-radius: var(--ui-input-radius);
+    outline: none;
+    font: inherit;
+    font-size: var(--ui-input-font-size);
+    transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+.ui-input {
+    padding: var(--ui-input-padding-y) var(--ui-input-padding-x);
+}
+
+.ui-textarea {
+    padding: var(--ui-input-padding-y) var(--ui-input-padding-x);
+    resize: vertical;
+}
+
+.ui-input:focus,
+.ui-textarea:focus {
+    border-color: var(--ui-input-border-focus);
+}

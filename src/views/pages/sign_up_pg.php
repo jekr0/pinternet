@@ -36,7 +36,7 @@ $isRegistrationMode = $authMode === 'registration';
 
             <div class="auth__field auth__field--username">
                 <input
-                    class="auth__input"
+                    class="auth__input ui-input"
                     type="text"
                     name="username"
                     placeholder="username"
@@ -50,7 +50,7 @@ $isRegistrationMode = $authMode === 'registration';
 
             <div class="auth__field auth__field--identity">
                 <input
-                    class="auth__input"
+                    class="auth__input ui-input"
                     type="<?= $isRegistrationMode ? 'email' : 'text'; ?>"
                     name="<?= $isRegistrationMode ? 'email' : 'login'; ?>"
                     placeholder="example@gmail.com"
@@ -62,7 +62,7 @@ $isRegistrationMode = $authMode === 'registration';
 
             <div class="auth__field auth__field--password auth__password-row">
                 <input
-                    class="auth__input auth__input--password"
+                    class="auth__input auth__input--password ui-input"
                     type="password"
                     name="password"
                     placeholder="password123"
