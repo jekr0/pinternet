@@ -111,16 +111,7 @@ class PostFullComponent {
             if (!postId) return;
 
             const nextUrl = `/post/${postId}`;
-            if (window.htmx) {
-                window.htmx.ajax('GET', nextUrl, {
-                    target: '#app-main',
-                    swap: 'outerHTML',
-                    pushUrl: true
-                });
-                return;
-            }
-
-            window.location.href = nextUrl;
+            App.nav.navigate(nextUrl, { pushUrl: true });
         });
     }
 
@@ -220,7 +211,7 @@ class PostFullComponent {
                 if (window.history.length > 1) {
                     window.history.back();
                 } else {
-                    window.location.href = '/';
+                    App.nav.navigate('/', { pushUrl: true });
                 }
                 return;
             }
@@ -265,7 +256,7 @@ class PostFullComponent {
             const postId = Number(event.detail?.post_id || 0);
             const currentPostId = Number(this.postFullElement?.dataset.postId || 0);
             if (!postId || postId !== currentPostId) return;
-            window.location.href = '/';
+            App.nav.navigate('/', { pushUrl: true });
         });
     }
 
