@@ -49,6 +49,13 @@ class CreatePostModalComponent {
         this.confirmAction = null;
         this.closeBlockedTimer = null;
         this.lastNonModalUrl = window.location.pathname + window.location.search;
+        this.openTriggerClickHandler = null;
+        this.openCreateEventHandler = null;
+        this.openEditEventHandler = null;
+        this.collectionsChangedHandler = null;
+        this.modalBackdropClickHandler = null;
+        this.cancelClickHandler = null;
+        this.escapeKeyHandler = null;
     }
 
     init() {
@@ -132,23 +139,29 @@ class CreatePostModalComponent {
     }
 
     bindOpenHandlers() {
-        document.addEventListener('click', (event) => {
+        this.openTriggerClickHandler = (event) => {
             const trigger = event.target.closest('[data-component="create-post-open"]');
             if (!trigger) return;
             event.preventDefault();
             this.openCreateMode();
-        });
+        };
 
-        document.addEventListener('post-modal:open', () => {
+        this.openCreateEventHandler = () => {
             this.openCreateMode();
-        });
+        };
 
-        document.addEventListener('post-modal:open-edit', async (event) => {
+        this.openEditEventHandler = async (event) => {
             await this.openEditMode(event.detail || {});
-        });
-        document.addEventListener('collections:changed', async () => {
+        };
+
+        this.collectionsChangedHandler = async () => {
             await this.loadCollections();
-        });
+        };
+
+        document.addEventListener('click', this.openTriggerClickHandler);
+        document.addEventListener('post-modal:open', this.openCreateEventHandler);
+        document.addEventListener('post-modal:open-edit', this.openEditEventHandler);
+        document.addEventListener('collections:changed', this.collectionsChangedHandler);
     }
 
     openCreateMode() {
@@ -279,7 +292,7 @@ class CreatePostModalComponent {
     }
 
     bindCloseHandlers() {
-        this.modal.addEventListener('click', (event) => {
+        this.modalBackdropClickHandler = (event) => {
             if (event.target === this.modal) {
                 if (this.hasUnsavedChanges()) {
                     this.blockEditOverlayClose();
@@ -288,20 +301,24 @@ class CreatePostModalComponent {
 
                 this.requestClose();
             }
-        });
+        };
 
-        document.addEventListener('click', (event) => {
+        this.cancelClickHandler = (event) => {
             const cancelButton = event.target.closest('[data-component="create-post-cancel"]');
             if (cancelButton) {
                 this.requestClose();
             }
-        });
+        };
 
-        document.addEventListener('keydown', (event) => {
+        this.escapeKeyHandler = (event) => {
             if (event.key === 'Escape' && !this.modal.classList.contains('post-modal--hidden')) {
                 this.requestClose();
             }
-        });
+        };
+
+        this.modal.addEventListener('click', this.modalBackdropClickHandler);
+        document.addEventListener('click', this.cancelClickHandler);
+        document.addEventListener('keydown', this.escapeKeyHandler);
     }
 
     async open() {
@@ -1010,6 +1027,35 @@ class CreatePostModalComponent {
         this.modal.classList.add('post-modal--hidden');
         this.modal.setAttribute('aria-hidden', 'true');
     }
-}
 
+    destroy() {
+        clearTimeout(this.alertHideTimer);
+        clearTimeout(this.alertFadeTimer);
+        clearTimeout(this.closeResetTimer);
+        clearTimeout(this.closeBlockedTimer);
+
+        if (this.modal && this.modalBackdropClickHandler) {
+            this.modal.removeEventListener('click', this.modalBackdropClickHandler);
+        }
+        if (this.openTriggerClickHandler) {
+            document.removeEventListener('click', this.openTriggerClickHandler);
+        }
+        if (this.openCreateEventHandler) {
+            document.removeEventListener('post-modal:open', this.openCreateEventHandler);
+        }
+        if (this.openEditEventHandler) {
+            document.removeEventListener('post-modal:open-edit', this.openEditEventHandler);
+        }
+        if (this.collectionsChangedHandler) {
+            document.removeEventListener('collections:changed', this.collectionsChangedHandler);
+        }
+        if (this.cancelClickHandler) {
+            document.removeEventListener('click', this.cancelClickHandler);
+        }
+        if (this.escapeKeyHandler) {
+            document.removeEventListener('keydown', this.escapeKeyHandler);
+        }
+    }
+
+}
 App.register('post_modal.js', CreatePostModalComponent);
