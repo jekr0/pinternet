@@ -24,46 +24,53 @@ if (strpos($path, $base) === 0) {
 }
 
 
-$redirectPermanent = static function (string $to): void {
+$redirectToCanonical = static function (string $to): void {
     header('Location: ' . $to, true, 302);
     exit;
 };
 
 
 
+
+
+// Нормализация trailing slash для канонического поведения URL.
+if ($path !== '/' && $path !== '' && str_ends_with($path, '/')) {
+    $path = rtrim($path, '/');
+    $redirectToCanonical($path === '' ? '/' : $path);
+}
+
 // Этап 1 (routing prep): канонизация URL и алиасы совместимости.
 if ($path === '/home') {
-    $redirectPermanent('/');
+    $redirectToCanonical('/');
 }
 
 if ($path === '/login') {
-    $redirectPermanent('/auth/login');
+    $redirectToCanonical('/auth/login');
 }
 
 if ($path === '/registration') {
-    $redirectPermanent('/auth/registration');
+    $redirectToCanonical('/auth/registration');
 }
 
 if ($path === '/sign_up') {
-    $authMode = $_SESSION['auth_mode'] ?? 'login';
-    $redirectPermanent($authMode === 'registration' ? '/auth/registration' : '/auth/login');
+    $redirectToCanonical('/auth/login');
 }
 
 $postEditMatches = [];
 if (preg_match('#^/post/(\d+)/edit$#', $path, $postEditMatches)) {
-    $redirectPermanent('/post/' . ((int) $postEditMatches[1]) . '?modal=edit');
+    $redirectToCanonical('/post/' . ((int) $postEditMatches[1]) . '?modal=edit');
 }
 
 if ($path === '/post/create') {
-    $redirectPermanent('/?modal=post-create');
+    $redirectToCanonical('/?modal=post-create');
 }
 
 if ($path === '/collections-editing') {
-    $redirectPermanent('/?modal=collections-editing');
+    $redirectToCanonical('/?modal=collections-editing');
 }
 
 if ($path === '/profile-editing') {
-    $redirectPermanent('/profile?modal=editing');
+    $redirectToCanonical('/profile?modal=editing');
 }
 
 // Определяем, какая страница нужна
@@ -76,7 +83,6 @@ if (preg_match('#^/post/(\d+)$#', $path, $matches)) {
 switch ($path) {
     case '':
     case '/':
-    case '/home':
     case '/post/:id':
         $page = 'home_pg.php';
         $pageTitle = 'Главная';
