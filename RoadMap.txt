@@ -65,9 +65,9 @@
 ## 5) Frontend lifecycle (main.js + modules)
 
 ### 5.1 Эволюция App-ядра
-- [ ] Сохранить текущий реестр модулей и selective init.
-- [ ] Добавить `App.initWithin(root)` для инициализации после HTMX swap.
-- [ ] Добавить `App.destroyWithin(root)` для корректного cleanup перед swap.
+- [x] Сохранить текущий реестр модулей и selective init.
+- [x] Добавить `App.initWithin(root)` для инициализации после HTMX swap.
+- [x] Добавить `App.destroyWithin(root)` для корректного cleanup перед swap.
 - [x] Добавить безопасный `reinit`-сценарий для повторной подгрузки одного и того же фрагмента.
 
 ### 5.2 Интеграция с HTMX-событиями
@@ -77,8 +77,8 @@
 ### 5.3 Устранение утечек
 - [ ] Для каждого модуля добавить/проверить `destroy()`:
   - [x] очистка `setInterval`/`setTimeout`,
-  - [ ] снятие `window/document` listeners,
-  - [ ] снятие подписок на custom events.
+  - [x] снятие `window/document` listeners,
+  - [x] снятие подписок на custom events.
 
 ## 6) Навигация внутри модулей (без костылей)
 - [ ] Убрать прямые `window.location.href` из UI-модулей там, где нужна HTMX-навигация.
@@ -148,7 +148,7 @@
 - [ ] Profile editing.
 
 ### 11.5 Этап 5 — lifecycle модулей
-- [ ] destroy/reinit для модулей.
+- [x] destroy/reinit для модулей.
 - [ ] Проверка отсутствия утечек.
 
 ### 11.6 Этап 6 — CSS унификация

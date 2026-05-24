@@ -37,6 +37,11 @@ const App = {
             }
         });
     },
+
+    initWithin: function (_root) {
+        // Пока модули сами ищут элементы глобально; root зарезервирован для следующей итерации.
+        this.init();
+    },
     destroyComponent: function (moduleFile) {
         const instance = this.components[moduleFile];
         if (!instance) return;
@@ -54,6 +59,11 @@ const App = {
     destroyAllComponents: function () {
         Object.keys(this.components).forEach((moduleFile) => this.destroyComponent(moduleFile));
     },
+
+    destroyWithin: function (_root) {
+        // На текущем этапе очищаем все компоненты перед swap контейнера.
+        this.destroyAllComponents();
+    },
     initWithSvgPreload: async function () {
         const svgNodes = Array.from(document.querySelectorAll('[data-svg-src]'));
         const svgPaths = svgNodes
@@ -61,7 +71,6 @@ const App = {
             .filter(Boolean);
 
         await this.utils.preloadSVGs(svgPaths);
-        this.init();
     },
 
     // Хранилище для экземпляров (можно использовать позже)
@@ -176,6 +185,7 @@ const App = {
 // Инициализируем после полной загрузки DOM (все скрипты уже выполнены)
 document.addEventListener('DOMContentLoaded', () => {
     App.initWithSvgPreload()
+        .then(() => App.initWithin(document))
         .finally(() => {
             document.documentElement.classList.remove('app-preloading');
             openUrlDrivenModalState();
@@ -187,7 +197,7 @@ document.addEventListener('htmx:beforeSwap', (event) => {
     const target = event.detail?.target;
     if (!target || target.id !== 'app-main') return;
 
-    App.destroyAllComponents();
+    App.destroyWithin(target);
 });
 
 
@@ -204,7 +214,7 @@ document.addEventListener('htmx:afterSwap', (event) => {
         window.activeModules = [];
     }
 
-    App.initWithSvgPreload();
+    App.initWithSvgPreload().then(() => App.initWithin(target));
     openUrlDrivenModalState();
 });
 
