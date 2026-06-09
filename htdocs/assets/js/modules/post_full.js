@@ -51,6 +51,8 @@ class PostFullComponent {
         this.commentInputFloatingHandler = null;
         this.postEditMode = false;
         this.descriptionEditor = null;
+        this.containerClickHandler = null;
+        this.syncCommentRailsResizeHandler = null;
     }
 
     init() {
@@ -81,7 +83,8 @@ class PostFullComponent {
             this.refreshReplyCounters();
             this.syncCommentRails();
             this.layoutPostTags();
-            window.addEventListener('resize', () => this.syncCommentRails());
+            this.syncCommentRailsResizeHandler = () => this.syncCommentRails();
+            window.addEventListener('resize', this.syncCommentRailsResizeHandler);
             this.tagsResizeHandler = () => this.layoutPostTags();
             window.addEventListener('resize', this.tagsResizeHandler);
             this.descriptionHideScrollHandler = () => this.updateDescriptionHideButtonPosition();
@@ -99,7 +102,7 @@ class PostFullComponent {
         const cards = Array.from(this.container.querySelectorAll('[data-component="post-card"]'));
         if (cards.length === 0) return;
 
-        this.container.addEventListener('click', (event) => {
+        this.containerClickHandler = (event) => {
             const card = event.target?.closest('[data-component="post-card"]');
             if (!card || !this.container.contains(card)) return;
 
@@ -110,9 +113,10 @@ class PostFullComponent {
             const postId = Number(card.dataset.postId || 0);
             if (!postId) return;
 
-            const nextUrl = `/post/${postId}`;
+            const nextUrl = App.history?.getPostFullUrl?.(postId) || `/post?id=${encodeURIComponent(String(postId))}`;
             App.nav.navigate(nextUrl, { pushUrl: true });
-        });
+        };
+        this.container.addEventListener('click', this.containerClickHandler);
     }
 
     // Инициализирует опорное серверное время, чтобы убрать влияние неверных часов на клиенте.
@@ -1888,7 +1892,7 @@ class PostFullComponent {
         const postId = this.getPostId();
         if (!postId) return;
 
-        const shareUrl = `${window.location.origin}/post/${postId}`;
+        const shareUrl = `${window.location.origin}${App.history?.getPostFullUrl?.(postId) || `/post?id=${encodeURIComponent(String(postId))}`}`;
 
         try {
             await navigator.clipboard.writeText(shareUrl);
@@ -2211,6 +2215,12 @@ class PostFullComponent {
             this.zoomHideTimer = null;
         }
 
+        if (this.container && this.containerClickHandler) {
+            this.container.removeEventListener('click', this.containerClickHandler);
+        }
+        if (this.syncCommentRailsResizeHandler) {
+            window.removeEventListener('resize', this.syncCommentRailsResizeHandler);
+        }
         if (this.tagsResizeHandler) {
             window.removeEventListener('resize', this.tagsResizeHandler);
         }

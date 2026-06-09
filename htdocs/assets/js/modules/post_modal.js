@@ -766,6 +766,7 @@ class CreatePostModalComponent {
                     const isModalRoute = App.history?.isModalPath?.();
                     if (isModalRoute && window.history.length > 1) {
                         this.close({ skipHistorySync: true });
+                        App.history?.markNextPopAsModalOnly?.();
                         window.history.back();
                         return;
                     }

@@ -174,8 +174,16 @@ const App = {
 
 
     history: {
+        skipNextModalOnlyPop: false,
         getCurrentUrl: function () {
             return window.location.pathname + window.location.search;
+        },
+        getUrl: function (url = window.location.href) {
+            try {
+                return new URL(url, window.location.origin);
+            } catch (_error) {
+                return new URL(window.location.href);
+            }
         },
         getModalKeyFromPath: function (pathname = window.location.pathname) {
             if (pathname === '/post/create' || /^\/post\/\d+\/edit$/.test(pathname)) return 'post-modal';
@@ -186,12 +194,28 @@ const App = {
             return !!this.getModalKeyFromPath(pathname);
         },
         isModalUrl: function (url) {
-            try {
-                const parsedUrl = new URL(url, window.location.origin);
-                return this.isModalPath(parsedUrl.pathname);
-            } catch (_error) {
-                return false;
-            }
+            return this.isModalPath(this.getUrl(url).pathname);
+        },
+        getPostFullIdFromUrl: function (url = window.location.href) {
+            const parsedUrl = this.getUrl(url);
+            if (parsedUrl.pathname !== '/post') return 0;
+            const postId = Number(parsedUrl.searchParams.get('id') || 0);
+            return Number.isInteger(postId) && postId > 0 ? postId : 0;
+        },
+        getPostFullUrl: function (postId) {
+            const normalizedPostId = Number(postId || 0);
+            return normalizedPostId > 0 ? `/post?id=${encodeURIComponent(String(normalizedPostId))}` : '/';
+        },
+        isPostFullUrl: function (url = window.location.href) {
+            return this.getPostFullIdFromUrl(url) > 0;
+        },
+        markNextPopAsModalOnly: function () {
+            this.skipNextModalOnlyPop = true;
+        },
+        consumeNextModalOnlyPop: function () {
+            const shouldSkip = this.skipNextModalOnlyPop;
+            this.skipNextModalOnlyPop = false;
+            return shouldSkip;
         }
     },
 
@@ -272,14 +296,9 @@ document.addEventListener('htmx:afterSwap', (event) => {
         .finally(() => openUrlDrivenModalState());
 });
 
-let isHistoryGuardRedirecting = false;
+let isDirtyHistoryPromptOpen = false;
 
 window.addEventListener('popstate', () => {
-    if (isHistoryGuardRedirecting) {
-        isHistoryGuardRedirecting = false;
-        return;
-    }
-
     const postModalInstance = App.components['post_modal.js'];
     const collectionModalInstance = App.components['collection_modul.js'];
     const isPostModalOpen = !!(postModalInstance?.modal && !postModalInstance.modal.classList.contains('post-modal--hidden'));
@@ -291,23 +310,46 @@ window.addEventListener('popstate', () => {
     const isCollectionDirty = !!(isCollectionModalOpen && typeof collectionModalInstance.hasUnsavedChanges === 'function' && collectionModalInstance.hasUnsavedChanges());
 
     if ((isPostDirty || isCollectionDirty) && activeModalUrl) {
-        isHistoryGuardRedirecting = true;
         window.history.pushState({}, '', activeModalUrl);
-        App.warn?.open({
+
+        if (isDirtyHistoryPromptOpen || App.overlay?.get?.('warn-modal')) {
+            return;
+        }
+
+        isDirtyHistoryPromptOpen = true;
+        const warningPromise = App.warn?.open({
             title: 'Осторожно!',
             description: 'У вас остались несохранённые изменения. После закрытия окна они будут сброшены. Хотите продолжить?',
             confirmLabel: 'Закрыть окно',
             cancelLabel: 'Назад',
             onConfirm: async () => {
+                isDirtyHistoryPromptOpen = false;
                 if (isPostModalOpen) {
                     postModalInstance?.close({ skipHistorySync: true });
                 }
                 if (isCollectionModalOpen) {
                     collectionModalInstance?.close({ skipHistorySync: true });
                 }
+                App.history?.markNextPopAsModalOnly?.();
                 window.history.back();
             }
         });
+
+        Promise.resolve(warningPromise).finally(() => {
+            isDirtyHistoryPromptOpen = false;
+        });
+        return;
+    }
+
+    if (App.history?.consumeNextModalOnlyPop?.()) {
+        openUrlDrivenModalState();
+        return;
+    }
+
+    const hasModalComponents = !!(postModalInstance?.modal || collectionModalInstance?.root);
+    const isModalRoute = App.history?.isModalPath?.();
+    if (hasModalComponents && (isModalRoute || isPostModalOpen || isCollectionModalOpen)) {
+        openUrlDrivenModalState();
         return;
     }
 
