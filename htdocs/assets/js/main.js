@@ -173,6 +173,28 @@ const App = {
     },
 
 
+    history: {
+        getCurrentUrl: function () {
+            return window.location.pathname + window.location.search;
+        },
+        getModalKeyFromPath: function (pathname = window.location.pathname) {
+            if (pathname === '/post/create' || /^\/post\/\d+\/edit$/.test(pathname)) return 'post-modal';
+            if (pathname === '/collections-editing') return 'collection-modal';
+            return null;
+        },
+        isModalPath: function (pathname = window.location.pathname) {
+            return !!this.getModalKeyFromPath(pathname);
+        },
+        isModalUrl: function (url) {
+            try {
+                const parsedUrl = new URL(url, window.location.origin);
+                return this.isModalPath(parsedUrl.pathname);
+            } catch (_error) {
+                return false;
+            }
+        }
+    },
+
     nav: {
         navigate: function (url, options = {}) {
             const { pushUrl = true, target = '#app-main', swap = 'outerHTML', replaceUrl = false } = options;
@@ -245,8 +267,9 @@ document.addEventListener('htmx:afterSwap', (event) => {
         window.activeModules = [];
     }
 
-    App.initWithSvgPreload().then(() => App.initWithin(target));
-    openUrlDrivenModalState();
+    App.initWithSvgPreload()
+        .then(() => App.initWithin(target))
+        .finally(() => openUrlDrivenModalState());
 });
 
 let isHistoryGuardRedirecting = false;
@@ -261,12 +284,15 @@ window.addEventListener('popstate', () => {
     const collectionModalInstance = App.components['collection_modul.js'];
     const isPostModalOpen = !!(postModalInstance?.modal && !postModalInstance.modal.classList.contains('post-modal--hidden'));
     const isCollectionModalOpen = !!(collectionModalInstance?.root && !collectionModalInstance.root.classList.contains('collection-modal--hidden'));
+    const activeModalUrl = isPostModalOpen
+        ? postModalInstance?.getModalUrl?.()
+        : (isCollectionModalOpen ? collectionModalInstance?.getModalUrl?.() : null);
     const isPostDirty = !!(isPostModalOpen && typeof postModalInstance.hasUnsavedChanges === 'function' && postModalInstance.hasUnsavedChanges());
     const isCollectionDirty = !!(isCollectionModalOpen && typeof collectionModalInstance.hasUnsavedChanges === 'function' && collectionModalInstance.hasUnsavedChanges());
 
-    if (isPostDirty || isCollectionDirty) {
+    if ((isPostDirty || isCollectionDirty) && activeModalUrl) {
         isHistoryGuardRedirecting = true;
-        window.history.pushState({}, '', window.location.pathname + window.location.search);
+        window.history.pushState({}, '', activeModalUrl);
         App.warn?.open({
             title: 'Осторожно!',
             description: 'У вас остались несохранённые изменения. После закрытия окна они будут сброшены. Хотите продолжить?',
@@ -292,10 +318,11 @@ window.addEventListener('popstate', () => {
                 target: swapTarget,
                 swap: 'outerHTML'
             });
-        } else {
-            window.location.reload();
             return;
         }
+
+        window.location.reload();
+        return;
     }
 
     openUrlDrivenModalState();
@@ -311,6 +338,14 @@ function openUrlDrivenModalState() {
     const isPostEdit = /^\/post\/(\d+)\/edit$/.test(pathname);
     const isCollectionsEditing = pathname === '/collections-editing';
 
+    if ((isPostCreate || isPostEdit) && collectionModalInstance?.root && !collectionModalInstance.root.classList.contains('collection-modal--hidden')) {
+        collectionModalInstance.close({ skipHistorySync: true });
+    }
+
+    if (isCollectionsEditing && postModalInstance?.modal && !postModalInstance.modal.classList.contains('post-modal--hidden')) {
+        postModalInstance.close({ skipHistorySync: true });
+    }
+
     if (!isPostCreate && !isPostEdit && postModalInstance?.modal && !postModalInstance.modal.classList.contains('post-modal--hidden')) {
         postModalInstance.close({ skipHistorySync: true });
     }
@@ -320,21 +355,17 @@ function openUrlDrivenModalState() {
     }
 
     if (!isPostCreate && !isPostEdit && !isCollectionsEditing) {
-        const blurOverlay = document.getElementById('app-blur-overlay');
-        if (blurOverlay) {
-            blurOverlay.classList.add('blur-lo--hidden');
-            blurOverlay.setAttribute('aria-hidden', 'true');
-        }
-        App.utils.unlockBodyScroll();
+        App.modalCtrl?.closeAll?.();
+        return;
     }
 
     if (isPostCreate) {
-        document.dispatchEvent(new CustomEvent('post-modal:open'));
+        document.dispatchEvent(new CustomEvent('post-modal:open', { detail: { fromHistory: true } }));
         return;
     }
 
     if (isCollectionsEditing) {
-        document.dispatchEvent(new CustomEvent('collection-modal:open'));
+        document.dispatchEvent(new CustomEvent('collection-modal:open', { detail: { fromHistory: true } }));
         return;
     }
 
@@ -349,7 +380,7 @@ function openUrlDrivenModalState() {
             .filter(Boolean);
 
         document.dispatchEvent(new CustomEvent('post-modal:open-edit', {
-            detail: { postId, description, imageSrc, tags }
+            detail: { postId, description, imageSrc, tags, fromHistory: true }
         }));
     }
 }

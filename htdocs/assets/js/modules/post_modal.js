@@ -48,7 +48,8 @@ class CreatePostModalComponent {
         this.closeResetTimer = null;
         this.confirmAction = null;
         this.closeBlockedTimer = null;
-        this.lastNonModalUrl = window.location.pathname + window.location.search;
+        this.lastNonModalUrl = App.history?.isModalPath?.() ? '/' : window.location.pathname + window.location.search;
+        this.currentModalUrl = null;
         this.openTriggerClickHandler = null;
         this.openCreateEventHandler = null;
         this.openEditEventHandler = null;
@@ -122,11 +123,23 @@ class CreatePostModalComponent {
     }
 
 
-    setModalUrl(nextUrl) {
+    getModalUrl() {
+        return this.currentModalUrl;
+    }
+
+    setModalUrl(nextUrl, options = {}) {
         if (!nextUrl) return;
+        const { fromHistory = false } = options;
         const currentUrl = window.location.pathname + window.location.search;
-        if (currentUrl === nextUrl) return;
-        this.lastNonModalUrl = currentUrl;
+        const isCurrentModalUrl = App.history?.isModalUrl?.(currentUrl);
+
+        this.currentModalUrl = nextUrl;
+
+        if (!isCurrentModalUrl) {
+            this.lastNonModalUrl = currentUrl;
+        }
+
+        if (fromHistory || currentUrl === nextUrl) return;
         window.history.pushState({}, '', nextUrl);
     }
 
@@ -146,8 +159,8 @@ class CreatePostModalComponent {
             this.openCreateMode();
         };
 
-        this.openCreateEventHandler = () => {
-            this.openCreateMode();
+        this.openCreateEventHandler = (event) => {
+            this.openCreateMode(event?.detail || {});
         };
 
         this.openEditEventHandler = async (event) => {
@@ -164,9 +177,9 @@ class CreatePostModalComponent {
         document.addEventListener('collections:changed', this.collectionsChangedHandler);
     }
 
-    openCreateMode() {
+    openCreateMode(options = {}) {
         clearTimeout(this.closeResetTimer);
-        this.setModalUrl('/post/create');
+        this.setModalUrl('/post/create', options);
         this.resetForm();
         this.applyCreateModeUI();
         if (App.modalCtrl) {
@@ -369,6 +382,7 @@ class CreatePostModalComponent {
         if (!skipHistorySync) {
             this.restoreNonModalUrl();
         }
+        this.currentModalUrl = null;
         if (App.modalCtrl) App.modalCtrl.close('post-modal');
         this.hideAlert();
         this.hideSuccessToast();
@@ -391,7 +405,7 @@ class CreatePostModalComponent {
     async openEditMode(payload) {
         const modalPostId = Number(payload?.postId || 0);
         if (modalPostId > 0) {
-            this.setModalUrl(`/post/${modalPostId}/edit`);
+            this.setModalUrl(`/post/${modalPostId}/edit`, payload);
         }
         clearTimeout(this.closeResetTimer);
         this.resetForm();
@@ -749,6 +763,12 @@ class CreatePostModalComponent {
             cancelLabel,
             onConfirm: async () => {
                 if (action === 'unsaved-close') {
+                    const isModalRoute = App.history?.isModalPath?.();
+                    if (isModalRoute && window.history.length > 1) {
+                        this.close({ skipHistorySync: true });
+                        window.history.back();
+                        return;
+                    }
                     this.close();
                     return;
                 }
