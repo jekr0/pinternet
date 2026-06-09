@@ -202,7 +202,7 @@ class PostCardComponent {
         const postId = Number(card.dataset.postId || 0);
         if (!postId) return;
 
-        const shareUrl = `${window.location.origin}/post/${postId}`;
+        const shareUrl = `${window.location.origin}${App.history?.getPostFullUrl?.(postId) || `/post?id=${encodeURIComponent(String(postId))}`}`;
         const shareButton = card.querySelector('[data-action="share"]');
         const markShared = () => {
             if (!shareButton) return;

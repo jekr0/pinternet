@@ -173,6 +173,52 @@ const App = {
     },
 
 
+    history: {
+        skipNextModalOnlyPop: false,
+        getCurrentUrl: function () {
+            return window.location.pathname + window.location.search;
+        },
+        getUrl: function (url = window.location.href) {
+            try {
+                return new URL(url, window.location.origin);
+            } catch (_error) {
+                return new URL(window.location.href);
+            }
+        },
+        getModalKeyFromPath: function (pathname = window.location.pathname) {
+            if (pathname === '/post/create' || /^\/post\/\d+\/edit$/.test(pathname)) return 'post-modal';
+            if (pathname === '/collections-editing') return 'collection-modal';
+            return null;
+        },
+        isModalPath: function (pathname = window.location.pathname) {
+            return !!this.getModalKeyFromPath(pathname);
+        },
+        isModalUrl: function (url) {
+            return this.isModalPath(this.getUrl(url).pathname);
+        },
+        getPostFullIdFromUrl: function (url = window.location.href) {
+            const parsedUrl = this.getUrl(url);
+            if (parsedUrl.pathname !== '/post') return 0;
+            const postId = Number(parsedUrl.searchParams.get('id') || 0);
+            return Number.isInteger(postId) && postId > 0 ? postId : 0;
+        },
+        getPostFullUrl: function (postId) {
+            const normalizedPostId = Number(postId || 0);
+            return normalizedPostId > 0 ? `/post?id=${encodeURIComponent(String(normalizedPostId))}` : '/';
+        },
+        isPostFullUrl: function (url = window.location.href) {
+            return this.getPostFullIdFromUrl(url) > 0;
+        },
+        markNextPopAsModalOnly: function () {
+            this.skipNextModalOnlyPop = true;
+        },
+        consumeNextModalOnlyPop: function () {
+            const shouldSkip = this.skipNextModalOnlyPop;
+            this.skipNextModalOnlyPop = false;
+            return shouldSkip;
+        }
+    },
+
     nav: {
         navigate: function (url, options = {}) {
             const { pushUrl = true, target = '#app-main', swap = 'outerHTML', replaceUrl = false } = options;
@@ -245,43 +291,65 @@ document.addEventListener('htmx:afterSwap', (event) => {
         window.activeModules = [];
     }
 
-    App.initWithSvgPreload().then(() => App.initWithin(target));
-    openUrlDrivenModalState();
+    App.initWithSvgPreload()
+        .then(() => App.initWithin(target))
+        .finally(() => openUrlDrivenModalState());
 });
 
-let isHistoryGuardRedirecting = false;
+let isDirtyHistoryPromptOpen = false;
 
 window.addEventListener('popstate', () => {
-    if (isHistoryGuardRedirecting) {
-        isHistoryGuardRedirecting = false;
-        return;
-    }
-
     const postModalInstance = App.components['post_modal.js'];
     const collectionModalInstance = App.components['collection_modul.js'];
     const isPostModalOpen = !!(postModalInstance?.modal && !postModalInstance.modal.classList.contains('post-modal--hidden'));
     const isCollectionModalOpen = !!(collectionModalInstance?.root && !collectionModalInstance.root.classList.contains('collection-modal--hidden'));
+    const activeModalUrl = isPostModalOpen
+        ? postModalInstance?.getModalUrl?.()
+        : (isCollectionModalOpen ? collectionModalInstance?.getModalUrl?.() : null);
     const isPostDirty = !!(isPostModalOpen && typeof postModalInstance.hasUnsavedChanges === 'function' && postModalInstance.hasUnsavedChanges());
     const isCollectionDirty = !!(isCollectionModalOpen && typeof collectionModalInstance.hasUnsavedChanges === 'function' && collectionModalInstance.hasUnsavedChanges());
 
-    if (isPostDirty || isCollectionDirty) {
-        isHistoryGuardRedirecting = true;
-        window.history.pushState({}, '', window.location.pathname + window.location.search);
-        App.warn?.open({
+    if ((isPostDirty || isCollectionDirty) && activeModalUrl) {
+        window.history.pushState({}, '', activeModalUrl);
+
+        if (isDirtyHistoryPromptOpen || App.overlay?.get?.('warn-modal')) {
+            return;
+        }
+
+        isDirtyHistoryPromptOpen = true;
+        const warningPromise = App.warn?.open({
             title: 'Осторожно!',
             description: 'У вас остались несохранённые изменения. После закрытия окна они будут сброшены. Хотите продолжить?',
             confirmLabel: 'Закрыть окно',
             cancelLabel: 'Назад',
             onConfirm: async () => {
+                isDirtyHistoryPromptOpen = false;
                 if (isPostModalOpen) {
                     postModalInstance?.close({ skipHistorySync: true });
                 }
                 if (isCollectionModalOpen) {
                     collectionModalInstance?.close({ skipHistorySync: true });
                 }
+                App.history?.markNextPopAsModalOnly?.();
                 window.history.back();
             }
         });
+
+        Promise.resolve(warningPromise).finally(() => {
+            isDirtyHistoryPromptOpen = false;
+        });
+        return;
+    }
+
+    if (App.history?.consumeNextModalOnlyPop?.()) {
+        openUrlDrivenModalState();
+        return;
+    }
+
+    const hasModalComponents = !!(postModalInstance?.modal || collectionModalInstance?.root);
+    const isModalRoute = App.history?.isModalPath?.();
+    if (hasModalComponents && (isModalRoute || isPostModalOpen || isCollectionModalOpen)) {
+        openUrlDrivenModalState();
         return;
     }
 
@@ -292,10 +360,11 @@ window.addEventListener('popstate', () => {
                 target: swapTarget,
                 swap: 'outerHTML'
             });
-        } else {
-            window.location.reload();
             return;
         }
+
+        window.location.reload();
+        return;
     }
 
     openUrlDrivenModalState();
@@ -311,6 +380,14 @@ function openUrlDrivenModalState() {
     const isPostEdit = /^\/post\/(\d+)\/edit$/.test(pathname);
     const isCollectionsEditing = pathname === '/collections-editing';
 
+    if ((isPostCreate || isPostEdit) && collectionModalInstance?.root && !collectionModalInstance.root.classList.contains('collection-modal--hidden')) {
+        collectionModalInstance.close({ skipHistorySync: true });
+    }
+
+    if (isCollectionsEditing && postModalInstance?.modal && !postModalInstance.modal.classList.contains('post-modal--hidden')) {
+        postModalInstance.close({ skipHistorySync: true });
+    }
+
     if (!isPostCreate && !isPostEdit && postModalInstance?.modal && !postModalInstance.modal.classList.contains('post-modal--hidden')) {
         postModalInstance.close({ skipHistorySync: true });
     }
@@ -320,21 +397,17 @@ function openUrlDrivenModalState() {
     }
 
     if (!isPostCreate && !isPostEdit && !isCollectionsEditing) {
-        const blurOverlay = document.getElementById('app-blur-overlay');
-        if (blurOverlay) {
-            blurOverlay.classList.add('blur-lo--hidden');
-            blurOverlay.setAttribute('aria-hidden', 'true');
-        }
-        App.utils.unlockBodyScroll();
+        App.modalCtrl?.closeAll?.();
+        return;
     }
 
     if (isPostCreate) {
-        document.dispatchEvent(new CustomEvent('post-modal:open'));
+        document.dispatchEvent(new CustomEvent('post-modal:open', { detail: { fromHistory: true } }));
         return;
     }
 
     if (isCollectionsEditing) {
-        document.dispatchEvent(new CustomEvent('collection-modal:open'));
+        document.dispatchEvent(new CustomEvent('collection-modal:open', { detail: { fromHistory: true } }));
         return;
     }
 
@@ -349,7 +422,7 @@ function openUrlDrivenModalState() {
             .filter(Boolean);
 
         document.dispatchEvent(new CustomEvent('post-modal:open-edit', {
-            detail: { postId, description, imageSrc, tags }
+            detail: { postId, description, imageSrc, tags, fromHistory: true }
         }));
     }
 }

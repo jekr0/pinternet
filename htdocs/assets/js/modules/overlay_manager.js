@@ -83,6 +83,10 @@ class OverlayManagerComponent {
         const instance = this.instances.get(key);
         if (!instance) return;
 
+        if (instance.isClosing) return;
+        instance.isClosing = true;
+        this.instances.delete(key);
+
         const { overlay, hiddenClass, lockScroll, transitionMs, onClose } = instance;
 
         if (hiddenClass) {
@@ -94,7 +98,6 @@ class OverlayManagerComponent {
                 App.utils.unlockBodyScroll();
             }
             overlay.remove();
-            this.instances.delete(key);
             onClose?.();
         }, transitionMs);
     }

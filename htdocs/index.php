@@ -56,14 +56,17 @@ if ($path === '/sign_up') {
     $redirectToCanonical('/auth/login');
 }
 
+if (preg_match('#^/post/(\d+)$#', $path, $matches)) {
+    $redirectToCanonical('/post?id=' . urlencode((string) $matches[1]));
+}
+
 // Этап 2 (partial rendering): определяем HTMX-запросы для возврата фрагментов.
 $isHtmxRequest = isset($_SERVER['HTTP_HX_REQUEST']) && $_SERVER['HTTP_HX_REQUEST'] === 'true';
 
 // Определяем, какая страница нужна
 $selectedPostId = 0;
-if (preg_match('#^/post/(\d+)$#', $path, $matches)) {
-    $selectedPostId = (int) $matches[1];
-    $path = '/post/:id';
+if ($path === '/post' && isset($_GET['id']) && ctype_digit((string) $_GET['id'])) {
+    $selectedPostId = (int) $_GET['id'];
 } elseif (preg_match('#^/post/(\d+)/edit$#', $path, $matches)) {
     $selectedPostId = (int) $matches[1];
     $path = '/post/:id/edit';
@@ -72,7 +75,7 @@ if (preg_match('#^/post/(\d+)$#', $path, $matches)) {
 switch ($path) {
     case '':
     case '/':
-    case '/post/:id':
+    case '/post':
     case '/post/:id/edit':
     case '/post/create':
     case '/collections-editing':

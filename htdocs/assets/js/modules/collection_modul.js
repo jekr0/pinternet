@@ -1,5 +1,5 @@
 class CollectionModalComponent {
-  constructor(){this.root=null;this.list=null;this.nameInput=null;this.tagsField=null;this.tagsList=null;this.tagsSuggestList=null;this.tagsInputRow=null;this.tagsAddButton=null;this.submitButton=null;this.deleteButton=null;this.panel=null;this.tags=[];this.maxTags=24;this.maxVisibleTagRows=3;this.mode='create';this.selectedCollection='';this.lastNonModalUrl=window.location.pathname + window.location.search;this.modalOpenHandler=null;this.rootClickHandler=null;this.nameInputHandler=null;this.submitClickHandler=null;this.deleteClickHandler=null;this.closeBlockedTimer=null;}
+  constructor(){this.root=null;this.list=null;this.nameInput=null;this.tagsField=null;this.tagsList=null;this.tagsSuggestList=null;this.tagsInputRow=null;this.tagsAddButton=null;this.submitButton=null;this.deleteButton=null;this.panel=null;this.tags=[];this.maxTags=24;this.maxVisibleTagRows=3;this.mode='create';this.selectedCollection='';this.lastNonModalUrl=App.history?.isModalPath?.()?'/':window.location.pathname + window.location.search;this.currentModalUrl=null;this.modalOpenHandler=null;this.rootClickHandler=null;this.nameInputHandler=null;this.submitClickHandler=null;this.deleteClickHandler=null;this.closeBlockedTimer=null;}
   init(){
     this.root=document.getElementById('collection-modal'); if(!this.root) return;
     this.list=this.root.querySelector('[data-component="collection-modal-list"]');
@@ -13,9 +13,9 @@ class CollectionModalComponent {
     this.deleteButton=this.root.querySelector('[data-component="collection-modal-delete"]');
     this.panel=this.root.querySelector('.collection-modal__panel');
 
-    this.modalOpenHandler=async ()=>{ if (App.modalCtrl) { App.modalCtrl.open('collection-modal'); await this.open(); return; } await this.open(); };
+    this.modalOpenHandler=async (event)=>{ if (App.modalCtrl) { App.modalCtrl.open('collection-modal'); await this.open(event?.detail||{}); return; } await this.open(event?.detail||{}); };
     document.addEventListener('collection-modal:open', this.modalOpenHandler);
-    this.rootClickHandler=(e)=>{if(e.target===this.root){ if(this.hasUnsavedChanges()){ this.blockOverlayClose(); return; } this.close(); } if(e.target.closest('[data-component="collection-modal-cancel"]')) this.requestClose();};
+    this.rootClickHandler=(e)=>{if(e.target===this.root){ if(this.hasUnsavedChanges()){ this.blockOverlayClose(); return; } this.requestClose(); } if(e.target.closest('[data-component="collection-modal-cancel"]')) this.requestClose();};
     this.root.addEventListener('click',this.rootClickHandler);
     this.nameInputHandler=()=>{const n=this.nameInput.value.replace(/[^a-zа-яё0-9_ ]/gi,'').slice(0,32);if(n!==this.nameInput.value)this.nameInput.value=n;};
     this.nameInput?.addEventListener('input',this.nameInputHandler);
@@ -28,11 +28,12 @@ class CollectionModalComponent {
     App.modalCtrl?.register('collection-modal', { show: () => this.showOnly(), hide: () => this.hideOnly() });
   }
 
-  setModalUrl(nextUrl){ if(!nextUrl) return; const current=window.location.pathname + window.location.search; if(current===nextUrl) return; this.lastNonModalUrl=current; window.history.pushState({},'',nextUrl); }
+  getModalUrl(){ return this.currentModalUrl; }
+  setModalUrl(nextUrl,options={}){ if(!nextUrl) return; const current=window.location.pathname + window.location.search; const fromHistory=!!options.fromHistory; const isCurrentModalUrl=!!App.history?.isModalUrl?.(current); this.currentModalUrl=nextUrl; if(!isCurrentModalUrl) this.lastNonModalUrl=current; if(fromHistory||current===nextUrl) return; window.history.pushState({},'',nextUrl); }
   restoreNonModalUrl(){ const target=this.lastNonModalUrl||'/'; const current=window.location.pathname + window.location.search; if(current===target) return; window.history.replaceState({},'',target); }
   bindTagsHandlers(){ if (!this.tagsField || !this.tagsAddButton) return; this.tagsField.addEventListener('keydown',(event)=>{ if(event.key==='Enter'){event.preventDefault();this.addTagFromInput();return;} if (event.key==='Tab'&&!event.shiftKey){const b=this.tagsSuggestList?.querySelector('button');const open=this.tagsSuggestList && !this.tagsSuggestList.classList.contains('collection-modal__tags-suggest-list--hidden'); if(!open||!b) return; event.preventDefault(); this.tagsField.value=b.dataset.tag||''; this.addTagFromInput();}}); this.tagsField.addEventListener('input',()=>{const normalized=this.tagsField.value.replace(/[^a-zа-яё0-9_#]/gi,'').slice(0,20); if(normalized!==this.tagsField.value)this.tagsField.value=normalized; this.loadTagSuggestions();}); this.tagsAddButton.addEventListener('click',()=>this.addTagFromInput()); }
-  async open(){ this.setModalUrl('/collections-editing'); this.showOnly(); await this.load(); this.renderTags(); this.setCreateMode(false); this.nameInput?.focus(); }
-  close(options={}){ const { skipHistorySync=false } = options; if(!skipHistorySync) this.restoreNonModalUrl(); if (App.modalCtrl) { App.modalCtrl.close('collection-modal'); } this.hideOnly(); this.hideTagSuggestions(); this.resetForm(); if (App.modalCtrl && !App.modalCtrl.isBlurVisible()) App.utils.unlockBodyScroll(); }
+  async open(options={}){ this.setModalUrl('/collections-editing',options); this.showOnly(); await this.load(); this.renderTags(); this.setCreateMode(false); this.nameInput?.focus(); }
+  close(options={}){ const { skipHistorySync=false } = options; if(!skipHistorySync) this.restoreNonModalUrl(); this.currentModalUrl=null; if (App.modalCtrl) { App.modalCtrl.close('collection-modal'); } this.hideOnly(); this.hideTagSuggestions(); this.resetForm(); }
   showOnly(){ this.root.classList.remove('collection-modal--hidden'); this.root.setAttribute('aria-hidden','false'); }
   hideOnly(){ this.root.classList.add('collection-modal--hidden'); this.root.setAttribute('aria-hidden','true'); }
 
@@ -68,7 +69,7 @@ class CollectionModalComponent {
   escapeHtml(v){return String(v).replace(/[&<>'"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[m]));}
   escapeRegex(v){return v.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');}
 
-  requestClose(){ if(this.hasUnsavedChanges()){ App.warn?.open({title:'Осторожно!',description:'У вас остались несохранённые изменения. После закрытия окна они будут сброшены. Хотите продолжить?',confirmLabel:'Закрыть окно',cancelLabel:'Назад',onConfirm:async()=>{ if(window.history.length>1){window.history.back(); return;} this.close(); }}); return;} if(window.location.pathname==='/collections-editing'&&window.history.length>1){window.history.back(); return;} this.close(); }
+  requestClose(){ if(this.hasUnsavedChanges()){ App.warn?.open({title:'Осторожно!',description:'У вас остались несохранённые изменения. После закрытия окна они будут сброшены. Хотите продолжить?',confirmLabel:'Закрыть окно',cancelLabel:'Назад',onConfirm:async()=>{ if(App.history?.isModalPath?.()&&window.history.length>1){this.close({skipHistorySync:true}); App.history?.markNextPopAsModalOnly?.(); window.history.back(); return;} this.close(); }}); return;} if(window.location.pathname==='/collections-editing'&&window.history.length>1){window.history.back(); return;} this.close(); }
   blockOverlayClose(){ if(!this.panel) return; clearTimeout(this.closeBlockedTimer); this.panel.classList.remove('collection-modal__panel--close-blocked'); void this.panel.offsetWidth; this.panel.classList.add('collection-modal__panel--close-blocked'); this.closeBlockedTimer=setTimeout(()=>{this.panel?.classList.remove('collection-modal__panel--close-blocked'); this.closeBlockedTimer=null;},1000); }
   showToast(message){ document.dispatchEvent(new CustomEvent('app:toast',{detail:{message}})); }
   getSnapshot(){ return JSON.stringify({mode:this.mode,name:(this.nameInput?.value||'').trim(),tags:[...this.tags].sort(),selected:this.selectedCollection}); }

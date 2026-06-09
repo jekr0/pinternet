@@ -97,6 +97,27 @@ class MasonryFeedComponent {
         const maxHeight = Math.max(...columnHeights);
         this.container.style.height = `${Math.max(this.topOffset, maxHeight - this.verticalGap)}px`;
     }
+
+    destroy() {
+        if (this.resizeHandler) {
+            window.removeEventListener('resize', this.resizeHandler);
+        }
+        if (this.postFullToggleHandler) {
+            document.removeEventListener('post-full:toggle', this.postFullToggleHandler);
+        }
+        if (this.postFullResizeHandler) {
+            document.removeEventListener('post-full:resize', this.postFullResizeHandler);
+        }
+        if (this.imageLoadHandler) {
+            this.cards.forEach((card) => {
+                const image = card.querySelector('.post-card__image');
+                if (!image) return;
+                image.removeEventListener('load', this.imageLoadHandler);
+                image.removeEventListener('error', this.imageLoadHandler);
+            });
+        }
+    }
+
 }
 
 App.register('masonry_feed.js', MasonryFeedComponent);
