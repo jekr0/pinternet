@@ -6,6 +6,20 @@ const App = {
     // Реестр зарегистрированных компонентов (ключ = имя файла модуля)
     registry: {},
 
+    // Модули, DOM которых живёт вне #app-main или предоставляет глобальные сервисы.
+    persistentModules: new Set([
+        'overlay_manager.js',
+        'modal_ctrl.js',
+        'warn_modal.js',
+        'toast_stack.js',
+        'profile_button.js',
+        'dropdown_profile.js',
+        'dropdown_search.js',
+        'post_modal.js',
+        'collection_modul.js',
+        'dropdown_collections.js'
+    ]),
+
     // Метод для регистрации компонента
     register: function (name, componentClass) {
         this.registry[name] = componentClass;
@@ -24,6 +38,10 @@ const App = {
             const ComponentClass = this.registry[moduleFile];
             if (ComponentClass) {
                 try {
+                    if (this.persistentModules.has(moduleFile) && this.components[moduleFile]) {
+                        return;
+                    }
+
                     this.destroyComponent(moduleFile);
 
                     const instance = new ComponentClass();
@@ -61,8 +79,9 @@ const App = {
     },
 
     destroyWithin: function (_root) {
-        // На текущем этапе очищаем все компоненты перед swap контейнера.
-        this.destroyAllComponents();
+        Object.keys(this.components)
+            .filter((moduleFile) => !this.persistentModules.has(moduleFile))
+            .forEach((moduleFile) => this.destroyComponent(moduleFile));
     },
     initWithSvgPreload: async function () {
         const svgNodes = Array.from(document.querySelectorAll('[data-svg-src]'));
@@ -185,29 +204,49 @@ const App = {
                 return new URL(window.location.href);
             }
         },
-        getModalKeyFromPath: function (pathname = window.location.pathname) {
-            if (pathname === '/post/create' || /^\/post\/\d+\/edit$/.test(pathname)) return 'post-modal';
-            if (pathname === '/collections-editing') return 'collection-modal';
+        getPostEditIdFromUrl: function (url = window.location.href) {
+            const parsedUrl = this.getUrl(url);
+            if (parsedUrl.pathname !== '/post') return 0;
+            const match = String(parsedUrl.searchParams.get('id') || '').match(/^(\d+)\/edit$/);
+            if (!match) return 0;
+            const postId = Number(match[1] || 0);
+            return Number.isInteger(postId) && postId > 0 ? postId : 0;
+        },
+        getModalKeyFromUrl: function (url = window.location.href) {
+            const parsedUrl = this.getUrl(url);
+            if (parsedUrl.pathname === '/post/create' || this.getPostEditIdFromUrl(parsedUrl.href) > 0) return 'post-modal';
+            if (parsedUrl.pathname === '/collections-editing') return 'collection-modal';
             return null;
         },
-        isModalPath: function (pathname = window.location.pathname) {
-            return !!this.getModalKeyFromPath(pathname);
+        getModalKeyFromPath: function (pathname = window.location.pathname) {
+            if (pathname === '/post/create') return 'post-modal';
+            if (pathname === '/collections-editing') return 'collection-modal';
+            return this.getModalKeyFromUrl(window.location.href);
+        },
+        isModalPath: function (_pathname = window.location.pathname) {
+            return !!this.getModalKeyFromUrl(window.location.href);
         },
         isModalUrl: function (url) {
-            return this.isModalPath(this.getUrl(url).pathname);
+            return !!this.getModalKeyFromUrl(url);
         },
         getPostFullIdFromUrl: function (url = window.location.href) {
             const parsedUrl = this.getUrl(url);
             if (parsedUrl.pathname !== '/post') return 0;
-            const postId = Number(parsedUrl.searchParams.get('id') || 0);
+            const match = String(parsedUrl.searchParams.get('id') || '').match(/^(\d+)(?:\/edit)?$/);
+            if (!match) return 0;
+            const postId = Number(match[1] || 0);
             return Number.isInteger(postId) && postId > 0 ? postId : 0;
         },
         getPostFullUrl: function (postId) {
             const normalizedPostId = Number(postId || 0);
             return normalizedPostId > 0 ? `/post?id=${encodeURIComponent(String(normalizedPostId))}` : '/';
         },
+        getPostEditUrl: function (postId) {
+            const normalizedPostId = Number(postId || 0);
+            return normalizedPostId > 0 ? `/post?id=${encodeURIComponent(String(normalizedPostId))}/edit` : '/post/create';
+        },
         isPostFullUrl: function (url = window.location.href) {
-            return this.getPostFullIdFromUrl(url) > 0;
+            return this.getPostFullIdFromUrl(url) > 0 && this.getPostEditIdFromUrl(url) === 0;
         },
         markNextPopAsModalOnly: function () {
             this.skipNextModalOnlyPop = true;
@@ -376,8 +415,9 @@ function openUrlDrivenModalState() {
     const postModalInstance = App.components['post_modal.js'];
     const collectionModalInstance = App.components['collection_modul.js'];
 
+    const postEditId = App.history?.getPostEditIdFromUrl?.() || 0;
     const isPostCreate = pathname === '/post/create';
-    const isPostEdit = /^\/post\/(\d+)\/edit$/.test(pathname);
+    const isPostEdit = postEditId > 0;
     const isCollectionsEditing = pathname === '/collections-editing';
 
     if ((isPostCreate || isPostEdit) && collectionModalInstance?.root && !collectionModalInstance.root.classList.contains('collection-modal--hidden')) {
@@ -411,9 +451,8 @@ function openUrlDrivenModalState() {
         return;
     }
 
-    const postEditMatch = pathname.match(/^\/post\/(\d+)\/edit$/);
-    if (postEditMatch) {
-        const postId = Number(postEditMatch[1] || 0);
+    if (postEditId > 0) {
+        const postId = postEditId;
         const postFull = document.querySelector('.post-full');
         const description = postFull?.querySelector('.post-full__description-text')?.textContent?.trim() || '';
         const imageSrc = postFull?.dataset.postImageSrc || postFull?.querySelector('.post-full__image')?.getAttribute('src') || '';
