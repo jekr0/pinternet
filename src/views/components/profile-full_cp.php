@@ -50,5 +50,7 @@ $profileFullZoomSrc = $profileFullHasAvatar ? $profileFullAvatarSrc : '/assets/i
         </div>
 
         <div class="profile-full__info" aria-hidden="true"></div>
+        <div class="profile-full__level" aria-hidden="true"></div>
+        <div class="profile-full__achievements" aria-hidden="true"></div>
     </div>
 </section>

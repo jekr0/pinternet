@@ -1,5 +1,9 @@
 /* =========================== Полная страница профиля ========================== */
 
+:root {
+    --profile-full-border-color: #e0e0e0;
+}
+
 .profile-full {
     height: 520px;
     margin: 104px 44px 0;
@@ -20,6 +24,7 @@
 .profile-full__avatar {
     position: relative;
     grid-column: 1;
+    grid-row: 1;
     width: 100%;
     aspect-ratio: 1 / 1;
     display: flex;
@@ -86,11 +91,32 @@
     pointer-events: auto;
 }
 
-.profile-full__info {
-    grid-column: 2 / 5;
+.profile-full__info,
+.profile-full__achievements {
     align-self: stretch;
-    margin-bottom: 52px;
-    border: 1px solid #bbb;
+    border: 1px solid var(--profile-full-border-color);
     border-radius: 24px;
     background: #fff;
+}
+
+.profile-full__info {
+    grid-column: 2 / 5;
+    grid-row: 1;
+    margin-bottom: 52px;
+}
+
+.profile-full__level {
+    grid-column: 5 / 8;
+    grid-row: 1;
+    align-self: start;
+    height: 40px;
+    border: 1.5px solid var(--profile-full-border-color);
+    border-radius: 12px;
+    background: #fff;
+}
+
+.profile-full__achievements {
+    grid-column: 5 / 8;
+    grid-row: 1;
+    margin-top: 52px;
 }
