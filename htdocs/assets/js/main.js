@@ -39,6 +39,9 @@ const App = {
             if (ComponentClass) {
                 try {
                     if (this.persistentModules.has(moduleFile) && this.components[moduleFile]) {
+                        if (typeof this.components[moduleFile].refresh === 'function') {
+                            this.components[moduleFile].refresh();
+                        }
                         return;
                     }
 
@@ -298,8 +301,37 @@ const App = {
     }
 };
 
+function syncActiveModulesFromMain(target = document.getElementById('app-main')) {
+    if (!target) return;
+
+    try {
+        const modulesJson = target.getAttribute('data-active-modules') || '[]';
+        const parsedModules = JSON.parse(modulesJson);
+        window.activeModules = Array.isArray(parsedModules) ? parsedModules : [];
+    } catch (error) {
+        console.warn('Failed to parse active modules from swapped fragment', error);
+        window.activeModules = [];
+    }
+}
+
+function bindHeaderLogoNavigation() {
+    if (App.headerLogoNavigationBound) return;
+    App.headerLogoNavigationBound = true;
+
+    document.addEventListener('click', (event) => {
+        const link = event.target?.closest?.('.header__logo');
+        if (!link) return;
+        if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+
+        event.preventDefault();
+        event.stopPropagation();
+        App.nav.navigate(link.getAttribute('href') || '/', { pushUrl: true });
+    }, true);
+}
+
 // Инициализируем после полной загрузки DOM (все скрипты уже выполнены)
 document.addEventListener('DOMContentLoaded', () => {
+    bindHeaderLogoNavigation();
     App.initWithSvgPreload()
         .then(() => App.initWithin(document))
         .finally(() => {
@@ -321,23 +353,35 @@ document.addEventListener('htmx:afterSwap', (event) => {
     const target = event.detail?.target;
     if (!target || target.id !== 'app-main') return;
 
-    try {
-        const modulesJson = target.getAttribute('data-active-modules') || '[]';
-        const parsedModules = JSON.parse(modulesJson);
-        window.activeModules = Array.isArray(parsedModules) ? parsedModules : [];
-    } catch (error) {
-        console.warn('Failed to parse active modules from swapped fragment', error);
-        window.activeModules = [];
-    }
+    syncActiveModulesFromMain(target);
 
     App.initWithSvgPreload()
         .then(() => App.initWithin(target))
         .finally(() => openUrlDrivenModalState());
 });
 
+// HTMX восстанавливает boosted-ссылки из собственного history cache и не всегда проходит
+// через обычный afterSwap-путь приложения, поэтому синхронизируем активные модули отдельно.
+document.addEventListener('htmx:historyRestore', () => {
+    window.setTimeout(() => {
+        const target = document.getElementById('app-main');
+        if (!target) return;
+
+        App.destroyWithin(target);
+        syncActiveModulesFromMain(target);
+        App.initWithSvgPreload()
+            .then(() => App.initWithin(target))
+            .finally(() => openUrlDrivenModalState());
+    }, 0);
+});
+
 let isDirtyHistoryPromptOpen = false;
 
-window.addEventListener('popstate', () => {
+window.addEventListener('popstate', (event) => {
+    if (event.state?.htmx) {
+        return;
+    }
+
     const postModalInstance = App.components['post_modal.js'];
     const collectionModalInstance = App.components['collection_modul.js'];
     const isPostModalOpen = !!(postModalInstance?.modal && !postModalInstance.modal.classList.contains('post-modal--hidden'));

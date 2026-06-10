@@ -3,6 +3,7 @@
 class ProfileComponent {
     constructor() {
         this.buttons = [];
+        this.boundButtons = new WeakSet();
     }
 
     init() {
@@ -11,8 +12,15 @@ class ProfileComponent {
 
         this.buttons.forEach(button => {
             this.prepareButton(button);
+            if (this.boundButtons.has(button)) return;
+
+            this.boundButtons.add(button);
             button.addEventListener('click', (e) => this.handleClick(e, button));
         });
+    }
+
+    refresh() {
+        this.init();
     }
 
     prepareButton(button) {
