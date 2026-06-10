@@ -13,6 +13,7 @@ CREATE TABLE Users (
     password_hash VARCHAR(255) NOT NULL,
     avatar        VARCHAR(255),
     bio           VARCHAR(256),
+    total_likes   INT NOT NULL DEFAULT 0,
     exp           INT NOT NULL DEFAULT 0,
     level         INT NOT NULL DEFAULT 1,
     role          ENUM('user', 'moderator', 'admin') NOT NULL DEFAULT 'user',
@@ -182,6 +183,20 @@ CREATE TABLE Comment_Likes (
 
     FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE SET NULL,
     FOREIGN KEY (comment_id) REFERENCES Comments(id) ON DELETE CASCADE
+);
+
+CREATE TABLE Comment_Like_Exp_Awards (
+    id               INT AUTO_INCREMENT PRIMARY KEY,
+    liker_user_id    INT NOT NULL,
+    comment_id       INT NOT NULL,
+    comment_owner_id INT NOT NULL,
+    created_at       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    UNIQUE KEY uq_comment_like_exp_award (liker_user_id, comment_id),
+
+    FOREIGN KEY (liker_user_id) REFERENCES Users(id) ON DELETE CASCADE,
+    FOREIGN KEY (comment_id) REFERENCES Comments(id) ON DELETE CASCADE,
+    FOREIGN KEY (comment_owner_id) REFERENCES Users(id) ON DELETE CASCADE
 );
 
 CREATE TABLE Comment_Reports (

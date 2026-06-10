@@ -8,16 +8,34 @@ if (session_status() === PHP_SESSION_NONE) {
 $profileFullUser = null;
 $profileFullAvatarSrc = '';
 $profileFullUsername = '';
+$profileFullBio = '';
+$profileFullSubscriptionsCount = 0;
+$profileFullSubscribersCount = 0;
+$profileFullTotalLikes = 0;
 $profileFullHasAvatar = false;
 
 if (!empty($_SESSION['user_id'])) {
     require_once __DIR__ . '/../../../src/config/database_conf.php';
 
-    $stmt = $pdo->prepare('SELECT username, avatar FROM Users WHERE id = ?');
+    $stmt = $pdo->prepare('
+        SELECT u.username,
+               u.avatar,
+               u.bio,
+               u.total_likes,
+               (SELECT COUNT(*) FROM Follows f WHERE f.follower_id = u.id) AS subscriptions_count,
+               (SELECT COUNT(*) FROM Follows f WHERE f.following_id = u.id) AS subscribers_count
+        FROM Users u
+        WHERE u.id = ?
+        LIMIT 1
+    ');
     $stmt->execute([$_SESSION['user_id']]);
     $profileFullUser = $stmt->fetch();
     $profileFullAvatarSrc = (string) ($profileFullUser['avatar'] ?? '');
     $profileFullUsername = (string) ($profileFullUser['username'] ?? '');
+    $profileFullBio = trim((string) ($profileFullUser['bio'] ?? ''));
+    $profileFullSubscriptionsCount = (int) ($profileFullUser['subscriptions_count'] ?? 0);
+    $profileFullSubscribersCount = (int) ($profileFullUser['subscribers_count'] ?? 0);
+    $profileFullTotalLikes = (int) ($profileFullUser['total_likes'] ?? 0);
     $profileFullHasAvatar = $profileFullAvatarSrc !== '';
 }
 
@@ -59,6 +77,15 @@ $profileFullZoomSrc = $profileFullHasAvatar ? $profileFullAvatarSrc : '/assets/i
                 <div class="profile-full__medals" aria-hidden="true"></div>
             </div>
             <div class="profile-full__about-title">о себе:</div>
+            <div class="profile-full__about">
+                <?= htmlspecialchars($profileFullBio !== '' ? $profileFullBio : 'Описание пользователя отстутствует', ENT_QUOTES, 'UTF-8') ?>
+            </div>
+            <div class="profile-full__divider" aria-hidden="true"></div>
+            <div class="profile-full__stats-row">
+                <div class="profile-full__stat">Подписки: <?= $profileFullSubscriptionsCount ?></div>
+                <div class="profile-full__stat">Подписчики: <?= $profileFullSubscribersCount ?></div>
+                <div class="profile-full__stat">Собрано лайков: <?= $profileFullTotalLikes ?></div>
+            </div>
         </div>
         <div class="profile-full__level" aria-hidden="true"></div>
         <div class="profile-full__achievements" aria-hidden="true"></div>

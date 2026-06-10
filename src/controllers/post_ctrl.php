@@ -330,12 +330,19 @@ function handleToggleLike(PDO $pdo, int $userId): never
         if ($likeId !== false) {
             $deleteLike = $pdo->prepare('DELETE FROM Post_Likes WHERE id = ?');
             $deleteLike->execute([(int) $likeId]);
+
+            $decrementTotalLikes = $pdo->prepare('UPDATE Users SET total_likes = GREATEST(total_likes - 1, 0) WHERE id = ?');
+            $decrementTotalLikes->execute([$postOwnerId]);
+
             $pdo->commit();
             jsonResponse(['success' => true, 'liked' => false]);
         }
 
         $insertLike = $pdo->prepare('INSERT INTO Post_Likes (user_id, post_id) VALUES (?, ?)');
         $insertLike->execute([$userId, $postId]);
+
+        $incrementTotalLikes = $pdo->prepare('UPDATE Users SET total_likes = total_likes + 1 WHERE id = ?');
+        $incrementTotalLikes->execute([$postOwnerId]);
 
         if ($userId !== $postOwnerId) {
             $insertAward = $pdo->prepare('INSERT IGNORE INTO Post_Like_Exp_Awards (liker_user_id, post_id, post_owner_id) VALUES (?, ?, ?)');
@@ -765,11 +772,14 @@ function handleToggleCommentLike(PDO $pdo, int $userId): never
         jsonResponse(['success' => false, 'error' => 'Некорректный comment_id.'], 422);
     }
 
-    $commentStmt = $pdo->prepare('SELECT id FROM Comments WHERE id = ? AND is_deleted = 0 LIMIT 1');
+    $commentStmt = $pdo->prepare('SELECT id, user_id FROM Comments WHERE id = ? AND is_deleted = 0 LIMIT 1');
     $commentStmt->execute([$commentId]);
-    if ($commentStmt->fetchColumn() === false) {
+    $comment = $commentStmt->fetch(PDO::FETCH_ASSOC) ?: null;
+    if ($comment === null) {
         jsonResponse(['success' => false, 'error' => 'Комментарий не найден.'], 404);
     }
+
+    $commentOwnerId = (int) ($comment['user_id'] ?? 0);
 
     try {
         $pdo->beginTransaction();
@@ -782,10 +792,27 @@ function handleToggleCommentLike(PDO $pdo, int $userId): never
         if ($likeId !== false) {
             $deleteLike = $pdo->prepare('DELETE FROM Comment_Likes WHERE id = ?');
             $deleteLike->execute([(int) $likeId]);
+
+            $decrementTotalLikes = $pdo->prepare('UPDATE Users SET total_likes = GREATEST(total_likes - 1, 0) WHERE id = ?');
+            $decrementTotalLikes->execute([$commentOwnerId]);
+
             $liked = false;
         } else {
             $insertLike = $pdo->prepare('INSERT INTO Comment_Likes (user_id, comment_id) VALUES (?, ?)');
             $insertLike->execute([$userId, $commentId]);
+
+            $incrementTotalLikes = $pdo->prepare('UPDATE Users SET total_likes = total_likes + 1 WHERE id = ?');
+            $incrementTotalLikes->execute([$commentOwnerId]);
+
+            if ($userId !== $commentOwnerId) {
+                $insertAward = $pdo->prepare('INSERT IGNORE INTO Comment_Like_Exp_Awards (liker_user_id, comment_id, comment_owner_id) VALUES (?, ?, ?)');
+                $insertAward->execute([$userId, $commentId, $commentOwnerId]);
+
+                if ($insertAward->rowCount() > 0) {
+                    $addExp = $pdo->prepare('UPDATE Users SET exp = exp + 5 WHERE id = ?');
+                    $addExp->execute([$commentOwnerId]);
+                }
+            }
         }
 
         $countStmt = $pdo->prepare('SELECT COUNT(*) FROM Comment_Likes WHERE comment_id = ?');
@@ -902,6 +929,23 @@ function handleDeleteComment(PDO $pdo, int $userId): never
         }
 
         $placeholders = implode(',', array_fill(0, count($idsToDelete), '?'));
+
+        $decrementCommentOwnerLikes = $pdo->prepare("
+            UPDATE Users u
+            INNER JOIN (
+                SELECT c.user_id, COUNT(cl.id) AS likes_count
+                FROM Comments c
+                INNER JOIN Comment_Likes cl ON cl.comment_id = c.id
+                WHERE c.id IN ($placeholders)
+                GROUP BY c.user_id
+            ) liked_comments ON liked_comments.user_id = u.id
+            SET u.total_likes = GREATEST(u.total_likes - liked_comments.likes_count, 0)
+        ");
+        $decrementCommentOwnerLikes->execute($idsToDelete);
+
+        $deleteCommentLikeAwards = $pdo->prepare("DELETE FROM Comment_Like_Exp_Awards WHERE comment_id IN ($placeholders)");
+        $deleteCommentLikeAwards->execute($idsToDelete);
+
         $deleteLikes = $pdo->prepare("DELETE FROM Comment_Likes WHERE comment_id IN ($placeholders)");
         $deleteLikes->execute($idsToDelete);
         $deleteReports = $pdo->prepare("DELETE FROM Comment_Reports WHERE comment_id IN ($placeholders)");
@@ -1038,11 +1082,30 @@ function handleDeletePost(PDO $pdo, int $userId): never
     try {
         $pdo->beginTransaction();
 
+        $decrementPostOwnerLikes = $pdo->prepare('UPDATE Users u INNER JOIN Posts p ON p.user_id = u.id SET u.total_likes = GREATEST(u.total_likes - (SELECT COUNT(*) FROM Post_Likes pl WHERE pl.post_id = p.id), 0) WHERE p.id = ?');
+        $decrementPostOwnerLikes->execute([$postId]);
+
+        $decrementCommentOwnerLikes = $pdo->prepare('
+            UPDATE Users u
+            INNER JOIN (
+                SELECT c.user_id, COUNT(cl.id) AS likes_count
+                FROM Comments c
+                INNER JOIN Comment_Likes cl ON cl.comment_id = c.id
+                WHERE c.post_id = ?
+                GROUP BY c.user_id
+            ) liked_comments ON liked_comments.user_id = u.id
+            SET u.total_likes = GREATEST(u.total_likes - liked_comments.likes_count, 0)
+        ');
+        $decrementCommentOwnerLikes->execute([$postId]);
+
         $deleteCommentReports = $pdo->prepare('DELETE cr FROM Comment_Reports cr INNER JOIN Comments c ON c.id = cr.comment_id WHERE c.post_id = ?');
         $deleteCommentReports->execute([$postId]);
 
         $deleteCommentLikes = $pdo->prepare('DELETE cl FROM Comment_Likes cl INNER JOIN Comments c ON c.id = cl.comment_id WHERE c.post_id = ?');
         $deleteCommentLikes->execute([$postId]);
+
+        $deleteCommentLikeAwards = $pdo->prepare('DELETE cla FROM Comment_Like_Exp_Awards cla INNER JOIN Comments c ON c.id = cla.comment_id WHERE c.post_id = ?');
+        $deleteCommentLikeAwards->execute([$postId]);
 
         $unlinkCommentParents = $pdo->prepare('UPDATE Comments SET parent_comment_id = NULL WHERE post_id = ?');
         $unlinkCommentParents->execute([$postId]);
