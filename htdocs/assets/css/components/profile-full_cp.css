@@ -1,0 +1,8 @@
+/* =========================== Полная страница профиля ========================== */
+
+.profile-full {
+    height: 520px;
+    margin: 104px 44px 0;
+    background: #fff;
+    border-radius: 32px 32px 0 0;
+}
