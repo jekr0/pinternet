@@ -149,6 +149,7 @@ switch ($path) {
             'dropdown_profile.js',
             'dropdown_search.js',
             'post_modal.js',
+            'profile_full.js',
             'adaptive_text.js'
         ];
         break;
@@ -275,6 +276,7 @@ $APP_JS = [
     'post_modal.js',
     'post_card.js',
     'post_full.js',
+    'profile_full.js',
     'dropdown_collections.js',
     'collection_modul.js',
     'masonry_feed.js',

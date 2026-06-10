@@ -1,10 +1,6 @@
 /* =========================== Полная страница профиля ========================== */
 
 .profile-full {
-    display: grid;
-    grid-template-columns: repeat(7, minmax(0, 1fr));
-    column-gap: 12px;
-    align-items: start;
     height: 520px;
     margin: 104px 44px 0;
     padding: 52px 12px 0;
@@ -13,7 +9,16 @@
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
 }
 
+.profile-full__row {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    column-gap: 12px;
+    align-items: start;
+    height: 300px;
+}
+
 .profile-full__avatar {
+    position: relative;
     grid-column: 1;
     width: 100%;
     aspect-ratio: 1 / 1;
@@ -21,12 +26,24 @@
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    padding: 0;
-    border: none;
     border-radius: 24px;
     color: #333;
     background: rgb(200, 200, 255);
-    cursor: pointer;
+}
+
+.profile-full__avatar::after {
+    position: absolute;
+    inset: 0;
+    content: '';
+    border-radius: 24px;
+    background: rgba(0, 0, 0, 0.2);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.1s ease;
+}
+
+.profile-full__avatar:hover::after {
+    opacity: 1;
 }
 
 .profile-full__avatar-image {
@@ -51,9 +68,28 @@
     color: #333;
 }
 
-.profile-full__info-card {
+.profile-full__maximize {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    z-index: 2;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.1s ease, visibility 0.1s ease;
+}
+
+.profile-full__avatar:hover .profile-full__maximize,
+.profile-full__maximize:focus-visible {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.profile-full__info {
     grid-column: 2 / 5;
-    height: 248px;
+    align-self: stretch;
+    margin-bottom: 52px;
     border: 1px solid #bbb;
     border-radius: 24px;
     background: #fff;
