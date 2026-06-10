@@ -7,15 +7,17 @@ if (session_status() === PHP_SESSION_NONE) {
 
 $profileFullUser = null;
 $profileFullAvatarSrc = '';
+$profileFullUsername = '';
 $profileFullHasAvatar = false;
 
 if (!empty($_SESSION['user_id'])) {
     require_once __DIR__ . '/../../../src/config/database_conf.php';
 
-    $stmt = $pdo->prepare('SELECT avatar FROM Users WHERE id = ?');
+    $stmt = $pdo->prepare('SELECT username, avatar FROM Users WHERE id = ?');
     $stmt->execute([$_SESSION['user_id']]);
     $profileFullUser = $stmt->fetch();
     $profileFullAvatarSrc = (string) ($profileFullUser['avatar'] ?? '');
+    $profileFullUsername = (string) ($profileFullUser['username'] ?? '');
     $profileFullHasAvatar = $profileFullAvatarSrc !== '';
 }
 
@@ -49,7 +51,15 @@ $profileFullZoomSrc = $profileFullHasAvatar ? $profileFullAvatarSrc : '/assets/i
             </button>
         </div>
 
-        <div class="profile-full__info" aria-hidden="true"></div>
+        <div class="profile-full__info">
+            <div class="profile-full__info-top-row">
+                <div class="profile-full__nickname" data-component="adaptive-text" data-max-font="28">
+                    <?= $profileFullUsername !== '' ? '@' . htmlspecialchars($profileFullUsername, ENT_QUOTES, 'UTF-8') : '' ?>
+                </div>
+                <div class="profile-full__medals" aria-hidden="true"></div>
+            </div>
+            <div class="profile-full__about-title">о себе:</div>
+        </div>
         <div class="profile-full__level" aria-hidden="true"></div>
         <div class="profile-full__achievements" aria-hidden="true"></div>
     </div>

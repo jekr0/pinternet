@@ -402,10 +402,11 @@ document.addEventListener('htmx:afterSwap', (event) => {
     const target = event.detail?.target;
     if (!target || target.id !== 'app-main') return;
 
-    syncActiveModulesFromMain(target);
+    const currentMain = document.getElementById('app-main') || target;
+    syncActiveModulesFromMain(currentMain);
 
     App.initWithSvgPreload()
-        .then(() => App.initWithin(target))
+        .then(() => App.initWithin(currentMain))
         .finally(() => openUrlDrivenModalState());
 });
 
