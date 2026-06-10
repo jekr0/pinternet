@@ -124,9 +124,32 @@ switch ($path) {
         case '/profile-editing':
         $page = 'profile_pg.php';
         $pageTitle = 'Профиль';
-        $PHP = [];
-        $CSS = [];
-        $JS  = [];
+        $PHP = [
+            'header_lo.php',
+            'footer_lo.php'
+        ];
+        $CSS = [
+            'header_lo.css',
+            'blur_lo.css',
+            'dropdown-search_cp.css',
+            'profile-container_cp.css',
+            'dropdown-profile_cp.css',
+            'post-modal_cp.css',
+            'warn-modal_cp.css',
+            'toast-stack_cp.css',
+            'footer_lo.css'
+        ];
+        $JS  = [
+            'overlay_manager.js',
+            'modal_ctrl.js',
+            'warn_modal.js',
+            'toast_stack.js',
+            'profile_button.js',
+            'dropdown_profile.js',
+            'dropdown_search.js',
+            'post_modal.js',
+            'adaptive_text.js'
+        ];
         break;
 
         case '/auth/login':
@@ -315,7 +338,7 @@ if ($isHtmxRequest) {
     <?php endforeach; ?>
 </head>
 
-<body hx-boost="true" hx-target="#app-main" hx-swap="outerHTML">
+<body>
     <!-- Подключаем layout-файлы (шапка, подвал) -->
     <?php foreach ($PHP as $layout): ?>
         <?php include '../src/views/layouts/' . $layout; ?>

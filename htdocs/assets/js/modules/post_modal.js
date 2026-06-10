@@ -140,7 +140,11 @@ class CreatePostModalComponent {
         }
 
         if (fromHistory || currentUrl === nextUrl) return;
-        window.history.pushState({}, '', nextUrl);
+        if (App.history?.pushUrl) {
+            App.history.pushUrl(nextUrl);
+        } else {
+            window.history.pushState({}, '', nextUrl);
+        }
     }
 
     restoreNonModalUrl() {
@@ -148,7 +152,11 @@ class CreatePostModalComponent {
         const targetUrl = this.lastNonModalUrl || fallback;
         const currentUrl = window.location.pathname + window.location.search;
         if (currentUrl === targetUrl) return;
-        window.history.replaceState({}, '', targetUrl);
+        if (App.history?.replaceUrl) {
+            App.history.replaceUrl(targetUrl);
+        } else {
+            window.history.replaceState({}, '', targetUrl);
+        }
     }
 
     bindOpenHandlers() {

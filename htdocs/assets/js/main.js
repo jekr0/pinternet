@@ -200,6 +200,15 @@ const App = {
         getCurrentUrl: function () {
             return window.location.pathname + window.location.search;
         },
+        getState: function (url = this.getCurrentUrl()) {
+            return { app: true, url };
+        },
+        pushUrl: function (url) {
+            window.history.pushState(this.getState(url), '', url);
+        },
+        replaceUrl: function (url) {
+            window.history.replaceState(this.getState(url), '', url);
+        },
         getUrl: function (url = window.location.href) {
             try {
                 return new URL(url, window.location.origin);
@@ -222,12 +231,11 @@ const App = {
             return null;
         },
         getModalKeyFromPath: function (pathname = window.location.pathname) {
-            if (pathname === '/post/create') return 'post-modal';
-            if (pathname === '/collections-editing') return 'collection-modal';
-            return this.getModalKeyFromUrl(window.location.href);
+            const search = pathname === window.location.pathname ? window.location.search : '';
+            return this.getModalKeyFromUrl(`${pathname}${search}`);
         },
-        isModalPath: function (_pathname = window.location.pathname) {
-            return !!this.getModalKeyFromUrl(window.location.href);
+        isModalPath: function (pathname = window.location.pathname) {
+            return !!this.getModalKeyFromPath(pathname);
         },
         isModalUrl: function (url) {
             return !!this.getModalKeyFromUrl(url);
@@ -262,32 +270,87 @@ const App = {
     },
 
     nav: {
+        clientPaths: new Set([
+            '/',
+            '/post',
+            '/post/create',
+            '/collections-editing',
+            '/profile',
+            '/profile-editing'
+        ]),
+        getInternalUrl: function (url) {
+            try {
+                const parsedUrl = new URL(url, window.location.origin);
+                if (parsedUrl.origin !== window.location.origin) return null;
+                return parsedUrl.pathname + parsedUrl.search;
+            } catch (_error) {
+                return null;
+            }
+        },
+        canLoadInShell: function (url) {
+            const parsedUrl = App.history.getUrl(url);
+            return this.clientPaths.has(parsedUrl.pathname);
+        },
         navigate: function (url, options = {}) {
-            const { pushUrl = true, target = '#app-main', swap = 'outerHTML', replaceUrl = false } = options;
-            if (!url) return;
-
-            if (window.htmx) {
-                const nextUrl = String(url);
-                const currentUrl = window.location.pathname + window.location.search;
-                const swapTarget = typeof target === 'string' ? document.querySelector(target) : target;
-                if (!swapTarget) {
-                    window.location.href = nextUrl;
-                    return;
-                }
-
-                if (nextUrl !== currentUrl) {
-                    if (replaceUrl) {
-                        window.history.replaceState({}, '', nextUrl);
-                    } else if (pushUrl) {
-                        window.history.pushState({}, '', nextUrl);
-                    }
-                }
-
-                window.htmx.ajax('GET', nextUrl, { target: swapTarget, swap });
+            const { pushUrl = true, target = '#app-main', swap = 'outerHTML', replaceUrl = false, force = false } = options;
+            const nextUrl = this.getInternalUrl(url);
+            if (!nextUrl) {
+                window.location.href = url;
                 return;
             }
 
-            window.location.href = url;
+            if (!this.canLoadInShell(nextUrl)) {
+                window.location.href = nextUrl;
+                return;
+            }
+
+            if (!window.htmx) {
+                window.location.href = nextUrl;
+                return;
+            }
+
+            const currentUrl = App.history.getCurrentUrl();
+            const swapTarget = typeof target === 'string' ? document.querySelector(target) : target;
+            if (!swapTarget) {
+                window.location.href = nextUrl;
+                return;
+            }
+
+            if (nextUrl !== currentUrl) {
+                if (replaceUrl) {
+                    App.history.replaceUrl(nextUrl);
+                } else if (pushUrl) {
+                    App.history.pushUrl(nextUrl);
+                }
+            } else if (!force) {
+                openUrlDrivenModalState();
+                return;
+            }
+
+            window.htmx.ajax('GET', nextUrl, { target: swapTarget, swap });
+        },
+        handleLinkClick: function (event) {
+            const link = event.target?.closest?.('a[href]');
+            if (!link) return;
+            if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+            if (link.target && link.target !== '_self') return;
+            if (link.hasAttribute('download')) return;
+            if (link.dataset.nativeNavigation === 'true') return;
+
+            const href = link.getAttribute('href');
+            if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:')) return;
+
+            const nextUrl = this.getInternalUrl(href);
+            if (!nextUrl || !this.canLoadInShell(nextUrl)) return;
+
+            event.preventDefault();
+            event.stopPropagation();
+            this.navigate(nextUrl, { pushUrl: true });
+        },
+        bindLinkInterception: function () {
+            if (this.linkInterceptionBound) return;
+            this.linkInterceptionBound = true;
+            document.addEventListener('click', (event) => this.handleLinkClick(event), true);
         }
     },
 
@@ -314,24 +377,10 @@ function syncActiveModulesFromMain(target = document.getElementById('app-main'))
     }
 }
 
-function bindHeaderLogoNavigation() {
-    if (App.headerLogoNavigationBound) return;
-    App.headerLogoNavigationBound = true;
-
-    document.addEventListener('click', (event) => {
-        const link = event.target?.closest?.('.header__logo');
-        if (!link) return;
-        if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-
-        event.preventDefault();
-        event.stopPropagation();
-        App.nav.navigate(link.getAttribute('href') || '/', { pushUrl: true });
-    }, true);
-}
-
 // Инициализируем после полной загрузки DOM (все скрипты уже выполнены)
 document.addEventListener('DOMContentLoaded', () => {
-    bindHeaderLogoNavigation();
+    App.history.replaceUrl(App.history.getCurrentUrl());
+    App.nav.bindLinkInterception();
     App.initWithSvgPreload()
         .then(() => App.initWithin(document))
         .finally(() => {
@@ -360,28 +409,9 @@ document.addEventListener('htmx:afterSwap', (event) => {
         .finally(() => openUrlDrivenModalState());
 });
 
-// HTMX восстанавливает boosted-ссылки из собственного history cache и не всегда проходит
-// через обычный afterSwap-путь приложения, поэтому синхронизируем активные модули отдельно.
-document.addEventListener('htmx:historyRestore', () => {
-    window.setTimeout(() => {
-        const target = document.getElementById('app-main');
-        if (!target) return;
-
-        App.destroyWithin(target);
-        syncActiveModulesFromMain(target);
-        App.initWithSvgPreload()
-            .then(() => App.initWithin(target))
-            .finally(() => openUrlDrivenModalState());
-    }, 0);
-});
-
 let isDirtyHistoryPromptOpen = false;
 
-window.addEventListener('popstate', (event) => {
-    if (event.state?.htmx) {
-        return;
-    }
-
+window.addEventListener('popstate', () => {
     const postModalInstance = App.components['post_modal.js'];
     const collectionModalInstance = App.components['collection_modul.js'];
     const isPostModalOpen = !!(postModalInstance?.modal && !postModalInstance.modal.classList.contains('post-modal--hidden'));
@@ -393,7 +423,7 @@ window.addEventListener('popstate', (event) => {
     const isCollectionDirty = !!(isCollectionModalOpen && typeof collectionModalInstance.hasUnsavedChanges === 'function' && collectionModalInstance.hasUnsavedChanges());
 
     if ((isPostDirty || isCollectionDirty) && activeModalUrl) {
-        window.history.pushState({}, '', activeModalUrl);
+        App.history.pushUrl(activeModalUrl);
 
         if (isDirtyHistoryPromptOpen || App.overlay?.get?.('warn-modal')) {
             return;
@@ -436,21 +466,13 @@ window.addEventListener('popstate', (event) => {
         return;
     }
 
-    if (window.htmx) {
-        const swapTarget = document.getElementById('app-main');
-        if (swapTarget) {
-            window.htmx.ajax('GET', window.location.pathname + window.location.search, {
-                target: swapTarget,
-                swap: 'outerHTML'
-            });
-            return;
-        }
-
-        window.location.reload();
+    const currentUrl = App.history.getCurrentUrl();
+    if (App.nav.canLoadInShell(currentUrl)) {
+        App.nav.navigate(currentUrl, { pushUrl: false, force: true });
         return;
     }
 
-    openUrlDrivenModalState();
+    window.location.href = currentUrl;
 });
 
 
