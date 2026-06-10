@@ -48,7 +48,7 @@ class CreatePostModalComponent {
         this.closeResetTimer = null;
         this.confirmAction = null;
         this.closeBlockedTimer = null;
-        this.lastNonModalUrl = App.history?.isModalPath?.() ? '/' : window.location.pathname + window.location.search;
+        this.lastNonModalUrl = App.history?.isModalUrl?.(window.location.href) ? '/' : window.location.pathname + window.location.search;
         this.currentModalUrl = null;
         this.openTriggerClickHandler = null;
         this.openCreateEventHandler = null;
@@ -140,7 +140,11 @@ class CreatePostModalComponent {
         }
 
         if (fromHistory || currentUrl === nextUrl) return;
-        window.history.pushState({}, '', nextUrl);
+        if (App.history?.pushUrl) {
+            App.history.pushUrl(nextUrl);
+        } else {
+            window.history.pushState({}, '', nextUrl);
+        }
     }
 
     restoreNonModalUrl() {
@@ -148,7 +152,11 @@ class CreatePostModalComponent {
         const targetUrl = this.lastNonModalUrl || fallback;
         const currentUrl = window.location.pathname + window.location.search;
         if (currentUrl === targetUrl) return;
-        window.history.replaceState({}, '', targetUrl);
+        if (App.history?.replaceUrl) {
+            App.history.replaceUrl(targetUrl);
+        } else {
+            window.history.replaceState({}, '', targetUrl);
+        }
     }
 
     bindOpenHandlers() {
@@ -366,8 +374,7 @@ class CreatePostModalComponent {
             return;
         }
 
-        const pathname = window.location.pathname;
-        const isModalRoute = pathname === '/post/create' || /^\/post\/\d+\/edit$/.test(pathname);
+        const isModalRoute = App.history?.isModalUrl?.(window.location.href);
         if (isModalRoute && window.history.length > 1) {
             window.history.back();
             return;
@@ -405,7 +412,7 @@ class CreatePostModalComponent {
     async openEditMode(payload) {
         const modalPostId = Number(payload?.postId || 0);
         if (modalPostId > 0) {
-            this.setModalUrl(`/post/${modalPostId}/edit`, payload);
+            this.setModalUrl(App.history?.getPostEditUrl?.(modalPostId) || `/post?id=${encodeURIComponent(String(modalPostId))}/edit`, payload);
         }
         clearTimeout(this.closeResetTimer);
         this.resetForm();
@@ -763,7 +770,7 @@ class CreatePostModalComponent {
             cancelLabel,
             onConfirm: async () => {
                 if (action === 'unsaved-close') {
-                    const isModalRoute = App.history?.isModalPath?.();
+                    const isModalRoute = App.history?.isModalUrl?.(window.location.href);
                     if (isModalRoute && window.history.length > 1) {
                         this.close({ skipHistorySync: true });
                         App.history?.markNextPopAsModalOnly?.();

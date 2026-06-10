@@ -6,6 +6,20 @@ const App = {
     // Реестр зарегистрированных компонентов (ключ = имя файла модуля)
     registry: {},
 
+    // Модули, DOM которых живёт вне #app-main или предоставляет глобальные сервисы.
+    persistentModules: new Set([
+        'overlay_manager.js',
+        'modal_ctrl.js',
+        'warn_modal.js',
+        'toast_stack.js',
+        'profile_button.js',
+        'dropdown_profile.js',
+        'dropdown_search.js',
+        'post_modal.js',
+        'collection_modul.js',
+        'dropdown_collections.js'
+    ]),
+
     // Метод для регистрации компонента
     register: function (name, componentClass) {
         this.registry[name] = componentClass;
@@ -24,6 +38,13 @@ const App = {
             const ComponentClass = this.registry[moduleFile];
             if (ComponentClass) {
                 try {
+                    if (this.persistentModules.has(moduleFile) && this.components[moduleFile]) {
+                        if (typeof this.components[moduleFile].refresh === 'function') {
+                            this.components[moduleFile].refresh();
+                        }
+                        return;
+                    }
+
                     this.destroyComponent(moduleFile);
 
                     const instance = new ComponentClass();
@@ -61,8 +82,9 @@ const App = {
     },
 
     destroyWithin: function (_root) {
-        // На текущем этапе очищаем все компоненты перед swap контейнера.
-        this.destroyAllComponents();
+        Object.keys(this.components)
+            .filter((moduleFile) => !this.persistentModules.has(moduleFile))
+            .forEach((moduleFile) => this.destroyComponent(moduleFile));
     },
     initWithSvgPreload: async function () {
         const svgNodes = Array.from(document.querySelectorAll('[data-svg-src]'));
@@ -178,6 +200,15 @@ const App = {
         getCurrentUrl: function () {
             return window.location.pathname + window.location.search;
         },
+        getState: function (url = this.getCurrentUrl()) {
+            return { app: true, url };
+        },
+        pushUrl: function (url) {
+            window.history.pushState(this.getState(url), '', url);
+        },
+        replaceUrl: function (url) {
+            window.history.replaceState(this.getState(url), '', url);
+        },
         getUrl: function (url = window.location.href) {
             try {
                 return new URL(url, window.location.origin);
@@ -185,29 +216,48 @@ const App = {
                 return new URL(window.location.href);
             }
         },
-        getModalKeyFromPath: function (pathname = window.location.pathname) {
-            if (pathname === '/post/create' || /^\/post\/\d+\/edit$/.test(pathname)) return 'post-modal';
-            if (pathname === '/collections-editing') return 'collection-modal';
+        getPostEditIdFromUrl: function (url = window.location.href) {
+            const parsedUrl = this.getUrl(url);
+            if (parsedUrl.pathname !== '/post') return 0;
+            const match = String(parsedUrl.searchParams.get('id') || '').match(/^(\d+)\/edit$/);
+            if (!match) return 0;
+            const postId = Number(match[1] || 0);
+            return Number.isInteger(postId) && postId > 0 ? postId : 0;
+        },
+        getModalKeyFromUrl: function (url = window.location.href) {
+            const parsedUrl = this.getUrl(url);
+            if (parsedUrl.pathname === '/post/create' || this.getPostEditIdFromUrl(parsedUrl.href) > 0) return 'post-modal';
+            if (parsedUrl.pathname === '/collections-editing') return 'collection-modal';
             return null;
+        },
+        getModalKeyFromPath: function (pathname = window.location.pathname) {
+            const search = pathname === window.location.pathname ? window.location.search : '';
+            return this.getModalKeyFromUrl(`${pathname}${search}`);
         },
         isModalPath: function (pathname = window.location.pathname) {
             return !!this.getModalKeyFromPath(pathname);
         },
         isModalUrl: function (url) {
-            return this.isModalPath(this.getUrl(url).pathname);
+            return !!this.getModalKeyFromUrl(url);
         },
         getPostFullIdFromUrl: function (url = window.location.href) {
             const parsedUrl = this.getUrl(url);
             if (parsedUrl.pathname !== '/post') return 0;
-            const postId = Number(parsedUrl.searchParams.get('id') || 0);
+            const match = String(parsedUrl.searchParams.get('id') || '').match(/^(\d+)(?:\/edit)?$/);
+            if (!match) return 0;
+            const postId = Number(match[1] || 0);
             return Number.isInteger(postId) && postId > 0 ? postId : 0;
         },
         getPostFullUrl: function (postId) {
             const normalizedPostId = Number(postId || 0);
             return normalizedPostId > 0 ? `/post?id=${encodeURIComponent(String(normalizedPostId))}` : '/';
         },
+        getPostEditUrl: function (postId) {
+            const normalizedPostId = Number(postId || 0);
+            return normalizedPostId > 0 ? `/post?id=${encodeURIComponent(String(normalizedPostId))}/edit` : '/post/create';
+        },
         isPostFullUrl: function (url = window.location.href) {
-            return this.getPostFullIdFromUrl(url) > 0;
+            return this.getPostFullIdFromUrl(url) > 0 && this.getPostEditIdFromUrl(url) === 0;
         },
         markNextPopAsModalOnly: function () {
             this.skipNextModalOnlyPop = true;
@@ -220,32 +270,87 @@ const App = {
     },
 
     nav: {
+        clientPaths: new Set([
+            '/',
+            '/post',
+            '/post/create',
+            '/collections-editing',
+            '/profile',
+            '/profile-editing'
+        ]),
+        getInternalUrl: function (url) {
+            try {
+                const parsedUrl = new URL(url, window.location.origin);
+                if (parsedUrl.origin !== window.location.origin) return null;
+                return parsedUrl.pathname + parsedUrl.search;
+            } catch (_error) {
+                return null;
+            }
+        },
+        canLoadInShell: function (url) {
+            const parsedUrl = App.history.getUrl(url);
+            return this.clientPaths.has(parsedUrl.pathname);
+        },
         navigate: function (url, options = {}) {
-            const { pushUrl = true, target = '#app-main', swap = 'outerHTML', replaceUrl = false } = options;
-            if (!url) return;
-
-            if (window.htmx) {
-                const nextUrl = String(url);
-                const currentUrl = window.location.pathname + window.location.search;
-                const swapTarget = typeof target === 'string' ? document.querySelector(target) : target;
-                if (!swapTarget) {
-                    window.location.href = nextUrl;
-                    return;
-                }
-
-                if (nextUrl !== currentUrl) {
-                    if (replaceUrl) {
-                        window.history.replaceState({}, '', nextUrl);
-                    } else if (pushUrl) {
-                        window.history.pushState({}, '', nextUrl);
-                    }
-                }
-
-                window.htmx.ajax('GET', nextUrl, { target: swapTarget, swap });
+            const { pushUrl = true, target = '#app-main', swap = 'outerHTML', replaceUrl = false, force = false } = options;
+            const nextUrl = this.getInternalUrl(url);
+            if (!nextUrl) {
+                window.location.href = url;
                 return;
             }
 
-            window.location.href = url;
+            if (!this.canLoadInShell(nextUrl)) {
+                window.location.href = nextUrl;
+                return;
+            }
+
+            if (!window.htmx) {
+                window.location.href = nextUrl;
+                return;
+            }
+
+            const currentUrl = App.history.getCurrentUrl();
+            const swapTarget = typeof target === 'string' ? document.querySelector(target) : target;
+            if (!swapTarget) {
+                window.location.href = nextUrl;
+                return;
+            }
+
+            if (nextUrl !== currentUrl) {
+                if (replaceUrl) {
+                    App.history.replaceUrl(nextUrl);
+                } else if (pushUrl) {
+                    App.history.pushUrl(nextUrl);
+                }
+            } else if (!force) {
+                openUrlDrivenModalState();
+                return;
+            }
+
+            window.htmx.ajax('GET', nextUrl, { target: swapTarget, swap });
+        },
+        handleLinkClick: function (event) {
+            const link = event.target?.closest?.('a[href]');
+            if (!link) return;
+            if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+            if (link.target && link.target !== '_self') return;
+            if (link.hasAttribute('download')) return;
+            if (link.dataset.nativeNavigation === 'true') return;
+
+            const href = link.getAttribute('href');
+            if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:')) return;
+
+            const nextUrl = this.getInternalUrl(href);
+            if (!nextUrl || !this.canLoadInShell(nextUrl)) return;
+
+            event.preventDefault();
+            event.stopPropagation();
+            this.navigate(nextUrl, { pushUrl: true });
+        },
+        bindLinkInterception: function () {
+            if (this.linkInterceptionBound) return;
+            this.linkInterceptionBound = true;
+            document.addEventListener('click', (event) => this.handleLinkClick(event), true);
         }
     },
 
@@ -259,8 +364,23 @@ const App = {
     }
 };
 
+function syncActiveModulesFromMain(target = document.getElementById('app-main')) {
+    if (!target) return;
+
+    try {
+        const modulesJson = target.getAttribute('data-active-modules') || '[]';
+        const parsedModules = JSON.parse(modulesJson);
+        window.activeModules = Array.isArray(parsedModules) ? parsedModules : [];
+    } catch (error) {
+        console.warn('Failed to parse active modules from swapped fragment', error);
+        window.activeModules = [];
+    }
+}
+
 // Инициализируем после полной загрузки DOM (все скрипты уже выполнены)
 document.addEventListener('DOMContentLoaded', () => {
+    App.history.replaceUrl(App.history.getCurrentUrl());
+    App.nav.bindLinkInterception();
     App.initWithSvgPreload()
         .then(() => App.initWithin(document))
         .finally(() => {
@@ -282,14 +402,7 @@ document.addEventListener('htmx:afterSwap', (event) => {
     const target = event.detail?.target;
     if (!target || target.id !== 'app-main') return;
 
-    try {
-        const modulesJson = target.getAttribute('data-active-modules') || '[]';
-        const parsedModules = JSON.parse(modulesJson);
-        window.activeModules = Array.isArray(parsedModules) ? parsedModules : [];
-    } catch (error) {
-        console.warn('Failed to parse active modules from swapped fragment', error);
-        window.activeModules = [];
-    }
+    syncActiveModulesFromMain(target);
 
     App.initWithSvgPreload()
         .then(() => App.initWithin(target))
@@ -310,7 +423,7 @@ window.addEventListener('popstate', () => {
     const isCollectionDirty = !!(isCollectionModalOpen && typeof collectionModalInstance.hasUnsavedChanges === 'function' && collectionModalInstance.hasUnsavedChanges());
 
     if ((isPostDirty || isCollectionDirty) && activeModalUrl) {
-        window.history.pushState({}, '', activeModalUrl);
+        App.history.pushUrl(activeModalUrl);
 
         if (isDirtyHistoryPromptOpen || App.overlay?.get?.('warn-modal')) {
             return;
@@ -353,21 +466,13 @@ window.addEventListener('popstate', () => {
         return;
     }
 
-    if (window.htmx) {
-        const swapTarget = document.getElementById('app-main');
-        if (swapTarget) {
-            window.htmx.ajax('GET', window.location.pathname + window.location.search, {
-                target: swapTarget,
-                swap: 'outerHTML'
-            });
-            return;
-        }
-
-        window.location.reload();
+    const currentUrl = App.history.getCurrentUrl();
+    if (App.nav.canLoadInShell(currentUrl)) {
+        App.nav.navigate(currentUrl, { pushUrl: false, force: true });
         return;
     }
 
-    openUrlDrivenModalState();
+    window.location.href = currentUrl;
 });
 
 
@@ -376,8 +481,9 @@ function openUrlDrivenModalState() {
     const postModalInstance = App.components['post_modal.js'];
     const collectionModalInstance = App.components['collection_modul.js'];
 
+    const postEditId = App.history?.getPostEditIdFromUrl?.() || 0;
     const isPostCreate = pathname === '/post/create';
-    const isPostEdit = /^\/post\/(\d+)\/edit$/.test(pathname);
+    const isPostEdit = postEditId > 0;
     const isCollectionsEditing = pathname === '/collections-editing';
 
     if ((isPostCreate || isPostEdit) && collectionModalInstance?.root && !collectionModalInstance.root.classList.contains('collection-modal--hidden')) {
@@ -411,9 +517,8 @@ function openUrlDrivenModalState() {
         return;
     }
 
-    const postEditMatch = pathname.match(/^\/post\/(\d+)\/edit$/);
-    if (postEditMatch) {
-        const postId = Number(postEditMatch[1] || 0);
+    if (postEditId > 0) {
+        const postId = postEditId;
         const postFull = document.querySelector('.post-full');
         const description = postFull?.querySelector('.post-full__description-text')?.textContent?.trim() || '';
         const imageSrc = postFull?.dataset.postImageSrc || postFull?.querySelector('.post-full__image')?.getAttribute('src') || '';

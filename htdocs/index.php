@@ -60,23 +60,24 @@ if (preg_match('#^/post/(\d+)$#', $path, $matches)) {
     $redirectToCanonical('/post?id=' . urlencode((string) $matches[1]));
 }
 
+if (preg_match('#^/post/(\d+)/edit$#', $path, $matches)) {
+    $redirectToCanonical('/post?id=' . urlencode((string) $matches[1]) . '/edit');
+}
+
 // Этап 2 (partial rendering): определяем HTMX-запросы для возврата фрагментов.
 $isHtmxRequest = isset($_SERVER['HTTP_HX_REQUEST']) && $_SERVER['HTTP_HX_REQUEST'] === 'true';
 
 // Определяем, какая страница нужна
 $selectedPostId = 0;
-if ($path === '/post' && isset($_GET['id']) && ctype_digit((string) $_GET['id'])) {
-    $selectedPostId = (int) $_GET['id'];
-} elseif (preg_match('#^/post/(\d+)/edit$#', $path, $matches)) {
+$postIdQueryValue = isset($_GET['id']) ? (string) $_GET['id'] : '';
+if ($path === '/post' && preg_match('#^(\d+)(?:/edit)?$#', $postIdQueryValue, $matches)) {
     $selectedPostId = (int) $matches[1];
-    $path = '/post/:id/edit';
 }
 
 switch ($path) {
     case '':
     case '/':
     case '/post':
-    case '/post/:id/edit':
     case '/post/create':
     case '/collections-editing':
         $page = 'home_pg.php';
@@ -123,9 +124,32 @@ switch ($path) {
         case '/profile-editing':
         $page = 'profile_pg.php';
         $pageTitle = 'Профиль';
-        $PHP = [];
-        $CSS = [];
-        $JS  = [];
+        $PHP = [
+            'header_lo.php',
+            'footer_lo.php'
+        ];
+        $CSS = [
+            'header_lo.css',
+            'blur_lo.css',
+            'dropdown-search_cp.css',
+            'profile-container_cp.css',
+            'dropdown-profile_cp.css',
+            'post-modal_cp.css',
+            'warn-modal_cp.css',
+            'toast-stack_cp.css',
+            'footer_lo.css'
+        ];
+        $JS  = [
+            'overlay_manager.js',
+            'modal_ctrl.js',
+            'warn_modal.js',
+            'toast_stack.js',
+            'profile_button.js',
+            'dropdown_profile.js',
+            'dropdown_search.js',
+            'post_modal.js',
+            'adaptive_text.js'
+        ];
         break;
 
         case '/auth/login':
@@ -221,6 +245,45 @@ switch ($path) {
         break;
 }
 
+$APP_CSS = [
+    'header_lo.css',
+    'blur_lo.css',
+    'dropdown-search_cp.css',
+    'profile-container_cp.css',
+    'dropdown-profile_cp.css',
+    'post-modal_cp.css',
+    'post-card_cp.css',
+    'post-full_cp.css',
+    'dropdown-collections_cp.css',
+    'collection-modul_cp.css',
+    'warn-modal_cp.css',
+    'toast-stack_cp.css',
+    'home_pg.css',
+    'footer_lo.css',
+    'auth_pg.css'
+];
+$APP_JS = [
+    'overlay_manager.js',
+    'modal_ctrl.js',
+    'warn_modal.js',
+    'toast_stack.js',
+    'profile_button.js',
+    'dropdown_profile.js',
+    'dropdown_search.js',
+    'post_modal.js',
+    'post_card.js',
+    'post_full.js',
+    'dropdown_collections.js',
+    'collection_modul.js',
+    'masonry_feed.js',
+    'adaptive_text.js',
+    'password_toggle.js',
+    'auth_form_guard.js',
+    'auto-god.js'
+];
+$CSS_TO_LOAD = array_values(array_unique(array_merge($APP_CSS, $CSS)));
+$JS_TO_LOAD = array_values(array_unique(array_merge($APP_JS, $JS)));
+
 // Начинаем вывод HTML
 if ($isHtmxRequest) {
     ?>
@@ -243,7 +306,7 @@ if ($isHtmxRequest) {
 
     <?php
     // Подключаем CSS-файлы из подпапок layouts/ и components/
-    foreach ($CSS as $cssFile):
+    foreach ($CSS_TO_LOAD as $cssFile):
         // Определяем подпапку по суффиксу файла
         if (str_ends_with($cssFile, '_lo.css')) {
             $subfolder = 'layouts';
@@ -270,12 +333,12 @@ if ($isHtmxRequest) {
     <script src="/assets/js/main.js" defer></script>
 
     <!-- Модули (регистрируются в App.registry) -->
-    <?php foreach ($JS as $jsFile): ?>
+    <?php foreach ($JS_TO_LOAD as $jsFile): ?>
         <script src="/assets/js/modules/<?php echo $jsFile; ?>" defer></script>
     <?php endforeach; ?>
 </head>
 
-<body hx-boost="true" hx-target="#app-main" hx-swap="outerHTML">
+<body>
     <!-- Подключаем layout-файлы (шапка, подвал) -->
     <?php foreach ($PHP as $layout): ?>
         <?php include '../src/views/layouts/' . $layout; ?>
