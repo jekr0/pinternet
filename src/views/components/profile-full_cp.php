@@ -6,6 +6,8 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 $profileFullUser = null;
+$profileFullViewerId = (int) ($_SESSION['user_id'] ?? 0);
+$profileFullUserId = 0;
 $profileFullAvatarSrc = '';
 $profileFullUsername = '';
 $profileFullBio = '';
@@ -13,23 +15,45 @@ $profileFullSubscriptionsCount = 0;
 $profileFullSubscribersCount = 0;
 $profileFullTotalLikes = 0;
 $profileFullHasAvatar = false;
+$profileFullActionState = 'default';
 
-if (!empty($_SESSION['user_id'])) {
+$profileFullRequestedUsername = trim(ltrim((string) ($_GET['username'] ?? ''), '@'));
+
+if ($profileFullViewerId > 0 || $profileFullRequestedUsername !== '') {
     require_once __DIR__ . '/../../../src/config/database_conf.php';
 
-    $stmt = $pdo->prepare('
-        SELECT u.username,
-               u.avatar,
-               u.bio,
-               u.total_likes,
-               (SELECT COUNT(*) FROM Follows f WHERE f.follower_id = u.id) AS subscriptions_count,
-               (SELECT COUNT(*) FROM Follows f WHERE f.following_id = u.id) AS subscribers_count
-        FROM Users u
-        WHERE u.id = ?
-        LIMIT 1
-    ');
-    $stmt->execute([$_SESSION['user_id']]);
+    if ($profileFullRequestedUsername !== '') {
+        $stmt = $pdo->prepare('
+            SELECT u.id,
+                   u.username,
+                   u.avatar,
+                   u.bio,
+                   u.total_likes,
+                   (SELECT COUNT(*) FROM Follows f WHERE f.follower_id = u.id) AS subscriptions_count,
+                   (SELECT COUNT(*) FROM Follows f WHERE f.following_id = u.id) AS subscribers_count
+            FROM Users u
+            WHERE u.username = ? AND u.is_deleted = 0
+            LIMIT 1
+        ');
+        $stmt->execute([$profileFullRequestedUsername]);
+    } else {
+        $stmt = $pdo->prepare('
+            SELECT u.id,
+                   u.username,
+                   u.avatar,
+                   u.bio,
+                   u.total_likes,
+                   (SELECT COUNT(*) FROM Follows f WHERE f.follower_id = u.id) AS subscriptions_count,
+                   (SELECT COUNT(*) FROM Follows f WHERE f.following_id = u.id) AS subscribers_count
+            FROM Users u
+            WHERE u.id = ? AND u.is_deleted = 0
+            LIMIT 1
+        ');
+        $stmt->execute([$profileFullViewerId]);
+    }
+
     $profileFullUser = $stmt->fetch();
+    $profileFullUserId = (int) ($profileFullUser['id'] ?? 0);
     $profileFullAvatarSrc = (string) ($profileFullUser['avatar'] ?? '');
     $profileFullUsername = (string) ($profileFullUser['username'] ?? '');
     $profileFullBio = trim((string) ($profileFullUser['bio'] ?? ''));
@@ -37,6 +61,28 @@ if (!empty($_SESSION['user_id'])) {
     $profileFullSubscribersCount = (int) ($profileFullUser['subscribers_count'] ?? 0);
     $profileFullTotalLikes = (int) ($profileFullUser['total_likes'] ?? 0);
     $profileFullHasAvatar = $profileFullAvatarSrc !== '';
+
+    if ($profileFullViewerId > 0 && $profileFullUserId > 0) {
+        if ($profileFullViewerId === $profileFullUserId) {
+            $profileFullActionState = 'yourself';
+        } else {
+            $followStmt = $pdo->prepare('
+                SELECT
+                    EXISTS(SELECT 1 FROM Follows WHERE follower_id = ? AND following_id = ?) AS viewer_follows,
+                    EXISTS(SELECT 1 FROM Follows WHERE follower_id = ? AND following_id = ?) AS target_follows
+            ');
+            $followStmt->execute([$profileFullViewerId, $profileFullUserId, $profileFullUserId, $profileFullViewerId]);
+            $followState = $followStmt->fetch();
+            $viewerFollows = !empty($followState['viewer_follows']);
+            $targetFollows = !empty($followState['target_follows']);
+
+            if ($viewerFollows && $targetFollows) {
+                $profileFullActionState = 'friends';
+            } elseif ($viewerFollows) {
+                $profileFullActionState = 'subscribed';
+            }
+        }
+    }
 }
 
 $profileFullZoomSrc = $profileFullHasAvatar ? $profileFullAvatarSrc : '/assets/images/icons/planet.svg';
@@ -76,11 +122,6 @@ $profileFullZoomSrc = $profileFullHasAvatar ? $profileFullAvatarSrc : '/assets/i
                 </div>
                 <div class="profile-full__medals" aria-hidden="true"></div>
             </div>
-            <div class="profile-full__line profile-full__line--about" aria-hidden="true">
-                <span class="profile-full__line-part"></span>
-                <span class="profile-full__line-label">о себе</span>
-                <span class="profile-full__line-part"></span>
-            </div>
             <div class="profile-full__about<?= $profileFullBio === '' ? ' profile-full__about--empty' : ''; ?>">
                 <?= htmlspecialchars($profileFullBio !== '' ? $profileFullBio : 'Описание пользователя отстутствует', ENT_QUOTES, 'UTF-8') ?>
             </div>
@@ -91,15 +132,13 @@ $profileFullZoomSrc = $profileFullHasAvatar ? $profileFullAvatarSrc : '/assets/i
                 <div class="profile-full__stat">Собрано лайков: <?= $profileFullTotalLikes ?></div>
             </div>
         </div>
-        <div class="profile-full__actions" aria-label="Действия с пользователем">
-            <button class="profile-full__button profile-full__button--subscribe" type="button" data-action="profile-subscribe">Подписаться</button>
-            <button class="profile-full__icon-button profile-full__icon-button--bell" type="button" data-action="profile-bell" aria-label="Уведомления" aria-pressed="false">
-                <span class="profile-full__meta-icon" data-icon="bell" data-svg-src="/assets/images/icons/bell.svg" aria-hidden="true"></span>
-            </button>
-            <button class="profile-full__icon-button profile-full__icon-button--report" type="button" data-action="profile-report" aria-label="Пожаловаться">
-                <span class="profile-full__meta-icon" data-icon="report" data-svg-src="/assets/images/icons/L-warning.svg" aria-hidden="true"></span>
-            </button>
-        </div>
+        <div
+            class="profile-full__actions"
+            aria-label="Действия с пользователем"
+            data-action-state="<?= htmlspecialchars($profileFullActionState, ENT_QUOTES, 'UTF-8') ?>"
+            data-profile-user-id="<?= $profileFullUserId ?>"
+            data-profile-username="<?= htmlspecialchars($profileFullUsername, ENT_QUOTES, 'UTF-8') ?>"
+        ></div>
         <div class="profile-full__level" aria-hidden="true"></div>
         <div class="profile-full__achievements" aria-hidden="true"></div>
     </div>

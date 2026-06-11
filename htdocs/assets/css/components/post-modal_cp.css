@@ -746,8 +746,8 @@
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 40px;
-    height: 40px;
+    width: 52px;
+    height: 52px;
     display: none;
     align-items: center;
     justify-content: center;
@@ -763,8 +763,8 @@
 
 .post-modal__upload-lock-icon,
 .post-modal__upload-lock-icon svg {
-    width: 36px;
-    height: 36px;
+    width: 52px;
+    height: 52px;
 }
 
 .post-modal__file-input {

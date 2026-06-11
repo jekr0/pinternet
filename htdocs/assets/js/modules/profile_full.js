@@ -4,6 +4,7 @@ class ProfileFullComponent {
     constructor() {
         this.root = null;
         this.avatar = null;
+        this.actions = null;
         this.zoomOverlay = null;
         this.zoomImage = null;
         this.zoomScale = 1;
@@ -28,12 +29,14 @@ class ProfileFullComponent {
         if (!this.root) return;
 
         this.avatar = this.root.querySelector('[data-profile-full-avatar]');
+        this.actions = this.root.querySelector('.profile-full__actions');
+        this.renderActionLine();
         this.initSvgIcons();
         this.bindActions();
     }
 
-    initSvgIcons() {
-        this.root.querySelectorAll('[data-svg-src]').forEach((node) => {
+    initSvgIcons(scope = this.root) {
+        scope.querySelectorAll('[data-svg-src]').forEach((node) => {
             const src = node.getAttribute('data-svg-src');
             if (src) {
                 App.utils.loadSVG(src, node);
@@ -53,6 +56,12 @@ class ProfileFullComponent {
                 return;
             }
 
+            if (action === 'profile-subscribe') {
+                event.preventDefault();
+                this.subscribeToProfile();
+                return;
+            }
+
             if (action === 'profile-bell') {
                 event.preventDefault();
                 this.toggleBellButton(button);
@@ -60,6 +69,110 @@ class ProfileFullComponent {
         };
 
         this.root.addEventListener('click', this.clickHandler);
+    }
+
+    renderActionLine(state = null) {
+        if (!this.actions) return;
+
+        const nextState = state || this.actions.dataset.actionState || 'default';
+        this.actions.dataset.actionState = nextState;
+
+        const templates = {
+            default: `
+                <button class="profile-full__button profile-full__button--subscribe" type="button" data-action="profile-subscribe">Подписаться</button>
+                <button class="profile-full__icon-button profile-full__icon-button--report" type="button" data-action="profile-report" aria-label="Пожаловаться">
+                    <span class="profile-full__meta-icon" data-icon="report" data-svg-src="/assets/images/icons/L-flag.svg" aria-hidden="true"></span>
+                </button>
+            `,
+            yourself: `
+                <button class="profile-full__button profile-full__button--subscribe" type="button" data-action="profile-subscribe">Подписаться</button>
+                <button class="profile-full__icon-button profile-full__icon-button--edit" type="button" data-action="profile-edit" aria-label="Редактировать профиль">
+                    <span class="profile-full__meta-icon" data-icon="edit" data-svg-src="/assets/images/icons/L-edit.svg" aria-hidden="true"></span>
+                </button>
+            `,
+            subscribed: `
+                <button class="profile-full__button profile-full__button--unsubscribe" type="button" data-action="profile-unsubscribe">Отписаться</button>
+                <button class="profile-full__icon-button profile-full__icon-button--bell" type="button" data-action="profile-bell" aria-label="Уведомления" aria-pressed="false">
+                    <span class="profile-full__meta-icon" data-icon="bell" data-svg-src="/assets/images/icons/bell.svg" aria-hidden="true"></span>
+                </button>
+                <button class="profile-full__icon-button profile-full__icon-button--report" type="button" data-action="profile-report" aria-label="Пожаловаться">
+                    <span class="profile-full__meta-icon" data-icon="report" data-svg-src="/assets/images/icons/L-flag.svg" aria-hidden="true"></span>
+                </button>
+            `,
+            friends: `
+                <button class="profile-full__button profile-full__button--message" type="button" data-action="profile-message">Сообщение</button>
+                <button class="profile-full__button profile-full__button--unsubscribe" type="button" data-action="profile-unsubscribe">Отписаться</button>
+                <button class="profile-full__icon-button profile-full__icon-button--bell" type="button" data-action="profile-bell" aria-label="Уведомления" aria-pressed="false">
+                    <span class="profile-full__meta-icon" data-icon="bell" data-svg-src="/assets/images/icons/bell.svg" aria-hidden="true"></span>
+                </button>
+                <button class="profile-full__icon-button profile-full__icon-button--report" type="button" data-action="profile-report" aria-label="Пожаловаться">
+                    <span class="profile-full__meta-icon" data-icon="report" data-svg-src="/assets/images/icons/L-flag.svg" aria-hidden="true"></span>
+                </button>
+            `
+        };
+
+        this.actions.innerHTML = templates[nextState] || templates.default;
+        this.initSvgIcons(this.actions);
+    }
+
+    async subscribeToProfile() {
+        if (!this.actions) return;
+
+        const userId = Number(this.actions.dataset.profileUserId || 0);
+        const username = String(this.actions.dataset.profileUsername || '').trim();
+        if (!userId) return;
+
+        const button = this.actions.querySelector('[data-action="profile-subscribe"]');
+        if (button) button.disabled = true;
+
+        try {
+            const response = await fetch('/profile/follow', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                    'Accept': 'application/json'
+                },
+                body: new URLSearchParams({ user_id: String(userId) }).toString()
+            });
+            const payload = await response.json();
+
+            if (!response.ok || !payload.success) {
+                throw new Error(payload.error || 'Не удалось подписаться.');
+            }
+
+            const nextState = payload.state === 'friends' ? 'friends' : 'subscribed';
+            this.renderActionLine(nextState);
+            this.showSubscribeToast(username || payload.username || '', nextState);
+        } catch (error) {
+            document.dispatchEvent(new CustomEvent('app:toast', {
+                detail: { message: error?.message || 'Ошибка при подписке.' }
+            }));
+        } finally {
+            if (button) button.disabled = false;
+        }
+    }
+
+    showSubscribeToast(username, state) {
+        const normalizedUsername = String(username || '').replace(/^@/, '');
+        const nickname = normalizedUsername ? `@${normalizedUsername}` : '@user';
+        const prefix = state === 'friends' ? 'Теперь вы с ' : 'Вы подписались на ';
+        const suffix = state === 'friends' ? ' друзья' : '';
+
+        document.dispatchEvent(new CustomEvent('app:toast', {
+            detail: {
+                html: `${this.escapeHtml(prefix)}<span class="toast-stack__accent">${this.escapeHtml(nickname)}</span>${this.escapeHtml(suffix)}`
+            }
+        }));
+    }
+
+    escapeHtml(value) {
+        return String(value).replace(/[&<>'"]/g, (char) => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            "'": '&#39;',
+            '"': '&quot;'
+        }[char]));
     }
 
     toggleBellButton(button) {

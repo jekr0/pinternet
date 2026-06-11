@@ -193,6 +193,10 @@ switch ($path) {
         require_once '../src/controllers/search_ctrl.php';
         exit;
 
+        case '/profile/follow':
+        require_once '../src/controllers/profile_ctrl.php';
+        exit;
+
         case '/posts/create':
         case '/posts/update':
         case '/posts/delete':

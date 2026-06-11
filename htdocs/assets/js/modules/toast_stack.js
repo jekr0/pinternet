@@ -10,9 +10,10 @@ class ToastStackComponent {
         this.ensureContainer();
 
         document.addEventListener('app:toast', (event) => {
+            const html = String(event.detail?.html || '').trim();
             const message = String(event.detail?.message || '').trim();
-            if (!message) return;
-            this.show(message);
+            if (!message && !html) return;
+            this.show(message, { html });
         });
     }
 
@@ -26,7 +27,7 @@ class ToastStackComponent {
         document.body.appendChild(this.container);
     }
 
-    show(message) {
+    show(message, options = {}) {
         this.ensureContainer();
 
         while (this.container.children.length >= this.maxToasts) {
@@ -37,7 +38,11 @@ class ToastStackComponent {
 
         const item = document.createElement('div');
         item.className = 'toast-stack__item toast-stack__item--hidden';
-        item.textContent = message;
+        if (options.html) {
+            item.innerHTML = options.html;
+        } else {
+            item.textContent = message;
+        }
 
         this.container.appendChild(item);
 
