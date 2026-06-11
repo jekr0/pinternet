@@ -233,7 +233,10 @@
     grid-column: span 2;
 }
 
-.profile-full__actions[data-action-state="default"] > .profile-full__button--subscribe,
+.profile-full__actions[data-action-state="default"] > .profile-full__button--subscribe {
+    grid-column: span 2;
+}
+
 .profile-full__actions[data-action-state="yourself"] > .profile-full__button--subscribe {
     grid-column: span 3;
 }
@@ -247,7 +250,7 @@
 .profile-full__button--subscribe:disabled,
 .profile-full__button--subscribe:disabled:hover {
     background: #efefef;
-    color: #bbb;
+    color: #fff;
     cursor: not-allowed;
 }
 

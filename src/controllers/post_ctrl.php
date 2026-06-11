@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . '/../config/database_conf.php';
+require_once __DIR__ . '/../config/level_helper.php';
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -349,8 +350,7 @@ function handleToggleLike(PDO $pdo, int $userId): never
             $insertAward->execute([$userId, $postId, $postOwnerId]);
 
             if ($insertAward->rowCount() > 0) {
-                $addExp = $pdo->prepare('UPDATE Users SET exp = exp + 5 WHERE id = ?');
-                $addExp->execute([$postOwnerId]);
+                addExpWithoutTransaction($pdo, $postOwnerId, POST_LIKE_EXP_AMOUNT);
             }
         }
 
@@ -809,8 +809,7 @@ function handleToggleCommentLike(PDO $pdo, int $userId): never
                 $insertAward->execute([$userId, $commentId, $commentOwnerId]);
 
                 if ($insertAward->rowCount() > 0) {
-                    $addExp = $pdo->prepare('UPDATE Users SET exp = exp + 5 WHERE id = ?');
-                    $addExp->execute([$commentOwnerId]);
+                    addExpWithoutTransaction($pdo, $commentOwnerId, COMMENT_LIKE_EXP_AMOUNT);
                 }
             }
         }
