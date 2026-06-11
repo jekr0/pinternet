@@ -188,7 +188,10 @@ class CreatePostModalComponent {
     openCreateMode(options = {}) {
         clearTimeout(this.closeResetTimer);
         this.setModalUrl('/post/create', options);
-        this.resetForm();
+        const shouldPreserveState = Boolean(options?.preserveState || (options?.fromHistory && !this.isEditMode && this.hasUnsavedChanges()));
+        if (!shouldPreserveState) {
+            this.resetForm();
+        }
         this.applyCreateModeUI();
         if (App.modalCtrl) {
             App.modalCtrl.open('post-modal');
@@ -415,9 +418,12 @@ class CreatePostModalComponent {
             this.setModalUrl(App.history?.getPostEditUrl?.(modalPostId) || `/post?id=${encodeURIComponent(String(modalPostId))}/edit`, payload);
         }
         clearTimeout(this.closeResetTimer);
-        this.resetForm();
-        this.applyEditModeUI(Number(payload.postId || 0));
-        this.fillEditData(payload);
+        const shouldPreserveState = Boolean(payload?.preserveState || (payload?.fromHistory && this.isEditMode && this.editPostId === modalPostId && this.hasUnsavedChanges()));
+        if (!shouldPreserveState) {
+            this.resetForm();
+            this.applyEditModeUI(Number(payload.postId || 0));
+            this.fillEditData(payload);
+        }
 
         if (App.modalCtrl) {
             App.modalCtrl.open('post-modal');
@@ -427,8 +433,10 @@ class CreatePostModalComponent {
             await this.open();
         }
 
-        await this.preloadEditCollections(payload.postId);
-        this.captureEditSnapshot();
+        if (!shouldPreserveState) {
+            await this.preloadEditCollections(payload.postId);
+            this.captureEditSnapshot();
+        }
     }
 
     applyCreateModeUI() {

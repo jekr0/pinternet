@@ -32,3 +32,7 @@
     opacity: 0;
     transform: translateY(6px);
 }
+
+.toast-stack__accent {
+    color: rgb(100, 100, 200);
+}
