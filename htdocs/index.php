@@ -134,6 +134,7 @@ switch ($path) {
             'dropdown-search_cp.css',
             'profile-container_cp.css',
             'dropdown-profile_cp.css',
+            'profile-full_cp.css',
             'post-modal_cp.css',
             'warn-modal_cp.css',
             'toast-stack_cp.css',
@@ -148,6 +149,7 @@ switch ($path) {
             'dropdown_profile.js',
             'dropdown_search.js',
             'post_modal.js',
+            'profile_full.js',
             'adaptive_text.js'
         ];
         break;
@@ -251,6 +253,7 @@ $APP_CSS = [
     'dropdown-search_cp.css',
     'profile-container_cp.css',
     'dropdown-profile_cp.css',
+    'profile-full_cp.css',
     'post-modal_cp.css',
     'post-card_cp.css',
     'post-full_cp.css',
@@ -273,6 +276,7 @@ $APP_JS = [
     'post_modal.js',
     'post_card.js',
     'post_full.js',
+    'profile_full.js',
     'dropdown_collections.js',
     'collection_modul.js',
     'masonry_feed.js',

@@ -1,5 +1,1 @@
-<?php
-    // ЗАГЛУШКА
-?>
-<h1>Профиль</h1>
-<p>Страница в разработке</p>
+<?php include '../src/views/components/profile-full_cp.php'; ?>
