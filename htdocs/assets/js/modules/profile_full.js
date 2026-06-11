@@ -62,6 +62,18 @@ class ProfileFullComponent {
                 return;
             }
 
+            if (action === 'profile-unsubscribe') {
+                event.preventDefault();
+                this.unsubscribeFromProfile();
+                return;
+            }
+
+            if (action === 'profile-report') {
+                event.preventDefault();
+                this.openReportOverlay(button);
+                return;
+            }
+
             if (action === 'profile-bell') {
                 event.preventDefault();
                 this.toggleBellButton(button);
@@ -85,7 +97,7 @@ class ProfileFullComponent {
                 </button>
             `,
             yourself: `
-                <button class="profile-full__button profile-full__button--subscribe" type="button" data-action="profile-subscribe">Подписаться</button>
+                <button class="profile-full__button profile-full__button--subscribe profile-full__button--self-subscribe" type="button" disabled aria-disabled="true">Подписаться</button>
                 <button class="profile-full__icon-button profile-full__icon-button--edit" type="button" data-action="profile-edit" aria-label="Редактировать профиль">
                     <span class="profile-full__meta-icon" data-icon="edit" data-svg-src="/assets/images/icons/L-edit.svg" aria-hidden="true"></span>
                 </button>
@@ -101,13 +113,15 @@ class ProfileFullComponent {
             `,
             friends: `
                 <button class="profile-full__button profile-full__button--message" type="button" data-action="profile-message">Сообщение</button>
-                <button class="profile-full__button profile-full__button--unsubscribe" type="button" data-action="profile-unsubscribe">Отписаться</button>
-                <button class="profile-full__icon-button profile-full__icon-button--bell" type="button" data-action="profile-bell" aria-label="Уведомления" aria-pressed="false">
-                    <span class="profile-full__meta-icon" data-icon="bell" data-svg-src="/assets/images/icons/bell.svg" aria-hidden="true"></span>
-                </button>
-                <button class="profile-full__icon-button profile-full__icon-button--report" type="button" data-action="profile-report" aria-label="Пожаловаться">
-                    <span class="profile-full__meta-icon" data-icon="report" data-svg-src="/assets/images/icons/L-flag.svg" aria-hidden="true"></span>
-                </button>
+                <div class="profile-full__friends-actions">
+                    <button class="profile-full__button profile-full__button--unsubscribe" type="button" data-action="profile-unsubscribe">Отписаться</button>
+                    <button class="profile-full__icon-button profile-full__icon-button--bell" type="button" data-action="profile-bell" aria-label="Уведомления" aria-pressed="false">
+                        <span class="profile-full__meta-icon" data-icon="bell" data-svg-src="/assets/images/icons/bell.svg" aria-hidden="true"></span>
+                    </button>
+                    <button class="profile-full__icon-button profile-full__icon-button--report" type="button" data-action="profile-report" aria-label="Пожаловаться">
+                        <span class="profile-full__meta-icon" data-icon="report" data-svg-src="/assets/images/icons/L-flag.svg" aria-hidden="true"></span>
+                    </button>
+                </div>
             `
         };
 
@@ -149,6 +163,106 @@ class ProfileFullComponent {
             }));
         } finally {
             if (button) button.disabled = false;
+        }
+    }
+
+    async unsubscribeFromProfile() {
+        if (!this.actions) return;
+
+        const userId = Number(this.actions.dataset.profileUserId || 0);
+        const username = String(this.actions.dataset.profileUsername || '').trim();
+        if (!userId) return;
+
+        const button = this.actions.querySelector('[data-action="profile-unsubscribe"]');
+        if (button) button.disabled = true;
+
+        try {
+            const response = await fetch('/profile/unfollow', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                    'Accept': 'application/json'
+                },
+                body: new URLSearchParams({ user_id: String(userId) }).toString()
+            });
+            const payload = await response.json();
+
+            if (!response.ok || !payload.success) {
+                throw new Error(payload.error || 'Не удалось отписаться.');
+            }
+
+            this.renderActionLine('default');
+            this.showUnsubscribeToast(username || payload.username || '');
+        } catch (error) {
+            document.dispatchEvent(new CustomEvent('app:toast', {
+                detail: { message: error?.message || 'Ошибка при отписке.' }
+            }));
+        } finally {
+            if (button) button.disabled = false;
+        }
+    }
+
+    showUnsubscribeToast(username) {
+        const normalizedUsername = String(username || '').replace(/^@/, '');
+        const nickname = normalizedUsername ? `@${normalizedUsername}` : '@user';
+
+        document.dispatchEvent(new CustomEvent('app:toast', {
+            detail: {
+                html: `${this.escapeHtml('Вы отписались от ')}<span class="toast-stack__accent">${this.escapeHtml(nickname)}</span>`
+            }
+        }));
+    }
+
+    openReportOverlay(reportButton) {
+        if (!this.actions) return;
+
+        App.warn?.open({
+            title: 'Подать жалобу на пользователя?',
+            description: 'После отправки жалобы профиль будет проверен модерацией на несоответствие правилам площадки.',
+            confirmLabel: 'Пожаловаться',
+            cancelLabel: 'Назад',
+            onConfirm: async () => {
+                await this.submitProfileReport(reportButton);
+            }
+        });
+    }
+
+    async submitProfileReport(reportButton) {
+        if (!this.actions) return;
+
+        const userId = Number(this.actions.dataset.profileUserId || 0);
+        if (!userId || !reportButton) return;
+
+        reportButton.disabled = true;
+
+        try {
+            const response = await fetch('/profile/report', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                    'Accept': 'application/json'
+                },
+                body: new URLSearchParams({ user_id: String(userId) }).toString()
+            });
+            const payload = await response.json();
+
+            if (!response.ok || !payload.success) {
+                document.dispatchEvent(new CustomEvent('app:toast', {
+                    detail: { message: payload?.error || 'Не удалось отправить жалобу.' }
+                }));
+                return;
+            }
+
+            document.dispatchEvent(new CustomEvent('app:toast', {
+                detail: { message: payload.already_reported ? 'Жалоба на рассмотрении' : 'Жалоба отправлена' }
+            }));
+        } catch (error) {
+            console.warn('Unable to report profile from profile-full', error);
+            document.dispatchEvent(new CustomEvent('app:toast', {
+                detail: { message: 'Не удалось отправить жалобу.' }
+            }));
+        } finally {
+            reportButton.disabled = false;
         }
     }
 
