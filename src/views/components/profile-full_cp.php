@@ -76,15 +76,29 @@ $profileFullZoomSrc = $profileFullHasAvatar ? $profileFullAvatarSrc : '/assets/i
                 </div>
                 <div class="profile-full__medals" aria-hidden="true"></div>
             </div>
+            <div class="profile-full__line profile-full__line--about" aria-hidden="true">
+                <span class="profile-full__line-part"></span>
+                <span class="profile-full__line-label">о себе</span>
+                <span class="profile-full__line-part"></span>
+            </div>
             <div class="profile-full__about<?= $profileFullBio === '' ? ' profile-full__about--empty' : ''; ?>">
                 <?= htmlspecialchars($profileFullBio !== '' ? $profileFullBio : 'Описание пользователя отстутствует', ENT_QUOTES, 'UTF-8') ?>
             </div>
-            <div class="profile-full__divider" aria-hidden="true"></div>
+            <div class="profile-full__line profile-full__line--stats" aria-hidden="true"></div>
             <div class="profile-full__stats-row">
                 <div class="profile-full__stat">Подписки: <?= $profileFullSubscriptionsCount ?></div>
                 <div class="profile-full__stat">Подписчики: <?= $profileFullSubscribersCount ?></div>
                 <div class="profile-full__stat">Собрано лайков: <?= $profileFullTotalLikes ?></div>
             </div>
+        </div>
+        <div class="profile-full__actions" aria-label="Действия с пользователем">
+            <button class="profile-full__button profile-full__button--subscribe" type="button" data-action="profile-subscribe">Подписаться</button>
+            <button class="profile-full__icon-button profile-full__icon-button--bell" type="button" data-action="profile-bell" aria-label="Уведомления" aria-pressed="false">
+                <span class="profile-full__meta-icon" data-icon="bell" data-svg-src="/assets/images/icons/bell.svg" aria-hidden="true"></span>
+            </button>
+            <button class="profile-full__icon-button profile-full__icon-button--report" type="button" data-action="profile-report" aria-label="Пожаловаться">
+                <span class="profile-full__meta-icon" data-icon="report" data-svg-src="/assets/images/icons/L-warning.svg" aria-hidden="true"></span>
+            </button>
         </div>
         <div class="profile-full__level" aria-hidden="true"></div>
         <div class="profile-full__achievements" aria-hidden="true"></div>

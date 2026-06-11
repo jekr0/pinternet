@@ -43,14 +43,37 @@ class ProfileFullComponent {
 
     bindActions() {
         this.clickHandler = (event) => {
-            const button = event.target.closest('[data-action="maximize-avatar"]');
-            if (!button || button.disabled) return;
+            const button = event.target.closest('[data-action]');
+            if (!button || button.disabled || !this.root.contains(button)) return;
 
-            event.preventDefault();
-            this.openZoomOverlay();
+            const action = button.dataset.action;
+            if (action === 'maximize-avatar') {
+                event.preventDefault();
+                this.openZoomOverlay();
+                return;
+            }
+
+            if (action === 'profile-bell') {
+                event.preventDefault();
+                this.toggleBellButton(button);
+            }
         };
 
         this.root.addEventListener('click', this.clickHandler);
+    }
+
+    toggleBellButton(button) {
+        const isActive = !button.classList.contains('is-active');
+        const icon = button.querySelector('[data-icon="bell"]');
+        const nextIcon = isActive ? '/assets/images/icons/bell-fill.svg' : '/assets/images/icons/bell.svg';
+
+        button.classList.toggle('is-active', isActive);
+        button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+
+        if (icon) {
+            icon.setAttribute('data-svg-src', nextIcon);
+            App.utils.loadSVG(nextIcon, icon);
+        }
     }
 
     openZoomOverlay() {
