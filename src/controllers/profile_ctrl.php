@@ -6,6 +6,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 require_once __DIR__ . '/../config/database_conf.php';
+require_once __DIR__ . '/../config/level_helper.php';
 
 function profileJsonResponse(array $payload, int $statusCode = 200): never
 {
@@ -57,12 +58,34 @@ function handleProfileFollow(PDO $pdo, int $viewerId, int $targetUserId): never
 
     $targetUser = findProfileTargetUser($pdo, $targetUserId);
 
-    $insertStmt = $pdo->prepare('INSERT IGNORE INTO Follows (follower_id, following_id) VALUES (?, ?)');
-    $insertStmt->execute([$viewerId, $targetUserId]);
+    try {
+        $pdo->beginTransaction();
 
-    $mutualStmt = $pdo->prepare('SELECT 1 FROM Follows WHERE follower_id = ? AND following_id = ? LIMIT 1');
-    $mutualStmt->execute([$targetUserId, $viewerId]);
-    $isMutual = $mutualStmt->fetchColumn() !== false;
+        $insertStmt = $pdo->prepare('INSERT IGNORE INTO Follows (follower_id, following_id) VALUES (?, ?)');
+        $insertStmt->execute([$viewerId, $targetUserId]);
+        $isFirstFollow = $insertStmt->rowCount() > 0;
+
+        if ($isFirstFollow) {
+            $insertAward = $pdo->prepare('INSERT IGNORE INTO User_Subscribe_Exp_Awards (subscriber_id, subscribed_user_id) VALUES (?, ?)');
+            $insertAward->execute([$viewerId, $targetUserId]);
+
+            if ($insertAward->rowCount() > 0) {
+                addExpWithoutTransaction($pdo, $targetUserId, SUBSCRIBE_EXP_AMOUNT);
+            }
+        }
+
+        $mutualStmt = $pdo->prepare('SELECT 1 FROM Follows WHERE follower_id = ? AND following_id = ? LIMIT 1');
+        $mutualStmt->execute([$targetUserId, $viewerId]);
+        $isMutual = $mutualStmt->fetchColumn() !== false;
+
+        $pdo->commit();
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        error_log('Profile follow error: ' . $e->getMessage());
+        profileJsonResponse(['success' => false, 'error' => 'Не удалось подписаться.'], 500);
+    }
 
     profileJsonResponse([
         'success' => true,
@@ -109,6 +132,53 @@ function handleProfileReport(PDO $pdo, int $viewerId, int $targetUserId): never
     profileJsonResponse(['success' => true, 'already_reported' => $alreadyReported]);
 }
 
+function handleProfileNotifications(PDO $pdo, int $viewerId, int $targetUserId): never
+{
+    if ($targetUserId === $viewerId) {
+        profileJsonResponse(['success' => false, 'error' => 'Нельзя включить уведомления для себя.'], 400);
+    }
+
+    findProfileTargetUser($pdo, $targetUserId);
+
+    $enabled = filter_var($_POST['enabled'] ?? false, FILTER_VALIDATE_BOOLEAN);
+    $updateStmt = $pdo->prepare('UPDATE Follows SET notifications_switch = ? WHERE follower_id = ? AND following_id = ?');
+    $updateStmt->execute([$enabled ? 1 : 0, $viewerId, $targetUserId]);
+
+    if ($updateStmt->rowCount() === 0) {
+        $existsStmt = $pdo->prepare('SELECT 1 FROM Follows WHERE follower_id = ? AND following_id = ? LIMIT 1');
+        $existsStmt->execute([$viewerId, $targetUserId]);
+        if ($existsStmt->fetchColumn() === false) {
+            profileJsonResponse(['success' => false, 'error' => 'Сначала подпишитесь на пользователя.'], 409);
+        }
+    }
+
+    profileJsonResponse(['success' => true, 'enabled' => $enabled]);
+}
+
+function handleProfileBlock(PDO $pdo, int $viewerId, int $targetUserId): never
+{
+    if ($targetUserId === $viewerId) {
+        profileJsonResponse(['success' => false, 'error' => 'Нельзя заблокировать себя.'], 400);
+    }
+
+    $targetUser = findProfileTargetUser($pdo, $targetUserId);
+    $blocked = filter_var($_POST['blocked'] ?? false, FILTER_VALIDATE_BOOLEAN);
+
+    if ($blocked) {
+        $stmt = $pdo->prepare('INSERT IGNORE INTO Blocks (blocker_user_id, blocked_user_id) VALUES (?, ?)');
+        $stmt->execute([$viewerId, $targetUserId]);
+    } else {
+        $stmt = $pdo->prepare('DELETE FROM Blocks WHERE blocker_user_id = ? AND blocked_user_id = ?');
+        $stmt->execute([$viewerId, $targetUserId]);
+    }
+
+    profileJsonResponse([
+        'success' => true,
+        'blocked' => $blocked,
+        'username' => (string) ($targetUser['username'] ?? ''),
+    ]);
+}
+
 $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
 requireProfilePostMethod();
 $viewerId = requireProfileViewerId();
@@ -118,5 +188,7 @@ match ($path) {
     '/profile/follow' => handleProfileFollow($pdo, $viewerId, $targetUserId),
     '/profile/unfollow' => handleProfileUnfollow($pdo, $viewerId, $targetUserId),
     '/profile/report' => handleProfileReport($pdo, $viewerId, $targetUserId),
+    '/profile/notifications' => handleProfileNotifications($pdo, $viewerId, $targetUserId),
+    '/profile/block' => handleProfileBlock($pdo, $viewerId, $targetUserId),
     default => profileJsonResponse(['success' => false, 'error' => 'Маршрут не найден.'], 404),
 };

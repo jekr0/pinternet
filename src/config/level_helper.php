@@ -1,4 +1,8 @@
 <?php
+const POST_LIKE_EXP_AMOUNT = 50;
+const COMMENT_LIKE_EXP_AMOUNT = 25;
+const SUBSCRIBE_EXP_AMOUNT = 100;
+
 const LEVEL_THRESHOLDS = [
     1 => 100,
     2 => 105,
@@ -51,29 +55,32 @@ function getExpProgress(int $exp, int $level): array
     ];
 }
 
-// Начисляем exp пользователю и синхронизируем сессию
-function addExp(PDO $pdo, int $userId, int $amount): void
+function addExpWithoutTransaction(PDO $pdo, int $userId, int $amount): void
 {
-    require_once __DIR__ . '/../config/level_helper.php';
-
-    $pdo->beginTransaction();
+    if ($amount <= 0) return;
 
     $stmt = $pdo->prepare('UPDATE Users SET exp = exp + ? WHERE id = ?');
     $stmt->execute([$amount, $userId]);
 
     $stmt = $pdo->prepare('SELECT exp FROM Users WHERE id = ?');
     $stmt->execute([$userId]);
-    $newExp   = (int) $stmt->fetchColumn();
+    $newExp = (int) $stmt->fetchColumn();
     $newLevel = calcLevel($newExp);
 
     $stmt = $pdo->prepare('UPDATE Users SET level = ? WHERE id = ?');
     $stmt->execute([$newLevel, $userId]);
 
-    $pdo->commit();
-
     // Обновляем сессию если это текущий пользователь
-    if (isset($_SESSION['user_id']) && $_SESSION['user_id'] === $userId) {
-        $_SESSION['exp']   = $newExp;
+    if (isset($_SESSION['user_id']) && (int) $_SESSION['user_id'] === $userId) {
+        $_SESSION['exp'] = $newExp;
         $_SESSION['level'] = $newLevel;
     }
+}
+
+// Начисляем exp пользователю и синхронизируем сессию
+function addExp(PDO $pdo, int $userId, int $amount): void
+{
+    $pdo->beginTransaction();
+    addExpWithoutTransaction($pdo, $userId, $amount);
+    $pdo->commit();
 }

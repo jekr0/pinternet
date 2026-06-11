@@ -76,7 +76,13 @@ class ProfileFullComponent {
 
             if (action === 'profile-bell') {
                 event.preventDefault();
-                this.toggleBellButton(button);
+                void this.toggleBellButton(button);
+                return;
+            }
+
+            if (action === 'profile-block') {
+                event.preventDefault();
+                void this.toggleBlockButton(button);
             }
         };
 
@@ -89,9 +95,21 @@ class ProfileFullComponent {
         const nextState = state || this.actions.dataset.actionState || 'default';
         this.actions.dataset.actionState = nextState;
 
+        const notificationsEnabled = this.actions.dataset.notificationsEnabled === 'true';
+        const profileBlocked = this.actions.dataset.profileBlocked === 'true';
+        const bellIcon = notificationsEnabled ? '/assets/images/icons/bell-fill.svg' : '/assets/images/icons/bell.svg';
+        const blockIcon = profileBlocked ? '/assets/images/icons/block-fill.svg' : '/assets/images/icons/block.svg';
+        const bellActiveClass = notificationsEnabled ? ' is-active' : '';
+        const blockActiveClass = profileBlocked ? ' is-active' : '';
+        const bellPressed = notificationsEnabled ? 'true' : 'false';
+        const blockPressed = profileBlocked ? 'true' : 'false';
+
         const templates = {
             default: `
                 <button class="profile-full__button profile-full__button--subscribe" type="button" data-action="profile-subscribe">Подписаться</button>
+                <button class="profile-full__icon-button profile-full__icon-button--block${blockActiveClass}" type="button" data-action="profile-block" aria-label="Заблокировать пользователя" aria-pressed="${blockPressed}">
+                    <span class="profile-full__meta-icon" data-icon="block" data-svg-src="${blockIcon}" aria-hidden="true"></span>
+                </button>
                 <button class="profile-full__icon-button profile-full__icon-button--report" type="button" data-action="profile-report" aria-label="Пожаловаться">
                     <span class="profile-full__meta-icon" data-icon="report" data-svg-src="/assets/images/icons/L-flag.svg" aria-hidden="true"></span>
                 </button>
@@ -104,8 +122,8 @@ class ProfileFullComponent {
             `,
             subscribed: `
                 <button class="profile-full__button profile-full__button--unsubscribe" type="button" data-action="profile-unsubscribe">Отписаться</button>
-                <button class="profile-full__icon-button profile-full__icon-button--bell" type="button" data-action="profile-bell" aria-label="Уведомления" aria-pressed="false">
-                    <span class="profile-full__meta-icon" data-icon="bell" data-svg-src="/assets/images/icons/bell.svg" aria-hidden="true"></span>
+                <button class="profile-full__icon-button profile-full__icon-button--bell${bellActiveClass}" type="button" data-action="profile-bell" aria-label="Уведомления" aria-pressed="${bellPressed}">
+                    <span class="profile-full__meta-icon" data-icon="bell" data-svg-src="${bellIcon}" aria-hidden="true"></span>
                 </button>
                 <button class="profile-full__icon-button profile-full__icon-button--report" type="button" data-action="profile-report" aria-label="Пожаловаться">
                     <span class="profile-full__meta-icon" data-icon="report" data-svg-src="/assets/images/icons/L-flag.svg" aria-hidden="true"></span>
@@ -115,8 +133,8 @@ class ProfileFullComponent {
                 <button class="profile-full__button profile-full__button--message" type="button" data-action="profile-message">Сообщение</button>
                 <div class="profile-full__friends-actions">
                     <button class="profile-full__button profile-full__button--unsubscribe" type="button" data-action="profile-unsubscribe">Отписаться</button>
-                    <button class="profile-full__icon-button profile-full__icon-button--bell" type="button" data-action="profile-bell" aria-label="Уведомления" aria-pressed="false">
-                        <span class="profile-full__meta-icon" data-icon="bell" data-svg-src="/assets/images/icons/bell.svg" aria-hidden="true"></span>
+                    <button class="profile-full__icon-button profile-full__icon-button--bell${bellActiveClass}" type="button" data-action="profile-bell" aria-label="Уведомления" aria-pressed="${bellPressed}">
+                        <span class="profile-full__meta-icon" data-icon="bell" data-svg-src="${bellIcon}" aria-hidden="true"></span>
                     </button>
                     <button class="profile-full__icon-button profile-full__icon-button--report" type="button" data-action="profile-report" aria-label="Пожаловаться">
                         <span class="profile-full__meta-icon" data-icon="report" data-svg-src="/assets/images/icons/L-flag.svg" aria-hidden="true"></span>
@@ -191,6 +209,7 @@ class ProfileFullComponent {
                 throw new Error(payload.error || 'Не удалось отписаться.');
             }
 
+            this.actions.dataset.notificationsEnabled = 'false';
             this.renderActionLine('default');
             this.showUnsubscribeToast(username || payload.username || '');
         } catch (error) {
@@ -289,10 +308,83 @@ class ProfileFullComponent {
         }[char]));
     }
 
-    toggleBellButton(button) {
+    async toggleBellButton(button) {
+        if (!this.actions) return;
+
         const isActive = !button.classList.contains('is-active');
-        const icon = button.querySelector('[data-icon="bell"]');
-        const nextIcon = isActive ? '/assets/images/icons/bell-fill.svg' : '/assets/images/icons/bell.svg';
+        const userId = Number(this.actions.dataset.profileUserId || 0);
+        if (!userId) return;
+
+        button.disabled = true;
+        try {
+            const response = await fetch('/profile/notifications', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                    'Accept': 'application/json'
+                },
+                body: new URLSearchParams({
+                    user_id: String(userId),
+                    enabled: isActive ? 'true' : 'false'
+                }).toString()
+            });
+            const payload = await response.json();
+            if (!response.ok || !payload.success) {
+                throw new Error(payload.error || 'Не удалось обновить уведомления.');
+            }
+
+            this.actions.dataset.notificationsEnabled = payload.enabled ? 'true' : 'false';
+            this.syncIconToggle(button, 'bell', payload.enabled, '/assets/images/icons/bell.svg', '/assets/images/icons/bell-fill.svg');
+        } catch (error) {
+            document.dispatchEvent(new CustomEvent('app:toast', {
+                detail: { message: error?.message || 'Ошибка при обновлении уведомлений.' }
+            }));
+        } finally {
+            button.disabled = false;
+        }
+    }
+
+    async toggleBlockButton(button) {
+        if (!this.actions) return;
+
+        const isActive = !button.classList.contains('is-active');
+        const userId = Number(this.actions.dataset.profileUserId || 0);
+        const username = String(this.actions.dataset.profileUsername || '').trim();
+        if (!userId) return;
+
+        button.disabled = true;
+        try {
+            const response = await fetch('/profile/block', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                    'Accept': 'application/json'
+                },
+                body: new URLSearchParams({
+                    user_id: String(userId),
+                    blocked: isActive ? 'true' : 'false'
+                }).toString()
+            });
+            const payload = await response.json();
+            if (!response.ok || !payload.success) {
+                throw new Error(payload.error || 'Не удалось обновить блокировку.');
+            }
+
+            this.actions.dataset.profileBlocked = payload.blocked ? 'true' : 'false';
+            this.syncIconToggle(button, 'block', payload.blocked, '/assets/images/icons/block.svg', '/assets/images/icons/block-fill.svg');
+            this.showBlockToast(username || payload.username || '', payload.blocked);
+        } catch (error) {
+            document.dispatchEvent(new CustomEvent('app:toast', {
+                detail: { message: error?.message || 'Ошибка при обновлении блокировки.' }
+            }));
+        } finally {
+            button.disabled = false;
+        }
+    }
+
+    syncIconToggle(button, iconName, isActive, inactiveIcon, activeIcon) {
+        const icon = button.querySelector(`[data-icon="${iconName}"]`);
+        const nextIcon = isActive ? activeIcon : inactiveIcon;
 
         button.classList.toggle('is-active', isActive);
         button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
@@ -301,6 +393,18 @@ class ProfileFullComponent {
             icon.setAttribute('data-svg-src', nextIcon);
             App.utils.loadSVG(nextIcon, icon);
         }
+    }
+
+    showBlockToast(username, isBlocked) {
+        const normalizedUsername = String(username || '').replace(/^@/, '');
+        const nickname = normalizedUsername ? `@${normalizedUsername}` : '@user';
+        const prefix = isBlocked ? 'Вы заблокировали ' : 'Вы разблокировали ';
+
+        document.dispatchEvent(new CustomEvent('app:toast', {
+            detail: {
+                html: `${this.escapeHtml(prefix)}<span class="toast-stack__accent">${this.escapeHtml(nickname)}</span>`
+            }
+        }));
     }
 
     openZoomOverlay() {

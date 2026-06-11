@@ -196,6 +196,8 @@ switch ($path) {
         case '/profile/follow':
         case '/profile/unfollow':
         case '/profile/report':
+        case '/profile/notifications':
+        case '/profile/block':
         require_once '../src/controllers/profile_ctrl.php';
         exit;
 

@@ -20,6 +20,7 @@ CREATE TABLE Users (
     is_banned     TINYINT(1) NOT NULL DEFAULT 0,
     is_deleted    TINYINT(1) NOT NULL DEFAULT 0,
     timeout_until DATETIME DEFAULT NULL,
+    username_changed_at DATETIME DEFAULT NULL,
     created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -228,15 +229,56 @@ CREATE TABLE Comment_Reports (
 -- ---------------------------------------------------------------------
 
 CREATE TABLE Follows (
-    id           INT AUTO_INCREMENT PRIMARY KEY,
-    follower_id  INT NOT NULL,
-    following_id INT NOT NULL,
+    id                   INT AUTO_INCREMENT PRIMARY KEY,
+    follower_id          INT NOT NULL,
+    following_id         INT NOT NULL,
+    notifications_switch TINYINT(1) NOT NULL DEFAULT 0,
 
     UNIQUE KEY uq_follow (follower_id, following_id),
     CHECK (follower_id != following_id),
 
     FOREIGN KEY (follower_id) REFERENCES Users(id) ON DELETE CASCADE,
     FOREIGN KEY (following_id) REFERENCES Users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE User_Subscribe_Exp_Awards (
+    id                INT AUTO_INCREMENT PRIMARY KEY,
+    subscriber_id     INT NOT NULL,
+    subscribed_user_id INT NOT NULL,
+    created_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    UNIQUE KEY uq_subscribe_exp_award (subscriber_id, subscribed_user_id),
+
+    FOREIGN KEY (subscriber_id) REFERENCES Users(id) ON DELETE CASCADE,
+    FOREIGN KEY (subscribed_user_id) REFERENCES Users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE Blocks (
+    id              INT AUTO_INCREMENT PRIMARY KEY,
+    blocker_user_id INT NOT NULL,
+    blocked_user_id INT NOT NULL,
+    created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    UNIQUE KEY uq_block (blocker_user_id, blocked_user_id),
+    CHECK (blocker_user_id != blocked_user_id),
+
+    FOREIGN KEY (blocker_user_id) REFERENCES Users(id) ON DELETE CASCADE,
+    FOREIGN KEY (blocked_user_id) REFERENCES Users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE messages (
+    id           INT AUTO_INCREMENT PRIMARY KEY,
+    from_user_id INT NOT NULL,
+    to_user_id   INT NOT NULL,
+    message      TEXT NOT NULL,
+    is_read      BOOLEAN DEFAULT FALSE,
+    created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    INDEX (from_user_id, to_user_id),
+    INDEX (to_user_id, is_read),
+
+    FOREIGN KEY (from_user_id) REFERENCES Users(id) ON DELETE CASCADE,
+    FOREIGN KEY (to_user_id) REFERENCES Users(id) ON DELETE CASCADE
 );
 
 -- ---------------------------------------------------------------------

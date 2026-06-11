@@ -16,6 +16,8 @@ $profileFullSubscribersCount = 0;
 $profileFullTotalLikes = 0;
 $profileFullHasAvatar = false;
 $profileFullActionState = 'default';
+$profileFullNotificationsEnabled = false;
+$profileFullBlocked = false;
 
 $profileFullRequestedUsername = trim(ltrim((string) ($_GET['username'] ?? ''), '@'));
 
@@ -69,12 +71,25 @@ if ($profileFullViewerId > 0 || $profileFullRequestedUsername !== '') {
             $followStmt = $pdo->prepare('
                 SELECT
                     EXISTS(SELECT 1 FROM Follows WHERE follower_id = ? AND following_id = ?) AS viewer_follows,
-                    EXISTS(SELECT 1 FROM Follows WHERE follower_id = ? AND following_id = ?) AS target_follows
+                    EXISTS(SELECT 1 FROM Follows WHERE follower_id = ? AND following_id = ?) AS target_follows,
+                    COALESCE((SELECT notifications_switch FROM Follows WHERE follower_id = ? AND following_id = ? LIMIT 1), 0) AS notifications_switch,
+                    EXISTS(SELECT 1 FROM Blocks WHERE blocker_user_id = ? AND blocked_user_id = ?) AS viewer_blocks
             ');
-            $followStmt->execute([$profileFullViewerId, $profileFullUserId, $profileFullUserId, $profileFullViewerId]);
+            $followStmt->execute([
+                $profileFullViewerId,
+                $profileFullUserId,
+                $profileFullUserId,
+                $profileFullViewerId,
+                $profileFullViewerId,
+                $profileFullUserId,
+                $profileFullViewerId,
+                $profileFullUserId,
+            ]);
             $followState = $followStmt->fetch();
             $viewerFollows = !empty($followState['viewer_follows']);
             $targetFollows = !empty($followState['target_follows']);
+            $profileFullNotificationsEnabled = !empty($followState['notifications_switch']);
+            $profileFullBlocked = !empty($followState['viewer_blocks']);
 
             if ($viewerFollows && $targetFollows) {
                 $profileFullActionState = 'friends';
@@ -138,6 +153,8 @@ $profileFullZoomSrc = $profileFullHasAvatar ? $profileFullAvatarSrc : '/assets/i
             data-action-state="<?= htmlspecialchars($profileFullActionState, ENT_QUOTES, 'UTF-8') ?>"
             data-profile-user-id="<?= $profileFullUserId ?>"
             data-profile-username="<?= htmlspecialchars($profileFullUsername, ENT_QUOTES, 'UTF-8') ?>"
+            data-notifications-enabled="<?= $profileFullNotificationsEnabled ? 'true' : 'false' ?>"
+            data-profile-blocked="<?= $profileFullBlocked ? 'true' : 'false' ?>"
         ></div>
         <div class="profile-full__level" aria-hidden="true"></div>
         <div class="profile-full__achievements" aria-hidden="true"></div>
