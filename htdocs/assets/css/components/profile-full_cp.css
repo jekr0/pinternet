@@ -112,13 +112,13 @@
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: 16px;
-    height: 40px;
+    height: 52px;
 }
 
 .profile-full__nickname,
 .profile-full__medals {
     min-width: 0;
-    height: 40px;
+    height: 52px;
 }
 
 .profile-full__nickname {
@@ -127,26 +127,14 @@
     overflow: hidden;
     white-space: nowrap;
     font-family: 'SF_def', Arial, sans-serif;
-    font-size: 28px;
+    padding-left: 12px;
+    font-size: 40px;
     line-height: 1;
     color: #333;
 }
 
-.profile-full__about-title {
-    height: 16px;
-    display: flex;
-    align-items: center;
-    overflow: hidden;
-    margin-top: 8px;
-    padding-left: 16px;
-    font-family: 'NS_def', Arial, sans-serif;
-    font-size: 16px;
-    line-height: 1;
-    color: #bbb;
-}
-
 .profile-full__about {
-    height: 100px;
+    height: 108px;
     overflow: hidden;
     margin-top: 8px;
     font-family: 'NS_def', Arial, sans-serif;
@@ -155,12 +143,19 @@
     color: #bbb;
 }
 
+.profile-full__about--empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
 .profile-full__divider {
     width: 100%;
     min-height: 14px;
     display: flex;
     align-items: center;
-    margin-top: 7px;
+    margin-top: 0;
 }
 
 .profile-full__divider::before {
@@ -175,12 +170,13 @@
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 12px;
-    height: 36px;
+    height: 28px;
+    margin-top: 4px;
 }
 
 .profile-full__stat {
     min-width: 0;
-    height: 36px;
+    height: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -188,9 +184,11 @@
     white-space: nowrap;
     text-align: center;
     font-family: 'SF_def', Arial, sans-serif;
-    font-size: 20px;
+    font-size: 16px;
     line-height: 1;
     color: #bbb;
+    user-select: none;
+    -webkit-user-select: none;
 }
 
 .profile-full__level {

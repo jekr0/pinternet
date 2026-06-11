@@ -71,13 +71,12 @@ $profileFullZoomSrc = $profileFullHasAvatar ? $profileFullAvatarSrc : '/assets/i
 
         <div class="profile-full__info">
             <div class="profile-full__info-top-row">
-                <div class="profile-full__nickname" data-component="adaptive-text" data-max-font="28">
+                <div class="profile-full__nickname" data-component="adaptive-text" data-max-font="40">
                     <?= $profileFullUsername !== '' ? '@' . htmlspecialchars($profileFullUsername, ENT_QUOTES, 'UTF-8') : '' ?>
                 </div>
                 <div class="profile-full__medals" aria-hidden="true"></div>
             </div>
-            <div class="profile-full__about-title">о себе:</div>
-            <div class="profile-full__about">
+            <div class="profile-full__about<?= $profileFullBio === '' ? ' profile-full__about--empty' : ''; ?>">
                 <?= htmlspecialchars($profileFullBio !== '' ? $profileFullBio : 'Описание пользователя отстутствует', ENT_QUOTES, 'UTF-8') ?>
             </div>
             <div class="profile-full__divider" aria-hidden="true"></div>

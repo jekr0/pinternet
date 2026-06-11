@@ -64,6 +64,10 @@ if (preg_match('#^/post/(\d+)/edit$#', $path, $matches)) {
     $redirectToCanonical('/post?id=' . urlencode((string) $matches[1]) . '/edit');
 }
 
+if ($path === '/collections-editing') {
+    $redirectToCanonical('/collections');
+}
+
 // Этап 2 (partial rendering): определяем HTMX-запросы для возврата фрагментов.
 $isHtmxRequest = isset($_SERVER['HTTP_HX_REQUEST']) && $_SERVER['HTTP_HX_REQUEST'] === 'true';
 
@@ -79,7 +83,7 @@ switch ($path) {
     case '/':
     case '/post':
     case '/post/create':
-    case '/collections-editing':
+    case '/collections':
         $page = 'home_pg.php';
         $pageTitle = 'Главная';
         $PHP = [

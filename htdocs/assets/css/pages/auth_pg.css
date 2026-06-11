@@ -260,6 +260,11 @@
 
 .auth__button--back {
     position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    text-decoration: none;
     overflow: hidden;
     isolation: isolate;
     background: #ffffff;

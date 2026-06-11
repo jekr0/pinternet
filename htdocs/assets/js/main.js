@@ -227,7 +227,7 @@ const App = {
         getModalKeyFromUrl: function (url = window.location.href) {
             const parsedUrl = this.getUrl(url);
             if (parsedUrl.pathname === '/post/create' || this.getPostEditIdFromUrl(parsedUrl.href) > 0) return 'post-modal';
-            if (parsedUrl.pathname === '/collections-editing') return 'collection-modal';
+            if (parsedUrl.pathname === '/collections') return 'collection-modal';
             return null;
         },
         getModalKeyFromPath: function (pathname = window.location.pathname) {
@@ -274,7 +274,7 @@ const App = {
             '/',
             '/post',
             '/post/create',
-            '/collections-editing',
+            '/collections',
             '/profile',
             '/profile-editing'
         ]),
@@ -485,14 +485,14 @@ function openUrlDrivenModalState() {
     const postEditId = App.history?.getPostEditIdFromUrl?.() || 0;
     const isPostCreate = pathname === '/post/create';
     const isPostEdit = postEditId > 0;
-    const isCollectionsEditing = pathname === '/collections-editing';
+    const isCollectionsEditing = pathname === '/collections';
 
     if ((isPostCreate || isPostEdit) && collectionModalInstance?.root && !collectionModalInstance.root.classList.contains('collection-modal--hidden')) {
         collectionModalInstance.close({ skipHistorySync: true });
     }
 
     if (isCollectionsEditing && postModalInstance?.modal && !postModalInstance.modal.classList.contains('post-modal--hidden')) {
-        postModalInstance.close({ skipHistorySync: true });
+        postModalInstance.hideOnly?.();
     }
 
     if (!isPostCreate && !isPostEdit && postModalInstance?.modal && !postModalInstance.modal.classList.contains('post-modal--hidden')) {
