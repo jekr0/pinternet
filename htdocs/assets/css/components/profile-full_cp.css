@@ -335,3 +335,66 @@
     grid-row: 1 / 3;
     margin-top: 52px;
 }
+
+/* ===== NEW: Button alignment for default and yourself states ===== */
+
+/* Base styles for new button types */
+.profile-full__button--block,
+.profile-full__button--report,
+.profile-full__button--edit {
+    border: 1px solid #e0e0e0;
+    background: #fff;
+    color: #bbb;
+    transition: border-color 0.2s ease, color 0.2s ease;
+    padding: 0 16px;
+    white-space: nowrap;
+}
+
+.profile-full__button--block:hover,
+.profile-full__button--report:hover,
+.profile-full__button--edit:hover {
+    border-color: rgb(150, 150, 250);
+    color: rgb(150, 150, 250);
+}
+
+/* Default state: Subscribe fills, Block & Report align to the right */
+.profile-full__actions[data-action-state="default"] {
+    display: flex;
+    gap: 12px;
+    grid-template-columns: none;
+}
+
+.profile-full__actions[data-action-state="default"] .profile-full__button--subscribe {
+    flex: 1;
+    grid-column: auto;
+    min-width: 0;
+}
+
+.profile-full__actions[data-action-state="default"] .profile-full__button--block,
+.profile-full__actions[data-action-state="default"] .profile-full__button--report {
+    flex: 0 0 auto;
+    grid-column: auto;
+}
+
+/* Yourself state: Subscribe fills, Edit aligns to the right */
+.profile-full__actions[data-action-state="yourself"] {
+    display: flex;
+    gap: 12px;
+    grid-template-columns: none;
+}
+
+.profile-full__actions[data-action-state="yourself"] .profile-full__button--subscribe {
+    flex: 1;
+    grid-column: auto;
+    min-width: 0;
+}
+
+.profile-full__actions[data-action-state="yourself"] .profile-full__button--edit {
+    flex: 0 0 auto;
+    grid-column: auto;
+}
+
+/* Ensure other states (subscribed, etc.) keep original grid layout */
+.profile-full__actions:not([data-action-state="default"]):not([data-action-state="yourself"]) {
+    display: grid;
+}
