@@ -12,6 +12,13 @@ class DropdownProfileComponent {
         this.buttons = document.querySelectorAll('[data-component="dropdown_button"]');
         if (this.buttons.length === 0) return;
 
+        const logOutBtn = document.getElementById('dropdown-profile-log-out');
+        if (logOutBtn) {
+            logOutBtn.addEventListener('click', () => {
+                window.location.href = '/logout';
+            });
+        }
+
         this.buttons.forEach(button => {
             const svgSrc = button.dataset.svgSrc;
             if (svgSrc) App.utils.loadSVG(svgSrc, button);

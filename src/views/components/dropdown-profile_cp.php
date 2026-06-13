@@ -41,6 +41,12 @@ $isLoggedIn = !empty($_SESSION['user_id']);
             </li>
 
         </ul>
+
+        <div class="dropdown-profile__divider"></div>
+
+        <button class="dropdown-profile__log-out" id="dropdown-profile-log-out">
+            Выйти из аккаунта
+        </button>
     </div>
 
 <?php else: ?>
