@@ -130,7 +130,6 @@
     font-size: 18px;
     line-height: 1.2;
     color: #333;
-    -webkit-text-fill-color: #333;
     text-align: justify;
 }
 
@@ -140,6 +139,7 @@
     justify-content: center;
     text-align: center;
     color: #bbb;
+    -webkit-text-fill-color: #bbb;
     user-select: none;
     -webkit-user-select: none;
 }
