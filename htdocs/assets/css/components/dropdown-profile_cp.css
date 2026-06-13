@@ -115,7 +115,25 @@
 
 /* Отдельный цвет для выхода из аккаунта */
 .dropdown-profile__link--logout {
+    height: 24px;
+    padding: 0 12px;
+    margin: 4px 12px;
+    border-radius: 8px;
+    background: transparent;
+    font-family: 'MC_caps';
+    font-size: 16px;
     color: rgb(100, 100, 200);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.1s ease, color 0.1s ease;
+    cursor: pointer;
+    border: none;
+}
+
+.dropdown-profile__link--logout:hover {
+    background: rgba(100, 100, 200, 0.08);
 }
 
 /* --------------------------- Гость ------------------------------------- */

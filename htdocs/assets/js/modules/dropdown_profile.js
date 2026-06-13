@@ -89,3 +89,9 @@ class DropdownProfileComponent {
 }
 
 App.register('dropdown_profile.js', DropdownProfileComponent);
+
+document.addEventListener('click', (event) => {
+    const logoutBtn = event.target.closest('[data-action="logout"]');
+    if (!logoutBtn) return;
+    window.location.href = '/logout';
+});

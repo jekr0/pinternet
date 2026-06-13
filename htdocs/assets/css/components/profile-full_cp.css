@@ -132,6 +132,7 @@
     color: #333;
     -webkit-text-fill-color: #333;
     text-align: justify;
+    text-align-last: center;
 }
 
 .profile-full__about--empty {
