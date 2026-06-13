@@ -142,7 +142,7 @@ $profileFullZoomSrc = $profileFullHasAvatar ? $profileFullAvatarSrc : '/assets/i
                 <div class="profile-full__medals" aria-hidden="true"></div>
             </div>
             <div class="profile-full__about<?= $profileFullBio === '' ? ' profile-full__about--empty' : ''; ?>">
-                <?= htmlspecialchars($profileFullBio !== '' ? $profileFullBio : 'Описание пользователя отстутствует', ENT_QUOTES, 'UTF-8') ?>
+                <?= htmlspecialchars($profileFullBio !== '' ? $profileFullBio : 'Описание пользователя отсутствует', ENT_QUOTES, 'UTF-8') ?>
             </div>
             <div class="profile-full__line profile-full__line--stats" aria-hidden="true"></div>
             <div class="profile-full__stats-row">
