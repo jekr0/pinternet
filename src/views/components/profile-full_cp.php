@@ -125,6 +125,10 @@ $profileFullZoomSrc = $profileFullHasAvatar ? $profileFullAvatarSrc : '/assets/i
                 ></span>
             <?php endif; ?>
 
+            <button class="post-full__action-button post-full__action-button--back" type="button" data-action="back" aria-label="Назад">
+                <span class="post-full__action-icon" data-svg-src="/assets/images/icons/L-arrow.svg" aria-hidden="true"></span>
+            </button>
+
             <button class="post-full__action-button profile-full__maximize" type="button" data-action="maximize-avatar" aria-label="Развернуть аватар">
                 <span class="post-full__action-icon" data-svg-src="/assets/images/icons/maximize.svg" aria-hidden="true"></span>
             </button>

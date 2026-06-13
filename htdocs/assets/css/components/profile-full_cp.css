@@ -32,24 +32,9 @@
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    border-radius: 24px;
+    border-radius: 16px;
     color: #333;
     background: rgb(200, 200, 255);
-}
-
-.profile-full__avatar::after {
-    position: absolute;
-    inset: 0;
-    content: '';
-    border-radius: 24px;
-    background: rgba(0, 0, 0, 0.2);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.1s ease;
-}
-
-.profile-full__avatar:hover::after {
-    opacity: 1;
 }
 
 .profile-full__avatar-image {
@@ -76,27 +61,16 @@
 
 .profile-full__maximize {
     position: absolute;
-    top: 16px;
-    right: 16px;
+    top: 12px;
+    right: 12px;
     z-index: 2;
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
-    transition: opacity 0.1s ease, visibility 0.1s ease;
-}
-
-.profile-full__avatar:hover .profile-full__maximize,
-.profile-full__maximize:focus-visible {
-    opacity: 1;
-    visibility: visible;
-    pointer-events: auto;
 }
 
 .profile-full__info,
 .profile-full__achievements {
     align-self: stretch;
     border: 1px solid var(--profile-full-border-color);
-    border-radius: 24px;
+    border-radius: 16px;
     background: #fff;
 }
 
@@ -155,7 +129,9 @@
     font-family: 'NS_def', Arial, sans-serif;
     font-size: 18px;
     line-height: 1.2;
-    color: #bbb;
+    color: #333;
+    -webkit-text-fill-color: #333;
+    text-align: justify;
 }
 
 .profile-full__about--empty {
@@ -163,6 +139,7 @@
     align-items: center;
     justify-content: center;
     text-align: center;
+    color: #bbb;
     user-select: none;
     -webkit-user-select: none;
 }

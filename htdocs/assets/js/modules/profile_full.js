@@ -50,6 +50,15 @@ class ProfileFullComponent {
             if (!button || button.disabled || !this.root.contains(button)) return;
 
             const action = button.dataset.action;
+            if (action === 'back') {
+                if (window.history.length > 1) {
+                    window.history.back();
+                } else {
+                    App.nav.navigate('/', { pushUrl: true });
+                }
+                return;
+            }
+
             if (action === 'maximize-avatar') {
                 event.preventDefault();
                 this.openZoomOverlay();
