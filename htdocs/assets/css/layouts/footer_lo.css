@@ -27,7 +27,8 @@
 
 .footer-menu__toggle {
     position: absolute;
-    inset: 0;
+    right: 0;
+    bottom: 0;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -64,10 +65,28 @@
     transition: fill 0.2s ease;
 }
 
+.footer-menu__control {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 36px;
+    margin: 16px 16px 4px;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.1s ease 0s, visibility 0.1s ease 0s;
+}
+
+.footer-menu[data-state="opened"] .footer-menu__control {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition-delay: 0.2s, 0.2s;
+}
+
+.footer-menu__pin,
 .footer-menu__compress {
-    position: absolute;
-    top: 16px;
-    left: 16px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -79,33 +98,57 @@
     background: transparent;
     color: #bbb;
     cursor: pointer;
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
-    transition: opacity 0.1s ease 0s, visibility 0.1s ease 0s, border-color 0.2s ease, color 0.2s ease;
+    transition: border-color 0.2s ease, color 0.2s ease;
 }
 
-.footer-menu[data-state="opened"] .footer-menu__compress {
-    opacity: 1;
-    visibility: visible;
-    pointer-events: auto;
-    transition-delay: 0.2s, 0.2s, 0s, 0s;
-}
-
+.footer-menu__pin:hover,
 .footer-menu__compress:hover {
     border-color: rgb(150, 150, 250);
     color: rgb(150, 150, 250);
 }
 
-.footer-menu__compress-icon,
-.footer-menu__compress-icon svg {
+.footer-menu__pin.is-active {
+    color: rgb(150, 150, 250);
+}
+
+.footer-menu__pin.is-active:hover {
+    color: rgb(100, 100, 200);
+}
+
+.footer-menu__control-icon,
+.footer-menu__control-icon svg {
     display: block;
     width: 24px;
     height: 24px;
 }
 
-.footer-menu__compress-icon svg,
-.footer-menu__compress-icon svg * {
+.footer-menu__control-icon svg,
+.footer-menu__control-icon svg * {
     fill: currentColor;
     transition: fill 0.2s ease;
+}
+
+.footer-menu__line {
+    display: flex;
+    align-items: center;
+    min-height: 14px;
+    margin: 4px 16px;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.1s ease 0s, visibility 0.1s ease 0s;
+}
+
+.footer-menu[data-state="opened"] .footer-menu__line {
+    opacity: 1;
+    visibility: visible;
+    transition-delay: 0.2s, 0.2s;
+}
+
+.footer-menu__line--1::before {
+    content: '';
+    flex: 1 1 auto;
+    height: 2px;
+    background: #e0e0e0;
+    border-radius: 1px;
 }
