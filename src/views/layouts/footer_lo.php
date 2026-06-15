@@ -13,6 +13,14 @@
             </button>
         </div>
         <div class="footer-menu__line footer-menu__line--1" aria-hidden="true"></div>
+
+        <div class="footer-menu__content" aria-label="Разделы меню">
+            <button class="footer-menu__content-button" type="button" data-footer-menu-action="profile">Профиль</button>
+            <button class="footer-menu__content-button" type="button" data-footer-menu-action="messages">Сообщения</button>
+            <button class="footer-menu__content-button" type="button" data-footer-menu-action="notifications">Уведомления</button>
+            <button class="footer-menu__content-button" type="button" data-footer-menu-action="friends">Друзья</button>
+            <button class="footer-menu__content-button" type="button" data-footer-menu-action="collections">Коллекции</button>
+        </div>
     </div>
 
     <button class="scroll-to-top-button" data-component="scroll-to-top" aria-label="Наверх">

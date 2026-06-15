@@ -9,6 +9,7 @@ class FooterLayout {
         this.compressButton = this.menu.querySelector('.footer-menu__compress');
         this.pinButton = this.menu.querySelector('.footer-menu__pin');
         this.pinIcon = this.pinButton?.querySelector('[data-svg-src]') || null;
+        this.contentButtons = Array.from(this.menu.querySelectorAll('[data-footer-menu-action]'));
 
         this.loadIcons();
         this.bindHandlers();
@@ -36,6 +37,10 @@ class FooterLayout {
             event.stopPropagation();
             this.togglePinned();
         };
+        this.contentClickHandler = (event) => {
+            event.stopPropagation();
+            this.handleContentAction(event.currentTarget?.dataset.footerMenuAction || '');
+        };
         this.outsideClickHandler = (event) => {
             if (this.menu.dataset.state !== 'opened' || this.isPinned) return;
             if (this.menu.contains(event.target)) return;
@@ -45,6 +50,7 @@ class FooterLayout {
         this.toggleButton?.addEventListener('click', this.openHandler);
         this.compressButton?.addEventListener('click', this.closeHandler);
         this.pinButton?.addEventListener('click', this.pinHandler);
+        this.contentButtons.forEach((button) => button.addEventListener('click', this.contentClickHandler));
         document.addEventListener('click', this.outsideClickHandler);
     }
 
@@ -56,6 +62,29 @@ class FooterLayout {
     closeMenu() {
         this.menu.dataset.state = 'closed';
         this.toggleButton?.setAttribute('aria-expanded', 'false');
+    }
+
+    closeAfterAction() {
+        if (!this.isPinned) {
+            this.closeMenu();
+        }
+    }
+
+    handleContentAction(action) {
+        if (action === 'profile') {
+            this.closeAfterAction();
+            if (App.nav?.navigate) {
+                App.nav.navigate('/profile');
+                return;
+            }
+            window.location.href = '/profile';
+            return;
+        }
+
+        if (action === 'collections') {
+            this.closeAfterAction();
+            document.dispatchEvent(new CustomEvent('collection-modal:open'));
+        }
     }
 
     togglePinned() {
