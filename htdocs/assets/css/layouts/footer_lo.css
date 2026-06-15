@@ -1,0 +1,111 @@
+.footer {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    z-index: 1100;
+    pointer-events: none;
+}
+
+.footer-menu {
+    position: fixed;
+    right: 44px;
+    bottom: 52px;
+    width: 64px;
+    height: 64px;
+    border-radius: 24px;
+    background: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    pointer-events: auto;
+    overflow: hidden;
+    transition: width 0.2s ease, height 0.2s ease;
+}
+
+.footer-menu[data-state="opened"] {
+    width: 324px;
+    height: 424px;
+}
+
+.footer-menu__toggle {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #333;
+    cursor: pointer;
+    transition: color 0.2s ease, opacity 0.1s ease, visibility 0.1s ease;
+}
+
+.footer-menu__toggle:hover {
+    color: rgb(100, 100, 200);
+}
+
+.footer-menu[data-state="opened"] .footer-menu__toggle {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.footer-menu__planet,
+.footer-menu__planet svg {
+    display: block;
+    width: 48px;
+    height: 48px;
+}
+
+.footer-menu__planet svg,
+.footer-menu__planet svg * {
+    fill: currentColor;
+    transition: fill 0.2s ease;
+}
+
+.footer-menu__compress {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    background: transparent;
+    color: #bbb;
+    cursor: pointer;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.1s ease 0s, visibility 0.1s ease 0s, border-color 0.2s ease, color 0.2s ease;
+}
+
+.footer-menu[data-state="opened"] .footer-menu__compress {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition-delay: 0.2s, 0.2s, 0s, 0s;
+}
+
+.footer-menu__compress:hover {
+    border-color: rgb(150, 150, 250);
+    color: rgb(150, 150, 250);
+}
+
+.footer-menu__compress-icon,
+.footer-menu__compress-icon svg {
+    display: block;
+    width: 24px;
+    height: 24px;
+}
+
+.footer-menu__compress-icon svg,
+.footer-menu__compress-icon svg * {
+    fill: currentColor;
+    transition: fill 0.2s ease;
+}
