@@ -1,0 +1,26 @@
+правки для БД:
+
+переименовать таблицы:
+- Follows -> User_Follows
+- Blocks -> User_Blocks
+- User_Subscribe_Exp_Awards -> User_Follows_Exp_Awards
+- Saved_Posts -> Collection_Posts
+- Warnings -> Reports
+- messаges -> Messаges
+- message -> text (Messаges)
+- warning_issued -> report_issued (Moderation_Log)
+- search-users -> Search_Users
+- search-global -> Search
+
+изменить:
+- для всех значений NVARCHAR округлить его до шестнадцатеричного значения (2/4/8/16/32/64/128/256/512...)
+- везде, где есть VARCHAR поменять на NVARCHAR
+- для password_hash формат NVARCHAR(512) 
+
+добавить:
+- после user_id в Notifications добавить атрибут title NVARCHAR(64)
+- после title в Notifications добавить атрибут text NVARCHAR(256) 
+
+удалить:
+- type из Notifications
+- data из Notifications
