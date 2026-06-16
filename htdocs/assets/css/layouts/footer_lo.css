@@ -1,0 +1,211 @@
+.footer {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    z-index: 1100;
+    pointer-events: none;
+}
+
+.footer-menu {
+    position: fixed;
+    right: 44px;
+    bottom: 52px;
+    width: 64px;
+    height: 64px;
+    border-radius: 24px;
+    background: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    pointer-events: auto;
+    overflow: hidden;
+    box-sizing: border-box;
+    transition: width 0.2s ease, height 0.2s ease, padding 0.2s ease;
+}
+
+.footer-menu[data-state="opened"] {
+    width: 324px;
+    height: 424px;
+    padding: 16px;
+}
+
+.footer-menu__toggle {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #333;
+    cursor: pointer;
+    transition: color 0.2s ease, opacity 0.1s ease 0.2s, visibility 0.1s ease 0.2s;
+}
+
+.footer-menu__toggle:hover {
+    color: rgb(100, 100, 200);
+}
+
+.footer-menu[data-state="opened"] .footer-menu__toggle {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition-delay: 0s, 0s, 0s;
+}
+
+.footer-menu__planet,
+.footer-menu__planet svg {
+    display: block;
+    width: 48px;
+    height: 48px;
+}
+
+.footer-menu__planet svg,
+.footer-menu__planet svg * {
+    fill: currentColor;
+    transition: fill 0.2s ease;
+}
+
+.footer-menu__control {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 36px;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.1s ease 0s, visibility 0.1s ease 0s;
+}
+
+.footer-menu[data-state="opened"] .footer-menu__control {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition-delay: 0.2s, 0.2s;
+}
+
+.footer-menu__pin,
+.footer-menu__compress {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    background: transparent;
+    color: #bbb;
+    cursor: pointer;
+    transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.footer-menu__pin:hover,
+.footer-menu__compress:hover {
+    border-color: rgb(150, 150, 250);
+    color: rgb(150, 150, 250);
+}
+
+.footer-menu__pin.is-active {
+    color: rgb(150, 150, 250);
+}
+
+.footer-menu__pin.is-active:hover {
+    color: rgb(100, 100, 200);
+}
+
+.footer-menu__control-icon,
+.footer-menu__control-icon svg {
+    display: block;
+    width: 24px;
+    height: 24px;
+}
+
+.footer-menu__control-icon svg,
+.footer-menu__control-icon svg * {
+    fill: currentColor;
+    stroke: currentColor;
+    transition: fill 0.2s ease, stroke 0.2s ease;
+}
+
+.footer-menu__pin .footer-menu__control-icon svg,
+.footer-menu__pin .footer-menu__control-icon svg * {
+    stroke: currentColor;
+}
+
+.footer-menu__pin:not(.is-active) .footer-menu__control-icon svg,
+.footer-menu__pin:not(.is-active) .footer-menu__control-icon svg * {
+    fill: none;
+}
+
+.footer-menu__pin.is-active .footer-menu__control-icon svg,
+.footer-menu__pin.is-active .footer-menu__control-icon svg * {
+    fill: currentColor;
+}
+
+.footer-menu__line {
+    display: flex;
+    align-items: center;
+    min-height: 14px;
+    margin: 4px 0;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.1s ease 0s, visibility 0.1s ease 0s;
+}
+
+.footer-menu[data-state="opened"] .footer-menu__line {
+    opacity: 1;
+    visibility: visible;
+    transition-delay: 0.2s, 0.2s;
+}
+
+.footer-menu__line--1::before {
+    content: '';
+    flex: 1 1 auto;
+    height: 2px;
+    background: #e0e0e0;
+    border-radius: 1px;
+}
+
+
+.footer-menu__content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.1s ease 0s, visibility 0.1s ease 0s;
+}
+
+.footer-menu[data-state="opened"] .footer-menu__content {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition-delay: 0.2s, 0.2s;
+}
+
+.footer-menu__content-button {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    width: 100%;
+    height: 36px;
+    padding: 0 12px;
+    border: none;
+    border-radius: 12px;
+    background: transparent;
+    font-family: 'SF_def', Arial, sans-serif;
+    font-size: 18px;
+    color: rgb(100, 100, 200);
+    cursor: pointer;
+    transition: background 0.1s ease, color 0.1s ease;
+}
+
+.footer-menu__content-button:hover {
+    background: rgba(100, 100, 200, 0.08);
+}

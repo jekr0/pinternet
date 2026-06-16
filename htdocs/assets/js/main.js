@@ -15,6 +15,7 @@ const App = {
         'profile_button.js',
         'dropdown_profile.js',
         'dropdown_search.js',
+        'footer_lo.js',
         'post_modal.js',
         'collection_modul.js',
         'dropdown_collections.js'

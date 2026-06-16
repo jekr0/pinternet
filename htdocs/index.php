@@ -114,6 +114,7 @@ switch ($path) {
             'profile_button.js',
             'dropdown_profile.js',
             'dropdown_search.js',
+            'footer_lo.js',
             'post_modal.js',
             'post_card.js',
             'post_full.js',
@@ -152,7 +153,9 @@ switch ($path) {
             'profile_button.js',
             'dropdown_profile.js',
             'dropdown_search.js',
+            'footer_lo.js',
             'post_modal.js',
+            'collection_modul.js',
             'profile_full.js',
             'adaptive_text.js'
         ];
@@ -252,8 +255,10 @@ switch ($path) {
             'profile_button.js',
             'dropdown_profile.js',
             'dropdown_search.js',
+            'footer_lo.js',
             'post_modal.js',
             'post_card.js',
+            'collection_modul.js',
             'adaptive_text.js'
         ];
         break;
@@ -285,6 +290,7 @@ $APP_JS = [
     'profile_button.js',
     'dropdown_profile.js',
     'dropdown_search.js',
+    'footer_lo.js',
     'post_modal.js',
     'post_card.js',
     'post_full.js',
