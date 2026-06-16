@@ -9,7 +9,7 @@ if (session_status() === PHP_SESSION_NONE) {
 header('Content-Type: application/json; charset=utf-8');
 
 if (empty($_SESSION['user_id'])) {
-    jsonResponse(['success' => false, 'error' => 'Требуется авторизация.'], 401);
+    jsonResponse(['success' => false, 'error' => 'Для этого действия требуется авторизация'], 401);
 }
 
 $userId = (int) $_SESSION['user_id'];
@@ -23,14 +23,14 @@ if ($path === '/search/history') {
     if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
         handleSearchHistorySave($pdo, $userId);
     }
-    jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод.'], 405);
+    jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод'], 405);
 }
 
 if ($path === '/search/suggest') {
     handleSearchSuggest($pdo, $userId);
 }
 
-jsonResponse(['success' => false, 'error' => 'Неизвестный метод.'], 404);
+jsonResponse(['success' => false, 'error' => 'Неизвестный метод'], 404);
 
 function handleSearchHistoryGet(PDO $pdo, int $userId): never
 {
@@ -39,7 +39,7 @@ function handleSearchHistoryGet(PDO $pdo, int $userId): never
 
     $stmt = $pdo->prepare('
         SELECT query_text
-        FROM Search_Users
+        FROM User_Search
         WHERE user_id = ?
         ORDER BY searched_at DESC
         LIMIT ?
@@ -60,7 +60,7 @@ function handleSearchHistorySave(PDO $pdo, int $userId): never
 {
     $query = normalizeSearchQuery((string) ($_POST['query'] ?? ''));
     if ($query === '') {
-        jsonResponse(['success' => false, 'error' => 'Пустой поисковый запрос.'], 422);
+        jsonResponse(['success' => false, 'error' => 'Пустой поисковый запрос'], 422);
     }
 
     try {
@@ -68,7 +68,7 @@ function handleSearchHistorySave(PDO $pdo, int $userId): never
 
         $existingStmt = $pdo->prepare('
             SELECT slot_index
-            FROM Search_Users
+            FROM User_Search
             WHERE user_id = ? AND query_text = ?
             LIMIT 1
         ');
@@ -77,20 +77,20 @@ function handleSearchHistorySave(PDO $pdo, int $userId): never
 
         if ($existingSlot !== false) {
             $touchStmt = $pdo->prepare('
-                UPDATE Search_Users
+                UPDATE User_Search
                 SET searched_at = CURRENT_TIMESTAMP
                 WHERE user_id = ? AND slot_index = ?
             ');
             $touchStmt->execute([$userId, (int) $existingSlot]);
         } else {
-            $countStmt = $pdo->prepare('SELECT COUNT(*) FROM Search_Users WHERE user_id = ?');
+            $countStmt = $pdo->prepare('SELECT COUNT(*) FROM User_Search WHERE user_id = ?');
             $countStmt->execute([$userId]);
             $currentCount = (int) $countStmt->fetchColumn();
 
             if ($currentCount < 10) {
                 $slotStmt = $pdo->prepare('
                     SELECT slot_index
-                    FROM Search_Users
+                    FROM User_Search
                     WHERE user_id = ?
                     ORDER BY slot_index ASC
                 ');
@@ -103,7 +103,7 @@ function handleSearchHistorySave(PDO $pdo, int $userId): never
             } else {
                 $oldestStmt = $pdo->prepare('
                     SELECT slot_index
-                    FROM Search_Users
+                    FROM User_Search
                     WHERE user_id = ?
                     ORDER BY searched_at ASC
                     LIMIT 1
@@ -113,7 +113,7 @@ function handleSearchHistorySave(PDO $pdo, int $userId): never
             }
 
             $upsertStmt = $pdo->prepare('
-                INSERT INTO Search_Users (user_id, slot_index, query_text, searched_at)
+                INSERT INTO User_Search (user_id, slot_index, query_text, searched_at)
                 VALUES (?, ?, ?, CURRENT_TIMESTAMP)
                 ON DUPLICATE KEY UPDATE
                     query_text = VALUES(query_text),
@@ -148,7 +148,7 @@ function handleSearchHistorySave(PDO $pdo, int $userId): never
             $pdo->rollBack();
         }
         error_log('Search history save error: ' . $e->getMessage());
-        jsonResponse(['success' => false, 'error' => 'Не удалось сохранить поисковый запрос.'], 500);
+        jsonResponse(['success' => false, 'error' => 'Не удалось сохранить поисковый запрос'], 500);
     }
 
     jsonResponse(['success' => true]);

@@ -24,6 +24,66 @@ CREATE TABLE Users (
     created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE User_Follows (
+    id                   INT AUTO_INCREMENT PRIMARY KEY,
+    follower_id          INT NOT NULL,
+    following_id         INT NOT NULL,
+    notifications_switch TINYINT(1) NOT NULL DEFAULT 0,
+
+    UNIQUE KEY uq_follow (follower_id, following_id),
+    CHECK (follower_id != following_id),
+
+    FOREIGN KEY (follower_id) REFERENCES Users(id) ON DELETE CASCADE,
+    FOREIGN KEY (following_id) REFERENCES Users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE User_Follows_Exp_Awards (
+    id                INT AUTO_INCREMENT PRIMARY KEY,
+    subscriber_id     INT NOT NULL,
+    subscribed_user_id INT NOT NULL,
+    created_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    UNIQUE KEY uq_subscribe_exp_award (subscriber_id, subscribed_user_id),
+
+    FOREIGN KEY (subscriber_id) REFERENCES Users(id) ON DELETE CASCADE,
+    FOREIGN KEY (subscribed_user_id) REFERENCES Users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE User_Search (
+    user_id     INT NOT NULL,
+    slot_index  TINYINT NOT NULL,
+    query_text  NVARCHAR(128) NOT NULL,
+    searched_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, slot_index),
+    KEY idx_user_search_recent (user_id, searched_at),
+    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE User_Blocks (
+    id              INT AUTO_INCREMENT PRIMARY KEY,
+    blocker_user_id INT NOT NULL,
+    blocked_user_id INT NOT NULL,
+    created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    UNIQUE KEY uq_block (blocker_user_id, blocked_user_id),
+    CHECK (blocker_user_id != blocked_user_id),
+
+    FOREIGN KEY (blocker_user_id) REFERENCES Users(id) ON DELETE CASCADE,
+    FOREIGN KEY (blocked_user_id) REFERENCES Users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE User_Reports (
+    id               INT AUTO_INCREMENT PRIMARY KEY,
+    user_id          INT NOT NULL,
+    reported_user_id INT NOT NULL,
+    created_at       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    UNIQUE KEY uq_user_report (user_id, reported_user_id),
+
+    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE,
+    FOREIGN KEY (reported_user_id) REFERENCES Users(id) ON DELETE CASCADE
+);
+
 -- ---------------------------------------------------------------------
 -- Hashtags
 -- ---------------------------------------------------------------------
@@ -95,19 +155,6 @@ CREATE TABLE Post_Reports (
     FOREIGN KEY (post_id) REFERENCES Posts(id) ON DELETE CASCADE
 );
 
--- Исправлено: user_id теперь NOT NULL, оба внешних ключа с CASCADE
-CREATE TABLE User_Reports (
-    id               INT AUTO_INCREMENT PRIMARY KEY,
-    user_id          INT NOT NULL,
-    reported_user_id INT NOT NULL,
-    created_at       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    UNIQUE KEY uq_user_report (user_id, reported_user_id),
-
-    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE,
-    FOREIGN KEY (reported_user_id) REFERENCES Users(id) ON DELETE CASCADE
-);
-
 -- Триггер для report_count
 DELIMITER $$
 
@@ -152,10 +199,6 @@ CREATE TABLE Collection_Hashtags (
     FOREIGN KEY (collection_id) REFERENCES Collections(id) ON DELETE CASCADE,
     FOREIGN KEY (hashtag_id) REFERENCES Hashtags(id) ON DELETE CASCADE
 );
-
--- ---------------------------------------------------------------------
--- Collection Posts (бывшая Saved_Posts)
--- ---------------------------------------------------------------------
 
 CREATE TABLE Collection_Posts (
     id            INT AUTO_INCREMENT PRIMARY KEY,
@@ -229,44 +272,6 @@ CREATE TABLE Comment_Reports (
 -- Social
 -- ---------------------------------------------------------------------
 
-CREATE TABLE User_Follows (
-    id                   INT AUTO_INCREMENT PRIMARY KEY,
-    follower_id          INT NOT NULL,
-    following_id         INT NOT NULL,
-    notifications_switch TINYINT(1) NOT NULL DEFAULT 0,
-
-    UNIQUE KEY uq_follow (follower_id, following_id),
-    CHECK (follower_id != following_id),
-
-    FOREIGN KEY (follower_id) REFERENCES Users(id) ON DELETE CASCADE,
-    FOREIGN KEY (following_id) REFERENCES Users(id) ON DELETE CASCADE
-);
-
-CREATE TABLE User_Follows_Exp_Awards (
-    id                INT AUTO_INCREMENT PRIMARY KEY,
-    subscriber_id     INT NOT NULL,
-    subscribed_user_id INT NOT NULL,
-    created_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    UNIQUE KEY uq_subscribe_exp_award (subscriber_id, subscribed_user_id),
-
-    FOREIGN KEY (subscriber_id) REFERENCES Users(id) ON DELETE CASCADE,
-    FOREIGN KEY (subscribed_user_id) REFERENCES Users(id) ON DELETE CASCADE
-);
-
-CREATE TABLE User_Blocks (
-    id              INT AUTO_INCREMENT PRIMARY KEY,
-    blocker_user_id INT NOT NULL,
-    blocked_user_id INT NOT NULL,
-    created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    UNIQUE KEY uq_block (blocker_user_id, blocked_user_id),
-    CHECK (blocker_user_id != blocked_user_id),
-
-    FOREIGN KEY (blocker_user_id) REFERENCES Users(id) ON DELETE CASCADE,
-    FOREIGN KEY (blocked_user_id) REFERENCES Users(id) ON DELETE CASCADE
-);
-
 CREATE TABLE Messages (
     id           INT AUTO_INCREMENT PRIMARY KEY,
     from_user_id INT NOT NULL,
@@ -282,39 +287,14 @@ CREATE TABLE Messages (
     FOREIGN KEY (to_user_id) REFERENCES Users(id) ON DELETE CASCADE
 );
 
--- ---------------------------------------------------------------------
--- Moderation
--- ---------------------------------------------------------------------
+CREATE TABLE Global_Search (
+    id          BIGINT AUTO_INCREMENT PRIMARY KEY,
+    query_text  NVARCHAR(128) NOT NULL,
+    searched_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-CREATE TABLE Reports (
-    id           INT AUTO_INCREMENT PRIMARY KEY,
-    user_id      INT NOT NULL,
-    moderator_id INT NULL,
-    reason       NVARCHAR(256),
-    created_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE NO ACTION,
-    FOREIGN KEY (moderator_id) REFERENCES Users(id) ON DELETE SET NULL
+    KEY idx_global_search_recent (searched_at),
+    KEY idx_global_search_query (query_text)
 );
-
-CREATE TABLE Moderation_Log (
-    id             INT AUTO_INCREMENT PRIMARY KEY,
-    moderator_id   INT NULL,
-    post_id        INT NULL,
-    comment_id     INT NULL,
-    reason         NVARCHAR(256),
-    report_issued  TINYINT(1) NOT NULL DEFAULT 0,
-    timeout_issued TINYINT(1) NOT NULL DEFAULT 0,
-    created_at     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    FOREIGN KEY (moderator_id) REFERENCES Users(id) ON DELETE SET NULL,
-    FOREIGN KEY (post_id) REFERENCES Posts(id) ON DELETE SET NULL,
-    FOREIGN KEY (comment_id) REFERENCES Comments(id) ON DELETE SET NULL
-);
-
--- ---------------------------------------------------------------------
--- Notifications (type и data удалены, добавлены title и text)
--- ---------------------------------------------------------------------
 
 CREATE TABLE Notifications (
     id         INT AUTO_INCREMENT PRIMARY KEY,
@@ -328,25 +308,22 @@ CREATE TABLE Notifications (
 );
 
 -- ---------------------------------------------------------------------
--- Search history
+-- Moderation
 -- ---------------------------------------------------------------------
 
-CREATE TABLE Search_Users (
-    user_id     INT NOT NULL,
-    slot_index  TINYINT NOT NULL,
-    query_text  NVARCHAR(128) NOT NULL,
-    searched_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (user_id, slot_index),
-    KEY idx_search_users_recent (user_id, searched_at),
-    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE
-);
+CREATE TABLE Moderation (
+    id             INT AUTO_INCREMENT PRIMARY KEY,
+    moderator_id   INT NULL,
+    user_id        INT NULL,
+    post_id        INT NULL,
+    comment_id     INT NULL,
+    reason         NVARCHAR(256),
+    report_issued  TINYINT(1) NOT NULL DEFAULT 0,
+    timeout_issued TINYINT(1) NOT NULL DEFAULT 0,
+    created_at     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-CREATE TABLE Search (
-    id          BIGINT AUTO_INCREMENT PRIMARY KEY,
-    user_id     INT NOT NULL,
-    query_text  NVARCHAR(128) NOT NULL,
-    searched_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    KEY idx_search_global_recent (searched_at),
-    KEY idx_search_global_query (query_text),
-    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE
+    FOREIGN KEY (moderator_id) REFERENCES Users(id) ON DELETE SET NULL,
+    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE SET NULL,
+    FOREIGN KEY (post_id) REFERENCES Posts(id) ON DELETE SET NULL,
+    FOREIGN KEY (comment_id) REFERENCES Comments(id) ON DELETE SET NULL
 );

@@ -1046,7 +1046,7 @@ class PostFullComponent {
     }
 
     notifyAuthRequired() {
-        this.dispatchToast('Для этого действия нужно войти в аккаунт.');
+        this.dispatchToast('Для этого действия требуется авторизация');
         const profileContainer = document.querySelector('.header__profile-container');
         if (!profileContainer) return;
 
@@ -1101,14 +1101,14 @@ class PostFullComponent {
         const parentCommentId = this.replyTargetCommentId > 0 ? this.replyTargetCommentId : 0;
         if (!postId || !text) return;
         if (text.length > 256) {
-            this.dispatchToast('Комментарий не должен превышать 256 символов.');
+            this.dispatchToast('Комментарий не должен превышать 256 символов');
             return;
         }
 
         if (this.commentComposerMode === 'edit' && this.editingCommentElement) {
             const editingCommentId = Number(this.editingCommentElement.dataset.commentId || 0);
             if (!editingCommentId) {
-                this.dispatchToast('Не удалось определить комментарий для редактирования.');
+                this.dispatchToast('Не удалось определить комментарий для редактирования');
                 return;
             }
             commentInput.disabled = true;
@@ -1127,7 +1127,7 @@ class PostFullComponent {
 
                 const payload = await response.json();
                 if (!response.ok || !payload.success) {
-                    this.dispatchToast(payload?.error || 'Не удалось обновить комментарий.');
+                    this.dispatchToast(payload?.error || 'Не удалось обновить комментарий');
                     return;
                 }
 
@@ -1141,7 +1141,7 @@ class PostFullComponent {
                 this.requestMasonryLayoutUpdate();
             } catch (error) {
                 console.warn('Unable to update comment from post-full', error);
-                this.dispatchToast('Не удалось обновить комментарий.');
+                this.dispatchToast('Не удалось обновить комментарий');
             } finally {
                 commentInput.disabled = false;
             }
@@ -1165,7 +1165,7 @@ class PostFullComponent {
 
             const payload = await response.json();
             if (!response.ok || !payload.success) {
-                this.dispatchToast(payload?.error || 'Не удалось сохранить комментарий.');
+                this.dispatchToast(payload?.error || 'Не удалось сохранить комментарий');
                 return;
             }
 
@@ -1208,7 +1208,7 @@ class PostFullComponent {
             this.requestMasonryLayoutUpdate();
         } catch (error) {
             console.warn('Unable to submit comment from post-full', error);
-            this.dispatchToast('Не удалось сохранить комментарий.');
+            this.dispatchToast('Не удалось сохранить комментарий');
         } finally {
             commentInput.disabled = false;
             commentInput.focus();
@@ -1482,7 +1482,7 @@ class PostFullComponent {
     async deleteCommentByElement(commentElement) {
         const commentId = Number(commentElement?.dataset.commentId || 0);
         if (!commentId) {
-            this.dispatchToast('Не удалось определить комментарий для удаления.');
+            this.dispatchToast('Не удалось определить комментарий для удаления');
             return;
         }
 
@@ -1497,7 +1497,7 @@ class PostFullComponent {
             });
             const payload = await response.json();
             if (!response.ok || !payload.success) {
-                this.dispatchToast(payload?.error || 'Не удалось удалить комментарий.');
+                this.dispatchToast(payload?.error || 'Не удалось удалить комментарий');
                 return;
             }
 
@@ -1517,7 +1517,7 @@ class PostFullComponent {
             this.requestMasonryLayoutUpdate();
         } catch (error) {
             console.warn('Unable to delete comment from post-full', error);
-            this.dispatchToast('Не удалось удалить комментарий.');
+            this.dispatchToast('Не удалось удалить комментарий');
         }
     }
 
@@ -1525,7 +1525,7 @@ class PostFullComponent {
         if (!commentElement) return;
         const commentId = Number(commentElement.dataset.commentId || 0);
         if (!commentId) {
-            this.dispatchToast('Не удалось определить комментарий для удаления.');
+            this.dispatchToast('Не удалось определить комментарий для удаления');
             return;
         }
 
@@ -1571,7 +1571,7 @@ class PostFullComponent {
             });
             const payload = await response.json();
             if (!response.ok || !payload.success) {
-                this.dispatchToast(payload?.error || 'Не удалось обработать лайк комментария.');
+                this.dispatchToast(payload?.error || 'Не удалось обработать лайк комментария');
                 return;
             }
 
@@ -1587,7 +1587,7 @@ class PostFullComponent {
             }
         } catch (error) {
             console.warn('Unable to toggle like for comment from post-full', error);
-            this.dispatchToast('Не удалось обработать лайк комментария.');
+            this.dispatchToast('Не удалось обработать лайк комментария');
         } finally {
             button.disabled = false;
         }
@@ -1634,7 +1634,7 @@ class PostFullComponent {
 
             const payload = await response.json();
             if (!response.ok || !payload.success) {
-                this.dispatchToast(payload?.error || 'Не удалось отправить жалобу.');
+                this.dispatchToast(payload?.error || 'Не удалось отправить жалобу');
                 return;
             }
 
@@ -1646,7 +1646,7 @@ class PostFullComponent {
 
                     } catch (error) {
             console.warn('Unable to report comment from post-full', error);
-            this.dispatchToast('Не удалось отправить жалобу.');
+            this.dispatchToast('Не удалось отправить жалобу');
         } finally {
             reportButton.disabled = false;
             this.pendingCommentReportId = 0;
@@ -2173,7 +2173,7 @@ class PostFullComponent {
 
             const payload = await response.json();
             if (!response.ok || !payload.success) {
-                this.dispatchToast(payload?.error || 'Не удалось отправить жалобу.');
+                this.dispatchToast(payload?.error || 'Не удалось отправить жалобу');
                 return;
             }
 
@@ -2185,7 +2185,7 @@ class PostFullComponent {
 
                     } catch (error) {
             console.warn('Unable to report post from post-full', error);
-            this.dispatchToast('Не удалось отправить жалобу.');
+            this.dispatchToast('Не удалось отправить жалобу');
         } finally {
             reportButton.disabled = false;
         }

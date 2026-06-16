@@ -111,4 +111,4 @@ class CollectionModalComponent {
     if(this.deleteButton&&this.deleteClickHandler) this.deleteButton.removeEventListener('click', this.deleteClickHandler);
   }
 }
-App.register('collection_modul.js', CollectionModalComponent);
+App.register('collection_modal.js', CollectionModalComponent);

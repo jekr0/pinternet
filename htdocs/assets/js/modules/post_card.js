@@ -95,7 +95,7 @@ class PostCardComponent {
     }
 
     notifyAuthRequired() {
-        this.showToast('Для этого действия нужно войти в аккаунт.');
+        this.showToast('Для этого действия требуется авторизация');
         const profileContainer = document.querySelector('.header__profile-container');
         if (!profileContainer) return;
 

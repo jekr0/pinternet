@@ -16,7 +16,7 @@ $path = rtrim($path, '/');
 $isPublicEndpoint = $path === '/posts/list';
 
 if (!$isPublicEndpoint && empty($_SESSION['user_id'])) {
-    jsonResponse(['success' => false, 'error' => 'Требуется авторизация.'], 401);
+    jsonResponse(['success' => false, 'error' => 'Для этого действия требуется авторизация'], 401);
 }
 
 $userId = (int) ($_SESSION['user_id'] ?? 0);
@@ -109,7 +109,7 @@ if ($path === '/posts/list') {
     handlePostsList($pdo);
 }
 
-jsonResponse(['success' => false, 'error' => 'Неизвестный метод.'], 404);
+jsonResponse(['success' => false, 'error' => 'Неизвестный метод'], 404);
 
 function handleCollectionsList(PDO $pdo, int $userId): never
 {
@@ -127,7 +127,7 @@ function handleCollectionsList(PDO $pdo, int $userId): never
 function handleCollectionsCreate(PDO $pdo, int $userId): never
 {
     if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
-        jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод.'], 405);
+        jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод'], 405);
     }
 
     $collectionName = trim((string) ($_POST['collection'] ?? ''));
@@ -169,7 +169,7 @@ function handleCollectionsCreate(PDO $pdo, int $userId): never
             $pdo->rollBack();
         }
         error_log('Collection create error: ' . $e->getMessage());
-        jsonResponse(['success' => false, 'error' => 'Не удалось создать коллекцию.'], 500);
+        jsonResponse(['success' => false, 'error' => 'Не удалось создать коллекцию'], 500);
     }
 
     $responseCollectionName = $validatedCollectionName === 'Profile' ? 'Профиль' : $validatedCollectionName;
@@ -197,17 +197,17 @@ function handleCollectionTags(PDO $pdo, int $userId): never
 function handleCollectionsUpdate(PDO $pdo, int $userId): never
 {
     if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
-        jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод.'], 405);
+        jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод'], 405);
     }
 
     $oldName = validateAndNormalizeCollectionName(normalizeCollectionName(trim((string) ($_POST['old_collection'] ?? ''))));
     $newName = validateAndNormalizeCollectionName(normalizeCollectionName(trim((string) ($_POST['collection'] ?? ''))));
     if ($oldName === null || $newName === null || $oldName === '') {
-        jsonResponse(['success' => false, 'error' => 'Некорректные параметры.'], 422);
+        jsonResponse(['success' => false, 'error' => 'Некорректные параметры'], 422);
     }
 
     if ($oldName === 'Profile') {
-        jsonResponse(['success' => false, 'error' => 'Коллекцию "Профиль" нельзя редактировать.'], 403);
+        jsonResponse(['success' => false, 'error' => 'Коллекцию "Профиль" нельзя редактировать'], 403);
     }
 
     $tagsInput = trim((string) ($_POST['tags'] ?? ''));
@@ -218,13 +218,13 @@ function handleCollectionsUpdate(PDO $pdo, int $userId): never
         $collectionId = findCollectionId($pdo, $userId, $oldName);
         if ($collectionId === null) {
             $pdo->rollBack();
-            jsonResponse(['success' => false, 'error' => 'Коллекция не найдена.'], 404);
+            jsonResponse(['success' => false, 'error' => 'Коллекция не найдена'], 404);
         }
 
         $existsId = findCollectionId($pdo, $userId, $newName);
         if ($existsId !== null && $existsId !== $collectionId) {
             $pdo->rollBack();
-            jsonResponse(['success' => false, 'error' => 'Коллекция с таким названием уже существует.'], 409);
+            jsonResponse(['success' => false, 'error' => 'Коллекция с таким названием уже существует'], 409);
         }
 
         $update = $pdo->prepare('UPDATE Collections SET name = ? WHERE id = ? AND user_id = ?');
@@ -247,7 +247,7 @@ function handleCollectionsUpdate(PDO $pdo, int $userId): never
     } catch (Throwable $e) {
         if ($pdo->inTransaction()) $pdo->rollBack();
         error_log('Collection update error: ' . $e->getMessage());
-        jsonResponse(['success' => false, 'error' => 'Не удалось обновить коллекцию.'], 500);
+        jsonResponse(['success' => false, 'error' => 'Не удалось обновить коллекцию'], 500);
     }
 
     $responseCollectionName = $newName === 'Profile' ? 'Профиль' : $newName;
@@ -257,20 +257,20 @@ function handleCollectionsUpdate(PDO $pdo, int $userId): never
 function handleCollectionsDelete(PDO $pdo, int $userId): never
 {
     if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
-        jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод.'], 405);
+        jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод'], 405);
     }
 
     $collectionName = validateAndNormalizeCollectionName(normalizeCollectionName(trim((string) ($_POST['collection'] ?? ''))));
     if ($collectionName === null || $collectionName === '') {
-        jsonResponse(['success' => false, 'error' => 'Некорректное название коллекции.'], 422);
+        jsonResponse(['success' => false, 'error' => 'Некорректное название коллекции'], 422);
     }
     if ($collectionName === 'Profile') {
-        jsonResponse(['success' => false, 'error' => 'Коллекцию "Профиль" нельзя удалить.'], 403);
+        jsonResponse(['success' => false, 'error' => 'Коллекцию "Профиль" нельзя удалить'], 403);
     }
 
     $collectionId = findCollectionId($pdo, $userId, $collectionName);
     if ($collectionId === null) {
-        jsonResponse(['success' => false, 'error' => 'Коллекция не найдена.'], 404);
+        jsonResponse(['success' => false, 'error' => 'Коллекция не найдена'], 404);
     }
 
     $delete = $pdo->prepare('DELETE FROM Collections WHERE id = ? AND user_id = ?');
@@ -305,19 +305,19 @@ function handleHashtagsSuggest(PDO $pdo): never
 function handleToggleLike(PDO $pdo, int $userId): never
 {
     if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
-        jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод.'], 405);
+        jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод'], 405);
     }
 
     $postId = (int) ($_POST['post_id'] ?? 0);
     if ($postId <= 0) {
-        jsonResponse(['success' => false, 'error' => 'Некорректный post_id.'], 422);
+        jsonResponse(['success' => false, 'error' => 'Некорректный post_id'], 422);
     }
 
     $selectPost = $pdo->prepare('SELECT id, user_id, description FROM Posts WHERE id = ? LIMIT 1');
     $selectPost->execute([$postId]);
     $post = $selectPost->fetch();
     if (!$post) {
-        jsonResponse(['success' => false, 'error' => 'Пост не найден.'], 404);
+        jsonResponse(['success' => false, 'error' => 'Пост не найден'], 404);
     }
 
     $postOwnerId = (int) $post['user_id'];
@@ -361,7 +361,7 @@ function handleToggleLike(PDO $pdo, int $userId): never
     } catch (Throwable $e) {
         $pdo->rollBack();
         error_log('Like toggle error: ' . $e->getMessage());
-        jsonResponse(['success' => false, 'error' => 'Не удалось обработать лайк.'], 500);
+        jsonResponse(['success' => false, 'error' => 'Не удалось обработать лайк'], 500);
     }
 
     jsonResponse(['success' => true, 'liked' => true]);
@@ -371,12 +371,12 @@ function handleToggleLike(PDO $pdo, int $userId): never
 function handleBookmarkPost(PDO $pdo, int $userId): never
 {
     if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
-        jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод.'], 405);
+        jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод'], 405);
     }
 
     $postId = (int) ($_POST['post_id'] ?? 0);
     if ($postId <= 0) {
-        jsonResponse(['success' => false, 'error' => 'Некорректный post_id.'], 422);
+        jsonResponse(['success' => false, 'error' => 'Некорректный post_id'], 422);
     }
 
     $postStmt = $pdo->prepare('SELECT user_id FROM Posts WHERE id = ? LIMIT 1');
@@ -384,7 +384,7 @@ function handleBookmarkPost(PDO $pdo, int $userId): never
     $postOwnerId = $postStmt->fetchColumn();
 
     if ($postOwnerId === false) {
-        jsonResponse(['success' => false, 'error' => 'Пост не найден.'], 404);
+        jsonResponse(['success' => false, 'error' => 'Пост не найден'], 404);
     }
 
     if ((int) $postOwnerId === $userId) {
@@ -411,7 +411,7 @@ function handleBookmarkPost(PDO $pdo, int $userId): never
     } catch (Throwable $e) {
         $pdo->rollBack();
         error_log('Bookmark error: ' . $e->getMessage());
-        jsonResponse(['success' => false, 'error' => 'Не удалось сохранить пост.'], 500);
+        jsonResponse(['success' => false, 'error' => 'Не удалось сохранить пост'], 500);
     }
 
     jsonResponse(['success' => true, 'bookmarked' => true]);
@@ -421,7 +421,7 @@ function handleBookmarkCollections(PDO $pdo, int $userId): never
 {
     $postId = (int) ($_GET['post_id'] ?? 0);
     if ($postId <= 0) {
-        jsonResponse(['success' => false, 'error' => 'Некорректный post_id.'], 422);
+        jsonResponse(['success' => false, 'error' => 'Некорректный post_id'], 422);
     }
 
     $collectionsStmt = $pdo->prepare('
@@ -450,22 +450,22 @@ function handleBookmarkCollections(PDO $pdo, int $userId): never
 function handleBookmarkCollectionToggle(PDO $pdo, int $userId): never
 {
     if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
-        jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод.'], 405);
+        jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод'], 405);
     }
 
     $postId = (int) ($_POST['post_id'] ?? 0);
     $collectionName = normalizeCollectionName(trim((string) ($_POST['collection'] ?? '')));
 
     if ($postId <= 0 || $collectionName === '') {
-        jsonResponse(['success' => false, 'error' => 'Некорректные параметры.'], 422);
+        jsonResponse(['success' => false, 'error' => 'Некорректные параметры'], 422);
     }
 
     $isOwner = isPostOwner($pdo, $postId, $userId);
     if ($isOwner === null) {
-        jsonResponse(['success' => false, 'error' => 'Пост не найден.'], 404);
+        jsonResponse(['success' => false, 'error' => 'Пост не найден'], 404);
     }
     if ($collectionName === 'Profile' && $isOwner) {
-        jsonResponse(['success' => false, 'error' => 'Коллекцию "Профиль" нельзя изменять вручную.'], 403);
+        jsonResponse(['success' => false, 'error' => 'Коллекцию "Профиль" нельзя изменять вручную'], 403);
     }
 
     $collectionId = findCollectionId($pdo, $userId, $collectionName);
@@ -473,7 +473,7 @@ function handleBookmarkCollectionToggle(PDO $pdo, int $userId): never
         $collectionId = createCollection($pdo, $userId, 'Profile');
     }
     if ($collectionId === null) {
-        jsonResponse(['success' => false, 'error' => 'Коллекция не найдена.'], 404);
+        jsonResponse(['success' => false, 'error' => 'Коллекция не найдена'], 404);
     }
 
     try {
@@ -519,7 +519,7 @@ function handleBookmarkCollectionToggle(PDO $pdo, int $userId): never
     } catch (Throwable $e) {
         $pdo->rollBack();
         error_log('Bookmark collection toggle error: ' . $e->getMessage());
-        jsonResponse(['success' => false, 'error' => 'Не удалось обновить коллекцию.'], 500);
+        jsonResponse(['success' => false, 'error' => 'Не удалось обновить коллекцию'], 500);
     }
 
     jsonResponse(['success' => true, 'saved' => $isSaved, 'has_any' => $hasAny, 'has_non_profile' => $hasNonProfile]);
@@ -528,17 +528,17 @@ function handleBookmarkCollectionToggle(PDO $pdo, int $userId): never
 function handleBookmarkClear(PDO $pdo, int $userId): never
 {
     if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
-        jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод.'], 405);
+        jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод'], 405);
     }
 
     $postId = (int) ($_POST['post_id'] ?? 0);
     if ($postId <= 0) {
-        jsonResponse(['success' => false, 'error' => 'Некорректный post_id.'], 422);
+        jsonResponse(['success' => false, 'error' => 'Некорректный post_id'], 422);
     }
 
     $isOwner = isPostOwner($pdo, $postId, $userId);
     if ($isOwner === null) {
-        jsonResponse(['success' => false, 'error' => 'Пост не найден.'], 404);
+        jsonResponse(['success' => false, 'error' => 'Пост не найден'], 404);
     }
 
     try {
@@ -578,7 +578,7 @@ function handleBookmarkClear(PDO $pdo, int $userId): never
         $hasNonProfile = $hasNonProfileStmt->fetchColumn() !== false;
     } catch (Throwable $e) {
         error_log('Bookmark clear error: ' . $e->getMessage());
-        jsonResponse(['success' => false, 'error' => 'Не удалось удалить пост из коллекций.'], 500);
+        jsonResponse(['success' => false, 'error' => 'Не удалось удалить пост из коллекций'], 500);
     }
 
     jsonResponse(['success' => true, 'has_any' => $hasAny, 'has_non_profile' => $hasNonProfile]);
@@ -587,13 +587,13 @@ function handleBookmarkClear(PDO $pdo, int $userId): never
 function handleBookmarkCollectionCreate(PDO $pdo, int $userId): never
 {
     if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
-        jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод.'], 405);
+        jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод'], 405);
     }
 
     $postId = (int) ($_POST['post_id'] ?? 0);
     $collectionName = validateAndNormalizeCollectionName(trim((string) ($_POST['collection'] ?? '')));
     if ($postId <= 0 || $collectionName === null || $collectionName === '') {
-        jsonResponse(['success' => false, 'error' => 'Некорректные параметры.'], 422);
+        jsonResponse(['success' => false, 'error' => 'Некорректные параметры'], 422);
     }
 
     try {
@@ -619,7 +619,7 @@ function handleBookmarkCollectionCreate(PDO $pdo, int $userId): never
             $pdo->rollBack();
         }
         error_log('Bookmark collection create error: ' . $e->getMessage());
-        jsonResponse(['success' => false, 'error' => 'Не удалось создать коллекцию.'], 500);
+        jsonResponse(['success' => false, 'error' => 'Не удалось создать коллекцию'], 500);
     }
 
     jsonResponse(['success' => true, 'collection' => $collectionName === 'Profile' ? 'Профиль' : $collectionName]);
@@ -640,19 +640,19 @@ function handlePostsList(PDO $pdo): never
 function handlePostReport(PDO $pdo, int $userId): never
 {
     if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
-        jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод.'], 405);
+        jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод'], 405);
     }
 
     $postId = (int) ($_POST['post_id'] ?? 0);
     if ($postId <= 0) {
-        jsonResponse(['success' => false, 'error' => 'Некорректный post_id.'], 422);
+        jsonResponse(['success' => false, 'error' => 'Некорректный post_id'], 422);
     }
 
     $postStmt = $pdo->prepare('SELECT id, user_id, description FROM Posts WHERE id = ? LIMIT 1');
     $postStmt->execute([$postId]);
     $post = $postStmt->fetch(PDO::FETCH_ASSOC) ?: null;
     if ($post === null) {
-        jsonResponse(['success' => false, 'error' => 'Пост не найден.'], 404);
+        jsonResponse(['success' => false, 'error' => 'Пост не найден'], 404);
     }
 
     try {
@@ -661,7 +661,7 @@ function handlePostReport(PDO $pdo, int $userId): never
         $alreadyReported = $insertStmt->rowCount() === 0;
     } catch (Throwable $e) {
         error_log('Report post error: ' . $e->getMessage());
-        jsonResponse(['success' => false, 'error' => 'Не удалось отправить жалобу.'], 500);
+        jsonResponse(['success' => false, 'error' => 'Не удалось отправить жалобу'], 500);
     }
 
     jsonResponse(['success' => true, 'already_reported' => $alreadyReported]);
@@ -670,7 +670,7 @@ function handlePostReport(PDO $pdo, int $userId): never
 function handleCreateComment(PDO $pdo, int $userId): never
 {
     if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
-        jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод.'], 405);
+        jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод'], 405);
     }
 
     $postId = (int) ($_POST['post_id'] ?? 0);
@@ -678,21 +678,21 @@ function handleCreateComment(PDO $pdo, int $userId): never
     $parentCommentId = (int) ($_POST['parent_comment_id'] ?? 0);
 
     if ($postId <= 0) {
-        jsonResponse(['success' => false, 'error' => 'Некорректный post_id.'], 422);
+        jsonResponse(['success' => false, 'error' => 'Некорректный post_id'], 422);
     }
 
     if ($content === '') {
-        jsonResponse(['success' => false, 'error' => 'Комментарий не может быть пустым.'], 422);
+        jsonResponse(['success' => false, 'error' => 'Комментарий не может быть пустым'], 422);
     }
 
     if (mb_strlen($content) > 256) {
-        jsonResponse(['success' => false, 'error' => 'Комментарий не должен превышать 256 символов.'], 422);
+        jsonResponse(['success' => false, 'error' => 'Комментарий не должен превышать 256 символов'], 422);
     }
 
     $postStmt = $pdo->prepare('SELECT id FROM Posts WHERE id = ? LIMIT 1');
     $postStmt->execute([$postId]);
     if ($postStmt->fetchColumn() === false) {
-        jsonResponse(['success' => false, 'error' => 'Пост не найден.'], 404);
+        jsonResponse(['success' => false, 'error' => 'Пост не найден'], 404);
     }
 
     $resolvedParentCommentId = null;
@@ -709,7 +709,7 @@ function handleCreateComment(PDO $pdo, int $userId): never
         $parentStmt->execute([$parentCommentId, $postId]);
         $parentRow = $parentStmt->fetch(PDO::FETCH_ASSOC) ?: null;
         if ($parentRow === null) {
-            jsonResponse(['success' => false, 'error' => 'Комментарий для ответа не найден.'], 404);
+            jsonResponse(['success' => false, 'error' => 'Комментарий для ответа не найден'], 404);
         }
         $resolvedParentCommentId = (int) ($parentRow['id'] ?? 0);
         $rootCommentId = resolveRootCommentId($pdo, $resolvedParentCommentId, $postId);
@@ -727,7 +727,7 @@ function handleCreateComment(PDO $pdo, int $userId): never
         }
     } catch (Throwable $e) {
         error_log('Create comment error: ' . $e->getMessage());
-        jsonResponse(['success' => false, 'error' => 'Не удалось сохранить комментарий.'], 500);
+        jsonResponse(['success' => false, 'error' => 'Не удалось сохранить комментарий'], 500);
     }
 
     $createdAtTsStmt = $pdo->prepare('SELECT UNIX_TIMESTAMP(created_at) FROM Comments WHERE id = ? LIMIT 1');
@@ -774,19 +774,19 @@ function resolveRootCommentId(PDO $pdo, int $commentId, int $postId): int
 function handleToggleCommentLike(PDO $pdo, int $userId): never
 {
     if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
-        jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод.'], 405);
+        jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод'], 405);
     }
 
     $commentId = (int) ($_POST['comment_id'] ?? 0);
     if ($commentId <= 0) {
-        jsonResponse(['success' => false, 'error' => 'Некорректный comment_id.'], 422);
+        jsonResponse(['success' => false, 'error' => 'Некорректный comment_id'], 422);
     }
 
     $commentStmt = $pdo->prepare('SELECT id, user_id, content FROM Comments WHERE id = ? AND is_deleted = 0 LIMIT 1');
     $commentStmt->execute([$commentId]);
     $comment = $commentStmt->fetch(PDO::FETCH_ASSOC) ?: null;
     if ($comment === null) {
-        jsonResponse(['success' => false, 'error' => 'Комментарий не найден.'], 404);
+        jsonResponse(['success' => false, 'error' => 'Комментарий не найден'], 404);
     }
 
     $commentOwnerId = (int) ($comment['user_id'] ?? 0);
@@ -834,7 +834,7 @@ function handleToggleCommentLike(PDO $pdo, int $userId): never
     } catch (Throwable $e) {
         $pdo->rollBack();
         error_log('Comment like toggle error: ' . $e->getMessage());
-        jsonResponse(['success' => false, 'error' => 'Не удалось обработать лайк комментария.'], 500);
+        jsonResponse(['success' => false, 'error' => 'Не удалось обработать лайк комментария'], 500);
     }
 
     jsonResponse(['success' => true, 'liked' => $liked, 'likes_count' => $likesCount]);
@@ -843,18 +843,18 @@ function handleToggleCommentLike(PDO $pdo, int $userId): never
 function handleCommentReport(PDO $pdo, int $userId): never
 {
     if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
-        jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод.'], 405);
+        jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод'], 405);
     }
 
     $commentId = (int) ($_POST['comment_id'] ?? 0);
     if ($commentId <= 0) {
-        jsonResponse(['success' => false, 'error' => 'Некорректный comment_id.'], 422);
+        jsonResponse(['success' => false, 'error' => 'Некорректный comment_id'], 422);
     }
 
     $commentStmt = $pdo->prepare('SELECT id FROM Comments WHERE id = ? AND is_deleted = 0 LIMIT 1');
     $commentStmt->execute([$commentId]);
     if ($commentStmt->fetchColumn() === false) {
-        jsonResponse(['success' => false, 'error' => 'Комментарий не найден.'], 404);
+        jsonResponse(['success' => false, 'error' => 'Комментарий не найден'], 404);
     }
 
     try {
@@ -863,7 +863,7 @@ function handleCommentReport(PDO $pdo, int $userId): never
         $alreadyReported = $insertStmt->rowCount() === 0;
     } catch (Throwable $e) {
         error_log('Comment report error: ' . $e->getMessage());
-        jsonResponse(['success' => false, 'error' => 'Не удалось отправить жалобу.'], 500);
+        jsonResponse(['success' => false, 'error' => 'Не удалось отправить жалобу'], 500);
     }
 
     jsonResponse(['success' => true, 'already_reported' => $alreadyReported]);
@@ -872,26 +872,26 @@ function handleCommentReport(PDO $pdo, int $userId): never
 function handleUpdateComment(PDO $pdo, int $userId): never
 {
     if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
-        jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод.'], 405);
+        jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод'], 405);
     }
 
     $commentId = (int) ($_POST['comment_id'] ?? 0);
     $content = trim((string) ($_POST['content'] ?? ''));
 
     if ($commentId <= 0) {
-        jsonResponse(['success' => false, 'error' => 'Некорректный comment_id.'], 422);
+        jsonResponse(['success' => false, 'error' => 'Некорректный comment_id'], 422);
     }
     if ($content === '') {
-        jsonResponse(['success' => false, 'error' => 'Комментарий не может быть пустым.'], 422);
+        jsonResponse(['success' => false, 'error' => 'Комментарий не может быть пустым'], 422);
     }
     if (mb_strlen($content) > 256) {
-        jsonResponse(['success' => false, 'error' => 'Комментарий не должен превышать 256 символов.'], 422);
+        jsonResponse(['success' => false, 'error' => 'Комментарий не должен превышать 256 символов'], 422);
     }
 
     $commentStmt = $pdo->prepare('SELECT id FROM Comments WHERE id = ? AND user_id = ? AND is_deleted = 0 LIMIT 1');
     $commentStmt->execute([$commentId, $userId]);
     if ($commentStmt->fetchColumn() === false) {
-        jsonResponse(['success' => false, 'error' => 'Комментарий не найден или недоступен для редактирования.'], 404);
+        jsonResponse(['success' => false, 'error' => 'Комментарий не найден или недоступен для редактирования'], 404);
     }
 
     try {
@@ -899,7 +899,7 @@ function handleUpdateComment(PDO $pdo, int $userId): never
         $updateStmt->execute([$content, $commentId, $userId]);
     } catch (Throwable $e) {
         error_log('Comment update error: ' . $e->getMessage());
-        jsonResponse(['success' => false, 'error' => 'Не удалось обновить комментарий.'], 500);
+        jsonResponse(['success' => false, 'error' => 'Не удалось обновить комментарий'], 500);
     }
 
     jsonResponse(['success' => true, 'comment_id' => $commentId, 'content' => $content]);
@@ -908,18 +908,18 @@ function handleUpdateComment(PDO $pdo, int $userId): never
 function handleDeleteComment(PDO $pdo, int $userId): never
 {
     if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
-        jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод.'], 405);
+        jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод'], 405);
     }
 
     $commentId = (int) ($_POST['comment_id'] ?? 0);
     if ($commentId <= 0) {
-        jsonResponse(['success' => false, 'error' => 'Некорректный comment_id.'], 422);
+        jsonResponse(['success' => false, 'error' => 'Некорректный comment_id'], 422);
     }
 
     $ownerStmt = $pdo->prepare('SELECT id FROM Comments WHERE id = ? AND user_id = ? AND is_deleted = 0 LIMIT 1');
     $ownerStmt->execute([$commentId, $userId]);
     if ($ownerStmt->fetchColumn() === false) {
-        jsonResponse(['success' => false, 'error' => 'Комментарий не найден или недоступен для удаления.'], 404);
+        jsonResponse(['success' => false, 'error' => 'Комментарий не найден или недоступен для удаления'], 404);
     }
 
     try {
@@ -971,7 +971,7 @@ function handleDeleteComment(PDO $pdo, int $userId): never
     } catch (Throwable $e) {
         $pdo->rollBack();
         error_log('Comment delete error: ' . $e->getMessage());
-        jsonResponse(['success' => false, 'error' => 'Не удалось удалить комментарий.'], 500);
+        jsonResponse(['success' => false, 'error' => 'Не удалось удалить комментарий'], 500);
     }
 }
 
@@ -979,7 +979,7 @@ function handleDeleteComment(PDO $pdo, int $userId): never
 function handleUpdatePost(PDO $pdo, int $userId): never
 {
     if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
-        jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод.'], 405);
+        jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод'], 405);
     }
 
     $postId = (int) ($_POST['post_id'] ?? 0);
@@ -988,17 +988,17 @@ function handleUpdatePost(PDO $pdo, int $userId): never
     $tagsInput = trim((string) ($_POST['tags'] ?? ''));
 
     if ($postId <= 0) {
-        jsonResponse(['success' => false, 'error' => 'Некорректный post_id.'], 422);
+        jsonResponse(['success' => false, 'error' => 'Некорректный post_id'], 422);
     }
 
     if (mb_strlen($description) > 512) {
-        jsonResponse(['success' => false, 'error' => 'Описание не должно быть длиннее 512 символов.'], 422);
+        jsonResponse(['success' => false, 'error' => 'Описание не должно быть длиннее 512 символов'], 422);
     }
 
     $postStmt = $pdo->prepare('SELECT id FROM Posts WHERE id = ? AND user_id = ? LIMIT 1');
     $postStmt->execute([$postId, $userId]);
     if ($postStmt->fetchColumn() === false) {
-        jsonResponse(['success' => false, 'error' => 'Пост не найден.'], 404);
+        jsonResponse(['success' => false, 'error' => 'Пост не найден'], 404);
     }
 
     $collectionNames = parseCollectionNames($collectionInput);
@@ -1060,7 +1060,7 @@ function handleUpdatePost(PDO $pdo, int $userId): never
             $pdo->rollBack();
         }
         error_log('Post update error: ' . $e->getMessage());
-        jsonResponse(['success' => false, 'error' => 'Не удалось сохранить изменения.'], 500);
+        jsonResponse(['success' => false, 'error' => 'Не удалось сохранить изменения'], 500);
     }
 
     jsonResponse([
@@ -1075,19 +1075,19 @@ function handleUpdatePost(PDO $pdo, int $userId): never
 function handleDeletePost(PDO $pdo, int $userId): never
 {
     if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
-        jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод.'], 405);
+        jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод'], 405);
     }
 
     $postId = (int) ($_POST['post_id'] ?? 0);
     if ($postId <= 0) {
-        jsonResponse(['success' => false, 'error' => 'Некорректный post_id.'], 422);
+        jsonResponse(['success' => false, 'error' => 'Некорректный post_id'], 422);
     }
 
     $postStmt = $pdo->prepare('SELECT image_path FROM Posts WHERE id = ? AND user_id = ? LIMIT 1');
     $postStmt->execute([$postId, $userId]);
     $imagePath = $postStmt->fetchColumn();
     if ($imagePath === false) {
-        jsonResponse(['success' => false, 'error' => 'Пост не найден.'], 404);
+        jsonResponse(['success' => false, 'error' => 'Пост не найден'], 404);
     }
 
     try {
@@ -1139,7 +1139,7 @@ function handleDeletePost(PDO $pdo, int $userId): never
             $pdo->rollBack();
         }
         error_log('Post delete error: ' . $e->getMessage());
-        jsonResponse(['success' => false, 'error' => 'Не удалось удалить пост.'], 500);
+        jsonResponse(['success' => false, 'error' => 'Не удалось удалить пост'], 500);
     }
 
     deletePostImageFile((string) $imagePath);
@@ -1150,7 +1150,7 @@ function handleDeletePost(PDO $pdo, int $userId): never
 function handleCreatePost(PDO $pdo, int $userId): never
 {
     if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
-        jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод.'], 405);
+        jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод'], 405);
     }
 
     $description = trim((string) ($_POST['description'] ?? ''));
@@ -1158,16 +1158,16 @@ function handleCreatePost(PDO $pdo, int $userId): never
     $tagsInput = trim((string) ($_POST['tags'] ?? ''));
 
     if (mb_strlen($description) > 512) {
-        jsonResponse(['success' => false, 'error' => 'Описание не должно превышать 512 символов.'], 422);
+        jsonResponse(['success' => false, 'error' => 'Описание не должно превышать 512 символов'], 422);
     }
 
     if (!isset($_FILES['image']) || !is_array($_FILES['image'])) {
-        jsonResponse(['success' => false, 'error' => 'Изображение обязательно.'], 422);
+        jsonResponse(['success' => false, 'error' => 'Изображение обязательно'], 422);
     }
 
     $image = $_FILES['image'];
     if (($image['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
-        jsonResponse(['success' => false, 'error' => 'Ошибка при загрузке изображения.'], 422);
+        jsonResponse(['success' => false, 'error' => 'Ошибка при загрузке изображения'], 422);
     }
 
     $tmpPath = (string) ($image['tmp_name'] ?? '');
@@ -1179,12 +1179,12 @@ function handleCreatePost(PDO $pdo, int $userId): never
     ];
 
     if (!isset($allowedTypes[$mimeType])) {
-        jsonResponse(['success' => false, 'error' => 'Допустимы только PNG, JPEG и GIF.'], 422);
+        jsonResponse(['success' => false, 'error' => 'Допустимы только PNG, JPEG и GIF'], 422);
     }
 
     $uploadDir = dirname(__DIR__, 2) . '/htdocs/uploads/posts';
     if (!is_dir($uploadDir) && !mkdir($uploadDir, 0775, true) && !is_dir($uploadDir)) {
-        jsonResponse(['success' => false, 'error' => 'Не удалось подготовить директорию для загрузки.'], 500);
+        jsonResponse(['success' => false, 'error' => 'Не удалось подготовить директорию для загрузки'], 500);
     }
 
     $fileName = sprintf('post_%d_%s.%s', $userId, bin2hex(random_bytes(8)), $allowedTypes[$mimeType]);
@@ -1192,7 +1192,7 @@ function handleCreatePost(PDO $pdo, int $userId): never
     $publicPath = 'uploads/posts/' . $fileName;
 
     if (!move_uploaded_file($tmpPath, $fullPath)) {
-        jsonResponse(['success' => false, 'error' => 'Не удалось сохранить изображение.'], 500);
+        jsonResponse(['success' => false, 'error' => 'Не удалось сохранить изображение'], 500);
     }
 
     $collectionNames = parseCollectionNames($collectionInput);
@@ -1250,7 +1250,7 @@ function handleCreatePost(PDO $pdo, int $userId): never
             @unlink($fullPath);
         }
         error_log('Post creation error: ' . $e->getMessage());
-        jsonResponse(['success' => false, 'error' => 'Не удалось создать пост.'], 500);
+        jsonResponse(['success' => false, 'error' => 'Не удалось создать пост'], 500);
     }
 
     jsonResponse(['success' => true, 'post_id' => $postId, 'image_path' => $publicPath]);

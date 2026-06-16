@@ -17,7 +17,7 @@ const App = {
         'dropdown_search.js',
         'footer_lo.js',
         'post_modal.js',
-        'collection_modul.js',
+        'collection_modal.js',
         'dropdown_collections.js'
     ]),
 
@@ -415,7 +415,7 @@ let isDirtyHistoryPromptOpen = false;
 
 window.addEventListener('popstate', () => {
     const postModalInstance = App.components['post_modal.js'];
-    const collectionModalInstance = App.components['collection_modul.js'];
+    const collectionModalInstance = App.components['collection_modal.js'];
     const isPostModalOpen = !!(postModalInstance?.modal && !postModalInstance.modal.classList.contains('post-modal--hidden'));
     const isCollectionModalOpen = !!(collectionModalInstance?.root && !collectionModalInstance.root.classList.contains('collection-modal--hidden'));
     const activeModalUrl = isPostModalOpen
@@ -481,7 +481,7 @@ window.addEventListener('popstate', () => {
 function openUrlDrivenModalState() {
     const pathname = window.location.pathname;
     const postModalInstance = App.components['post_modal.js'];
-    const collectionModalInstance = App.components['collection_modul.js'];
+    const collectionModalInstance = App.components['collection_modal.js'];
 
     const postEditId = App.history?.getPostEditIdFromUrl?.() || 0;
     const isPostCreate = pathname === '/post/create';

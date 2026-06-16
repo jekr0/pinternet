@@ -100,7 +100,7 @@ switch ($path) {
             'post-card_cp.css',
             'post-full_cp.css',
             'dropdown-collections_cp.css',
-            'collection-modul_cp.css',
+            'collection-modal_cp.css',
             'warn-modal_cp.css',
             'toast-stack_cp.css',
             'home_pg.css',
@@ -119,7 +119,7 @@ switch ($path) {
             'post_card.js',
             'post_full.js',
             'dropdown_collections.js',
-            'collection_modul.js',
+            'collection_modal.js',
             'masonry_feed.js',
             'adaptive_text.js'
         ];
@@ -155,7 +155,7 @@ switch ($path) {
             'dropdown_search.js',
             'footer_lo.js',
             'post_modal.js',
-            'collection_modul.js',
+            'collection_modal.js',
             'profile_full.js',
             'adaptive_text.js'
         ];
@@ -258,7 +258,7 @@ switch ($path) {
             'footer_lo.js',
             'post_modal.js',
             'post_card.js',
-            'collection_modul.js',
+            'collection_modal.js',
             'adaptive_text.js'
         ];
         break;
@@ -275,7 +275,7 @@ $APP_CSS = [
     'post-card_cp.css',
     'post-full_cp.css',
     'dropdown-collections_cp.css',
-    'collection-modul_cp.css',
+    'collection-modal_cp.css',
     'warn-modal_cp.css',
     'toast-stack_cp.css',
     'home_pg.css',
@@ -296,7 +296,7 @@ $APP_JS = [
     'post_full.js',
     'profile_full.js',
     'dropdown_collections.js',
-    'collection_modul.js',
+    'collection_modal.js',
     'masonry_feed.js',
     'adaptive_text.js',
     'password_toggle.js',
