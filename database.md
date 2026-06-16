@@ -300,7 +300,7 @@ CREATE TABLE Notifications (
     id         INT AUTO_INCREMENT PRIMARY KEY,
     user_id    INT NOT NULL,
     title      NVARCHAR(64) NOT NULL,
-    text       NVARCHAR(256) NOT NULL,
+    text       NVARCHAR(256) NULL,
     is_read    TINYINT(1) NOT NULL DEFAULT 0,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 

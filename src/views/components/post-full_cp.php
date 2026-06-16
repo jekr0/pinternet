@@ -228,8 +228,7 @@ if (!$selectedPost) {
                 <span class="post-full__comments-toggle-line" aria-hidden="true"></span>
             </div>
         <?php endif; ?>
-        <?php if ($viewerId > 0): ?>
-            <div class="post-full__comment-reply-state" data-component="post-full-reply-state" aria-live="polite">
+        <div class="post-full__comment-reply-state" data-component="post-full-reply-state" aria-live="polite">
                 <button class="post-full__comment-reply-cancel" type="button" data-action="reply-cancel" aria-label="Отменить ответ">×</button>
                 <span class="post-full__comment-reply-text">
                     Ответ пользователю <span class="post-full__comment-reply-nickname" data-component="post-full-reply-nickname"></span>
@@ -245,6 +244,5 @@ if (!$selectedPost) {
                 ></textarea>
                 <span class="post-full__comment-counter" data-component="post-full-comment-counter">0/256</span>
             </div>
-        <?php endif; ?>
     </div>
 </section>

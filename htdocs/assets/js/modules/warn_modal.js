@@ -1,6 +1,9 @@
 class WarnModalComponent {
   init(){
-    App.warn={open:(cfg)=>this.open(cfg)};
+    App.warn={open:(cfg)=>this.open(cfg), close:()=>this.close()};
+  }
+  close(){
+    App.overlay?.close?.('warn-modal');
   }
   open(cfg={}){
     if(!App.overlay) return null;

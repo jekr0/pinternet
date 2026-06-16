@@ -7,6 +7,7 @@ class FooterLayout {
         this.isPinned = false;
         this.toggleButton = this.menu.querySelector('.footer-menu__toggle');
         this.compressButton = this.menu.querySelector('.footer-menu__compress');
+        this.homeButton = this.menu.querySelector('.footer-menu__home');
         this.pinButton = this.menu.querySelector('.footer-menu__pin');
         this.pinIcon = this.pinButton?.querySelector('[data-svg-src]') || null;
         this.contentButtons = Array.from(this.menu.querySelectorAll('[data-footer-menu-action]'));
@@ -18,6 +19,7 @@ class FooterLayout {
     }
 
     loadIcons() {
+        if (!this.menu) return;
         this.menu.querySelectorAll('[data-svg-src]').forEach((icon) => this.loadIcon(icon));
     }
 
@@ -38,6 +40,15 @@ class FooterLayout {
             event.stopPropagation();
             this.togglePinned();
         };
+        this.homeHandler = (event) => {
+            event.stopPropagation();
+            this.closeAfterAction();
+            if (App.nav?.navigate) {
+                App.nav.navigate('/', { pushUrl: true });
+                return;
+            }
+            window.location.href = '/';
+        };
         this.contentClickHandler = (event) => {
             event.stopPropagation();
             this.handleContentAction(event.currentTarget?.dataset.footerMenuAction || '');
@@ -51,6 +62,7 @@ class FooterLayout {
         this.toggleButton?.addEventListener('click', this.openHandler);
         this.compressButton?.addEventListener('click', this.closeHandler);
         this.pinButton?.addEventListener('click', this.pinHandler);
+        this.homeButton?.addEventListener('click', this.homeHandler);
         this.contentButtons.forEach((button) => button.addEventListener('click', this.contentClickHandler));
         document.addEventListener('click', this.outsideClickHandler);
     }
@@ -81,6 +93,7 @@ class FooterLayout {
     }
 
     closeMenu() {
+        if (!this.menu) return;
         this.menu.dataset.state = 'closed';
         this.toggleButton?.setAttribute('aria-expanded', 'false');
     }
@@ -129,6 +142,16 @@ class FooterLayout {
     }
 
     refresh() {
+        const currentMenu = document.querySelector('[data-component="footer-menu"]');
+        if (!currentMenu) {
+            this.menu = null;
+            return;
+        }
+        if (currentMenu !== this.menu || currentMenu.dataset.bound !== '1') {
+            currentMenu.dataset.bound = '0';
+            this.init();
+            return;
+        }
         this.loadIcons();
     }
 }

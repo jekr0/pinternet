@@ -15,6 +15,9 @@ $footerMenuIsAuthenticated = !empty($_SESSION['user_id']);
             <button class="footer-menu__compress" type="button" aria-label="Свернуть меню">
                 <span class="footer-menu__control-icon" data-svg-src="/assets/images/icons/compress.svg" aria-hidden="true"></span>
             </button>
+            <button class="footer-menu__home" type="button" aria-label="На главную">
+                <span class="footer-menu__control-icon" data-svg-src="/assets/images/icons/home.svg" aria-hidden="true"></span>
+            </button>
         </div>
         <div class="footer-menu__line footer-menu__line--1" aria-hidden="true"></div>
 
