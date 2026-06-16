@@ -12,7 +12,7 @@ $isLoggedIn = !empty($_SESSION['user_id']);
     require_once __DIR__ . '/../../../src/config/database_conf.php';
     require_once __DIR__ . '/../../../src/config/level_helper.php';
 
-    $stmt = $pdo->prepare('SELECT email, exp, level FROM Users WHERE id = ?');
+    $stmt = $pdo->prepare('SELECT email, exp, level, created_at FROM Users WHERE id = ?');
     $stmt->execute([$_SESSION['user_id']]);
     $user = $stmt->fetch();
 
@@ -22,6 +22,11 @@ $isLoggedIn = !empty($_SESSION['user_id']);
     }
 
     $progress = getExpProgress((int) $_SESSION['exp'], (int) $_SESSION['level']);
+    $createdAtText = '';
+    if (!empty($user['created_at'])) {
+        $createdAtText = date('d.m.Y', strtotime((string) $user['created_at']));
+    }
+
 
     ?>
 
@@ -39,6 +44,12 @@ $isLoggedIn = !empty($_SESSION['user_id']);
             <li class="dropdown-profile__item dropdown-profile__item--info">
                     <?= $progress['current'] ?>/<?= $progress['needed'] ?> exp до <?= $progress['next_level'] ?> уровня
             </li>
+
+            <?php if ($createdAtText !== ''): ?>
+                <li class="dropdown-profile__item dropdown-profile__item--info" data-profile-item="created-at">
+                    Создан <?= htmlspecialchars($createdAtText) ?>
+                </li>
+            <?php endif; ?>
 
         </ul>
 

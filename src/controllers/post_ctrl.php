@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/../config/database_conf.php';
 require_once __DIR__ . '/../config/level_helper.php';
+require_once __DIR__ . '/notifications_ctrl.php';
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -312,7 +313,7 @@ function handleToggleLike(PDO $pdo, int $userId): never
         jsonResponse(['success' => false, 'error' => 'Некорректный post_id.'], 422);
     }
 
-    $selectPost = $pdo->prepare('SELECT id, user_id FROM Posts WHERE id = ? LIMIT 1');
+    $selectPost = $pdo->prepare('SELECT id, user_id, description FROM Posts WHERE id = ? LIMIT 1');
     $selectPost->execute([$postId]);
     $post = $selectPost->fetch();
     if (!$post) {
@@ -346,6 +347,8 @@ function handleToggleLike(PDO $pdo, int $userId): never
         $incrementTotalLikes->execute([$postOwnerId]);
 
         if ($userId !== $postOwnerId) {
+            notifyPostLiked($pdo, $postOwnerId, $userId, $post['description'] ?? '');
+
             $insertAward = $pdo->prepare('INSERT IGNORE INTO Post_Like_Exp_Awards (liker_user_id, post_id, post_owner_id) VALUES (?, ?, ?)');
             $insertAward->execute([$userId, $postId, $postOwnerId]);
 
@@ -401,7 +404,7 @@ function handleBookmarkPost(PDO $pdo, int $userId): never
             $collectionId = (int) $pdo->lastInsertId();
         }
 
-        $saveStmt = $pdo->prepare('INSERT IGNORE INTO Saved_Posts (user_id, post_id, collection_id) VALUES (?, ?, ?)');
+        $saveStmt = $pdo->prepare('INSERT IGNORE INTO Collection_Posts (user_id, post_id, collection_id) VALUES (?, ?, ?)');
         $saveStmt->execute([$userId, $postId, (int) $collectionId]);
 
         $pdo->commit();
@@ -424,7 +427,7 @@ function handleBookmarkCollections(PDO $pdo, int $userId): never
     $collectionsStmt = $pdo->prepare('
         SELECT b.name, CASE WHEN sp.id IS NULL THEN 0 ELSE 1 END AS is_saved
         FROM Collections b
-        LEFT JOIN Saved_Posts sp ON sp.collection_id = b.id AND sp.user_id = b.user_id AND sp.post_id = ?
+        LEFT JOIN Collection_Posts sp ON sp.collection_id = b.id AND sp.user_id = b.user_id AND sp.post_id = ?
         WHERE b.user_id = ?
         ORDER BY b.created_at ASC
     ');
@@ -476,23 +479,23 @@ function handleBookmarkCollectionToggle(PDO $pdo, int $userId): never
     try {
         $pdo->beginTransaction();
 
-        $savedStmt = $pdo->prepare('SELECT id FROM Saved_Posts WHERE user_id = ? AND post_id = ? AND collection_id = ? LIMIT 1');
+        $savedStmt = $pdo->prepare('SELECT id FROM Collection_Posts WHERE user_id = ? AND post_id = ? AND collection_id = ? LIMIT 1');
         $savedStmt->execute([$userId, $postId, $collectionId]);
         $savedId = $savedStmt->fetchColumn();
 
         $isSaved = false;
         if ($savedId !== false) {
-            $deleteStmt = $pdo->prepare('DELETE FROM Saved_Posts WHERE id = ?');
+            $deleteStmt = $pdo->prepare('DELETE FROM Collection_Posts WHERE id = ?');
             $deleteStmt->execute([(int) $savedId]);
         } else {
-            $insertStmt = $pdo->prepare('INSERT INTO Saved_Posts (user_id, post_id, collection_id) VALUES (?, ?, ?)');
+            $insertStmt = $pdo->prepare('INSERT INTO Collection_Posts (user_id, post_id, collection_id) VALUES (?, ?, ?)');
             $insertStmt->execute([$userId, $postId, $collectionId]);
             $isSaved = true;
         }
 
         $hasAnyStmt = $pdo->prepare('
             SELECT 1
-            FROM Saved_Posts sp
+            FROM Collection_Posts sp
             INNER JOIN Collections b ON b.id = sp.collection_id AND b.user_id = sp.user_id
             WHERE sp.user_id = ? AND sp.post_id = ?
             LIMIT 1
@@ -502,7 +505,7 @@ function handleBookmarkCollectionToggle(PDO $pdo, int $userId): never
 
         $hasNonProfileStmt = $pdo->prepare('
             SELECT 1
-            FROM Saved_Posts sp
+            FROM Collection_Posts sp
             INNER JOIN Collections b ON b.id = sp.collection_id AND b.user_id = sp.user_id
             WHERE sp.user_id = ?
               AND sp.post_id = ?
@@ -542,19 +545,19 @@ function handleBookmarkClear(PDO $pdo, int $userId): never
         if ($isOwner) {
             $deleteStmt = $pdo->prepare('
                 DELETE sp
-                FROM Saved_Posts sp
+                FROM Collection_Posts sp
                 INNER JOIN Collections b ON b.id = sp.collection_id
                 WHERE sp.user_id = ? AND sp.post_id = ? AND LOWER(b.name) <> LOWER(?)
             ');
             $deleteStmt->execute([$userId, $postId, 'Profile']);
         } else {
-            $deleteStmt = $pdo->prepare('DELETE FROM Saved_Posts WHERE user_id = ? AND post_id = ?');
+            $deleteStmt = $pdo->prepare('DELETE FROM Collection_Posts WHERE user_id = ? AND post_id = ?');
             $deleteStmt->execute([$userId, $postId]);
         }
 
         $hasAnyStmt = $pdo->prepare('
             SELECT 1
-            FROM Saved_Posts sp
+            FROM Collection_Posts sp
             INNER JOIN Collections b ON b.id = sp.collection_id AND b.user_id = sp.user_id
             WHERE sp.user_id = ? AND sp.post_id = ?
             LIMIT 1
@@ -564,7 +567,7 @@ function handleBookmarkClear(PDO $pdo, int $userId): never
 
         $hasNonProfileStmt = $pdo->prepare('
             SELECT 1
-            FROM Saved_Posts sp
+            FROM Collection_Posts sp
             INNER JOIN Collections b ON b.id = sp.collection_id AND b.user_id = sp.user_id
             WHERE sp.user_id = ?
               AND sp.post_id = ?
@@ -601,12 +604,12 @@ function handleBookmarkCollectionCreate(PDO $pdo, int $userId): never
             $collectionId = createCollection($pdo, $userId, $collectionName);
         }
 
-        $existsStmt = $pdo->prepare('SELECT id FROM Saved_Posts WHERE user_id = ? AND post_id = ? AND collection_id = ? LIMIT 1');
+        $existsStmt = $pdo->prepare('SELECT id FROM Collection_Posts WHERE user_id = ? AND post_id = ? AND collection_id = ? LIMIT 1');
         $existsStmt->execute([$userId, $postId, $collectionId]);
         $savedId = $existsStmt->fetchColumn();
 
         if ($savedId === false) {
-            $insertStmt = $pdo->prepare('INSERT INTO Saved_Posts (user_id, post_id, collection_id) VALUES (?, ?, ?)');
+            $insertStmt = $pdo->prepare('INSERT INTO Collection_Posts (user_id, post_id, collection_id) VALUES (?, ?, ?)');
             $insertStmt->execute([$userId, $postId, $collectionId]);
         }
 
@@ -645,9 +648,10 @@ function handlePostReport(PDO $pdo, int $userId): never
         jsonResponse(['success' => false, 'error' => 'Некорректный post_id.'], 422);
     }
 
-    $postStmt = $pdo->prepare('SELECT id FROM Posts WHERE id = ? LIMIT 1');
+    $postStmt = $pdo->prepare('SELECT id, user_id, description FROM Posts WHERE id = ? LIMIT 1');
     $postStmt->execute([$postId]);
-    if ($postStmt->fetchColumn() === false) {
+    $post = $postStmt->fetch(PDO::FETCH_ASSOC) ?: null;
+    if ($post === null) {
         jsonResponse(['success' => false, 'error' => 'Пост не найден.'], 404);
     }
 
@@ -695,7 +699,7 @@ function handleCreateComment(PDO $pdo, int $userId): never
     $rootCommentId = null;
     if ($parentCommentId > 0) {
         $parentStmt = $pdo->prepare('
-            SELECT id, parent_comment_id
+            SELECT id, parent_comment_id, user_id, content
             FROM Comments
             WHERE id = ?
               AND post_id = ?
@@ -715,6 +719,12 @@ function handleCreateComment(PDO $pdo, int $userId): never
         $insertStmt = $pdo->prepare('INSERT INTO Comments (post_id, user_id, content, parent_comment_id) VALUES (?, ?, ?, ?)');
         $insertStmt->execute([$postId, $userId, $content, $resolvedParentCommentId]);
         $commentId = (int) $pdo->lastInsertId();
+
+        if ($resolvedParentCommentId !== null && !empty($parentRow)) {
+            notifyCommentReplied($pdo, (int) ($parentRow['user_id'] ?? 0), $userId, $parentRow['content'] ?? '');
+        } else {
+            notifyPostCommented($pdo, (int) ($post['user_id'] ?? 0), $userId, $post['description'] ?? '');
+        }
     } catch (Throwable $e) {
         error_log('Create comment error: ' . $e->getMessage());
         jsonResponse(['success' => false, 'error' => 'Не удалось сохранить комментарий.'], 500);
@@ -772,7 +782,7 @@ function handleToggleCommentLike(PDO $pdo, int $userId): never
         jsonResponse(['success' => false, 'error' => 'Некорректный comment_id.'], 422);
     }
 
-    $commentStmt = $pdo->prepare('SELECT id, user_id FROM Comments WHERE id = ? AND is_deleted = 0 LIMIT 1');
+    $commentStmt = $pdo->prepare('SELECT id, user_id, content FROM Comments WHERE id = ? AND is_deleted = 0 LIMIT 1');
     $commentStmt->execute([$commentId]);
     $comment = $commentStmt->fetch(PDO::FETCH_ASSOC) ?: null;
     if ($comment === null) {
@@ -805,6 +815,8 @@ function handleToggleCommentLike(PDO $pdo, int $userId): never
             $incrementTotalLikes->execute([$commentOwnerId]);
 
             if ($userId !== $commentOwnerId) {
+                notifyCommentLiked($pdo, $commentOwnerId, $userId, $comment['content'] ?? '');
+
                 $insertAward = $pdo->prepare('INSERT IGNORE INTO Comment_Like_Exp_Awards (liker_user_id, comment_id, comment_owner_id) VALUES (?, ?, ?)');
                 $insertAward->execute([$userId, $commentId, $commentOwnerId]);
 
@@ -1007,10 +1019,10 @@ function handleUpdatePost(PDO $pdo, int $userId): never
             $profileCollectionId = createCollection($pdo, $userId, 'Profile');
         }
 
-        $deleteOwnSaves = $pdo->prepare('DELETE FROM Saved_Posts WHERE user_id = ? AND post_id = ?');
+        $deleteOwnSaves = $pdo->prepare('DELETE FROM Collection_Posts WHERE user_id = ? AND post_id = ?');
         $deleteOwnSaves->execute([$userId, $postId]);
 
-        $savePost = $pdo->prepare('INSERT IGNORE INTO Saved_Posts (user_id, post_id, collection_id) VALUES (?, ?, ?)');
+        $savePost = $pdo->prepare('INSERT IGNORE INTO Collection_Posts (user_id, post_id, collection_id) VALUES (?, ?, ?)');
         $savePost->execute([$userId, $postId, $profileCollectionId]);
 
         foreach ($collectionNames as $collectionName) {
@@ -1115,7 +1127,7 @@ function handleDeletePost(PDO $pdo, int $userId): never
         $pdo->prepare('DELETE FROM Post_Reports WHERE post_id = ?')->execute([$postId]);
         $pdo->prepare('DELETE FROM Post_Like_Exp_Awards WHERE post_id = ?')->execute([$postId]);
         $pdo->prepare('DELETE FROM Post_Likes WHERE post_id = ?')->execute([$postId]);
-        $pdo->prepare('DELETE FROM Saved_Posts WHERE post_id = ?')->execute([$postId]);
+        $pdo->prepare('DELETE FROM Collection_Posts WHERE post_id = ?')->execute([$postId]);
         $pdo->prepare('DELETE FROM Post_Hashtags WHERE post_id = ?')->execute([$postId]);
 
         $deletePost = $pdo->prepare('DELETE FROM Posts WHERE id = ? AND user_id = ?');
@@ -1194,13 +1206,14 @@ function handleCreatePost(PDO $pdo, int $userId): never
         $insertPost = $pdo->prepare('INSERT INTO Posts (user_id, image_path, description) VALUES (?, ?, ?)');
         $insertPost->execute([$userId, $publicPath, $description !== '' ? $description : null]);
         $postId = (int) $pdo->lastInsertId();
+        notifyFollowedUserCreatedPost($pdo, $userId, $postId, $description);
 
         $profileCollectionId = findCollectionId($pdo, $userId, 'Profile');
         if ($profileCollectionId === null) {
             $profileCollectionId = createCollection($pdo, $userId, 'Profile');
         }
 
-        $savePost = $pdo->prepare('INSERT IGNORE INTO Saved_Posts (user_id, post_id, collection_id) VALUES (?, ?, ?)');
+        $savePost = $pdo->prepare('INSERT IGNORE INTO Collection_Posts (user_id, post_id, collection_id) VALUES (?, ?, ?)');
         $savePost->execute([$userId, $postId, $profileCollectionId]);
 
         foreach ($collectionNames as $collectionName) {

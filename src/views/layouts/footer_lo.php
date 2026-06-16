@@ -1,5 +1,9 @@
+<?php
+if (session_status() === PHP_SESSION_NONE) session_start();
+$footerMenuIsAuthenticated = !empty($_SESSION['user_id']);
+?>
 <footer class="footer" aria-label="Быстрые действия">
-    <div class="footer-menu" data-component="footer-menu" data-state="closed">
+    <div class="footer-menu" data-component="footer-menu" data-state="closed" data-authenticated="<?= $footerMenuIsAuthenticated ? '1' : '0' ?>">
         <button class="footer-menu__toggle" type="button" aria-label="Открыть меню" aria-expanded="false">
             <span class="footer-menu__planet" data-svg-src="/assets/images/icons/planet.svg" aria-hidden="true"></span>
         </button>
@@ -20,6 +24,7 @@
             <button class="footer-menu__content-button" type="button" data-footer-menu-action="notifications">Уведомления</button>
             <button class="footer-menu__content-button" type="button" data-footer-menu-action="friends">Друзья</button>
             <button class="footer-menu__content-button" type="button" data-footer-menu-action="collections">Коллекции</button>
+            <button class="footer-menu__create-post" type="button" data-footer-menu-action="create-post">Создать пост</button>
         </div>
     </div>
 

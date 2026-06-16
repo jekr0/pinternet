@@ -7,6 +7,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
 require_once __DIR__ . '/../config/database_conf.php';
 require_once __DIR__ . '/../config/level_helper.php';
+require_once __DIR__ . '/notifications_ctrl.php';
 
 function profileJsonResponse(array $payload, int $statusCode = 200): never
 {
@@ -61,12 +62,12 @@ function handleProfileFollow(PDO $pdo, int $viewerId, int $targetUserId): never
     try {
         $pdo->beginTransaction();
 
-        $insertStmt = $pdo->prepare('INSERT IGNORE INTO Follows (follower_id, following_id) VALUES (?, ?)');
+        $insertStmt = $pdo->prepare('INSERT IGNORE INTO User_Follows (follower_id, following_id) VALUES (?, ?)');
         $insertStmt->execute([$viewerId, $targetUserId]);
         $isFirstFollow = $insertStmt->rowCount() > 0;
 
         if ($isFirstFollow) {
-            $insertAward = $pdo->prepare('INSERT IGNORE INTO User_Subscribe_Exp_Awards (subscriber_id, subscribed_user_id) VALUES (?, ?)');
+            $insertAward = $pdo->prepare('INSERT IGNORE INTO User_Follows_Exp_Awards (subscriber_id, subscribed_user_id) VALUES (?, ?)');
             $insertAward->execute([$viewerId, $targetUserId]);
 
             if ($insertAward->rowCount() > 0) {
@@ -74,9 +75,17 @@ function handleProfileFollow(PDO $pdo, int $viewerId, int $targetUserId): never
             }
         }
 
-        $mutualStmt = $pdo->prepare('SELECT 1 FROM Follows WHERE follower_id = ? AND following_id = ? LIMIT 1');
+        $mutualStmt = $pdo->prepare('SELECT 1 FROM User_Follows WHERE follower_id = ? AND following_id = ? LIMIT 1');
         $mutualStmt->execute([$targetUserId, $viewerId]);
         $isMutual = $mutualStmt->fetchColumn() !== false;
+
+        if ($isFirstFollow) {
+            notifyUserFollowed($pdo, $targetUserId, $viewerId);
+            if ($isMutual) {
+                notifyMutualFollow($pdo, $viewerId, $targetUserId);
+                notifyMutualFollow($pdo, $targetUserId, $viewerId);
+            }
+        }
 
         $pdo->commit();
     } catch (Throwable $e) {
@@ -102,7 +111,7 @@ function handleProfileUnfollow(PDO $pdo, int $viewerId, int $targetUserId): neve
 
     $targetUser = findProfileTargetUser($pdo, $targetUserId);
 
-    $deleteStmt = $pdo->prepare('DELETE FROM Follows WHERE follower_id = ? AND following_id = ?');
+    $deleteStmt = $pdo->prepare('DELETE FROM User_Follows WHERE follower_id = ? AND following_id = ?');
     $deleteStmt->execute([$viewerId, $targetUserId]);
 
     profileJsonResponse([
@@ -141,11 +150,11 @@ function handleProfileNotifications(PDO $pdo, int $viewerId, int $targetUserId):
     findProfileTargetUser($pdo, $targetUserId);
 
     $enabled = filter_var($_POST['enabled'] ?? false, FILTER_VALIDATE_BOOLEAN);
-    $updateStmt = $pdo->prepare('UPDATE Follows SET notifications_switch = ? WHERE follower_id = ? AND following_id = ?');
+    $updateStmt = $pdo->prepare('UPDATE User_Follows SET notifications_switch = ? WHERE follower_id = ? AND following_id = ?');
     $updateStmt->execute([$enabled ? 1 : 0, $viewerId, $targetUserId]);
 
     if ($updateStmt->rowCount() === 0) {
-        $existsStmt = $pdo->prepare('SELECT 1 FROM Follows WHERE follower_id = ? AND following_id = ? LIMIT 1');
+        $existsStmt = $pdo->prepare('SELECT 1 FROM User_Follows WHERE follower_id = ? AND following_id = ? LIMIT 1');
         $existsStmt->execute([$viewerId, $targetUserId]);
         if ($existsStmt->fetchColumn() === false) {
             profileJsonResponse(['success' => false, 'error' => 'Сначала подпишитесь на пользователя.'], 409);
@@ -165,10 +174,10 @@ function handleProfileBlock(PDO $pdo, int $viewerId, int $targetUserId): never
     $blocked = filter_var($_POST['blocked'] ?? false, FILTER_VALIDATE_BOOLEAN);
 
     if ($blocked) {
-        $stmt = $pdo->prepare('INSERT IGNORE INTO Blocks (blocker_user_id, blocked_user_id) VALUES (?, ?)');
+        $stmt = $pdo->prepare('INSERT IGNORE INTO User_Blocks (blocker_user_id, blocked_user_id) VALUES (?, ?)');
         $stmt->execute([$viewerId, $targetUserId]);
     } else {
-        $stmt = $pdo->prepare('DELETE FROM Blocks WHERE blocker_user_id = ? AND blocked_user_id = ?');
+        $stmt = $pdo->prepare('DELETE FROM User_Blocks WHERE blocker_user_id = ? AND blocked_user_id = ?');
         $stmt->execute([$viewerId, $targetUserId]);
     }
 

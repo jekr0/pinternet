@@ -21,6 +21,16 @@
     transition: width 0.2s ease, height 0.2s ease, padding 0.2s ease;
 }
 
+.footer-menu.is-auth-required-shake {
+    animation: footer-menu-shake 0.1s ease-in-out;
+}
+
+@keyframes footer-menu-shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+}
+
 .footer-menu[data-state="opened"] {
     width: 324px;
     height: 424px;
@@ -98,14 +108,22 @@
     border: 2px solid #e0e0e0;
     border-radius: 12px;
     background: transparent;
-    color: #bbb;
+    fill: #bbb;
     cursor: pointer;
-    transition: border-color 0.2s ease, color 0.2s ease;
+    transition: border-color 0.2s ease, color 0.2s ease, fill 0.2s ease;
 }
 
 .footer-menu__pin:hover,
 .footer-menu__compress:hover {
     border-color: rgb(150, 150, 250);
+    fill: rgb(150, 150, 250);
+}
+
+.footer-menu__pin {
+    color: #bbb;
+}
+
+.footer-menu__pin:hover {
     color: rgb(150, 150, 250);
 }
 
@@ -146,6 +164,12 @@
     fill: currentColor;
 }
 
+.footer-menu__compress .footer-menu__control-icon svg,
+.footer-menu__compress .footer-menu__control-icon svg * {
+    fill: inherit;
+    stroke: none;
+}
+
 .footer-menu__line {
     display: flex;
     align-items: center;
@@ -176,6 +200,7 @@
     display: flex;
     flex-direction: column;
     gap: 4px;
+    height: calc(100% - 54px);
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
@@ -201,11 +226,33 @@
     background: transparent;
     font-family: 'SF_def', Arial, sans-serif;
     font-size: 18px;
-    color: rgb(100, 100, 200);
+    color: #333;
     cursor: pointer;
     transition: background 0.1s ease, color 0.1s ease;
 }
 
 .footer-menu__content-button:hover {
     background: rgba(100, 100, 200, 0.08);
+}
+
+.footer-menu__create-post {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 40px;
+    margin-top: auto;
+    padding: 0 16px;
+    border: none;
+    border-radius: 12px;
+    background: rgb(100, 100, 200);
+    font-family: 'SF_def', Arial, sans-serif;
+    font-size: 16px;
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.1s ease, color 0.1s ease;
+}
+
+.footer-menu__create-post:hover {
+    background: rgb(80, 80, 180);
 }
