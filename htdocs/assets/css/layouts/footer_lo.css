@@ -98,7 +98,8 @@
 }
 
 .footer-menu__pin,
-.footer-menu__compress {
+.footer-menu__compress,
+.footer-menu__home {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -114,7 +115,8 @@
 }
 
 .footer-menu__pin:hover,
-.footer-menu__compress:hover {
+.footer-menu__compress:hover,
+.footer-menu__home:hover {
     border-color: rgb(150, 150, 250);
     fill: rgb(150, 150, 250);
 }
@@ -165,7 +167,9 @@
 }
 
 .footer-menu__compress .footer-menu__control-icon svg,
-.footer-menu__compress .footer-menu__control-icon svg * {
+.footer-menu__compress .footer-menu__control-icon svg *,
+.footer-menu__home .footer-menu__control-icon svg,
+.footer-menu__home .footer-menu__control-icon svg * {
     fill: inherit;
     stroke: none;
 }

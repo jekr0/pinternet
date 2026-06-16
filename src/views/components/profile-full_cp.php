@@ -159,6 +159,7 @@ $profileFullZoomSrc = $profileFullHasAvatar ? $profileFullAvatarSrc : '/assets/i
             data-profile-username="<?= htmlspecialchars($profileFullUsername, ENT_QUOTES, 'UTF-8') ?>"
             data-notifications-enabled="<?= $profileFullNotificationsEnabled ? 'true' : 'false' ?>"
             data-profile-blocked="<?= $profileFullBlocked ? 'true' : 'false' ?>"
+            data-viewer-authorized="<?= $profileFullViewerId > 0 ? 'true' : 'false' ?>"
         ></div>
         <div class="profile-full__level" aria-hidden="true"></div>
         <div class="profile-full__achievements" aria-hidden="true"></div>

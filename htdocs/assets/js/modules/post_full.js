@@ -226,6 +226,10 @@ class PostFullComponent {
             }
 
             if (action === 'warning') {
+                if (!this.isViewerAuthorized()) {
+                    this.notifyAuthRequired();
+                    return;
+                }
                 this.openReportOverlay();
                 return;
             }
@@ -383,11 +387,19 @@ class PostFullComponent {
             }
 
             if (action === 'comment-report') {
+                if (!this.isViewerAuthorized()) {
+                    this.notifyAuthRequired();
+                    return;
+                }
                 this.openCommentReportOverlay(commentId);
                 return;
             }
 
             if (action === 'comment-reply') {
+                if (!this.isViewerAuthorized()) {
+                    this.notifyAuthRequired();
+                    return;
+                }
                 this.activateReplyState(commentId, rootCommentId, commentUsername);
                 return;
             }
@@ -1098,6 +1110,10 @@ class PostFullComponent {
     async submitComment(commentInput) {
         const postId = this.getPostId();
         const text = commentInput.value.trim();
+        if (!this.isViewerAuthorized()) {
+            this.notifyAuthRequired();
+            return;
+        }
         const parentCommentId = this.replyTargetCommentId > 0 ? this.replyTargetCommentId : 0;
         if (!postId || !text) return;
         if (text.length > 256) {
@@ -1604,6 +1620,10 @@ class PostFullComponent {
 
     openCommentReportOverlay(commentId) {
         if (!commentId) return;
+        if (!this.isViewerAuthorized()) {
+            this.notifyAuthRequired();
+            return;
+        }
 
         this.pendingCommentReportId = commentId;
         App.warn?.open({
@@ -2144,6 +2164,10 @@ class PostFullComponent {
     }
 
     openReportOverlay() {
+        if (!this.isViewerAuthorized()) {
+            this.notifyAuthRequired();
+            return;
+        }
         App.warn?.open({
             title: 'Подать жалобу на пост?',
             description: 'После отправки жалобы пост будет проверен модерацией на несоответствие правилам площадки.',

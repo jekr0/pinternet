@@ -414,6 +414,9 @@ document.addEventListener('htmx:afterSwap', (event) => {
 let isDirtyHistoryPromptOpen = false;
 
 window.addEventListener('popstate', () => {
+    if (App.overlay?.get?.('warn-modal')) {
+        App.warn?.close?.();
+    }
     const postModalInstance = App.components['post_modal.js'];
     const collectionModalInstance = App.components['collection_modal.js'];
     const isPostModalOpen = !!(postModalInstance?.modal && !postModalInstance.modal.classList.contains('post-modal--hidden'));
@@ -522,6 +525,11 @@ function openUrlDrivenModalState() {
     if (postEditId > 0) {
         const postId = postEditId;
         const postFull = document.querySelector('.post-full');
+        if (postFull && postFull.dataset.owner !== '1') {
+            document.dispatchEvent(new CustomEvent('app:toast', { detail: { message: 'Хорошая попытка' } }));
+            App.nav.navigate('/', { pushUrl: false, replaceUrl: true, force: true });
+            return;
+        }
         const description = postFull?.querySelector('.post-full__description-text')?.textContent?.trim() || '';
         const imageSrc = postFull?.dataset.postImageSrc || postFull?.querySelector('.post-full__image')?.getAttribute('src') || '';
         const tags = Array.from(postFull?.querySelectorAll('.post-full__tag-label') || [])
