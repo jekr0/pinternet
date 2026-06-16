@@ -20,7 +20,7 @@ function profileJsonResponse(array $payload, int $statusCode = 200): never
 function requireProfilePostMethod(): void
 {
     if (strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
-        profileJsonResponse(['success' => false, 'error' => 'Метод не поддерживается.'], 405);
+        profileJsonResponse(['success' => false, 'error' => 'Метод не поддерживается'], 405);
     }
 }
 
@@ -28,7 +28,7 @@ function requireProfileViewerId(): int
 {
     $viewerId = (int) ($_SESSION['user_id'] ?? 0);
     if ($viewerId <= 0) {
-        profileJsonResponse(['success' => false, 'error' => 'Сначала войдите в аккаунт.'], 401);
+        profileJsonResponse(['success' => false, 'error' => 'Для этого действия требуется авторизация'], 401);
     }
 
     return $viewerId;
@@ -37,7 +37,7 @@ function requireProfileViewerId(): int
 function findProfileTargetUser(PDO $pdo, int $targetUserId): array
 {
     if ($targetUserId <= 0) {
-        profileJsonResponse(['success' => false, 'error' => 'Пользователь не найден.'], 400);
+        profileJsonResponse(['success' => false, 'error' => 'Пользователь не найден'], 400);
     }
 
     $userStmt = $pdo->prepare('SELECT id, username FROM Users WHERE id = ? AND is_deleted = 0 LIMIT 1');
@@ -45,7 +45,7 @@ function findProfileTargetUser(PDO $pdo, int $targetUserId): array
     $targetUser = $userStmt->fetch();
 
     if (!$targetUser) {
-        profileJsonResponse(['success' => false, 'error' => 'Пользователь не найден.'], 404);
+        profileJsonResponse(['success' => false, 'error' => 'Пользователь не найден'], 404);
     }
 
     return $targetUser;
@@ -54,7 +54,7 @@ function findProfileTargetUser(PDO $pdo, int $targetUserId): array
 function handleProfileFollow(PDO $pdo, int $viewerId, int $targetUserId): never
 {
     if ($targetUserId === $viewerId) {
-        profileJsonResponse(['success' => false, 'error' => 'Нельзя подписаться на себя.'], 400);
+        profileJsonResponse(['success' => false, 'error' => 'Нельзя подписаться на себя'], 400);
     }
 
     $targetUser = findProfileTargetUser($pdo, $targetUserId);
@@ -93,7 +93,7 @@ function handleProfileFollow(PDO $pdo, int $viewerId, int $targetUserId): never
             $pdo->rollBack();
         }
         error_log('Profile follow error: ' . $e->getMessage());
-        profileJsonResponse(['success' => false, 'error' => 'Не удалось подписаться.'], 500);
+        profileJsonResponse(['success' => false, 'error' => 'Не удалось подписаться'], 500);
     }
 
     profileJsonResponse([
@@ -106,7 +106,7 @@ function handleProfileFollow(PDO $pdo, int $viewerId, int $targetUserId): never
 function handleProfileUnfollow(PDO $pdo, int $viewerId, int $targetUserId): never
 {
     if ($targetUserId === $viewerId) {
-        profileJsonResponse(['success' => false, 'error' => 'Нельзя отписаться от себя.'], 400);
+        profileJsonResponse(['success' => false, 'error' => 'Нельзя отписаться от себя'], 400);
     }
 
     $targetUser = findProfileTargetUser($pdo, $targetUserId);
@@ -124,7 +124,7 @@ function handleProfileUnfollow(PDO $pdo, int $viewerId, int $targetUserId): neve
 function handleProfileReport(PDO $pdo, int $viewerId, int $targetUserId): never
 {
     if ($targetUserId === $viewerId) {
-        profileJsonResponse(['success' => false, 'error' => 'Нельзя пожаловаться на себя.'], 400);
+        profileJsonResponse(['success' => false, 'error' => 'Нельзя пожаловаться на себя'], 400);
     }
 
     findProfileTargetUser($pdo, $targetUserId);
@@ -135,7 +135,7 @@ function handleProfileReport(PDO $pdo, int $viewerId, int $targetUserId): never
         $alreadyReported = $insertStmt->rowCount() === 0;
     } catch (Throwable $e) {
         error_log('User report error: ' . $e->getMessage());
-        profileJsonResponse(['success' => false, 'error' => 'Не удалось отправить жалобу.'], 500);
+        profileJsonResponse(['success' => false, 'error' => 'Не удалось отправить жалобу'], 500);
     }
 
     profileJsonResponse(['success' => true, 'already_reported' => $alreadyReported]);
@@ -144,7 +144,7 @@ function handleProfileReport(PDO $pdo, int $viewerId, int $targetUserId): never
 function handleProfileNotifications(PDO $pdo, int $viewerId, int $targetUserId): never
 {
     if ($targetUserId === $viewerId) {
-        profileJsonResponse(['success' => false, 'error' => 'Нельзя включить уведомления для себя.'], 400);
+        profileJsonResponse(['success' => false, 'error' => 'Нельзя включить уведомления для себя'], 400);
     }
 
     findProfileTargetUser($pdo, $targetUserId);
@@ -157,7 +157,7 @@ function handleProfileNotifications(PDO $pdo, int $viewerId, int $targetUserId):
         $existsStmt = $pdo->prepare('SELECT 1 FROM User_Follows WHERE follower_id = ? AND following_id = ? LIMIT 1');
         $existsStmt->execute([$viewerId, $targetUserId]);
         if ($existsStmt->fetchColumn() === false) {
-            profileJsonResponse(['success' => false, 'error' => 'Сначала подпишитесь на пользователя.'], 409);
+            profileJsonResponse(['success' => false, 'error' => 'Сначала подпишитесь на пользователя'], 409);
         }
     }
 
@@ -167,7 +167,7 @@ function handleProfileNotifications(PDO $pdo, int $viewerId, int $targetUserId):
 function handleProfileBlock(PDO $pdo, int $viewerId, int $targetUserId): never
 {
     if ($targetUserId === $viewerId) {
-        profileJsonResponse(['success' => false, 'error' => 'Нельзя заблокировать себя.'], 400);
+        profileJsonResponse(['success' => false, 'error' => 'Нельзя заблокировать себя'], 400);
     }
 
     $targetUser = findProfileTargetUser($pdo, $targetUserId);
@@ -199,5 +199,5 @@ match ($path) {
     '/profile/report' => handleProfileReport($pdo, $viewerId, $targetUserId),
     '/profile/notifications' => handleProfileNotifications($pdo, $viewerId, $targetUserId),
     '/profile/block' => handleProfileBlock($pdo, $viewerId, $targetUserId),
-    default => profileJsonResponse(['success' => false, 'error' => 'Маршрут не найден.'], 404),
+    default => profileJsonResponse(['success' => false, 'error' => 'Маршрут не найден'], 404),
 };

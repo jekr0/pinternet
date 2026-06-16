@@ -67,7 +67,7 @@ class FooterLayout {
 
     showAuthRequired() {
         document.dispatchEvent(new CustomEvent('app:toast', {
-            detail: { message: 'Для этого действия необходимо авторизироваться' }
+            detail: { message: 'Для этого действия требуется авторизация' }
         }));
 
         clearTimeout(this.authShakeTimer);
