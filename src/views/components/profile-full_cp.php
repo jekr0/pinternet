@@ -31,8 +31,8 @@ if ($profileFullViewerId > 0 || $profileFullRequestedUsername !== '') {
                    u.avatar,
                    u.bio,
                    u.total_likes,
-                   (SELECT COUNT(*) FROM Follows f WHERE f.follower_id = u.id) AS subscriptions_count,
-                   (SELECT COUNT(*) FROM Follows f WHERE f.following_id = u.id) AS subscribers_count
+                   (SELECT COUNT(*) FROM User_Follows f WHERE f.follower_id = u.id) AS subscriptions_count,
+                   (SELECT COUNT(*) FROM User_Follows f WHERE f.following_id = u.id) AS subscribers_count
             FROM Users u
             WHERE u.username = ? AND u.is_deleted = 0
             LIMIT 1
@@ -45,8 +45,8 @@ if ($profileFullViewerId > 0 || $profileFullRequestedUsername !== '') {
                    u.avatar,
                    u.bio,
                    u.total_likes,
-                   (SELECT COUNT(*) FROM Follows f WHERE f.follower_id = u.id) AS subscriptions_count,
-                   (SELECT COUNT(*) FROM Follows f WHERE f.following_id = u.id) AS subscribers_count
+                   (SELECT COUNT(*) FROM User_Follows f WHERE f.follower_id = u.id) AS subscriptions_count,
+                   (SELECT COUNT(*) FROM User_Follows f WHERE f.following_id = u.id) AS subscribers_count
             FROM Users u
             WHERE u.id = ? AND u.is_deleted = 0
             LIMIT 1
@@ -70,10 +70,10 @@ if ($profileFullViewerId > 0 || $profileFullRequestedUsername !== '') {
         } else {
             $followStmt = $pdo->prepare('
                 SELECT
-                    EXISTS(SELECT 1 FROM Follows WHERE follower_id = ? AND following_id = ?) AS viewer_follows,
-                    EXISTS(SELECT 1 FROM Follows WHERE follower_id = ? AND following_id = ?) AS target_follows,
-                    COALESCE((SELECT notifications_switch FROM Follows WHERE follower_id = ? AND following_id = ? LIMIT 1), 0) AS notifications_switch,
-                    EXISTS(SELECT 1 FROM Blocks WHERE blocker_user_id = ? AND blocked_user_id = ?) AS viewer_blocks
+                    EXISTS(SELECT 1 FROM User_Follows WHERE follower_id = ? AND following_id = ?) AS viewer_follows,
+                    EXISTS(SELECT 1 FROM User_Follows WHERE follower_id = ? AND following_id = ?) AS target_follows,
+                    COALESCE((SELECT notifications_switch FROM User_Follows WHERE follower_id = ? AND following_id = ? LIMIT 1), 0) AS notifications_switch,
+                    EXISTS(SELECT 1 FROM User_Blocks WHERE blocker_user_id = ? AND blocked_user_id = ?) AS viewer_blocks
             ');
             $followStmt->execute([
                 $profileFullViewerId,

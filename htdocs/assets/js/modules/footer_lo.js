@@ -84,6 +84,12 @@ class FooterLayout {
         if (action === 'collections') {
             this.closeAfterAction();
             document.dispatchEvent(new CustomEvent('collection-modal:open'));
+            return;
+        }
+
+        if (action === 'create-post') {
+            this.closeAfterAction();
+            document.dispatchEvent(new CustomEvent('post-modal:open'));
         }
     }
 

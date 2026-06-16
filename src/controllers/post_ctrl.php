@@ -401,7 +401,7 @@ function handleBookmarkPost(PDO $pdo, int $userId): never
             $collectionId = (int) $pdo->lastInsertId();
         }
 
-        $saveStmt = $pdo->prepare('INSERT IGNORE INTO Saved_Posts (user_id, post_id, collection_id) VALUES (?, ?, ?)');
+        $saveStmt = $pdo->prepare('INSERT IGNORE INTO Collection_Posts (user_id, post_id, collection_id) VALUES (?, ?, ?)');
         $saveStmt->execute([$userId, $postId, (int) $collectionId]);
 
         $pdo->commit();
@@ -424,7 +424,7 @@ function handleBookmarkCollections(PDO $pdo, int $userId): never
     $collectionsStmt = $pdo->prepare('
         SELECT b.name, CASE WHEN sp.id IS NULL THEN 0 ELSE 1 END AS is_saved
         FROM Collections b
-        LEFT JOIN Saved_Posts sp ON sp.collection_id = b.id AND sp.user_id = b.user_id AND sp.post_id = ?
+        LEFT JOIN Collection_Posts sp ON sp.collection_id = b.id AND sp.user_id = b.user_id AND sp.post_id = ?
         WHERE b.user_id = ?
         ORDER BY b.created_at ASC
     ');
@@ -476,23 +476,23 @@ function handleBookmarkCollectionToggle(PDO $pdo, int $userId): never
     try {
         $pdo->beginTransaction();
 
-        $savedStmt = $pdo->prepare('SELECT id FROM Saved_Posts WHERE user_id = ? AND post_id = ? AND collection_id = ? LIMIT 1');
+        $savedStmt = $pdo->prepare('SELECT id FROM Collection_Posts WHERE user_id = ? AND post_id = ? AND collection_id = ? LIMIT 1');
         $savedStmt->execute([$userId, $postId, $collectionId]);
         $savedId = $savedStmt->fetchColumn();
 
         $isSaved = false;
         if ($savedId !== false) {
-            $deleteStmt = $pdo->prepare('DELETE FROM Saved_Posts WHERE id = ?');
+            $deleteStmt = $pdo->prepare('DELETE FROM Collection_Posts WHERE id = ?');
             $deleteStmt->execute([(int) $savedId]);
         } else {
-            $insertStmt = $pdo->prepare('INSERT INTO Saved_Posts (user_id, post_id, collection_id) VALUES (?, ?, ?)');
+            $insertStmt = $pdo->prepare('INSERT INTO Collection_Posts (user_id, post_id, collection_id) VALUES (?, ?, ?)');
             $insertStmt->execute([$userId, $postId, $collectionId]);
             $isSaved = true;
         }
 
         $hasAnyStmt = $pdo->prepare('
             SELECT 1
-            FROM Saved_Posts sp
+            FROM Collection_Posts sp
             INNER JOIN Collections b ON b.id = sp.collection_id AND b.user_id = sp.user_id
             WHERE sp.user_id = ? AND sp.post_id = ?
             LIMIT 1
@@ -502,7 +502,7 @@ function handleBookmarkCollectionToggle(PDO $pdo, int $userId): never
 
         $hasNonProfileStmt = $pdo->prepare('
             SELECT 1
-            FROM Saved_Posts sp
+            FROM Collection_Posts sp
             INNER JOIN Collections b ON b.id = sp.collection_id AND b.user_id = sp.user_id
             WHERE sp.user_id = ?
               AND sp.post_id = ?
@@ -542,19 +542,19 @@ function handleBookmarkClear(PDO $pdo, int $userId): never
         if ($isOwner) {
             $deleteStmt = $pdo->prepare('
                 DELETE sp
-                FROM Saved_Posts sp
+                FROM Collection_Posts sp
                 INNER JOIN Collections b ON b.id = sp.collection_id
                 WHERE sp.user_id = ? AND sp.post_id = ? AND LOWER(b.name) <> LOWER(?)
             ');
             $deleteStmt->execute([$userId, $postId, 'Profile']);
         } else {
-            $deleteStmt = $pdo->prepare('DELETE FROM Saved_Posts WHERE user_id = ? AND post_id = ?');
+            $deleteStmt = $pdo->prepare('DELETE FROM Collection_Posts WHERE user_id = ? AND post_id = ?');
             $deleteStmt->execute([$userId, $postId]);
         }
 
         $hasAnyStmt = $pdo->prepare('
             SELECT 1
-            FROM Saved_Posts sp
+            FROM Collection_Posts sp
             INNER JOIN Collections b ON b.id = sp.collection_id AND b.user_id = sp.user_id
             WHERE sp.user_id = ? AND sp.post_id = ?
             LIMIT 1
@@ -564,7 +564,7 @@ function handleBookmarkClear(PDO $pdo, int $userId): never
 
         $hasNonProfileStmt = $pdo->prepare('
             SELECT 1
-            FROM Saved_Posts sp
+            FROM Collection_Posts sp
             INNER JOIN Collections b ON b.id = sp.collection_id AND b.user_id = sp.user_id
             WHERE sp.user_id = ?
               AND sp.post_id = ?
@@ -601,12 +601,12 @@ function handleBookmarkCollectionCreate(PDO $pdo, int $userId): never
             $collectionId = createCollection($pdo, $userId, $collectionName);
         }
 
-        $existsStmt = $pdo->prepare('SELECT id FROM Saved_Posts WHERE user_id = ? AND post_id = ? AND collection_id = ? LIMIT 1');
+        $existsStmt = $pdo->prepare('SELECT id FROM Collection_Posts WHERE user_id = ? AND post_id = ? AND collection_id = ? LIMIT 1');
         $existsStmt->execute([$userId, $postId, $collectionId]);
         $savedId = $existsStmt->fetchColumn();
 
         if ($savedId === false) {
-            $insertStmt = $pdo->prepare('INSERT INTO Saved_Posts (user_id, post_id, collection_id) VALUES (?, ?, ?)');
+            $insertStmt = $pdo->prepare('INSERT INTO Collection_Posts (user_id, post_id, collection_id) VALUES (?, ?, ?)');
             $insertStmt->execute([$userId, $postId, $collectionId]);
         }
 
@@ -1007,10 +1007,10 @@ function handleUpdatePost(PDO $pdo, int $userId): never
             $profileCollectionId = createCollection($pdo, $userId, 'Profile');
         }
 
-        $deleteOwnSaves = $pdo->prepare('DELETE FROM Saved_Posts WHERE user_id = ? AND post_id = ?');
+        $deleteOwnSaves = $pdo->prepare('DELETE FROM Collection_Posts WHERE user_id = ? AND post_id = ?');
         $deleteOwnSaves->execute([$userId, $postId]);
 
-        $savePost = $pdo->prepare('INSERT IGNORE INTO Saved_Posts (user_id, post_id, collection_id) VALUES (?, ?, ?)');
+        $savePost = $pdo->prepare('INSERT IGNORE INTO Collection_Posts (user_id, post_id, collection_id) VALUES (?, ?, ?)');
         $savePost->execute([$userId, $postId, $profileCollectionId]);
 
         foreach ($collectionNames as $collectionName) {
@@ -1115,7 +1115,7 @@ function handleDeletePost(PDO $pdo, int $userId): never
         $pdo->prepare('DELETE FROM Post_Reports WHERE post_id = ?')->execute([$postId]);
         $pdo->prepare('DELETE FROM Post_Like_Exp_Awards WHERE post_id = ?')->execute([$postId]);
         $pdo->prepare('DELETE FROM Post_Likes WHERE post_id = ?')->execute([$postId]);
-        $pdo->prepare('DELETE FROM Saved_Posts WHERE post_id = ?')->execute([$postId]);
+        $pdo->prepare('DELETE FROM Collection_Posts WHERE post_id = ?')->execute([$postId]);
         $pdo->prepare('DELETE FROM Post_Hashtags WHERE post_id = ?')->execute([$postId]);
 
         $deletePost = $pdo->prepare('DELETE FROM Posts WHERE id = ? AND user_id = ?');
@@ -1200,7 +1200,7 @@ function handleCreatePost(PDO $pdo, int $userId): never
             $profileCollectionId = createCollection($pdo, $userId, 'Profile');
         }
 
-        $savePost = $pdo->prepare('INSERT IGNORE INTO Saved_Posts (user_id, post_id, collection_id) VALUES (?, ?, ?)');
+        $savePost = $pdo->prepare('INSERT IGNORE INTO Collection_Posts (user_id, post_id, collection_id) VALUES (?, ?, ?)');
         $savePost->execute([$userId, $postId, $profileCollectionId]);
 
         foreach ($collectionNames as $collectionName) {

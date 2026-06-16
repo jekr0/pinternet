@@ -20,6 +20,7 @@
             <button class="footer-menu__content-button" type="button" data-footer-menu-action="notifications">Уведомления</button>
             <button class="footer-menu__content-button" type="button" data-footer-menu-action="friends">Друзья</button>
             <button class="footer-menu__content-button" type="button" data-footer-menu-action="collections">Коллекции</button>
+            <button class="footer-menu__create-post" type="button" data-footer-menu-action="create-post">Создать пост</button>
         </div>
     </div>
 

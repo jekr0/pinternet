@@ -39,7 +39,7 @@ function handleSearchHistoryGet(PDO $pdo, int $userId): never
 
     $stmt = $pdo->prepare('
         SELECT query_text
-        FROM `search-users`
+        FROM Search_Users
         WHERE user_id = ?
         ORDER BY searched_at DESC
         LIMIT ?
@@ -68,7 +68,7 @@ function handleSearchHistorySave(PDO $pdo, int $userId): never
 
         $existingStmt = $pdo->prepare('
             SELECT slot_index
-            FROM `search-users`
+            FROM Search_Users
             WHERE user_id = ? AND query_text = ?
             LIMIT 1
         ');
@@ -77,20 +77,20 @@ function handleSearchHistorySave(PDO $pdo, int $userId): never
 
         if ($existingSlot !== false) {
             $touchStmt = $pdo->prepare('
-                UPDATE `search-users`
+                UPDATE Search_Users
                 SET searched_at = CURRENT_TIMESTAMP
                 WHERE user_id = ? AND slot_index = ?
             ');
             $touchStmt->execute([$userId, (int) $existingSlot]);
         } else {
-            $countStmt = $pdo->prepare('SELECT COUNT(*) FROM `search-users` WHERE user_id = ?');
+            $countStmt = $pdo->prepare('SELECT COUNT(*) FROM Search_Users WHERE user_id = ?');
             $countStmt->execute([$userId]);
             $currentCount = (int) $countStmt->fetchColumn();
 
             if ($currentCount < 10) {
                 $slotStmt = $pdo->prepare('
                     SELECT slot_index
-                    FROM `search-users`
+                    FROM Search_Users
                     WHERE user_id = ?
                     ORDER BY slot_index ASC
                 ');
@@ -103,7 +103,7 @@ function handleSearchHistorySave(PDO $pdo, int $userId): never
             } else {
                 $oldestStmt = $pdo->prepare('
                     SELECT slot_index
-                    FROM `search-users`
+                    FROM Search_Users
                     WHERE user_id = ?
                     ORDER BY searched_at ASC
                     LIMIT 1
@@ -113,7 +113,7 @@ function handleSearchHistorySave(PDO $pdo, int $userId): never
             }
 
             $upsertStmt = $pdo->prepare('
-                INSERT INTO `search-users` (user_id, slot_index, query_text, searched_at)
+                INSERT INTO Search_Users (user_id, slot_index, query_text, searched_at)
                 VALUES (?, ?, ?, CURRENT_TIMESTAMP)
                 ON DUPLICATE KEY UPDATE
                     query_text = VALUES(query_text),
@@ -123,18 +123,18 @@ function handleSearchHistorySave(PDO $pdo, int $userId): never
         }
 
         $insertGlobalStmt = $pdo->prepare('
-            INSERT INTO `search-global` (user_id, query_text)
+            INSERT INTO Search (user_id, query_text)
             VALUES (?, ?)
         ');
         $insertGlobalStmt->execute([$userId, $query]);
 
         $trimGlobalStmt = $pdo->prepare('
-            DELETE FROM `search-global`
+            DELETE FROM Search
             WHERE id NOT IN (
                 SELECT id
                 FROM (
                     SELECT id
-                    FROM `search-global`
+                    FROM Search
                     ORDER BY id DESC
                     LIMIT 100
                 ) AS latest
