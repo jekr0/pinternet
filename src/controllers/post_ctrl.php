@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/../config/database_conf.php';
 require_once __DIR__ . '/../config/level_helper.php';
+require_once __DIR__ . '/notifications_ctrl.php';
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -312,7 +313,7 @@ function handleToggleLike(PDO $pdo, int $userId): never
         jsonResponse(['success' => false, 'error' => 'Некорректный post_id.'], 422);
     }
 
-    $selectPost = $pdo->prepare('SELECT id, user_id FROM Posts WHERE id = ? LIMIT 1');
+    $selectPost = $pdo->prepare('SELECT id, user_id, description FROM Posts WHERE id = ? LIMIT 1');
     $selectPost->execute([$postId]);
     $post = $selectPost->fetch();
     if (!$post) {
@@ -346,6 +347,8 @@ function handleToggleLike(PDO $pdo, int $userId): never
         $incrementTotalLikes->execute([$postOwnerId]);
 
         if ($userId !== $postOwnerId) {
+            notifyPostLiked($pdo, $postOwnerId, $userId, $post['description'] ?? '');
+
             $insertAward = $pdo->prepare('INSERT IGNORE INTO Post_Like_Exp_Awards (liker_user_id, post_id, post_owner_id) VALUES (?, ?, ?)');
             $insertAward->execute([$userId, $postId, $postOwnerId]);
 
@@ -645,9 +648,10 @@ function handlePostReport(PDO $pdo, int $userId): never
         jsonResponse(['success' => false, 'error' => 'Некорректный post_id.'], 422);
     }
 
-    $postStmt = $pdo->prepare('SELECT id FROM Posts WHERE id = ? LIMIT 1');
+    $postStmt = $pdo->prepare('SELECT id, user_id, description FROM Posts WHERE id = ? LIMIT 1');
     $postStmt->execute([$postId]);
-    if ($postStmt->fetchColumn() === false) {
+    $post = $postStmt->fetch(PDO::FETCH_ASSOC) ?: null;
+    if ($post === null) {
         jsonResponse(['success' => false, 'error' => 'Пост не найден.'], 404);
     }
 
@@ -695,7 +699,7 @@ function handleCreateComment(PDO $pdo, int $userId): never
     $rootCommentId = null;
     if ($parentCommentId > 0) {
         $parentStmt = $pdo->prepare('
-            SELECT id, parent_comment_id
+            SELECT id, parent_comment_id, user_id, content
             FROM Comments
             WHERE id = ?
               AND post_id = ?
@@ -715,6 +719,12 @@ function handleCreateComment(PDO $pdo, int $userId): never
         $insertStmt = $pdo->prepare('INSERT INTO Comments (post_id, user_id, content, parent_comment_id) VALUES (?, ?, ?, ?)');
         $insertStmt->execute([$postId, $userId, $content, $resolvedParentCommentId]);
         $commentId = (int) $pdo->lastInsertId();
+
+        if ($resolvedParentCommentId !== null && !empty($parentRow)) {
+            notifyCommentReplied($pdo, (int) ($parentRow['user_id'] ?? 0), $userId, $parentRow['content'] ?? '');
+        } else {
+            notifyPostCommented($pdo, (int) ($post['user_id'] ?? 0), $userId, $post['description'] ?? '');
+        }
     } catch (Throwable $e) {
         error_log('Create comment error: ' . $e->getMessage());
         jsonResponse(['success' => false, 'error' => 'Не удалось сохранить комментарий.'], 500);
@@ -772,7 +782,7 @@ function handleToggleCommentLike(PDO $pdo, int $userId): never
         jsonResponse(['success' => false, 'error' => 'Некорректный comment_id.'], 422);
     }
 
-    $commentStmt = $pdo->prepare('SELECT id, user_id FROM Comments WHERE id = ? AND is_deleted = 0 LIMIT 1');
+    $commentStmt = $pdo->prepare('SELECT id, user_id, content FROM Comments WHERE id = ? AND is_deleted = 0 LIMIT 1');
     $commentStmt->execute([$commentId]);
     $comment = $commentStmt->fetch(PDO::FETCH_ASSOC) ?: null;
     if ($comment === null) {
@@ -805,6 +815,8 @@ function handleToggleCommentLike(PDO $pdo, int $userId): never
             $incrementTotalLikes->execute([$commentOwnerId]);
 
             if ($userId !== $commentOwnerId) {
+                notifyCommentLiked($pdo, $commentOwnerId, $userId, $comment['content'] ?? '');
+
                 $insertAward = $pdo->prepare('INSERT IGNORE INTO Comment_Like_Exp_Awards (liker_user_id, comment_id, comment_owner_id) VALUES (?, ?, ?)');
                 $insertAward->execute([$userId, $commentId, $commentOwnerId]);
 
@@ -1194,6 +1206,7 @@ function handleCreatePost(PDO $pdo, int $userId): never
         $insertPost = $pdo->prepare('INSERT INTO Posts (user_id, image_path, description) VALUES (?, ?, ?)');
         $insertPost->execute([$userId, $publicPath, $description !== '' ? $description : null]);
         $postId = (int) $pdo->lastInsertId();
+        notifyFollowedUserCreatedPost($pdo, $userId, $postId, $description);
 
         $profileCollectionId = findCollectionId($pdo, $userId, 'Profile');
         if ($profileCollectionId === null) {

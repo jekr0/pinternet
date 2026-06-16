@@ -7,6 +7,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
 require_once __DIR__ . '/../config/database_conf.php';
 require_once __DIR__ . '/../config/level_helper.php';
+require_once __DIR__ . '/notifications_ctrl.php';
 
 function profileJsonResponse(array $payload, int $statusCode = 200): never
 {
@@ -77,6 +78,14 @@ function handleProfileFollow(PDO $pdo, int $viewerId, int $targetUserId): never
         $mutualStmt = $pdo->prepare('SELECT 1 FROM User_Follows WHERE follower_id = ? AND following_id = ? LIMIT 1');
         $mutualStmt->execute([$targetUserId, $viewerId]);
         $isMutual = $mutualStmt->fetchColumn() !== false;
+
+        if ($isFirstFollow) {
+            notifyUserFollowed($pdo, $targetUserId, $viewerId);
+            if ($isMutual) {
+                notifyMutualFollow($pdo, $viewerId, $targetUserId);
+                notifyMutualFollow($pdo, $targetUserId, $viewerId);
+            }
+        }
 
         $pdo->commit();
     } catch (Throwable $e) {

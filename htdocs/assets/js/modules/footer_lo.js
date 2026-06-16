@@ -10,6 +10,7 @@ class FooterLayout {
         this.pinButton = this.menu.querySelector('.footer-menu__pin');
         this.pinIcon = this.pinButton?.querySelector('[data-svg-src]') || null;
         this.contentButtons = Array.from(this.menu.querySelectorAll('[data-footer-menu-action]'));
+        this.authShakeTimer = null;
 
         this.loadIcons();
         this.bindHandlers();
@@ -55,8 +56,28 @@ class FooterLayout {
     }
 
     openMenu() {
+        if (this.menu.dataset.authenticated !== '1') {
+            this.showAuthRequired();
+            return;
+        }
+
         this.menu.dataset.state = 'opened';
         this.toggleButton?.setAttribute('aria-expanded', 'true');
+    }
+
+    showAuthRequired() {
+        document.dispatchEvent(new CustomEvent('app:toast', {
+            detail: { message: 'Для этого действия необходимо авторизироваться' }
+        }));
+
+        clearTimeout(this.authShakeTimer);
+        this.menu.classList.remove('is-auth-required-shake');
+        void this.menu.offsetWidth;
+        this.menu.classList.add('is-auth-required-shake');
+        this.authShakeTimer = setTimeout(() => {
+            this.menu.classList.remove('is-auth-required-shake');
+            this.authShakeTimer = null;
+        }, 1000);
     }
 
     closeMenu() {
