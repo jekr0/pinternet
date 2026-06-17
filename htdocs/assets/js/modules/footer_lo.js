@@ -10,6 +10,7 @@ class FooterLayout {
         this.collections = [];
         this.toggleButton = this.menu.querySelector('.footer-menu__toggle');
         this.compressButton = this.menu.querySelector('.footer-menu__compress');
+        this.homeButton = this.menu.querySelector('.footer-menu__home');
         this.pinButton = this.menu.querySelector('.footer-menu__pin');
         this.pinIcon = this.pinButton?.querySelector('[data-svg-src]') || null;
         this.titleNode = this.menu.querySelector('[data-component="footer-menu-title"]');
@@ -47,6 +48,15 @@ class FooterLayout {
                 return;
             }
             this.togglePinned();
+        };
+        this.homeHandler = (event) => {
+            event.stopPropagation();
+            this.closeAfterAction();
+            if (App.nav?.navigate) {
+                App.nav.navigate('/', { pushUrl: true });
+                return;
+            }
+            window.location.href = '/';
         };
         this.contentClickHandler = (event) => {
             const button = event.target?.closest?.('[data-footer-menu-action], [data-footer-collection]');
