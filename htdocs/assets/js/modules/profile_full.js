@@ -99,6 +99,10 @@ class ProfileFullComponent {
 
             if (action === 'profile-block') {
                 event.preventDefault();
+                if (!this.isViewerAuthorized()) {
+                    this.notifyAuthRequired();
+                    return;
+                }
                 void this.toggleBlockButton(button);
             }
         };
