@@ -689,9 +689,10 @@ function handleCreateComment(PDO $pdo, int $userId): never
         jsonResponse(['success' => false, 'error' => 'Комментарий не должен превышать 256 символов'], 422);
     }
 
-    $postStmt = $pdo->prepare('SELECT id FROM Posts WHERE id = ? LIMIT 1');
+    $postStmt = $pdo->prepare('SELECT id, user_id, description FROM Posts WHERE id = ? LIMIT 1');
     $postStmt->execute([$postId]);
-    if ($postStmt->fetchColumn() === false) {
+    $post = $postStmt->fetch(PDO::FETCH_ASSOC) ?: null;
+    if ($post === null) {
         jsonResponse(['success' => false, 'error' => 'Пост не найден'], 404);
     }
 
@@ -721,9 +722,9 @@ function handleCreateComment(PDO $pdo, int $userId): never
         $commentId = (int) $pdo->lastInsertId();
 
         if ($resolvedParentCommentId !== null && !empty($parentRow)) {
-            notifyCommentReplied($pdo, (int) ($parentRow['user_id'] ?? 0), $userId, $parentRow['content'] ?? '');
+            notifyCommentReplied($pdo, (int) ($parentRow['user_id'] ?? 0), $userId, $content);
         } else {
-            notifyPostCommented($pdo, (int) ($post['user_id'] ?? 0), $userId, $post['description'] ?? '');
+            notifyPostCommented($pdo, (int) ($post['user_id'] ?? 0), $userId, $content);
         }
     } catch (Throwable $e) {
         error_log('Create comment error: ' . $e->getMessage());

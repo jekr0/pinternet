@@ -67,6 +67,10 @@ class ProfileFullComponent {
 
             if (action === 'profile-subscribe') {
                 event.preventDefault();
+                if (!this.isViewerAuthorized()) {
+                    this.notifyAuthRequired();
+                    return;
+                }
                 this.subscribeToProfile();
                 return;
             }
@@ -79,6 +83,10 @@ class ProfileFullComponent {
 
             if (action === 'profile-report') {
                 event.preventDefault();
+                if (!this.isViewerAuthorized()) {
+                    this.notifyAuthRequired();
+                    return;
+                }
                 this.openReportOverlay(button);
                 return;
             }
@@ -91,6 +99,10 @@ class ProfileFullComponent {
 
             if (action === 'profile-block') {
                 event.preventDefault();
+                if (!this.isViewerAuthorized()) {
+                    this.notifyAuthRequired();
+                    return;
+                }
                 void this.toggleBlockButton(button);
             }
         };
@@ -154,6 +166,16 @@ class ProfileFullComponent {
 
         this.actions.innerHTML = templates[nextState] || templates.default;
         this.initSvgIcons(this.actions);
+    }
+
+    isViewerAuthorized() {
+        return this.actions?.dataset.viewerAuthorized === 'true';
+    }
+
+    notifyAuthRequired() {
+        document.dispatchEvent(new CustomEvent('app:toast', {
+            detail: { message: 'Для этого действия требуется авторизация' }
+        }));
     }
 
     async subscribeToProfile() {
@@ -243,6 +265,10 @@ class ProfileFullComponent {
 
     openReportOverlay(reportButton) {
         if (!this.actions) return;
+        if (!this.isViewerAuthorized()) {
+            this.notifyAuthRequired();
+            return;
+        }
 
         App.warn?.open({
             title: 'Подать жалобу на пользователя?',

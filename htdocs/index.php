@@ -165,22 +165,80 @@ switch ($path) {
         $_SESSION['auth_mode'] = 'login';
         $page = 'sign_up_pg.php';
         $pageTitle = 'Авторизация';
-        $PHP = [];
-        $CSS = ['warn-modal_cp.css',
-            'toast-stack_cp.css', 'auth_pg.css'];
-        $JS  = ['warn_modal.js',
-            'toast_stack.js', 'password_toggle.js', 'auth_form_guard.js', 'auto-god.js'];
+        $PHP = [
+            'header_lo.php',
+            'footer_lo.php'
+        ];
+        $CSS = [
+            'header_lo.css',
+            'blur_lo.css',
+            'dropdown-search_cp.css',
+            'profile-container_cp.css',
+            'dropdown-profile_cp.css',
+            'post-modal_cp.css',
+            'dropdown-collections_cp.css',
+            'collection-modal_cp.css',
+            'warn-modal_cp.css',
+            'toast-stack_cp.css',
+            'footer_lo.css',
+            'auth_pg.css'
+        ];
+        $JS  = [
+            'overlay_manager.js',
+            'modal_ctrl.js',
+            'warn_modal.js',
+            'toast_stack.js',
+            'profile_button.js',
+            'dropdown_profile.js',
+            'dropdown_search.js',
+            'footer_lo.js',
+            'post_modal.js',
+            'dropdown_collections.js',
+            'collection_modal.js',
+            'password_toggle.js',
+            'auth_form_guard.js',
+            'auto-god.js'
+        ];
         break;
 
         case '/auth/registration':
         $_SESSION['auth_mode'] = 'registration';
         $page = 'sign_up_pg.php';
         $pageTitle = 'Авторизация';
-        $PHP = [];
-        $CSS = ['warn-modal_cp.css',
-            'toast-stack_cp.css', 'auth_pg.css'];
-        $JS  = ['warn_modal.js',
-            'toast_stack.js', 'password_toggle.js', 'auth_form_guard.js', 'auto-god.js'];
+        $PHP = [
+            'header_lo.php',
+            'footer_lo.php'
+        ];
+        $CSS = [
+            'header_lo.css',
+            'blur_lo.css',
+            'dropdown-search_cp.css',
+            'profile-container_cp.css',
+            'dropdown-profile_cp.css',
+            'post-modal_cp.css',
+            'dropdown-collections_cp.css',
+            'collection-modal_cp.css',
+            'warn-modal_cp.css',
+            'toast-stack_cp.css',
+            'footer_lo.css',
+            'auth_pg.css'
+        ];
+        $JS  = [
+            'overlay_manager.js',
+            'modal_ctrl.js',
+            'warn_modal.js',
+            'toast_stack.js',
+            'profile_button.js',
+            'dropdown_profile.js',
+            'dropdown_search.js',
+            'footer_lo.js',
+            'post_modal.js',
+            'dropdown_collections.js',
+            'collection_modal.js',
+            'password_toggle.js',
+            'auth_form_guard.js',
+            'auto-god.js'
+        ];
         break;
 
         case '/logout':
