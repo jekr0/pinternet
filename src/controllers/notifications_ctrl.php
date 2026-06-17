@@ -24,7 +24,7 @@ function createNotification(PDO $pdo, int $userId, string $title, ?string $text 
     $stmt->execute([
         $userId,
         mb_substr($title, 0, 64),
-        $text === null ? null : mb_substr($text, 0, 256),
+        $text === null ? null : mb_substr($text, 0, 512),
     ]);
 }
 

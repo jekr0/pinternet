@@ -375,3 +375,22 @@
 .profile-full__actions:not([data-action-state="default"]):not([data-action-state="yourself"]) {
     display: grid;
 }
+.profile-full__actions[data-action-state="subscribed"] {
+    grid-column: 1 / 5;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    column-gap: 12px;
+}
+
+.profile-full__actions[data-action-state="subscribed"] > .profile-full__button--unsubscribe {
+    grid-column: 1 / 3;
+}
+
+.profile-full__actions[data-action-state="subscribed"] > .profile-full__icon-button--bell {
+    grid-column: 3;
+    justify-self: end;
+}
+
+.profile-full__actions[data-action-state="subscribed"] > .profile-full__icon-button--report {
+    grid-column: 4;
+    justify-self: end;
+}
