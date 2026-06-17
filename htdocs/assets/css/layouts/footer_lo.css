@@ -33,7 +33,7 @@
 
 .footer-menu[data-state="opened"] {
     width: 324px;
-    height: 424px;
+    height: 416px;
     padding: 16px;
 }
 
@@ -80,9 +80,10 @@
 
 .footer-menu__control {
     position: relative;
-    display: flex;
+    display: grid;
+    grid-template-columns: 36px minmax(0, 1fr) 36px;
     align-items: center;
-    justify-content: space-between;
+    column-gap: 12px;
     height: 36px;
     opacity: 0;
     visibility: hidden;
@@ -95,6 +96,19 @@
     visibility: visible;
     pointer-events: auto;
     transition-delay: 0.2s, 0.2s;
+}
+
+.footer-menu__title {
+    min-width: 0;
+    display: block;
+    overflow: hidden;
+    white-space: nowrap;
+    text-align: center;
+    font-family: 'SF_def', Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1;
+    color: #555;
+    transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
 .footer-menu__pin,
@@ -135,6 +149,12 @@
     color: rgb(100, 100, 200);
 }
 
+.footer-menu__pin--back .footer-menu__control-icon svg,
+.footer-menu__pin--back .footer-menu__control-icon svg * {
+    fill: none;
+    stroke: currentColor;
+}
+
 .footer-menu__control-icon,
 .footer-menu__control-icon svg {
     display: block;
@@ -154,8 +174,8 @@
     stroke: currentColor;
 }
 
-.footer-menu__pin:not(.is-active) .footer-menu__control-icon svg,
-.footer-menu__pin:not(.is-active) .footer-menu__control-icon svg * {
+.footer-menu__pin:not(.is-active):not(.footer-menu__pin--back) .footer-menu__control-icon svg,
+.footer-menu__pin:not(.is-active):not(.footer-menu__pin--back) .footer-menu__control-icon svg * {
     fill: none;
 }
 
@@ -195,12 +215,13 @@
     border-radius: 1px;
 }
 
-
 .footer-menu__content {
     display: flex;
     flex-direction: column;
     gap: 4px;
-    height: calc(100% - 54px);
+    height: calc(100% - 70px);
+    padding-bottom: 20px;
+    box-sizing: border-box;
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
@@ -212,6 +233,29 @@
     visibility: visible;
     pointer-events: auto;
     transition-delay: 0.2s, 0.2s;
+}
+
+.footer-menu__content-main {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.footer-menu.is-substate-transitioning-out .footer-menu__content,
+.footer-menu.is-substate-transitioning-out .footer-menu__title {
+    opacity: 0;
+    transform: translateY(-4px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.footer-menu.is-substate-transitioning-in .footer-menu__content,
+.footer-menu.is-substate-transitioning-in .footer-menu__title {
+    animation: footer-menu-substate-in 0.2s ease 0.2s both;
+}
+
+@keyframes footer-menu-substate-in {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 .footer-menu__content-button {
@@ -241,7 +285,7 @@
     justify-content: center;
     width: 100%;
     height: 40px;
-    margin-top: 96px;
+    margin-top: auto;
     border: none;
     border-radius: 12px;
     background: rgb(100, 100, 200);
@@ -254,4 +298,62 @@
 
 .footer-menu__create-post:hover {
     background: rgb(80, 80, 180);
+}
+
+.footer-menu__state-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 320px;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    font-family: 'SF_def', Arial, sans-serif;
+    font-size: 16px;
+    color: #bbb;
+    text-align: center;
+}
+
+.footer-menu__collections-list {
+    height: 320px;
+    margin: 0;
+    padding: 0;
+    overflow-y: auto;
+    list-style: none;
+    border-radius: 12px;
+}
+
+.footer-menu__collections-list li + li {
+    margin-top: 4px;
+}
+
+.footer-menu__collection-item,
+.footer-menu__collections-placeholder {
+    width: 100%;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 0 12px;
+    box-sizing: border-box;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    background: #fff;
+    font-family: 'SF_def', Arial, sans-serif;
+    font-size: 18px;
+    color: #333;
+}
+
+.footer-menu__collection-item {
+    cursor: pointer;
+    transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.footer-menu__collection-item:hover {
+    border-color: rgb(150, 150, 250);
+    color: rgb(100, 100, 200);
+}
+
+.footer-menu__collections-placeholder {
+    justify-content: center;
+    color: #bbb;
 }

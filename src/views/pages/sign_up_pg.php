@@ -81,7 +81,7 @@ $isRegistrationMode = $authMode === 'registration';
             </div>
 
             <div class="auth__actions">
-                <a class="auth__button auth__button--back" href="/">
+                <a class="auth__button auth__button--back" href="/" data-component="auth-back">
                     <span>Назад</span>
                 </a>
                 <button class="auth__button auth__button--submit" type="submit" data-component="auth-submit-button">

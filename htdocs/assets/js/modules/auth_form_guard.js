@@ -20,6 +20,19 @@ class AuthFormGuardComponent {
 
     bindModeToggle(form) {
         const toggleButtons = Array.from(form.querySelectorAll('[data-component="auth-mode-toggle"]'));
+
+        const backButton = form.querySelector('[data-component="auth-back"]');
+        if (backButton && backButton.dataset.bound !== '1') {
+            backButton.dataset.bound = '1';
+            backButton.addEventListener('click', (event) => {
+                event.preventDefault();
+                if (window.history.length > 1) {
+                    window.history.back();
+                    return;
+                }
+                window.location.href = backButton.getAttribute('href') || '/';
+            });
+        }
         if (toggleButtons.length === 0) return;
 
         toggleButtons.forEach((button) => {
