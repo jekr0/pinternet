@@ -73,9 +73,13 @@ $isHtmxRequest = isset($_SERVER['HTTP_HX_REQUEST']) && $_SERVER['HTTP_HX_REQUEST
 
 // Определяем, какая страница нужна
 $selectedPostId = 0;
+$selectedPostEditId = 0;
 $postIdQueryValue = isset($_GET['id']) ? (string) $_GET['id'] : '';
 if ($path === '/post' && preg_match('#^(\d+)(?:/edit)?$#', $postIdQueryValue, $matches)) {
     $selectedPostId = (int) $matches[1];
+    if (str_ends_with($postIdQueryValue, '/edit')) {
+        $selectedPostEditId = $selectedPostId;
+    }
 }
 
 switch ($path) {
@@ -85,7 +89,13 @@ switch ($path) {
     case '/post/create':
     case '/collections':
         $page = 'home_pg.php';
-        $pageTitle = 'Главная';
+        $pageTitle = match (true) {
+            $path === '/post/create' => 'Создание поста',
+            $selectedPostEditId > 0 => 'Пост ' . $selectedPostEditId . ' / Редактирование',
+            $selectedPostId > 0 => 'Пост ' . $selectedPostId,
+            $path === '/collections' => 'Коллекции',
+            default => 'Главная',
+        };
         $PHP = [
             'header_lo.php',
             'footer_lo.php'
@@ -128,7 +138,8 @@ switch ($path) {
         case '/profile':
         case '/profile-editing':
         $page = 'profile_pg.php';
-        $pageTitle = 'Профиль';
+        $profileTitleUsername = trim(ltrim((string) ($_GET['username'] ?? ''), '@'));
+        $pageTitle = $profileTitleUsername !== '' ? '@' . $profileTitleUsername : 'Профиль';
         $PHP = [
             'header_lo.php',
             'footer_lo.php'
@@ -164,7 +175,7 @@ switch ($path) {
         case '/auth/login':
         $_SESSION['auth_mode'] = 'login';
         $page = 'auth-full_cp.php';
-        $pageTitle = 'Авторизация';
+        $pageTitle = 'Вход';
         $PHP = [];
         $CSS = [
             'toast-stack_cp.css',
@@ -182,7 +193,7 @@ switch ($path) {
         case '/auth/registration':
         $_SESSION['auth_mode'] = 'registration';
         $page = 'auth-full_cp.php';
-        $pageTitle = 'Авторизация';
+        $pageTitle = 'Регистрация';
         $PHP = [];
         $CSS = [
             'toast-stack_cp.css',
@@ -214,6 +225,7 @@ switch ($path) {
         case '/profile/report':
         case '/profile/notifications':
         case '/profile/block':
+        case '/profile/friends':
         require_once '../src/controllers/profile_ctrl.php';
         exit;
 

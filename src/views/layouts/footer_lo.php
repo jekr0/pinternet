@@ -10,7 +10,7 @@ $footerMenuIsAuthenticated = !empty($_SESSION['user_id']);
 
         <div class="footer-menu__control" aria-label="Управление меню">
             <div class="footer-menu__left-controls">
-                <button class="footer-menu__back" type="button" aria-label="Назад" hidden>
+                <button class="footer-menu__back is-hidden" type="button" aria-label="Назад" aria-hidden="true">
                     <span class="footer-menu__control-icon" data-svg-src="/assets/images/icons/L-arrow.svg" aria-hidden="true"></span>
                 </button>
                 <button class="footer-menu__pin" type="button" aria-label="Закрепить меню" aria-pressed="false">

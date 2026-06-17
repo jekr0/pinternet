@@ -9,6 +9,7 @@ class FooterLayout {
         this.stateTransitionTimer = null;
         this.stateTransitionFrame = null;
         this.collections = [];
+        this.friends = [];
         this.toggleButton = this.menu.querySelector('.footer-menu__toggle');
         this.compressButton = this.menu.querySelector('.footer-menu__compress');
         this.backButton = this.menu.querySelector('.footer-menu__back');
@@ -135,6 +136,11 @@ class FooterLayout {
             return;
         }
 
+        if (action === 'friend-message') {
+            this.renderState('message_state');
+            return;
+        }
+
         if (button?.dataset.footerCollection) {
             return;
         }
@@ -176,7 +182,7 @@ class FooterLayout {
     }
 
     getKnownState(state) {
-        return ['home_state', 'messages_state', 'notifications_state', 'friends_state', 'collections_state'].includes(state)
+        return ['home_state', 'message_state', 'messages_state', 'notifications_state', 'friends_state', 'collections_state'].includes(state)
             ? state
             : 'home_state';
     }
@@ -193,11 +199,17 @@ class FooterLayout {
         if (state === 'collections_state') {
             void this.loadCollectionsState();
         }
+
+        if (state === 'friends_state') {
+            this.bindFriendsSearch();
+            void this.loadFriendsState();
+        }
     }
 
     getStateTitle(state) {
         return {
             home_state: 'Меню',
+            message_state: 'Сообщения',
             messages_state: 'Сообщения',
             notifications_state: 'Уведомления',
             friends_state: 'Друзья',
@@ -223,7 +235,80 @@ class FooterLayout {
             return '<ul class="footer-menu__collections-list" data-component="footer-menu-collections-list"><li class="footer-menu__collections-placeholder">Загрузка...</li></ul>';
         }
 
+        if (state === 'friends_state') {
+            return `
+                <label class="footer-menu__friends-search" aria-label="Поиск друзей">
+                    <input class="footer-menu__friends-search-input" type="text" autocomplete="off" placeholder=" " data-component="footer-menu-friends-search">
+                    <span class="footer-menu__friends-search-placeholder" aria-hidden="true">
+                        <span class="footer-menu__friends-search-icon"></span>
+                        <span>Поиск</span>
+                    </span>
+                </label>
+                <ul class="footer-menu__friends-list" data-component="footer-menu-friends-list"><li class="footer-menu__friends-placeholder">Загрузка...</li></ul>
+            `;
+        }
+
         return '<div class="footer-menu__state-placeholder">Скоро здесь появится содержимое</div>';
+    }
+
+
+    bindFriendsSearch() {
+        const searchInput = this.content?.querySelector('[data-component="footer-menu-friends-search"]');
+        if (!searchInput) return;
+
+        searchInput.addEventListener('input', () => this.renderFriendsList());
+    }
+
+    async loadFriendsState() {
+        const list = this.content?.querySelector('[data-component="footer-menu-friends-list"]');
+        if (!list) return;
+
+        try {
+            const response = await fetch('/profile/friends', {
+                method: 'POST',
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            const payload = await response.json();
+            if (!response.ok || !payload.success || !Array.isArray(payload.friends)) {
+                throw new Error(payload?.error || 'Не удалось загрузить друзей');
+            }
+            this.friends = payload.friends
+                .map((friend) => ({
+                    id: Number(friend?.id || 0),
+                    username: String(friend?.username || '').trim()
+                }))
+                .filter((friend) => friend.id > 0 && friend.username !== '')
+                .sort((left, right) => left.username.localeCompare(right.username, undefined, { numeric: true, sensitivity: 'base' }));
+            this.renderFriendsList();
+        } catch (error) {
+            console.warn('Unable to load footer friends', error);
+            list.innerHTML = '<li class="footer-menu__friends-placeholder">Не удалось загрузить друзей</li>';
+        }
+    }
+
+    renderFriendsList() {
+        const list = this.content?.querySelector('[data-component="footer-menu-friends-list"]');
+        if (!list) return;
+
+        const query = String(this.content?.querySelector('[data-component="footer-menu-friends-search"]')?.value || '').trim().toLowerCase();
+        const filteredFriends = this.friends.filter((friend) => friend.username.toLowerCase().includes(query));
+
+        if (filteredFriends.length === 0) {
+            list.innerHTML = '<li class="footer-menu__friends-placeholder">Ничего не найдено</li>';
+            return;
+        }
+
+        list.innerHTML = filteredFriends.map((friend) => `
+            <li>
+                <div class="footer-menu__friend-item" data-footer-friend-id="${friend.id}">
+                    <span class="footer-menu__friend-name">@${this.escapeHtml(friend.username)}</span>
+                    <button class="footer-menu__friend-message" type="button" data-footer-menu-action="friend-message" aria-label="Написать @${this.escapeHtml(friend.username)}">
+                        <span class="footer-menu__friend-message-icon" data-svg-src="/assets/images/icons/message.svg" aria-hidden="true"></span>
+                    </button>
+                </div>
+            </li>
+        `).join('');
+        this.loadIcons();
     }
 
     async loadCollectionsState() {
@@ -278,7 +363,7 @@ class FooterLayout {
         if (!this.backButton || !this.backIcon) return;
 
         const isHomeState = state === 'home_state';
-        this.backButton.hidden = isHomeState;
+        this.backButton.classList.toggle('is-hidden', isHomeState);
         this.backButton.setAttribute('aria-hidden', isHomeState ? 'true' : 'false');
         this.loadIcon(this.backIcon);
     }
@@ -287,7 +372,7 @@ class FooterLayout {
         if (!this.pinButton || !this.pinIcon) return;
 
         const isHomeState = state === 'home_state';
-        this.pinButton.hidden = !isHomeState;
+        this.pinButton.classList.toggle('is-hidden', !isHomeState);
         this.pinButton.classList.toggle('is-active', isHomeState && this.isPinned);
         this.pinButton.setAttribute('aria-label', this.isPinned ? 'Открепить меню' : 'Закрепить меню');
         this.pinButton.setAttribute('aria-pressed', this.isPinned ? 'true' : 'false');

@@ -196,6 +196,43 @@ const App = {
     },
 
 
+
+    title: {
+        prefix: 'Grinderest / ',
+        getPageTitle: function (url = window.location.href) {
+            const parsedUrl = App.history.getUrl(url);
+            const pathname = parsedUrl.pathname;
+
+            if (pathname === '/profile') {
+                const username = String(parsedUrl.searchParams.get('username') || '').trim().replace(/^@+/, '');
+                return username ? `@${username}` : 'Профиль';
+            }
+
+            if (pathname === '/post') {
+                const postParam = String(parsedUrl.searchParams.get('id') || '').trim();
+                const editMatch = postParam.match(/^(\d+)\/edit$/);
+                if (editMatch) return `Пост ${editMatch[1]} / Редактирование`;
+
+                const postMatch = postParam.match(/^(\d+)$/);
+                if (postMatch) return `Пост ${postMatch[1]}`;
+            }
+
+            const titles = {
+                '/': 'Главная',
+                '/post/create': 'Создание поста',
+                '/collections': 'Коллекции',
+                '/auth/login': 'Вход',
+                '/auth/register': 'Регистрация',
+                '/auth/registration': 'Регистрация'
+            };
+
+            return titles[pathname] || 'Главная';
+        },
+        sync: function (url = window.location.href) {
+            document.title = `${this.prefix}${this.getPageTitle(url)}`;
+        }
+    },
+
     history: {
         skipNextModalOnlyPop: false,
         getCurrentUrl: function () {
@@ -206,9 +243,11 @@ const App = {
         },
         pushUrl: function (url) {
             window.history.pushState(this.getState(url), '', url);
+            App.title.sync(url);
         },
         replaceUrl: function (url) {
             window.history.replaceState(this.getState(url), '', url);
+            App.title.sync(url);
         },
         getUrl: function (url = window.location.href) {
             try {
@@ -381,6 +420,7 @@ function syncActiveModulesFromMain(target = document.getElementById('app-main'))
 // Инициализируем после полной загрузки DOM (все скрипты уже выполнены)
 document.addEventListener('DOMContentLoaded', () => {
     App.history.replaceUrl(App.history.getCurrentUrl());
+    App.title.sync();
     App.nav.bindLinkInterception();
     App.initWithSvgPreload()
         .then(() => App.initWithin(document))
@@ -414,6 +454,7 @@ document.addEventListener('htmx:afterSwap', (event) => {
 let isDirtyHistoryPromptOpen = false;
 
 window.addEventListener('popstate', () => {
+    App.title.sync();
     if (App.overlay?.get?.('warn-modal')) {
         App.warn?.close?.();
     }

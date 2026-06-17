@@ -164,6 +164,33 @@ function handleProfileNotifications(PDO $pdo, int $viewerId, int $targetUserId):
     profileJsonResponse(['success' => true, 'enabled' => $enabled]);
 }
 
+function handleProfileFriends(PDO $pdo, int $viewerId): never
+{
+    $stmt = $pdo->prepare('
+        SELECT u.id, u.username
+        FROM Users u
+        INNER JOIN User_Follows outgoing
+            ON outgoing.following_id = u.id AND outgoing.follower_id = ?
+        INNER JOIN User_Follows incoming
+            ON incoming.follower_id = u.id AND incoming.following_id = ?
+        WHERE u.is_deleted = 0
+    ');
+    $stmt->execute([$viewerId, $viewerId]);
+    $friends = $stmt->fetchAll() ?: [];
+
+    usort($friends, static function (array $left, array $right): int {
+        return strnatcasecmp((string) ($left['username'] ?? ''), (string) ($right['username'] ?? ''));
+    });
+
+    profileJsonResponse([
+        'success' => true,
+        'friends' => array_map(static fn (array $friend): array => [
+            'id' => (int) ($friend['id'] ?? 0),
+            'username' => (string) ($friend['username'] ?? ''),
+        ], $friends),
+    ]);
+}
+
 function handleProfileBlock(PDO $pdo, int $viewerId, int $targetUserId): never
 {
     if ($targetUserId === $viewerId) {
@@ -199,5 +226,6 @@ match ($path) {
     '/profile/report' => handleProfileReport($pdo, $viewerId, $targetUserId),
     '/profile/notifications' => handleProfileNotifications($pdo, $viewerId, $targetUserId),
     '/profile/block' => handleProfileBlock($pdo, $viewerId, $targetUserId),
+    '/profile/friends' => handleProfileFriends($pdo, $viewerId),
     default => profileJsonResponse(['success' => false, 'error' => 'Маршрут не найден'], 404),
 };

@@ -7,7 +7,7 @@
 .collection-modal__right-column{display:flex;flex-direction:column;height:100%}
 
 /* left collections list: dropdown-collections behavior with preserved block geom */
-.collection-modal__collection-list{margin:52px 0 0;padding:0;list-style:none;height:352px;overflow-y:auto;border:1.5px solid #e0e0e0;border-radius:12px;transition:border-color .2s ease}
+.collection-modal__collection-list{margin:52px 0 0;padding:0;list-style:none;height:352px;overflow-y:auto;border:1px solid #e0e0e0;border-radius:12px;transition:border-color .2s ease}
 .collection-modal__collection-list:hover{border-color:rgb(150,150,250)}
 .collection-modal__collection-list li{margin:0;padding:0}
 .collection-modal__collection-item{width:100%;height:36px;padding:0 12px;border:none;border-radius:0;background:transparent;text-align:left;font-family:'NS_def',Arial,sans-serif;font-size:18px;color:#333;cursor:pointer;transition:background .1s ease,color .1s ease}
