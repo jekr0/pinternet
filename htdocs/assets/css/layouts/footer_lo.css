@@ -81,7 +81,7 @@
 .footer-menu__control {
     position: relative;
     display: grid;
-    grid-template-columns: 36px minmax(0, 1fr) 36px;
+    grid-template-columns: 84px minmax(0, 1fr) 36px;
     align-items: center;
     column-gap: 12px;
     height: 36px;
@@ -111,7 +111,14 @@
     transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
+.footer-menu__left-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
 .footer-menu__pin,
+.footer-menu__back,
 .footer-menu__compress {
     display: inline-flex;
     align-items: center;
@@ -128,16 +135,19 @@
 }
 
 .footer-menu__pin:hover,
+.footer-menu__back:hover,
 .footer-menu__compress:hover {
     border-color: rgb(150, 150, 250);
     fill: rgb(150, 150, 250);
 }
 
-.footer-menu__pin {
+.footer-menu__pin,
+.footer-menu__back {
     color: #bbb;
 }
 
-.footer-menu__pin:hover {
+.footer-menu__pin:hover,
+.footer-menu__back:hover {
     color: rgb(150, 150, 250);
 }
 
@@ -149,10 +159,9 @@
     color: rgb(100, 100, 200);
 }
 
-.footer-menu__pin--back .footer-menu__control-icon svg,
-.footer-menu__pin--back .footer-menu__control-icon svg * {
-    fill: none;
-    stroke: currentColor;
+.footer-menu__back[hidden],
+.footer-menu__pin[hidden] {
+    display: none;
 }
 
 .footer-menu__control-icon,
@@ -174,14 +183,17 @@
     stroke: currentColor;
 }
 
-.footer-menu__pin:not(.is-active):not(.footer-menu__pin--back) .footer-menu__control-icon svg,
-.footer-menu__pin:not(.is-active):not(.footer-menu__pin--back) .footer-menu__control-icon svg * {
+.footer-menu__pin:not(.is-active) .footer-menu__control-icon svg,
+.footer-menu__pin:not(.is-active) .footer-menu__control-icon svg * {
     fill: none;
 }
 
 .footer-menu__pin.is-active .footer-menu__control-icon svg,
-.footer-menu__pin.is-active .footer-menu__control-icon svg * {
+.footer-menu__pin.is-active .footer-menu__control-icon svg *,
+.footer-menu__back .footer-menu__control-icon svg,
+.footer-menu__back .footer-menu__control-icon svg * {
     fill: currentColor;
+    stroke: none;
 }
 
 .footer-menu__compress .footer-menu__control-icon svg,
@@ -326,7 +338,7 @@
     transition: border-color 0.2s ease;
 }
 
-.footer-menu__collections-list::hover {
+.footer-menu__collections-list:hover {
     border-color: rgb(150, 150, 250);
 }
 
@@ -352,7 +364,7 @@
 }
 
 /* Элемент списка без дополнительных отступов */
-.footer-menu__collection-list li {
+.footer-menu__collections-list li {
     margin: 0;
     padding: 0;
 }
@@ -376,6 +388,14 @@
 /* Hover-подложка кнопки коллекции */
 .footer-menu__collection-item:hover {
     background: rgba(100, 100, 200, 0.08);
+}
+
+.footer-menu__collection-item--add {
+    justify-content: center;
+    height: 40px;
+    font-family: 'SF_def', Arial, sans-serif;
+    font-size: 24px;
+    color: rgb(100, 100, 200);
 }
 
 .footer-menu__collections-placeholder {
