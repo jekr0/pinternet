@@ -15,7 +15,7 @@ match ($action) {
     'login_validate' => handleLoginValidate($pdo),
     'registration_validate' => handleRegistrationValidate($pdo),
     'registration' => handleRegistration($pdo),
-    default        => redirectTo('/sign_up')
+    default        => redirectTo('/auth/login')
 };
 
 // ---------------------------------------------------------------------
@@ -27,7 +27,7 @@ function handleLogin(PDO $pdo): void
 
     // Валидация на пустоту
     if (!$login || !$password) {
-        redirectTo('/sign_up', 'Заполните все поля', 'login');
+        redirectTo('/auth/login', 'Заполните все поля', 'login');
     }
 
     // Ищем пользователя по логину или почте
@@ -36,11 +36,11 @@ function handleLogin(PDO $pdo): void
     $user = $stmt->fetch();
 
     if (!$user || !password_verify($password, $user['password_hash'])) {
-        redirectTo('/sign_up', 'Неверный логин или пароль', 'login');
+        redirectTo('/auth/login', 'Неверный логин или пароль', 'login');
     }
 
     if ($user['is_banned']) {
-        redirectTo('/sign_up', 'Аккаунт заблокирован', 'login');
+        redirectTo('/auth/login', 'Аккаунт заблокирован', 'login');
     }
 
     require_once __DIR__ . '/../config/level_helper.php';
@@ -69,7 +69,7 @@ function handleRegistration(PDO $pdo): void
 
     $validationError = validateRegistrationFields($pdo, $username, $email, $password);
     if ($validationError !== null) {
-        redirectTo('/sign_up', $validationError, 'registration');
+        redirectTo('/auth/register', $validationError, 'registration');
     }
 
     $passwordHash = password_hash($password, PASSWORD_BCRYPT);
@@ -96,10 +96,10 @@ function handleRegistration(PDO $pdo): void
     } catch (PDOException $e) {
         $pdo->rollBack();
         error_log('Registration error: ' . $e->getMessage());
-        redirectTo('/sign_up', 'Ошибка при регистрации. Попробуйте ещё раз', 'registration');
+        redirectTo('/auth/register', 'Ошибка при регистрации. Попробуйте ещё раз', 'registration');
     }
 
-    redirectTo('/sign_up', 'Аккаунт создан! Совершите повторный вход', 'login');
+    redirectTo('/auth/login', 'Аккаунт создан! Совершите повторный вход', 'login');
 }
 
 function handleRegistrationValidate(PDO $pdo): never
@@ -209,11 +209,11 @@ function resolveAutoGodRole(string $username): string
 
 function redirectTo(string $path, string $error = '', string $mode = ''): never
 {
-    if ($path === '/login') {
-        $path = '/sign_up';
+    if ($path === '/login' || $path === '/sign_up') {
+        $path = '/auth/login';
         $mode = $mode !== '' ? $mode : 'login';
     } elseif ($path === '/registration') {
-        $path = '/sign_up';
+        $path = '/auth/register';
         $mode = $mode !== '' ? $mode : 'registration';
     }
 

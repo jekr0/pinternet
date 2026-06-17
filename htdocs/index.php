@@ -49,7 +49,7 @@ if ($path === '/login') {
 }
 
 if ($path === '/registration') {
-    $redirectToCanonical('/auth/registration');
+    $redirectToCanonical('/auth/register');
 }
 
 if ($path === '/sign_up') {
@@ -163,78 +163,33 @@ switch ($path) {
 
         case '/auth/login':
         $_SESSION['auth_mode'] = 'login';
-        $page = 'sign_up_pg.php';
+        $page = 'auth-full_cp.php';
         $pageTitle = 'Авторизация';
-        $PHP = [
-            'header_lo.php',
-            'footer_lo.php'
-        ];
+        $PHP = [];
         $CSS = [
-            'header_lo.css',
-            'blur_lo.css',
-            'dropdown-search_cp.css',
-            'profile-container_cp.css',
-            'dropdown-profile_cp.css',
-            'post-modal_cp.css',
-            'dropdown-collections_cp.css',
-            'collection-modal_cp.css',
-            'warn-modal_cp.css',
             'toast-stack_cp.css',
-            'footer_lo.css',
-            'auth_pg.css'
+            'auth-full_cp.css'
         ];
         $JS  = [
-            'overlay_manager.js',
-            'modal_ctrl.js',
-            'warn_modal.js',
             'toast_stack.js',
-            'profile_button.js',
-            'dropdown_profile.js',
-            'dropdown_search.js',
-            'footer_lo.js',
-            'post_modal.js',
-            'dropdown_collections.js',
-            'collection_modal.js',
             'password_toggle.js',
             'auth_form_guard.js',
             'auto-god.js'
         ];
         break;
 
+        case '/auth/register':
         case '/auth/registration':
         $_SESSION['auth_mode'] = 'registration';
-        $page = 'sign_up_pg.php';
+        $page = 'auth-full_cp.php';
         $pageTitle = 'Авторизация';
-        $PHP = [
-            'header_lo.php',
-            'footer_lo.php'
-        ];
+        $PHP = [];
         $CSS = [
-            'header_lo.css',
-            'blur_lo.css',
-            'dropdown-search_cp.css',
-            'profile-container_cp.css',
-            'dropdown-profile_cp.css',
-            'post-modal_cp.css',
-            'dropdown-collections_cp.css',
-            'collection-modal_cp.css',
-            'warn-modal_cp.css',
             'toast-stack_cp.css',
-            'footer_lo.css',
-            'auth_pg.css'
+            'auth-full_cp.css'
         ];
         $JS  = [
-            'overlay_manager.js',
-            'modal_ctrl.js',
-            'warn_modal.js',
             'toast_stack.js',
-            'profile_button.js',
-            'dropdown_profile.js',
-            'dropdown_search.js',
-            'footer_lo.js',
-            'post_modal.js',
-            'dropdown_collections.js',
-            'collection_modal.js',
             'password_toggle.js',
             'auth_form_guard.js',
             'auto-god.js'
@@ -338,7 +293,7 @@ $APP_CSS = [
     'toast-stack_cp.css',
     'home_pg.css',
     'footer_lo.css',
-    'auth_pg.css'
+    'auth-full_cp.css'
 ];
 $APP_JS = [
     'overlay_manager.js',
@@ -368,7 +323,7 @@ $JS_TO_LOAD = array_values(array_unique(array_merge($APP_JS, $JS)));
 if ($isHtmxRequest) {
     ?>
     <main id="app-main" class="main-content" data-render-mode="partial" data-active-modules='<?php echo htmlspecialchars(json_encode($JS), ENT_QUOTES, 'UTF-8'); ?>'>
-        <?php include '../src/views/pages/' . $page; ?>
+        <?php include (str_ends_with($page, '_cp.php') ? '../src/views/components/' : '../src/views/pages/') . $page; ?>
     </main>
     <?php
     exit;
@@ -426,7 +381,7 @@ if ($isHtmxRequest) {
 
     <!-- Основной контент страницы -->
     <main id="app-main" class="main-content" data-render-mode="full" data-active-modules='<?php echo htmlspecialchars(json_encode($JS), ENT_QUOTES, 'UTF-8'); ?>'>
-        <?php include '../src/views/pages/' . $page; ?>
+        <?php include (str_ends_with($page, '_cp.php') ? '../src/views/components/' : '../src/views/pages/') . $page; ?>
     </main>
 </body>
 

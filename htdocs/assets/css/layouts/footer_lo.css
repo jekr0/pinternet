@@ -248,12 +248,16 @@
 
 .footer-menu.is-substate-transitioning-in .footer-menu__content,
 .footer-menu.is-substate-transitioning-in .footer-menu__title {
-    animation: footer-menu-substate-in 0.2s ease 0.2s both;
+    opacity: 0;
+    transform: translateY(4px);
+    transition: none;
 }
 
-@keyframes footer-menu-substate-in {
-    from { opacity: 0;}
-    to { opacity: 1;}
+.footer-menu[data-state="opened"]:not(.is-substate-transitioning-out):not(.is-substate-transitioning-in) .footer-menu__content,
+.footer-menu[data-state="opened"]:not(.is-substate-transitioning-out):not(.is-substate-transitioning-in) .footer-menu__title {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
 .footer-menu__content-button {

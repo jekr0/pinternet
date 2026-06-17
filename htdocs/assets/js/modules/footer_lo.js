@@ -7,6 +7,7 @@ class FooterLayout {
         this.isPinned = false;
         this.substate = 'home_state';
         this.stateTransitionTimer = null;
+        this.stateTransitionFrame = null;
         this.collections = [];
         this.toggleButton = this.menu.querySelector('.footer-menu__toggle');
         this.compressButton = this.menu.querySelector('.footer-menu__compress');
@@ -147,11 +148,18 @@ class FooterLayout {
         }
 
         clearTimeout(this.stateTransitionTimer);
+        cancelAnimationFrame(this.stateTransitionFrame);
+        this.menu.classList.remove('is-substate-transitioning-in');
         this.menu.classList.add('is-substate-transitioning-out');
         this.stateTransitionTimer = setTimeout(() => {
             this.applyState(normalizedState);
             this.menu.classList.remove('is-substate-transitioning-out');
             this.menu.classList.add('is-substate-transitioning-in');
+            void this.menu.offsetWidth;
+            this.stateTransitionFrame = requestAnimationFrame(() => {
+                this.menu?.classList.remove('is-substate-transitioning-in');
+                this.stateTransitionFrame = null;
+            });
             this.stateTransitionTimer = setTimeout(() => {
                 this.menu?.classList.remove('is-substate-transitioning-in');
                 this.stateTransitionTimer = null;
