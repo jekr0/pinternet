@@ -104,10 +104,31 @@ class ProfileFullComponent {
                     return;
                 }
                 void this.toggleBlockButton(button);
+                return;
+            }
+
+            if (action === 'profile-message') {
+                event.preventDefault();
+                this.openFooterChat();
             }
         };
 
         this.root.addEventListener('click', this.clickHandler);
+    }
+
+
+    openFooterChat() {
+        if (!this.actions) return;
+        const user = {
+            id: Number(this.actions.dataset.profileUserId || 0),
+            username: String(this.actions.dataset.profileUsername || '').trim()
+        };
+        const footer = App.components?.['footer_lo.js'];
+        if (footer?.openChatFromProfile) {
+            footer.openChatFromProfile(user);
+            return;
+        }
+        document.dispatchEvent(new CustomEvent('app:toast', { detail: { message: 'Меню сообщений недоступно' } }));
     }
 
     renderActionLine(state = null) {

@@ -347,7 +347,7 @@ function handleToggleLike(PDO $pdo, int $userId): never
         $incrementTotalLikes->execute([$postOwnerId]);
 
         if ($userId !== $postOwnerId) {
-            notifyPostLiked($pdo, $postOwnerId, $userId, $post['description'] ?? '');
+            notifyPostLiked($pdo, $postOwnerId, $userId, $postId, $post['description'] ?? '');
 
             $insertAward = $pdo->prepare('INSERT IGNORE INTO Post_Like_Exp_Awards (liker_user_id, post_id, post_owner_id) VALUES (?, ?, ?)');
             $insertAward->execute([$userId, $postId, $postOwnerId]);
@@ -722,9 +722,9 @@ function handleCreateComment(PDO $pdo, int $userId): never
         $commentId = (int) $pdo->lastInsertId();
 
         if ($resolvedParentCommentId !== null && !empty($parentRow)) {
-            notifyCommentReplied($pdo, (int) ($parentRow['user_id'] ?? 0), $userId, $content);
+            notifyCommentReplied($pdo, (int) ($parentRow['user_id'] ?? 0), $userId, $postId, $commentId, $content);
         } else {
-            notifyPostCommented($pdo, (int) ($post['user_id'] ?? 0), $userId, $content);
+            notifyPostCommented($pdo, (int) ($post['user_id'] ?? 0), $userId, $postId, $commentId, $content);
         }
     } catch (Throwable $e) {
         error_log('Create comment error: ' . $e->getMessage());
@@ -783,7 +783,7 @@ function handleToggleCommentLike(PDO $pdo, int $userId): never
         jsonResponse(['success' => false, 'error' => 'Некорректный comment_id'], 422);
     }
 
-    $commentStmt = $pdo->prepare('SELECT id, user_id, content FROM Comments WHERE id = ? AND is_deleted = 0 LIMIT 1');
+    $commentStmt = $pdo->prepare('SELECT id, post_id, user_id, content FROM Comments WHERE id = ? AND is_deleted = 0 LIMIT 1');
     $commentStmt->execute([$commentId]);
     $comment = $commentStmt->fetch(PDO::FETCH_ASSOC) ?: null;
     if ($comment === null) {
@@ -816,7 +816,7 @@ function handleToggleCommentLike(PDO $pdo, int $userId): never
             $incrementTotalLikes->execute([$commentOwnerId]);
 
             if ($userId !== $commentOwnerId) {
-                notifyCommentLiked($pdo, $commentOwnerId, $userId, $comment['content'] ?? '');
+                notifyCommentLiked($pdo, $commentOwnerId, $userId, (int) ($comment['post_id'] ?? 0), $commentId, $comment['content'] ?? '');
 
                 $insertAward = $pdo->prepare('INSERT IGNORE INTO Comment_Like_Exp_Awards (liker_user_id, comment_id, comment_owner_id) VALUES (?, ?, ?)');
                 $insertAward->execute([$userId, $commentId, $commentOwnerId]);

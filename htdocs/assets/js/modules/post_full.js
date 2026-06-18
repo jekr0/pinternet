@@ -97,6 +97,7 @@ class PostFullComponent {
             window.addEventListener('scroll', this.commentsHideScrollHandler, { passive: true });
             window.addEventListener('resize', this.commentsHideScrollHandler);
             this.initScrollTopButton();
+            this.revealCommentFromUrl();
         }
 
         const cards = Array.from(this.container.querySelectorAll('[data-component="post-card"]'));
@@ -120,6 +121,19 @@ class PostFullComponent {
     }
 
     // Инициализирует опорное серверное время, чтобы убрать влияние неверных часов на клиенте.
+
+    revealCommentFromUrl() {
+        const commentId = Number(new URLSearchParams(window.location.search).get('comment_id') || 0);
+        if (!commentId) return;
+        const comment = this.postFullElement?.querySelector(`.post-full__comment-item[data-comment-id="${commentId}"]`);
+        if (!comment) return;
+        this.commentsExpanded = true;
+        this.applyCommentsPreviewState();
+        comment.closest('.post-full__comment-thread')?.classList.add('is-highlighted');
+        comment.classList.add('is-highlighted');
+        requestAnimationFrame(() => comment.scrollIntoView({ block: 'center', behavior: 'smooth' }));
+    }
+
     initReferenceClock() {
         const datasetServerNowTs = Number(this.postFullElement?.dataset.serverNowTs || 0);
         this.serverNowTs = Number.isFinite(datasetServerNowTs) && datasetServerNowTs > 0

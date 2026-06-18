@@ -336,6 +336,65 @@ function handleProfileMessagesChats(PDO $pdo, int $viewerId): never
     ]);
 }
 
+
+function handleProfileNotificationsList(PDO $pdo, int $viewerId): never
+{
+    $stmt = $pdo->prepare('
+        SELECT n.id,
+               n.title,
+               n.text,
+               n.is_read,
+               n.actor_user_id,
+               n.post_id,
+               n.comment_id,
+               UNIX_TIMESTAMP(n.created_at) AS created_at_ts,
+               u.username AS actor_username
+        FROM Notifications n
+        LEFT JOIN Users u ON u.id = n.actor_user_id AND u.is_deleted = 0
+        WHERE n.user_id = ?
+        ORDER BY n.created_at DESC, n.id DESC
+        LIMIT 100
+    ');
+    $stmt->execute([$viewerId]);
+    $notifications = $stmt->fetchAll() ?: [];
+
+    profileJsonResponse([
+        'success' => true,
+        'notifications' => array_map(static function (array $notification): array {
+            $postId = (int) ($notification['post_id'] ?? 0);
+            $commentId = (int) ($notification['comment_id'] ?? 0);
+            $actorUsername = (string) ($notification['actor_username'] ?? '');
+            $targetUrl = '';
+            if ($postId > 0) {
+                $targetUrl = '/post?id=' . $postId . ($commentId > 0 ? '&comment_id=' . $commentId : '');
+            } elseif ($actorUsername !== '') {
+                $targetUrl = '/profile?username=' . rawurlencode($actorUsername);
+            }
+
+            return [
+                'id' => (int) ($notification['id'] ?? 0),
+                'title' => (string) ($notification['title'] ?? ''),
+                'text' => $notification['text'] === null ? '' : (string) $notification['text'],
+                'is_read' => (int) ($notification['is_read'] ?? 0) === 1,
+                'created_at' => date('c', (int) ($notification['created_at_ts'] ?? time())),
+                'actor_user_id' => (int) ($notification['actor_user_id'] ?? 0),
+                'actor_username' => $actorUsername,
+                'post_id' => $postId,
+                'comment_id' => $commentId,
+                'target_url' => $targetUrl,
+            ];
+        }, $notifications),
+    ]);
+}
+
+function handleProfileNotificationsRead(PDO $pdo, int $viewerId): never
+{
+    $stmt = $pdo->prepare('UPDATE Notifications SET is_read = 1 WHERE user_id = ? AND is_read = 0');
+    $stmt->execute([$viewerId]);
+
+    profileJsonResponse(['success' => true]);
+}
+
 function handleProfileFooterCounts(PDO $pdo, int $viewerId): never
 {
     $messagesStmt = $pdo->prepare('SELECT COUNT(*) FROM Messages WHERE to_user_id = ? AND is_read = 0');
@@ -405,6 +464,8 @@ match ($path) {
     '/profile/messages/list' => handleProfileMessagesList($pdo, $viewerId, $targetUserId),
     '/profile/messages/send' => handleProfileMessagesSend($pdo, $viewerId, $targetUserId),
     '/profile/messages/chats' => handleProfileMessagesChats($pdo, $viewerId),
+    '/profile/notifications/list' => handleProfileNotificationsList($pdo, $viewerId),
+    '/profile/notifications/read' => handleProfileNotificationsRead($pdo, $viewerId),
     '/profile/footer-counts' => handleProfileFooterCounts($pdo, $viewerId),
     default => profileJsonResponse(['success' => false, 'error' => 'Маршрут не найден'], 404),
 };

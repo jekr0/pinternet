@@ -787,15 +787,18 @@
 }
 
 .footer-menu__chat-list::-webkit-scrollbar,
+.footer-menu__notif-list::-webkit-scrollbar,
 .footer-menu__message-list::-webkit-scrollbar {
     display: none;
 }
 
-.footer-menu__chat-list li + li {
+.footer-menu__chat-list li + li,
+.footer-menu__notif-list li + li {
     margin-top: 4px;
 }
 
-.footer-menu__chat-item {
+.footer-menu__chat-item,
+.footer-menu__notif-item {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -813,8 +816,73 @@
     transition: background 0.1s ease, color 0.1s ease;
 }
 
-.footer-menu__chat-item:hover {
+.footer-menu__chat-item:hover,
+.footer-menu__notif-item:hover {
     background: rgba(100, 100, 200, 0.08);
+}
+
+.footer-menu__notif-list-wrap {
+    height: 100%;
+}
+
+.footer-menu__notif-item {
+    min-height: 40px;
+    height: auto;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    padding: 0;
+    font-family: 'NS_def', Arial, sans-serif;
+    cursor: pointer;
+}
+
+.footer-menu__notif-item--unread {
+    background: rgba(100, 100, 200, 0.08);
+}
+
+.footer-menu__notif-title {
+    min-width: 0;
+    width: 100%;
+    padding: 4px 8px 0;
+    box-sizing: border-box;
+    font-family: 'NS_def', Arial, sans-serif;
+    font-size: 18px;
+    line-height: 1.2;
+    color: #555;
+    overflow-wrap: anywhere;
+}
+
+.footer-menu__notif-text {
+    min-width: 0;
+    width: 100%;
+    padding: 4px 8px;
+    box-sizing: border-box;
+    font-family: 'NS_def', Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.2;
+    color: #bbb;
+    overflow-wrap: anywhere;
+}
+
+.footer-menu__notif-nickname {
+    color: rgb(100, 100, 200);
+}
+
+.footer-menu__notif-date-time {
+    align-self: flex-end;
+    margin-top: auto;
+    padding: 2px 8px 0;
+    box-sizing: border-box;
+    font-family: 'NS_def', Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.2;
+    color: #bbb;
+    opacity: 0;
+    transition: opacity 0.1s ease;
+}
+
+.footer-menu__notif-item:hover .footer-menu__notif-date-time {
+    opacity: 1;
 }
 
 .footer-menu__message-list {
@@ -824,7 +892,7 @@
 }
 
 .footer-menu__chat::after {
-    bottom: var(--footer-message-input-height, 48px);
+    bottom: calc(var(--footer-message-input-height, 48px) + 8px);
 }
 
 .footer-menu__message-item {
