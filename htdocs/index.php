@@ -226,6 +226,8 @@ switch ($path) {
         case '/profile/notifications':
         case '/profile/block':
         case '/profile/friends':
+        case '/profile/messages/list':
+        case '/profile/messages/send':
         require_once '../src/controllers/profile_ctrl.php';
         exit;
 

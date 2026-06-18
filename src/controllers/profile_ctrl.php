@@ -167,7 +167,7 @@ function handleProfileNotifications(PDO $pdo, int $viewerId, int $targetUserId):
 function handleProfileFriends(PDO $pdo, int $viewerId): never
 {
     $stmt = $pdo->prepare('
-        SELECT u.id, u.username
+        SELECT u.id, u.username, u.level
         FROM Users u
         INNER JOIN User_Follows outgoing
             ON outgoing.following_id = u.id AND outgoing.follower_id = ?
@@ -187,7 +187,85 @@ function handleProfileFriends(PDO $pdo, int $viewerId): never
         'friends' => array_map(static fn (array $friend): array => [
             'id' => (int) ($friend['id'] ?? 0),
             'username' => (string) ($friend['username'] ?? ''),
+            'level' => (int) ($friend['level'] ?? 1),
         ], $friends),
+    ]);
+}
+
+function assertProfileFriend(PDO $pdo, int $viewerId, int $friendId): void
+{
+    if ($friendId <= 0 || $friendId === $viewerId) {
+        profileJsonResponse(['success' => false, 'error' => 'Пользователь не найден'], 400);
+    }
+
+    findProfileTargetUser($pdo, $friendId);
+    $stmt = $pdo->prepare('
+        SELECT 1
+        FROM User_Follows outgoing
+        INNER JOIN User_Follows incoming
+            ON incoming.follower_id = ? AND incoming.following_id = ?
+        WHERE outgoing.follower_id = ? AND outgoing.following_id = ?
+        LIMIT 1
+    ');
+    $stmt->execute([$friendId, $viewerId, $viewerId, $friendId]);
+    if ($stmt->fetchColumn() === false) {
+        profileJsonResponse(['success' => false, 'error' => 'Писать можно только друзьям'], 403);
+    }
+}
+
+function handleProfileMessagesList(PDO $pdo, int $viewerId, int $friendId): never
+{
+    assertProfileFriend($pdo, $viewerId, $friendId);
+
+    $stmt = $pdo->prepare('
+        SELECT id, from_user_id, to_user_id, text, UNIX_TIMESTAMP(created_at) AS created_at_ts
+        FROM Messages
+        WHERE (from_user_id = ? AND to_user_id = ?) OR (from_user_id = ? AND to_user_id = ?)
+        ORDER BY created_at DESC, id DESC
+        LIMIT 100
+    ');
+    $stmt->execute([$viewerId, $friendId, $friendId, $viewerId]);
+    $messages = $stmt->fetchAll() ?: [];
+
+    profileJsonResponse([
+        'success' => true,
+        'messages' => array_map(static fn (array $message): array => [
+            'id' => (int) ($message['id'] ?? 0),
+            'type' => (int) ($message['from_user_id'] ?? 0) === $viewerId ? 'self' : 'friend',
+            'text' => (string) ($message['text'] ?? ''),
+            'sentAt' => date('c', (int) ($message['created_at_ts'] ?? time())),
+        ], $messages),
+    ]);
+}
+
+function handleProfileMessagesSend(PDO $pdo, int $viewerId, int $friendId): never
+{
+    assertProfileFriend($pdo, $viewerId, $friendId);
+
+    $text = trim((string) ($_POST['text'] ?? ''));
+    if ($text === '') {
+        profileJsonResponse(['success' => false, 'error' => 'Введите сообщение'], 400);
+    }
+    if (mb_strlen($text, 'UTF-8') > 256) {
+        profileJsonResponse(['success' => false, 'error' => 'Сообщение не должно превышать 256 символов'], 400);
+    }
+
+    $stmt = $pdo->prepare('INSERT INTO Messages (from_user_id, to_user_id, text) VALUES (?, ?, ?)');
+    $stmt->execute([$viewerId, $friendId, $text]);
+    $messageId = (int) $pdo->lastInsertId();
+
+    $createdStmt = $pdo->prepare('SELECT UNIX_TIMESTAMP(created_at) FROM Messages WHERE id = ? LIMIT 1');
+    $createdStmt->execute([$messageId]);
+    $createdAtTs = (int) ($createdStmt->fetchColumn() ?: time());
+
+    profileJsonResponse([
+        'success' => true,
+        'message' => [
+            'id' => $messageId,
+            'type' => 'self',
+            'text' => $text,
+            'sentAt' => date('c', $createdAtTs),
+        ],
     ]);
 }
 
@@ -227,5 +305,7 @@ match ($path) {
     '/profile/notifications' => handleProfileNotifications($pdo, $viewerId, $targetUserId),
     '/profile/block' => handleProfileBlock($pdo, $viewerId, $targetUserId),
     '/profile/friends' => handleProfileFriends($pdo, $viewerId),
+    '/profile/messages/list' => handleProfileMessagesList($pdo, $viewerId, $targetUserId),
+    '/profile/messages/send' => handleProfileMessagesSend($pdo, $viewerId, $targetUserId),
     default => profileJsonResponse(['success' => false, 'error' => 'Маршрут не найден'], 404),
 };

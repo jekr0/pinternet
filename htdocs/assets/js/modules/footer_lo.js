@@ -10,6 +10,8 @@ class FooterLayout {
         this.stateTransitionFrame = null;
         this.collections = [];
         this.friends = [];
+        this.activeChatFriend = null;
+        this.chatMessages = {};
         this.toggleButton = this.menu.querySelector('.footer-menu__toggle');
         this.compressButton = this.menu.querySelector('.footer-menu__compress');
         this.backButton = this.menu.querySelector('.footer-menu__back');
@@ -57,10 +59,10 @@ class FooterLayout {
             this.togglePinned();
         };
         this.contentClickHandler = (event) => {
-            const button = event.target?.closest?.('[data-footer-menu-action], [data-footer-collection]');
+            const button = event.target?.closest?.('[data-footer-menu-action], [data-footer-collection], [data-footer-friend-id]');
             if (!button || !this.content?.contains(button)) return;
             event.stopPropagation();
-            this.handleContentAction(button.dataset.footerMenuAction || '', button);
+            this.handleContentAction(button.dataset.footerMenuAction || '', button, event);
         };
         this.outsideClickHandler = (event) => {
             if (!this.menu || this.menu.dataset.state !== 'opened' || this.isPinned) return;
@@ -115,7 +117,7 @@ class FooterLayout {
         }
     }
 
-    handleContentAction(action, button) {
+    handleContentAction(action, button, event = null) {
         if (action === 'profile') {
             this.closeAfterAction();
             if (App.nav?.navigate) {
@@ -137,7 +139,14 @@ class FooterLayout {
         }
 
         if (action === 'friend-message') {
-            this.renderState('message_state');
+            const friendItem = button?.closest?.('[data-footer-friend-id]');
+            this.openChatWithFriend(friendItem?.dataset.footerFriendId);
+            return;
+        }
+
+        if (button?.dataset.footerFriendId) {
+            if (event?.target?.closest?.('[data-footer-menu-action="friend-message"]')) return;
+            this.openFriendProfile(button.dataset.footerFriendId);
             return;
         }
 
@@ -182,7 +191,7 @@ class FooterLayout {
     }
 
     getKnownState(state) {
-        return ['home_state', 'message_state', 'messages_state', 'notifications_state', 'friends_state', 'collections_state'].includes(state)
+        return ['home_state', 'chat_state', 'messages_state', 'notifications_state', 'friends_state', 'collections_state'].includes(state)
             ? state
             : 'home_state';
     }
@@ -200,16 +209,22 @@ class FooterLayout {
             void this.loadCollectionsState();
         }
 
+
         if (state === 'friends_state') {
             this.bindFriendsSearch();
             void this.loadFriendsState();
+        }
+
+        if (state === 'chat_state') {
+            this.bindChatState();
+            this.renderChatMessages();
         }
     }
 
     getStateTitle(state) {
         return {
             home_state: 'Меню',
-            message_state: 'Сообщения',
+            chat_state: this.activeChatFriend?.username ? `@${this.activeChatFriend.username}` : 'Сообщения',
             messages_state: 'Сообщения',
             notifications_state: 'Уведомления',
             friends_state: 'Друзья',
@@ -233,6 +248,17 @@ class FooterLayout {
 
         if (state === 'collections_state') {
             return '<ul class="footer-menu__collections-list" data-component="footer-menu-collections-list"><li class="footer-menu__collections-placeholder">Загрузка...</li></ul>';
+        }
+
+        if (state === 'chat_state') {
+            return `
+                <div class="footer-menu__chat" data-component="footer-menu-chat">
+                    <div class="footer-menu__message-list" data-component="footer-menu-message-list"></div>
+                    <div class="footer-menu__message-input-wrap">
+                        <textarea class="footer-menu__message-input" data-component="footer-menu-message-input" placeholder="Сообщение" maxlength="256" aria-label="Сообщение"></textarea>
+                    </div>
+                </div>
+            `;
         }
 
         if (state === 'friends_state') {
@@ -275,7 +301,8 @@ class FooterLayout {
             this.friends = payload.friends
                 .map((friend) => ({
                     id: Number(friend?.id || 0),
-                    username: String(friend?.username || '').trim()
+                    username: String(friend?.username || '').trim(),
+                    level: Number(friend?.level || 1)
                 }))
                 .filter((friend) => friend.id > 0 && friend.username !== '')
                 .sort((left, right) => left.username.localeCompare(right.username, undefined, { numeric: true, sensitivity: 'base' }));
@@ -301,7 +328,7 @@ class FooterLayout {
         list.innerHTML = filteredFriends.map((friend) => `
             <li>
                 <div class="footer-menu__friend-item" data-footer-friend-id="${friend.id}">
-                    <span class="footer-menu__friend-name">@${this.escapeHtml(friend.username)}</span>
+                    <span class="footer-menu__friend-label"><span class="footer-menu__friend-name">@${this.escapeHtml(friend.username)}</span><span class="footer-menu__friend-level">${this.escapeHtml(friend.level || 1)}</span></span>
                     <button class="footer-menu__friend-message" type="button" data-footer-menu-action="friend-message" aria-label="Написать @${this.escapeHtml(friend.username)}">
                         <span class="footer-menu__friend-message-icon" data-svg-src="/assets/images/icons/message.svg" aria-hidden="true"></span>
                     </button>
@@ -309,6 +336,149 @@ class FooterLayout {
             </li>
         `).join('');
         this.loadIcons();
+    }
+
+    openFriendProfile(friendId) {
+        const friend = this.friends.find((item) => item.id === Number(friendId));
+        if (!friend?.username) return;
+        this.closeAfterAction();
+        const url = `/profile?username=${encodeURIComponent(friend.username)}`;
+        if (App.nav?.navigate) {
+            App.nav.navigate(url);
+            return;
+        }
+        window.location.href = url;
+    }
+
+    openChatWithFriend(friendId) {
+        const friend = this.friends.find((item) => item.id === Number(friendId));
+        if (!friend) return;
+        this.activeChatFriend = friend;
+        if (!this.chatMessages[friend.id]) {
+            this.chatMessages[friend.id] = [];
+        }
+        this.renderState('chat_state');
+        void this.loadChatMessages();
+    }
+
+    async loadChatMessages() {
+        const friend = this.activeChatFriend;
+        if (!friend) return;
+        try {
+            const formData = new FormData();
+            formData.append('user_id', String(friend.id));
+            const response = await fetch('/profile/messages/list', {
+                method: 'POST',
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                body: formData
+            });
+            const payload = await response.json();
+            if (!response.ok || !payload.success || !Array.isArray(payload.messages)) {
+                throw new Error(payload?.error || 'Не удалось загрузить сообщения');
+            }
+            this.chatMessages[friend.id] = payload.messages;
+            this.renderChatMessages();
+        } catch (error) {
+            console.warn('Unable to load footer chat messages', error);
+            document.dispatchEvent(new CustomEvent('app:toast', { detail: { message: error?.message || 'Не удалось загрузить сообщения' } }));
+        }
+    }
+
+    bindChatState() {
+        const input = this.content?.querySelector('[data-component="footer-menu-message-input"]');
+        if (!input) return;
+
+        input.addEventListener('input', () => this.autoResizeMessageInput(input));
+        input.addEventListener('keydown', (event) => {
+            if (event.key === 'Tab' && event.ctrlKey) {
+                event.preventDefault();
+                const start = input.selectionStart ?? input.value.length;
+                const end = input.selectionEnd ?? input.value.length;
+                const currentValue = input.value;
+                input.value = `${currentValue.slice(0, start)}\n${currentValue.slice(end)}`;
+                input.selectionStart = input.selectionEnd = start + 1;
+                input.dispatchEvent(new Event('input', { bubbles: true }));
+                return;
+            }
+            if (event.key !== 'Enter' || event.shiftKey) return;
+            event.preventDefault();
+            void this.submitChatMessage(input);
+        });
+        this.autoResizeMessageInput(input);
+    }
+
+    autoResizeMessageInput(input) {
+        if (!input) return;
+        if (input.value.trim() === '') {
+            input.style.height = '40px';
+            return;
+        }
+        input.style.height = 'auto';
+        input.style.height = `${Math.min(140, Math.max(40, input.scrollHeight))}px`;
+    }
+
+    async submitChatMessage(input) {
+        const text = String(input?.value || '').trim();
+        const friend = this.activeChatFriend;
+        if (!friend || !text) return;
+        if (text.length > 256) {
+            document.dispatchEvent(new CustomEvent('app:toast', { detail: { message: 'Сообщение не должно превышать 256 символов' } }));
+            return;
+        }
+
+        input.disabled = true;
+        try {
+            const formData = new FormData();
+            formData.append('user_id', String(friend.id));
+            formData.append('text', text);
+            const response = await fetch('/profile/messages/send', {
+                method: 'POST',
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                body: formData
+            });
+            const payload = await response.json();
+            if (!response.ok || !payload.success || !payload.message) {
+                throw new Error(payload?.error || 'Не удалось отправить сообщение');
+            }
+            if (!this.chatMessages[friend.id]) this.chatMessages[friend.id] = [];
+            this.chatMessages[friend.id].unshift(payload.message);
+            input.value = '';
+            this.autoResizeMessageInput(input);
+            this.renderChatMessages();
+        } catch (error) {
+            console.warn('Unable to send footer chat message', error);
+            document.dispatchEvent(new CustomEvent('app:toast', { detail: { message: error?.message || 'Не удалось отправить сообщение' } }));
+        } finally {
+            input.disabled = false;
+            input.focus();
+        }
+    }
+
+    renderChatMessages() {
+        const list = this.content?.querySelector('[data-component="footer-menu-message-list"]');
+        if (!list || !this.activeChatFriend) return;
+        const messages = this.chatMessages[this.activeChatFriend.id] || [];
+        list.innerHTML = messages.length ? messages.map((message) => this.getMessageItemHtml(message)).join('') : '<div class="footer-menu__message-placeholder">Сообщений пока нет</div>';
+    }
+
+    getMessageItemHtml(message) {
+        const type = message?.type === 'friend' ? 'friend' : 'self';
+        return `
+            <div class="footer-menu__message-row footer-menu__message-row--${type}">
+                <div class="footer-menu__message-item footer-menu__message-item--${type}">${this.escapeHtml(message?.text || '')}</div>
+                <div class="footer-menu__message-time">${this.escapeHtml(this.formatMessageTime(message?.sentAt))}</div>
+            </div>
+        `;
+    }
+
+    formatMessageTime(value) {
+        const date = value ? new Date(value) : new Date();
+        if (Number.isNaN(date.getTime())) return '';
+        const pad = (number) => String(number).padStart(2, '0');
+        if (Date.now() - date.getTime() >= 24 * 60 * 60 * 1000) {
+            return `${pad(date.getDate())}.${pad(date.getMonth() + 1)}.${date.getFullYear()}`;
+        }
+        return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
     }
 
     async loadCollectionsState() {
