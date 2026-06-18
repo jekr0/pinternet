@@ -192,14 +192,25 @@ function handleProfileFriends(PDO $pdo, int $viewerId): never
     ]);
 }
 
-function assertProfileFriend(PDO $pdo, int $viewerId, int $friendId): void
+function getProfileMessageAvailability(PDO $pdo, int $viewerId, int $friendId): array
 {
     if ($friendId <= 0 || $friendId === $viewerId) {
-        profileJsonResponse(['success' => false, 'error' => 'Пользователь не найден'], 400);
+        return ['can_message' => false, 'reason' => 'not_found'];
     }
 
     findProfileTargetUser($pdo, $friendId);
-    $stmt = $pdo->prepare('
+
+    $blockStmt = $pdo->prepare('SELECT blocker_user_id FROM User_Blocks WHERE (blocker_user_id = ? AND blocked_user_id = ?) OR (blocker_user_id = ? AND blocked_user_id = ?) LIMIT 1');
+    $blockStmt->execute([$viewerId, $friendId, $friendId, $viewerId]);
+    $blockerId = $blockStmt->fetchColumn();
+    if ($blockerId !== false) {
+        return [
+            'can_message' => false,
+            'reason' => (int) $blockerId === $viewerId ? 'blocked_by_viewer' : 'blocked_by_friend',
+        ];
+    }
+
+    $friendStmt = $pdo->prepare('
         SELECT 1
         FROM User_Follows outgoing
         INNER JOIN User_Follows incoming
@@ -207,15 +218,36 @@ function assertProfileFriend(PDO $pdo, int $viewerId, int $friendId): void
         WHERE outgoing.follower_id = ? AND outgoing.following_id = ?
         LIMIT 1
     ');
-    $stmt->execute([$friendId, $viewerId, $viewerId, $friendId]);
-    if ($stmt->fetchColumn() === false) {
-        profileJsonResponse(['success' => false, 'error' => 'Писать можно только друзьям'], 403);
+    $friendStmt->execute([$friendId, $viewerId, $viewerId, $friendId]);
+    if ($friendStmt->fetchColumn() === false) {
+        return ['can_message' => false, 'reason' => 'not_friends'];
     }
+
+    return ['can_message' => true, 'reason' => ''];
+}
+
+function requireProfileMessageAvailability(PDO $pdo, int $viewerId, int $friendId): void
+{
+    $availability = getProfileMessageAvailability($pdo, $viewerId, $friendId);
+    if ($availability['can_message']) return;
+
+    $messages = [
+        'not_friends' => 'Похоже, вы больше не друзья',
+        'blocked_by_viewer' => 'Для отправки сообщений разблокируйте пользователя',
+        'blocked_by_friend' => 'Сожалеем, вы были заблокированы',
+        'not_found' => 'Пользователь не найден',
+    ];
+
+    profileJsonResponse([
+        'success' => false,
+        'error' => $messages[$availability['reason']] ?? 'Нельзя отправить сообщение',
+        'reason' => $availability['reason'],
+    ], $availability['reason'] === 'not_found' ? 400 : 403);
 }
 
 function handleProfileMessagesList(PDO $pdo, int $viewerId, int $friendId): never
 {
-    assertProfileFriend($pdo, $viewerId, $friendId);
+    $availability = getProfileMessageAvailability($pdo, $viewerId, $friendId);
 
     $stmt = $pdo->prepare('
         SELECT id, from_user_id, to_user_id, text, UNIX_TIMESTAMP(created_at) AS created_at_ts
@@ -227,8 +259,13 @@ function handleProfileMessagesList(PDO $pdo, int $viewerId, int $friendId): neve
     $stmt->execute([$viewerId, $friendId, $friendId, $viewerId]);
     $messages = $stmt->fetchAll() ?: [];
 
+    $readStmt = $pdo->prepare('UPDATE Messages SET is_read = 1 WHERE from_user_id = ? AND to_user_id = ? AND is_read = 0');
+    $readStmt->execute([$friendId, $viewerId]);
+
     profileJsonResponse([
         'success' => true,
+        'can_message' => $availability['can_message'],
+        'reason' => $availability['reason'],
         'messages' => array_map(static fn (array $message): array => [
             'id' => (int) ($message['id'] ?? 0),
             'type' => (int) ($message['from_user_id'] ?? 0) === $viewerId ? 'self' : 'friend',
@@ -240,7 +277,7 @@ function handleProfileMessagesList(PDO $pdo, int $viewerId, int $friendId): neve
 
 function handleProfileMessagesSend(PDO $pdo, int $viewerId, int $friendId): never
 {
-    assertProfileFriend($pdo, $viewerId, $friendId);
+    requireProfileMessageAvailability($pdo, $viewerId, $friendId);
 
     $text = trim((string) ($_POST['text'] ?? ''));
     if ($text === '') {
@@ -265,6 +302,65 @@ function handleProfileMessagesSend(PDO $pdo, int $viewerId, int $friendId): neve
             'type' => 'self',
             'text' => $text,
             'sentAt' => date('c', $createdAtTs),
+        ],
+    ]);
+}
+
+function handleProfileMessagesChats(PDO $pdo, int $viewerId): never
+{
+    $stmt = $pdo->prepare('
+        SELECT
+            u.id,
+            u.username,
+            SUM(CASE WHEN m.to_user_id = ? AND m.is_read = 0 THEN 1 ELSE 0 END) AS unread_count,
+            MAX(m.created_at) AS last_message_at
+        FROM Messages m
+        INNER JOIN Users u
+            ON u.id = CASE WHEN m.from_user_id = ? THEN m.to_user_id ELSE m.from_user_id END
+        WHERE (m.from_user_id = ? OR m.to_user_id = ?) AND u.is_deleted = 0
+        GROUP BY u.id, u.username
+        ORDER BY last_message_at DESC, u.username ASC
+        LIMIT 100
+    ');
+    $stmt->execute([$viewerId, $viewerId, $viewerId, $viewerId]);
+    $chats = $stmt->fetchAll() ?: [];
+
+    profileJsonResponse([
+        'success' => true,
+        'chats' => array_map(static fn (array $chat): array => [
+            'id' => (int) ($chat['id'] ?? 0),
+            'username' => (string) ($chat['username'] ?? ''),
+            'unread_count' => (int) ($chat['unread_count'] ?? 0),
+        ], $chats),
+    ]);
+}
+
+function handleProfileFooterCounts(PDO $pdo, int $viewerId): never
+{
+    $messagesStmt = $pdo->prepare('SELECT COUNT(*) FROM Messages WHERE to_user_id = ? AND is_read = 0');
+    $messagesStmt->execute([$viewerId]);
+    $notificationsStmt = $pdo->prepare('SELECT COUNT(*) FROM Notifications WHERE user_id = ? AND is_read = 0');
+    $notificationsStmt->execute([$viewerId]);
+
+    $latestStmt = $pdo->prepare('
+        SELECT u.username, COUNT(*) AS unread_count
+        FROM Messages m
+        INNER JOIN Users u ON u.id = m.from_user_id
+        WHERE m.to_user_id = ? AND m.is_read = 0
+        GROUP BY u.id, u.username
+        ORDER BY MAX(m.created_at) DESC
+        LIMIT 1
+    ');
+    $latestStmt->execute([$viewerId]);
+    $latest = $latestStmt->fetch() ?: [];
+
+    profileJsonResponse([
+        'success' => true,
+        'messages_unread' => (int) $messagesStmt->fetchColumn(),
+        'notifications_unread' => (int) $notificationsStmt->fetchColumn(),
+        'latest_unread' => [
+            'username' => (string) ($latest['username'] ?? ''),
+            'count' => (int) ($latest['unread_count'] ?? 0),
         ],
     ]);
 }
@@ -307,5 +403,7 @@ match ($path) {
     '/profile/friends' => handleProfileFriends($pdo, $viewerId),
     '/profile/messages/list' => handleProfileMessagesList($pdo, $viewerId, $targetUserId),
     '/profile/messages/send' => handleProfileMessagesSend($pdo, $viewerId, $targetUserId),
+    '/profile/messages/chats' => handleProfileMessagesChats($pdo, $viewerId),
+    '/profile/footer-counts' => handleProfileFooterCounts($pdo, $viewerId),
     default => profileJsonResponse(['success' => false, 'error' => 'Маршрут не найден'], 404),
 };

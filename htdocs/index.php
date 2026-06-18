@@ -228,6 +228,8 @@ switch ($path) {
         case '/profile/friends':
         case '/profile/messages/list':
         case '/profile/messages/send':
+        case '/profile/messages/chats':
+        case '/profile/footer-counts':
         require_once '../src/controllers/profile_ctrl.php';
         exit;
 
