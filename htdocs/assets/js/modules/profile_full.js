@@ -154,9 +154,17 @@ class ProfileFullComponent {
     applyCollectionFilter() {
         const activeButton = this.getActiveCollectionButton();
         const activeCollection = String(activeButton?.dataset.collectionName || '').trim().toLowerCase();
+        const activePublications = activeButton?.dataset.publications === '1';
+        const profileUsername = String(this.actions?.dataset.profileUsername || '').replace(/^@+/, '').trim().toLowerCase();
         const cards = Array.from(document.querySelectorAll('[data-component="masonry-feed"][data-profile-feed="1"] .post-card'));
 
         cards.forEach((card) => {
+            if (activePublications) {
+                const authorUsername = String(card.dataset.authorUsername || '').replace(/^@+/, '').trim().toLowerCase();
+                card.hidden = !!profileUsername && authorUsername !== profileUsername;
+                return;
+            }
+
             const collections = this.getCardCollections(card).map((collection) => collection.toLowerCase());
             card.hidden = !!activeCollection && !collections.includes(activeCollection);
         });

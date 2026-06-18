@@ -23,6 +23,7 @@
     data-liked="<?php echo $isLiked ? '1' : '0'; ?>"
     data-bookmarked="<?php echo $isBookmarked ? '1' : '0'; ?>"
     data-owner="<?php echo $isOwner ? '1' : '0'; ?>"
+    data-author-username="<?php echo htmlspecialchars(ltrim($authorUsername, '@'), ENT_QUOTES, 'UTF-8'); ?>"
     <?php if ($postCollectionsAttr !== ''): ?>data-profile-collections="<?php echo $postCollectionsAttr; ?>"<?php endif; ?>
     aria-label="Модуль поста"
 >
