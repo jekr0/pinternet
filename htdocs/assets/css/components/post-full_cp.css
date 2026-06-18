@@ -903,7 +903,7 @@
     box-sizing: border-box;
     outline: none;
     resize: none;
-    overflow-y: auto;
+    overflow-y: hidden;
     font-family: 'NS_def', Arial, sans-serif;
     font-size: 16px;
     color: #333;
