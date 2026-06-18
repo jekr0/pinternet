@@ -18,6 +18,7 @@ $profileFullHasAvatar = false;
 $profileFullActionState = 'default';
 $profileFullNotificationsEnabled = false;
 $profileFullBlocked = false;
+$profileFullStatus = '';
 
 $profileFullRequestedUsername = trim(ltrim((string) ($_GET['username'] ?? ''), '@'));
 
@@ -67,6 +68,7 @@ if ($profileFullViewerId > 0 || $profileFullRequestedUsername !== '') {
     if ($profileFullViewerId > 0 && $profileFullUserId > 0) {
         if ($profileFullViewerId === $profileFullUserId) {
             $profileFullActionState = 'yourself';
+            $profileFullStatus = 'Вы';
         } else {
             $followStmt = $pdo->prepare('
                 SELECT
@@ -93,8 +95,11 @@ if ($profileFullViewerId > 0 || $profileFullRequestedUsername !== '') {
 
             if ($viewerFollows && $targetFollows) {
                 $profileFullActionState = 'friends';
+                $profileFullStatus = 'Друзья';
             } elseif ($viewerFollows) {
                 $profileFullActionState = 'subscribed';
+            } elseif ($targetFollows) {
+                $profileFullStatus = 'Подписан';
             }
         }
     }
@@ -139,7 +144,10 @@ $profileFullZoomSrc = $profileFullHasAvatar ? $profileFullAvatarSrc : '/assets/i
                 <div class="profile-full__nickname" data-component="adaptive-text" data-max-font="40">
                     <?= $profileFullUsername !== '' ? '@' . htmlspecialchars($profileFullUsername, ENT_QUOTES, 'UTF-8') : '' ?>
                 </div>
-                <div class="profile-full__medals" aria-hidden="true"></div>
+                <?php if ($profileFullStatus !== ''): ?>
+                    <span class="profile-full__status-separator" aria-hidden="true"></span>
+                    <span class="profile-full__status"><?= htmlspecialchars($profileFullStatus, ENT_QUOTES, 'UTF-8') ?></span>
+                <?php endif; ?>
             </div>
             <div class="profile-full__about<?= $profileFullBio === '' ? ' profile-full__about--empty' : ''; ?>">
                 <?= htmlspecialchars($profileFullBio !== '' ? $profileFullBio : 'Описание пользователя отсутствует', ENT_QUOTES, 'UTF-8') ?>
@@ -161,7 +169,7 @@ $profileFullZoomSrc = $profileFullHasAvatar ? $profileFullAvatarSrc : '/assets/i
             data-profile-blocked="<?= $profileFullBlocked ? 'true' : 'false' ?>"
             data-viewer-authorized="<?= $profileFullViewerId > 0 ? 'true' : 'false' ?>"
         ></div>
-        <div class="profile-full__level" aria-hidden="true"></div>
+        <div class="profile-full__medals" aria-hidden="true"></div>
         <div class="profile-full__achievements" aria-hidden="true"></div>
     </div>
 </section>

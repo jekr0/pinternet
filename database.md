@@ -297,14 +297,25 @@ CREATE TABLE Global_Search (
 );
 
 CREATE TABLE Notifications (
-    id         INT AUTO_INCREMENT PRIMARY KEY,
-    user_id    INT NOT NULL,
-    title      NVARCHAR(64) NOT NULL,
-    text       NVARCHAR(512) NULL,
-    is_read    TINYINT(1) NOT NULL DEFAULT 0,
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    id            INT AUTO_INCREMENT PRIMARY KEY,
+    user_id       INT NOT NULL,
+    actor_user_id INT NULL,
+    post_id       INT NULL,
+    comment_id    INT NULL,
+    title         NVARCHAR(64) NOT NULL,
+    text          NVARCHAR(512) NULL,
+    is_read       TINYINT(1) NOT NULL DEFAULT 0,
+    created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE
+    INDEX (user_id, is_read, created_at),
+    INDEX (actor_user_id),
+    INDEX (post_id),
+    INDEX (comment_id),
+
+    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE,
+    FOREIGN KEY (actor_user_id) REFERENCES Users(id) ON DELETE SET NULL,
+    FOREIGN KEY (post_id) REFERENCES Posts(id) ON DELETE SET NULL,
+    FOREIGN KEY (comment_id) REFERENCES Comments(id) ON DELETE SET NULL
 );
 
 -- ---------------------------------------------------------------------

@@ -833,7 +833,7 @@
     justify-content: flex-start;
     padding: 0;
     font-family: 'NS_def', Arial, sans-serif;
-    cursor: default;
+    cursor: pointer;
 }
 
 .footer-menu__notif-item--unread {
@@ -864,6 +864,10 @@
     overflow-wrap: anywhere;
 }
 
+.footer-menu__notif-nickname {
+    color: rgb(100, 100, 200);
+}
+
 .footer-menu__notif-date-time {
     align-self: flex-end;
     margin-top: auto;
@@ -873,6 +877,12 @@
     font-size: 16px;
     line-height: 1.2;
     color: #bbb;
+    opacity: 0;
+    transition: opacity 0.1s ease;
+}
+
+.footer-menu__notif-item:hover .footer-menu__notif-date-time {
+    opacity: 1;
 }
 
 .footer-menu__message-list {

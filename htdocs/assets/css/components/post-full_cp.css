@@ -1098,3 +1098,7 @@
     right: 30px;
     z-index: 2;
 }
+.post-full__comment-item.is-highlighted {
+    background: rgba(100, 100, 200, 0.08);
+    border-radius: 12px;
+}

@@ -14,6 +14,7 @@ class FooterLayout {
         this.chatMessages = {};
         this.chatList = [];
         this.notifications = [];
+        this.currentUserId = Number(this.menu.dataset.viewerId || 0);
         this.footerCounts = { messages: 0, notifications: 0 };
         this.countsPollTimer = null;
         this.toggleButton = this.menu.querySelector('.footer-menu__toggle');
@@ -65,7 +66,7 @@ class FooterLayout {
             this.togglePinned();
         };
         this.contentClickHandler = (event) => {
-            const button = event.target?.closest?.('[data-footer-menu-action], [data-footer-collection], [data-footer-friend-id], [data-footer-chat-id]');
+            const button = event.target?.closest?.('[data-footer-menu-action], [data-footer-collection], [data-footer-friend-id], [data-footer-chat-id], [data-footer-notification-id]');
             if (!button || !this.content?.contains(button)) return;
             event.stopPropagation();
             this.handleContentAction(button.dataset.footerMenuAction || '', button, event);
@@ -160,6 +161,11 @@ class FooterLayout {
 
         if (button?.dataset.footerChatId) {
             this.openChatById(button.dataset.footerChatId);
+            return;
+        }
+
+        if (button?.dataset.footerNotificationId) {
+            this.openNotificationTarget(button.dataset.footerNotificationId);
             return;
         }
 
@@ -411,6 +417,7 @@ class FooterLayout {
     }
 
     openChatWithUser(friend) {
+        this.openMenu();
         this.activeChatFriend = friend;
         if (!this.chatMessages[friend.id]) {
             this.chatMessages[friend.id] = [];
@@ -637,7 +644,11 @@ class FooterLayout {
                 title: String(notification?.title || '').trim(),
                 text: String(notification?.text || '').trim(),
                 isRead: Boolean(notification?.is_read),
-                createdAt: String(notification?.created_at || '')
+                createdAt: String(notification?.created_at || ''),
+                actorUsername: String(notification?.actor_username || '').trim(),
+                targetUrl: String(notification?.target_url || '').trim(),
+                postId: Number(notification?.post_id || 0),
+                commentId: Number(notification?.comment_id || 0)
             })).filter((notification) => notification.id > 0 && notification.title !== '')
                 .sort((left, right) => {
                     const rightTime = Date.parse(right.createdAt) || 0;
@@ -659,13 +670,31 @@ class FooterLayout {
         }
         list.innerHTML = this.notifications.map((notification) => `
             <li>
-                <div class="footer-menu__notif-item${notification.isRead ? '' : ' footer-menu__notif-item--unread'}">
-                    <div class="footer-menu__notif-title">${this.escapeHtml(notification.title)}</div>
+                <div class="footer-menu__notif-item${notification.isRead ? '' : ' footer-menu__notif-item--unread'}" data-footer-notification-id="${notification.id}">
+                    <div class="footer-menu__notif-title">${this.formatNotificationTitle(notification.title)}</div>
                     ${notification.text ? `<div class="footer-menu__notif-text">${this.escapeHtml(notification.text)}</div>` : ''}
                     <div class="footer-menu__notif-date-time">${this.escapeHtml(this.formatMessageTime(notification.createdAt))}</div>
                 </div>
             </li>
         `).join('');
+    }
+
+
+
+    formatNotificationTitle(title) {
+        return this.escapeHtml(title).replace(/(@[\p{L}\p{N}_.-]+)/gu, '<span class="footer-menu__notif-nickname">$1</span>');
+    }
+
+    openNotificationTarget(notificationId) {
+        const notification = this.notifications.find((item) => item.id === Number(notificationId));
+        if (!notification?.targetUrl) return;
+        void this.markNotificationsRead();
+        this.closeAfterAction();
+        if (App.nav?.navigate) {
+            App.nav.navigate(notification.targetUrl);
+            return;
+        }
+        window.location.href = notification.targetUrl;
     }
 
     async markNotificationsRead() {
@@ -720,7 +749,11 @@ class FooterLayout {
     }
 
     getMessageCipherKey(friendId) {
-        return (Number(friendId) || 0) + 97;
+        const firstId = Number(friendId) || 0;
+        const secondId = Number(this.currentUserId) || 0;
+        const low = Math.min(firstId, secondId);
+        const high = Math.max(firstId, secondId);
+        return (low * 131 + high * 257 + 97) % 65535;
     }
 
     cryptMessageSameLength(text, friendId, direction) {
@@ -832,6 +865,17 @@ class FooterLayout {
             "'": '&#39;',
             '"': '&quot;'
         }[char]));
+    }
+
+
+    openChatFromProfile(user) {
+        const normalizedUser = {
+            id: Number(user?.id || 0),
+            username: String(user?.username || '').replace(/^@+/, '').trim(),
+            level: Number(user?.level || 1)
+        };
+        if (!normalizedUser.id || !normalizedUser.username) return;
+        this.openChatWithUser(normalizedUser);
     }
 
     refresh() {

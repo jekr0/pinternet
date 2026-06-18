@@ -339,19 +339,51 @@ function handleProfileMessagesChats(PDO $pdo, int $viewerId): never
 
 function handleProfileNotificationsList(PDO $pdo, int $viewerId): never
 {
-    $stmt = $pdo->prepare('SELECT id, title, text, is_read, UNIX_TIMESTAMP(created_at) AS created_at_ts FROM Notifications WHERE user_id = ? ORDER BY created_at DESC, id DESC LIMIT 100');
+    $stmt = $pdo->prepare('
+        SELECT n.id,
+               n.title,
+               n.text,
+               n.is_read,
+               n.actor_user_id,
+               n.post_id,
+               n.comment_id,
+               UNIX_TIMESTAMP(n.created_at) AS created_at_ts,
+               u.username AS actor_username
+        FROM Notifications n
+        LEFT JOIN Users u ON u.id = n.actor_user_id AND u.is_deleted = 0
+        WHERE n.user_id = ?
+        ORDER BY n.created_at DESC, n.id DESC
+        LIMIT 100
+    ');
     $stmt->execute([$viewerId]);
     $notifications = $stmt->fetchAll() ?: [];
 
     profileJsonResponse([
         'success' => true,
-        'notifications' => array_map(static fn (array $notification): array => [
-            'id' => (int) ($notification['id'] ?? 0),
-            'title' => (string) ($notification['title'] ?? ''),
-            'text' => $notification['text'] === null ? '' : (string) $notification['text'],
-            'is_read' => (int) ($notification['is_read'] ?? 0) === 1,
-            'created_at' => date('c', (int) ($notification['created_at_ts'] ?? time())),
-        ], $notifications),
+        'notifications' => array_map(static function (array $notification): array {
+            $postId = (int) ($notification['post_id'] ?? 0);
+            $commentId = (int) ($notification['comment_id'] ?? 0);
+            $actorUsername = (string) ($notification['actor_username'] ?? '');
+            $targetUrl = '';
+            if ($postId > 0) {
+                $targetUrl = '/post?id=' . $postId . ($commentId > 0 ? '&comment_id=' . $commentId : '');
+            } elseif ($actorUsername !== '') {
+                $targetUrl = '/profile?username=' . rawurlencode($actorUsername);
+            }
+
+            return [
+                'id' => (int) ($notification['id'] ?? 0),
+                'title' => (string) ($notification['title'] ?? ''),
+                'text' => $notification['text'] === null ? '' : (string) $notification['text'],
+                'is_read' => (int) ($notification['is_read'] ?? 0) === 1,
+                'created_at' => date('c', (int) ($notification['created_at_ts'] ?? time())),
+                'actor_user_id' => (int) ($notification['actor_user_id'] ?? 0),
+                'actor_username' => $actorUsername,
+                'post_id' => $postId,
+                'comment_id' => $commentId,
+                'target_url' => $targetUrl,
+            ];
+        }, $notifications),
     ]);
 }
 

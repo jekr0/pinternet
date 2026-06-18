@@ -20,7 +20,7 @@
     position: absolute;
     left: 0;
     right: 0;
-    bottom: 0;
+    top: 100%;
     height: 56px;
     pointer-events: none;
     background: linear-gradient(to bottom, #fff, rgba(255, 255, 255, 0));
@@ -96,14 +96,13 @@
 }
 
 .profile-full__info-top-row {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
     height: 52px;
 }
 
-.profile-full__nickname,
-.profile-full__medals {
+.profile-full__nickname {
     min-width: 0;
     height: 52px;
 }
@@ -118,6 +117,23 @@
     font-size: 40px;
     line-height: 1;
     color: #333;
+}
+
+.profile-full__status-separator {
+    flex: 0 0 auto;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #bbb;
+}
+
+.profile-full__status {
+    flex: 0 0 auto;
+    font-family: 'SF_def', Arial, sans-serif;
+    font-size: 36px;
+    line-height: 1;
+    color: #bbb;
+    white-space: nowrap;
 }
 
 .profile-full__line {
@@ -310,7 +326,7 @@
     fill: currentColor;
 }
 
-.profile-full__level {
+.profile-full__medals {
     grid-column: 5 / 8;
     grid-row: 1;
     align-self: start;
