@@ -4,7 +4,7 @@ class FooterLayout {
         if (!this.menu || this.menu.dataset.bound === '1') return;
 
         this.menu.dataset.bound = '1';
-        this.isPinned = false;
+        this.isPinned = this.shouldRestorePinnedState();
         this.substate = 'home_state';
         this.stateTransitionTimer = null;
         this.stateTransitionFrame = null;
@@ -15,6 +15,10 @@ class FooterLayout {
         this.chatList = [];
         this.notifications = [];
         this.currentUserId = Number(this.menu.dataset.viewerId || 0);
+        if (this.menu.dataset.authenticated !== '1') {
+            this.isPinned = false;
+            this.persistPinnedState();
+        }
         this.footerCounts = { messages: 0, notifications: 0 };
         this.countsPollTimer = null;
         this.toggleButton = this.menu.querySelector('.footer-menu__toggle');
@@ -30,7 +34,11 @@ class FooterLayout {
         this.renderState('home_state', { animate: false });
         this.loadIcons();
         this.bindHandlers();
-        this.closeMenu();
+        if (this.isPinned && this.menu.dataset.authenticated === '1') {
+            this.openMenu();
+        } else {
+            this.closeMenu({ force: true });
+        }
         void this.loadFooterCounts({ notify: false });
         this.countsPollTimer = setInterval(() => this.loadFooterCounts({ notify: true }), 15000);
     }
@@ -112,8 +120,13 @@ class FooterLayout {
         }, 1000);
     }
 
-    closeMenu() {
+    closeMenu(options = {}) {
         if (!this.menu) return;
+        const { force = false } = options;
+        if (this.isPinned && !force) {
+            this.openMenu();
+            return;
+        }
         if (this.substate === 'notifications_state') {
             void this.markNotificationsRead();
         }
@@ -854,7 +867,27 @@ class FooterLayout {
 
     togglePinned() {
         this.isPinned = !this.isPinned;
+        this.persistPinnedState();
+        if (this.isPinned) {
+            this.openMenu();
+        }
         this.updatePinControlForState(this.substate || 'home_state');
+    }
+
+    shouldRestorePinnedState() {
+        try {
+            return window.sessionStorage?.getItem('footer-menu-pinned') === '1';
+        } catch (error) {
+            return false;
+        }
+    }
+
+    persistPinnedState() {
+        try {
+            window.sessionStorage?.setItem('footer-menu-pinned', this.isPinned ? '1' : '0');
+        } catch (error) {
+            // Ignore storage failures; pinning still works for the current instance.
+        }
     }
 
     escapeHtml(value) {

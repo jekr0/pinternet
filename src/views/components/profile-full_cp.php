@@ -169,7 +169,9 @@ $profileFullZoomSrc = $profileFullHasAvatar ? $profileFullAvatarSrc : '/assets/i
             data-profile-blocked="<?= $profileFullBlocked ? 'true' : 'false' ?>"
             data-viewer-authorized="<?= $profileFullViewerId > 0 ? 'true' : 'false' ?>"
         ></div>
-        <div class="profile-full__medals" aria-hidden="true"></div>
+        <div class="profile-full__progress" aria-hidden="true"></div>
         <div class="profile-full__achievements" aria-hidden="true"></div>
+        <div class="profile-full__line profile-full__line--collections" aria-hidden="true"></div>
+        <div class="profile-full__collections-scroll" aria-label="Коллекции профиля"></div>
     </div>
 </section>

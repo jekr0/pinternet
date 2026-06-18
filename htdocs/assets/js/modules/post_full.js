@@ -127,10 +127,28 @@ class PostFullComponent {
         if (!commentId) return;
         const comment = this.postFullElement?.querySelector(`.post-full__comment-item[data-comment-id="${commentId}"]`);
         if (!comment) return;
-        this.commentsExpanded = true;
-        this.applyCommentsPreviewState();
-        comment.closest('.post-full__comment-thread')?.classList.add('is-highlighted');
+
+        const thread = comment.closest('.post-full__comment-thread');
+        if (thread) {
+            const commentsList = this.postFullElement?.querySelector('[data-component="post-full-comments-list"]');
+            const threads = Array.from(commentsList?.querySelectorAll('.post-full__comment-thread') || []);
+            const threadIndex = threads.indexOf(thread);
+            if (threadIndex >= 3) {
+                this.commentsExpanded = true;
+                this.applyCommentsPreviewState();
+            }
+
+            const childrenToggle = thread.querySelector('[data-action="comment-children-toggle"].post-full__comment-children-toggle');
+            if (childrenToggle) {
+                childrenToggle.dataset.expanded = '1';
+                this.applyCommentChildrenState();
+            }
+
+            thread.classList.add('is-highlighted');
+        }
+
         comment.classList.add('is-highlighted');
+        this.requestMasonryLayoutUpdate();
         requestAnimationFrame(() => comment.scrollIntoView({ block: 'center', behavior: 'smooth' }));
     }
 
@@ -855,11 +873,12 @@ class PostFullComponent {
         const commentsBlock = this.postFullElement.querySelector('.post-full__comments-block');
         if (!inputWrap || !commentsBlock || !floatingWrap) return;
 
-        this.updateStaticCommentInputPlaceholder(inputWrap);
+        const shouldFloatInput = this.commentsExpanded && this.shouldFloatCommentInput(inputWrap, commentsBlock);
+        this.updateStaticCommentInputPlaceholder(inputWrap, commentsBlock);
 
-        commentsBlock.classList.toggle('has-floating-comment-input', this.commentsExpanded);
+        commentsBlock.classList.toggle('has-floating-comment-input', shouldFloatInput);
 
-        if (!this.commentsExpanded) {
+        if (!shouldFloatInput) {
             floatingWrap.classList.remove('is-visible');
             return;
         }
@@ -887,10 +906,20 @@ class PostFullComponent {
         this.updateCommentsHideButtonPosition();
     }
 
-    updateStaticCommentInputPlaceholder(inputWrap) {
+    shouldFloatCommentInput(inputWrap, commentsBlock) {
+        if (!inputWrap || !commentsBlock) return false;
+        const inputRect = inputWrap.getBoundingClientRect();
+        const blockRect = commentsBlock.getBoundingClientRect();
+        const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+        if (blockRect.bottom <= viewportHeight) return false;
+        return inputRect.top > viewportHeight || inputRect.bottom > viewportHeight;
+    }
+
+    updateStaticCommentInputPlaceholder(inputWrap, commentsBlock = null) {
         if (!inputWrap) return;
 
-        if (!this.commentsExpanded) {
+        commentsBlock = commentsBlock || this.postFullElement?.querySelector('.post-full__comments-block');
+        if (!this.commentsExpanded || !this.shouldFloatCommentInput(inputWrap, commentsBlock)) {
             inputWrap.classList.remove('is-placeholder');
             inputWrap.style.removeProperty('--post-full-comment-placeholder-height');
             return;

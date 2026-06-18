@@ -22,6 +22,8 @@ class ProfileFullComponent {
         this.zoomStartPanX = 0;
         this.zoomStartPanY = 0;
         this.clickHandler = null;
+        this.statusSeparator = null;
+        this.statusNode = null;
     }
 
     init() {
@@ -30,6 +32,8 @@ class ProfileFullComponent {
 
         this.avatar = this.root.querySelector('[data-profile-full-avatar]');
         this.actions = this.root.querySelector('.profile-full__actions');
+        this.statusSeparator = this.root.querySelector('.profile-full__status-separator');
+        this.statusNode = this.root.querySelector('.profile-full__status');
         this.renderActionLine();
         this.initSvgIcons();
         this.bindActions();
@@ -186,7 +190,44 @@ class ProfileFullComponent {
         };
 
         this.actions.innerHTML = templates[nextState] || templates.default;
+        this.syncStatusForState(nextState);
         this.initSvgIcons(this.actions);
+    }
+
+    syncStatusForState(state) {
+        if (!this.root) return;
+        const topRow = this.root.querySelector('.profile-full__info-top-row');
+        if (!topRow) return;
+
+        const labels = {
+            yourself: 'Вы',
+            friends: 'Друзья',
+            followed_by: 'Подписан'
+        };
+        const label = labels[state] || '';
+
+        if (!label) {
+            this.statusSeparator?.remove();
+            this.statusNode?.remove();
+            this.statusSeparator = null;
+            this.statusNode = null;
+            return;
+        }
+
+        if (!this.statusSeparator) {
+            this.statusSeparator = document.createElement('span');
+            this.statusSeparator.className = 'profile-full__status-separator';
+            this.statusSeparator.setAttribute('aria-hidden', 'true');
+            topRow.appendChild(this.statusSeparator);
+        }
+
+        if (!this.statusNode) {
+            this.statusNode = document.createElement('span');
+            this.statusNode.className = 'profile-full__status';
+            topRow.appendChild(this.statusNode);
+        }
+
+        this.statusNode.textContent = label;
     }
 
     isViewerAuthorized() {
@@ -224,7 +265,7 @@ class ProfileFullComponent {
                 throw new Error(payload.error || 'Не удалось подписаться.');
             }
 
-            const nextState = payload.state === 'friends' ? 'friends' : 'subscribed';
+            const nextState = payload.state === 'friends' ? 'friends' : (payload.state === 'followed_by' ? 'followed_by' : 'subscribed');
             this.renderActionLine(nextState);
             this.showSubscribeToast(username || payload.username || '', nextState);
         } catch (error) {

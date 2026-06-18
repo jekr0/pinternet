@@ -29,7 +29,7 @@
 .profile-full__row {
     display: grid;
     grid-template-columns: repeat(7, minmax(0, 1fr));
-    grid-template-rows: auto 40px;
+    grid-template-rows: auto 40px auto 40px;
     column-gap: 12px;
     row-gap: 12px;
     align-items: start;
@@ -328,7 +328,7 @@
     fill: currentColor;
 }
 
-.profile-full__medals {
+.profile-full__progress {
     grid-column: 5 / 8;
     grid-row: 1;
     align-self: start;
@@ -366,20 +366,24 @@
 }
 
 /* Default state: Subscribe fills, Block & Report align to the right */
-.profile-full__actions[data-action-state="default"] {
+.profile-full__actions[data-action-state="default"],
+.profile-full__actions[data-action-state="followed_by"] {
     display: flex;
     gap: 12px;
     grid-template-columns: none;
 }
 
-.profile-full__actions[data-action-state="default"] .profile-full__button--subscribe {
+.profile-full__actions[data-action-state="default"] .profile-full__button--subscribe,
+.profile-full__actions[data-action-state="followed_by"] .profile-full__button--subscribe {
     flex: 1;
     grid-column: auto;
     min-width: 0;
 }
 
 .profile-full__actions[data-action-state="default"] .profile-full__button--block,
-.profile-full__actions[data-action-state="default"] .profile-full__button--report {
+.profile-full__actions[data-action-state="default"] .profile-full__button--report,
+.profile-full__actions[data-action-state="followed_by"] .profile-full__button--block,
+.profile-full__actions[data-action-state="followed_by"] .profile-full__button--report {
     flex: 0 0 auto;
     grid-column: auto;
 }
@@ -403,7 +407,7 @@
 }
 
 /* Ensure other states (subscribed, etc.) keep original grid layout */
-.profile-full__actions:not([data-action-state="default"]):not([data-action-state="yourself"]) {
+.profile-full__actions:not([data-action-state="default"]):not([data-action-state="followed_by"]):not([data-action-state="yourself"]) {
     display: grid;
 }
 
@@ -429,4 +433,56 @@
 .profile-full__actions[data-action-state="subscribed"] > .profile-full__icon-button--bell,
 .profile-full__actions[data-action-state="subscribed"] > .profile-full__icon-button--report {
     justify-self: end;
+}
+
+
+.profile-full__line--collections {
+    grid-column: 1 / 8;
+    grid-row: 3;
+    margin: 25px 0;
+}
+
+.profile-full__line--collections::before {
+    content: '';
+    flex: 1 1 auto;
+    height: 2px;
+    background: #e0e0e0;
+    border-radius: 1px;
+}
+
+.profile-full__collections-scroll {
+    position: relative;
+    grid-column: 1 / 8;
+    grid-row: 4;
+    height: 40px;
+    overflow: hidden;
+    border: 1px solid #bbb;
+    border-radius: 12px;
+    background: #fff;
+    transition: border-color 0.2s ease;
+}
+
+.profile-full__collections-scroll:hover {
+    border-color: rgb(100, 100, 200);
+}
+
+.profile-full__collections-scroll::before,
+.profile-full__collections-scroll::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    z-index: 2;
+    width: 12px;
+    pointer-events: none;
+}
+
+.profile-full__collections-scroll::before {
+    left: 0;
+    background: linear-gradient(to right, #fff, rgba(255, 255, 255, 0));
+}
+
+.profile-full__collections-scroll::after {
+    right: 0;
+    background: linear-gradient(to left, #fff, rgba(255, 255, 255, 0));
 }
