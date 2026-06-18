@@ -462,7 +462,6 @@
     position: relative;
     z-index: 1;
     display: flex;
-    gap: 12px;
     height: 40px;
     overflow-x: auto;
     overflow-y: hidden;
@@ -474,15 +473,11 @@
 }
 
 .profile-full__collections-item {
-    flex: 0 0 248px;
-    width: 248px;
+    width: 260px;
     height: 40px;
     min-width: 0;
-    padding: 0 16px;
-    border: 0;
-    border-radius: 12px;
-    background: #fff;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    border: none;
+    background: none;
     font-family: 'NS_def', Arial, sans-serif;
     font-size: 18px;
     line-height: 1;
@@ -497,7 +492,7 @@
 
 .profile-full__collections-item.is-active,
 .profile-full__collections-item:hover {
-    color: rgb(100, 100, 200);
+    background: rgba(50, 50, 150, 0.2);
 }
 
 .profile-full__collections-item-accent {
@@ -505,5 +500,5 @@
 }
 
 .profile-post-masonry {
-    margin-top: 8px;
+    margin-top: 24px;
 }
