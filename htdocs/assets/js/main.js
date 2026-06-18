@@ -528,11 +528,13 @@ function openUrlDrivenModalState() {
     const pathname = window.location.pathname;
     const postModalInstance = App.components['post_modal.js'];
     const collectionModalInstance = App.components['collection_modal.js'];
+    const profileModalInstance = App.components['profile_modal.js'];
 
     const postEditId = App.history?.getPostEditIdFromUrl?.() || 0;
     const isPostCreate = pathname === '/post/create';
     const isPostEdit = postEditId > 0;
     const isCollectionsEditing = pathname === '/collections';
+    const isProfileEditing = pathname === '/profile-editing';
 
     if ((isPostCreate || isPostEdit) && collectionModalInstance?.root && !collectionModalInstance.root.classList.contains('collection-modal--hidden')) {
         collectionModalInstance.close({ skipHistorySync: true });
@@ -550,7 +552,11 @@ function openUrlDrivenModalState() {
         collectionModalInstance.close({ skipHistorySync: true });
     }
 
-    if (!isPostCreate && !isPostEdit && !isCollectionsEditing) {
+    if (!isProfileEditing && profileModalInstance?.root && !profileModalInstance.root.classList.contains('profile-modal--hidden')) {
+        profileModalInstance.close();
+    }
+
+    if (!isPostCreate && !isPostEdit && !isCollectionsEditing && !isProfileEditing) {
         App.modalCtrl?.closeAll?.();
         return;
     }
@@ -562,6 +568,11 @@ function openUrlDrivenModalState() {
 
     if (isCollectionsEditing) {
         document.dispatchEvent(new CustomEvent('collection-modal:open', { detail: { fromHistory: true } }));
+        return;
+    }
+
+    if (isProfileEditing) {
+        document.dispatchEvent(new CustomEvent('profile-modal:open', { detail: { fromHistory: true } }));
         return;
     }
 

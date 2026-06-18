@@ -936,8 +936,8 @@
 
 .footer-menu__clean-button {
     position: absolute;
-    right: 16px;
-    bottom: 20px;
+    right: 0;
+    bottom: 0;
     z-index: 5;
     width: 36px;
     height: 36px;

@@ -457,6 +457,88 @@ function handleProfileBlock(PDO $pdo, int $viewerId, int $targetUserId): never
     ]);
 }
 
+function handleProfileUpdate(PDO $pdo, int $viewerId): never
+{
+    $username = trim((string) ($_POST['username'] ?? ''));
+    $bio = trim((string) ($_POST['bio'] ?? ''));
+
+    if (!preg_match('/^[A-Za-zА-Яа-яЁё0-9_]{3,12}$/u', $username)) {
+        profileJsonResponse(['success' => false, 'error' => 'Только латиница, кириллица, цифры и "_"'], 422);
+    }
+
+    if (mb_strlen($bio) > 256) {
+        profileJsonResponse(['success' => false, 'error' => 'Описание не должно быть длиннее 256 символов'], 422);
+    }
+
+    $stmt = $pdo->prepare('SELECT username, avatar, username_changed_at FROM Users WHERE id = ? AND is_deleted = 0 LIMIT 1');
+    $stmt->execute([$viewerId]);
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+    if (!$user) {
+        profileJsonResponse(['success' => false, 'error' => 'Пользователь не найден'], 404);
+    }
+
+    $currentUsername = (string) ($user['username'] ?? '');
+    $usernameChangedAt = (string) ($user['username_changed_at'] ?? '');
+    $isUsernameChanged = mb_strtolower($username) !== mb_strtolower($currentUsername);
+
+    if ($isUsernameChanged && $usernameChangedAt !== '' && strtotime($usernameChangedAt) > time() - 7 * 24 * 60 * 60) {
+        profileJsonResponse(['success' => false, 'error' => 'Ник нельзя менять чаще одного раза в 7 дней'], 409);
+    }
+
+    if ($isUsernameChanged) {
+        $existsStmt = $pdo->prepare('SELECT id FROM Users WHERE username = ? AND id <> ? LIMIT 1');
+        $existsStmt->execute([$username, $viewerId]);
+        if ($existsStmt->fetchColumn() !== false) {
+            profileJsonResponse(['success' => false, 'error' => 'Это имя пользователя уже занято'], 409);
+        }
+    }
+
+    $avatarPath = (string) ($user['avatar'] ?? '');
+    if (isset($_FILES['avatar']) && is_array($_FILES['avatar']) && (int) ($_FILES['avatar']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
+        $error = (int) ($_FILES['avatar']['error'] ?? UPLOAD_ERR_OK);
+        if ($error !== UPLOAD_ERR_OK) {
+            profileJsonResponse(['success' => false, 'error' => 'Не удалось загрузить аватар'], 422);
+        }
+        if ((int) ($_FILES['avatar']['size'] ?? 0) > 20 * 1024 * 1024) {
+            profileJsonResponse(['success' => false, 'error' => 'Изображение не должно превышать 20МБ'], 422);
+        }
+        $tmpName = (string) ($_FILES['avatar']['tmp_name'] ?? '');
+        $mime = mime_content_type($tmpName) ?: '';
+        $extensions = ['image/png' => 'png', 'image/jpeg' => 'jpg', 'image/gif' => 'gif'];
+        if (!isset($extensions[$mime])) {
+            profileJsonResponse(['success' => false, 'error' => 'Поддерживаются только PNG, JPEG и GIF изображения'], 422);
+        }
+        $uploadDir = dirname(__DIR__, 2) . '/htdocs/uploads/avatars';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0775, true);
+        }
+        $safeUsername = preg_replace('/[^A-Za-zА-Яа-яЁё0-9_]/u', '_', $username) ?: 'user';
+        $fileName = $safeUsername . '_avatar.' . $extensions[$mime];
+        $targetPath = $uploadDir . '/' . $fileName;
+        if (!move_uploaded_file($tmpName, $targetPath)) {
+            profileJsonResponse(['success' => false, 'error' => 'Не удалось сохранить аватар'], 500);
+        }
+        $avatarPath = '/uploads/avatars/' . $fileName;
+    }
+
+    $update = $pdo->prepare('UPDATE Users SET username = ?, bio = ?, avatar = ?, username_changed_at = CASE WHEN ? = 1 THEN NOW() ELSE username_changed_at END WHERE id = ?');
+    $update->execute([$username, $bio !== '' ? $bio : null, $avatarPath !== '' ? $avatarPath : null, $isUsernameChanged ? 1 : 0, $viewerId]);
+
+    $_SESSION['username'] = $username;
+
+    $changedStmt = $pdo->prepare('SELECT username_changed_at FROM Users WHERE id = ? LIMIT 1');
+    $changedStmt->execute([$viewerId]);
+    $nextChangedAt = (string) ($changedStmt->fetchColumn() ?: '');
+
+    profileJsonResponse([
+        'success' => true,
+        'username' => $username,
+        'bio' => $bio,
+        'avatar' => $avatarPath,
+        'username_changed_at' => $nextChangedAt,
+    ]);
+}
+
 $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
 requireProfilePostMethod();
 $viewerId = requireProfileViewerId();
@@ -476,5 +558,6 @@ match ($path) {
     '/profile/notifications/read' => handleProfileNotificationsRead($pdo, $viewerId),
     '/profile/notifications/clear' => handleProfileNotificationsClear($pdo, $viewerId),
     '/profile/footer-counts' => handleProfileFooterCounts($pdo, $viewerId),
+    '/profile/update' => handleProfileUpdate($pdo, $viewerId),
     default => profileJsonResponse(['success' => false, 'error' => 'Маршрут не найден'], 404),
 };

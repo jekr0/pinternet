@@ -112,10 +112,9 @@ if ($profileFullUserId > 0 && isset($pdo)) {
     $collectionsStmt = $pdo->prepare('
         SELECT c.name, COUNT(DISTINCT cp.post_id) AS posts_count
         FROM Collections c
-        INNER JOIN Collection_Posts cp ON cp.collection_id = c.id AND cp.user_id = c.user_id
+        LEFT JOIN Collection_Posts cp ON cp.collection_id = c.id AND cp.user_id = c.user_id
         WHERE c.user_id = ?
         GROUP BY c.id, c.name
-        HAVING posts_count > 0
         ORDER BY c.created_at ASC, c.id ASC
     ');
     $collectionsStmt->execute([$profileFullUserId]);
@@ -218,7 +217,7 @@ $profileFullZoomSrc = $profileFullHasAvatar ? $profileFullAvatarSrc : '/assets/i
                         aria-pressed="<?= $profileFullIsActiveCollection ? 'true' : 'false' ?>"
                     >
                         <?php if ($profileFullIsPublications): ?>
-                            Посты <span class="profile-full__collections-item-accent">@<?= htmlspecialchars($profileFullUsername, ENT_QUOTES, 'UTF-8') ?></span>
+                            Посты&nbsp;<span class="profile-full__collections-item-accent">@<?= htmlspecialchars($profileFullUsername, ENT_QUOTES, 'UTF-8') ?></span>
                         <?php else: ?>
                             <?= htmlspecialchars($profileFullCollectionName, ENT_QUOTES, 'UTF-8') ?>
                         <?php endif; ?>

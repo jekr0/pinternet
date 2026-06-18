@@ -14,10 +14,9 @@ if ($profileFeedUserId > 0) {
     $collectionsStmt = $pdo->prepare('
         SELECT c.name, COUNT(DISTINCT cp.post_id) AS posts_count
         FROM Collections c
-        INNER JOIN Collection_Posts cp ON cp.collection_id = c.id AND cp.user_id = c.user_id
+        LEFT JOIN Collection_Posts cp ON cp.collection_id = c.id AND cp.user_id = c.user_id
         WHERE c.user_id = ?
         GROUP BY c.id, c.name
-        HAVING posts_count > 0
         ORDER BY c.created_at ASC, c.id ASC
     ');
     $collectionsStmt->execute([$profileFeedUserId]);

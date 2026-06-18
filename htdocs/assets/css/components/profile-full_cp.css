@@ -6,7 +6,8 @@
 
 .profile-full {
     position: relative;
-    height: 428px;
+    min-height: 428px;
+    height: auto;
     margin: 104px 44px 0;
     padding: 52px 12px 0;
     background: #fff;
@@ -452,10 +453,9 @@
 .profile-full__collections-scroll {
     position: relative;
     grid-column: 1 / 8;
-    width: calc(100% + 24px);
+    width: calc(100% + 12px);
     height: 40px;
-    padding-left: 6px;
-    margin-left: -12px;
+    margin-left: -6px;
     overflow: hidden;
     background: rgba(100, 100, 200, 0.08);
 }
@@ -496,7 +496,8 @@
 }
 
 .profile-full__collections-item {
-    width: 260px;
+    flex: 0 0 calc((100% - 84px) / 7 + 12px);
+    width: calc((100% - 84px) / 7 + 12px);
     height: 40px;
     min-width: 0;
     border: none;

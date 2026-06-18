@@ -68,14 +68,14 @@
     justify-content: center;
 }
 
-.collection-modal__edit-icon,
-.collection-modal__edit-icon svg {
+.collection-modal__plus-icon {
     width: 16px;
     height: 16px;
-    display: block;
-}
-
-.collection-modal__edit-icon svg,
-.collection-modal__edit-icon svg * {
-    fill: currentColor;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'SF_def', Arial, sans-serif;
+    font-size: 18px;
+    line-height: 16px;
+    color: currentColor;
 }

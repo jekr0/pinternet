@@ -24,6 +24,8 @@ class ProfileFullComponent {
         this.clickHandler = null;
         this.statusSeparator = null;
         this.statusNode = null;
+        this.collectionsTrack = null;
+        this.collectionsWheelHandler = null;
     }
 
     init() {
@@ -115,6 +117,12 @@ class ProfileFullComponent {
             if (action === 'profile-message') {
                 event.preventDefault();
                 this.openFooterChat();
+                return;
+            }
+
+            if (action === 'profile-edit') {
+                event.preventDefault();
+                document.dispatchEvent(new CustomEvent('profile-modal:open'));
             }
         };
 
@@ -125,6 +133,9 @@ class ProfileFullComponent {
     bindCollectionsFilter() {
         const scroll = this.root?.querySelector('[data-profile-collections-scroll]');
         if (!scroll) return;
+
+        this.collectionsTrack = scroll.querySelector('.profile-full__collections-scroll-track');
+        this.bindCollectionsWheelScroll();
 
         const buttons = Array.from(scroll.querySelectorAll('[data-profile-collection-item]'));
         if (buttons.length === 0) return;
@@ -142,6 +153,22 @@ class ProfileFullComponent {
         this.applyCollectionFilter();
     }
 
+    bindCollectionsWheelScroll() {
+        if (!this.collectionsTrack || this.collectionsWheelHandler) return;
+
+        this.collectionsWheelHandler = (event) => {
+            if (!this.collectionsTrack || this.collectionsTrack.scrollWidth <= this.collectionsTrack.clientWidth) return;
+
+            const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
+            if (!delta) return;
+
+            event.preventDefault();
+            this.collectionsTrack.scrollLeft += delta;
+        };
+
+        this.collectionsTrack.addEventListener('wheel', this.collectionsWheelHandler, { passive: false });
+    }
+
     setCollectionButtonState(button, isActive) {
         button.classList.toggle('is-active', isActive);
         button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
@@ -154,9 +181,17 @@ class ProfileFullComponent {
     applyCollectionFilter() {
         const activeButton = this.getActiveCollectionButton();
         const activeCollection = String(activeButton?.dataset.collectionName || '').trim().toLowerCase();
+        const activePublications = activeButton?.dataset.publications === '1';
+        const profileUsername = String(this.actions?.dataset.profileUsername || '').replace(/^@+/, '').trim().toLowerCase();
         const cards = Array.from(document.querySelectorAll('[data-component="masonry-feed"][data-profile-feed="1"] .post-card'));
 
         cards.forEach((card) => {
+            if (activePublications) {
+                const authorUsername = String(card.dataset.authorUsername || '').replace(/^@+/, '').trim().toLowerCase();
+                card.hidden = !!profileUsername && authorUsername !== profileUsername;
+                return;
+            }
+
             const collections = this.getCardCollections(card).map((collection) => collection.toLowerCase());
             card.hidden = !!activeCollection && !collections.includes(activeCollection);
         });
@@ -785,6 +820,9 @@ class ProfileFullComponent {
     destroy() {
         if (this.root && this.clickHandler) {
             this.root.removeEventListener('click', this.clickHandler);
+        }
+        if (this.collectionsTrack && this.collectionsWheelHandler) {
+            this.collectionsTrack.removeEventListener('wheel', this.collectionsWheelHandler);
         }
         this.closeZoomOverlay();
         clearTimeout(this.zoomHideTimer);

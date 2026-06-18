@@ -15,6 +15,7 @@ class FooterLayout {
         this.chatList = [];
         this.notifications = [];
         this.currentUserId = Number(this.menu.dataset.viewerId || 0);
+        this.currentUsername = String(this.menu.dataset.viewerUsername || '').replace(/^@+/, '').trim();
         if (this.menu.dataset.authenticated !== '1') {
             this.isPinned = false;
             this.persistPinnedState();
@@ -30,6 +31,7 @@ class FooterLayout {
         this.titleNode = this.menu.querySelector('[data-component="footer-menu-title"]');
         this.content = this.menu.querySelector('.footer-menu__content');
         this.authShakeTimer = null;
+        this.collectionsChangedHandler = null;
 
         this.renderState('home_state', { animate: false });
         this.loadIcons();
@@ -90,6 +92,10 @@ class FooterLayout {
         this.backButton?.addEventListener('click', this.backHandler);
         this.pinButton?.addEventListener('click', this.pinHandler);
         this.content?.addEventListener('click', this.contentClickHandler);
+        this.collectionsChangedHandler = () => {
+            if (this.substate === 'collections_state') this.loadCollectionsState();
+        };
+        document.addEventListener('collections:changed', this.collectionsChangedHandler);
         document.addEventListener('click', this.outsideClickHandler);
     }
 
@@ -142,12 +148,7 @@ class FooterLayout {
 
     handleContentAction(action, button, event = null) {
         if (action === 'profile') {
-            this.closeAfterAction();
-            if (App.nav?.navigate) {
-                App.nav.navigate('/profile');
-                return;
-            }
-            window.location.href = '/profile';
+            this.navigateToOwnProfile();
             return;
         }
 
@@ -163,6 +164,11 @@ class FooterLayout {
 
         if (action === 'collections-create') {
             document.dispatchEvent(new CustomEvent('collection-modal:open'));
+            return;
+        }
+
+        if (button?.dataset.footerCollection) {
+            this.navigateToCollection(button.dataset.footerCollection);
             return;
         }
 
@@ -446,6 +452,10 @@ class FooterLayout {
             this.chatMessages[friend.id] = [];
         }
         this.renderState('chat_state');
+        if (this.menu) {
+            this.menu.dataset.state = 'opened';
+            this.toggleButton?.setAttribute('aria-expanded', 'true');
+        }
         void this.loadChatMessages();
     }
 
@@ -847,6 +857,34 @@ class FooterLayout {
         }
     }
 
+    navigateToOwnProfile() {
+        this.closeAfterAction();
+        const url = this.currentUsername ? `/profile?username=${encodeURIComponent(`@${this.currentUsername}`)}` : '/profile';
+        if (App.nav?.navigate) {
+            App.nav.navigate(url, { pushUrl: true });
+            return;
+        }
+        window.location.href = url;
+    }
+
+    navigateToCollection(collection) {
+        const normalizedCollection = String(collection || '').trim();
+        if (this.isProfileCollectionName(normalizedCollection)) {
+            this.navigateToOwnProfile();
+            return;
+        }
+        this.closeAfterAction();
+        const usernamePart = this.currentUsername ? `username=${encodeURIComponent(`@${this.currentUsername}`)}` : '';
+        const collectionPart = `collection=${encodeURIComponent(normalizedCollection)}`;
+        const query = [usernamePart, collectionPart].filter(Boolean).join('&');
+        const url = `/profile?${query}`;
+        if (App.nav?.navigate) {
+            App.nav.navigate(url, { pushUrl: true });
+            return;
+        }
+        window.location.href = url;
+    }
+
     renderCollectionsList(list, collections) {
         const normalizedCollections = collections
             .map((collection) => String(collection || '').trim())
@@ -971,6 +1009,7 @@ class FooterLayout {
         this.pinButton?.removeEventListener('click', this.pinHandler);
         this.content?.removeEventListener('click', this.contentClickHandler);
         document.removeEventListener('click', this.outsideClickHandler);
+        if (this.collectionsChangedHandler) document.removeEventListener('collections:changed', this.collectionsChangedHandler);
         clearTimeout(this.stateTransitionTimer);
         clearTimeout(this.authShakeTimer);
         clearInterval(this.countsPollTimer);
