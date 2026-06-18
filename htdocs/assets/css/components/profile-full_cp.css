@@ -123,6 +123,7 @@
     flex: 0 0 auto;
     width: 6px;
     height: 6px;
+    margin-top: 9px;
     border-radius: 50%;
     background: #bbb;
 }
@@ -130,7 +131,8 @@
 .profile-full__status {
     flex: 0 0 auto;
     font-family: 'SF_def', Arial, sans-serif;
-    font-size: 36px;
+    margin-top: 9px;
+    font-size: 29px;
     line-height: 1;
     color: #bbb;
     white-space: nowrap;
