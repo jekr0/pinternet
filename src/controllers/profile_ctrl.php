@@ -336,6 +336,33 @@ function handleProfileMessagesChats(PDO $pdo, int $viewerId): never
     ]);
 }
 
+
+function handleProfileNotificationsList(PDO $pdo, int $viewerId): never
+{
+    $stmt = $pdo->prepare('SELECT id, title, text, is_read, UNIX_TIMESTAMP(created_at) AS created_at_ts FROM Notifications WHERE user_id = ? ORDER BY created_at DESC, id DESC LIMIT 100');
+    $stmt->execute([$viewerId]);
+    $notifications = $stmt->fetchAll() ?: [];
+
+    profileJsonResponse([
+        'success' => true,
+        'notifications' => array_map(static fn (array $notification): array => [
+            'id' => (int) ($notification['id'] ?? 0),
+            'title' => (string) ($notification['title'] ?? ''),
+            'text' => $notification['text'] === null ? '' : (string) $notification['text'],
+            'is_read' => (int) ($notification['is_read'] ?? 0) === 1,
+            'created_at' => date('c', (int) ($notification['created_at_ts'] ?? time())),
+        ], $notifications),
+    ]);
+}
+
+function handleProfileNotificationsRead(PDO $pdo, int $viewerId): never
+{
+    $stmt = $pdo->prepare('UPDATE Notifications SET is_read = 1 WHERE user_id = ? AND is_read = 0');
+    $stmt->execute([$viewerId]);
+
+    profileJsonResponse(['success' => true]);
+}
+
 function handleProfileFooterCounts(PDO $pdo, int $viewerId): never
 {
     $messagesStmt = $pdo->prepare('SELECT COUNT(*) FROM Messages WHERE to_user_id = ? AND is_read = 0');
@@ -405,6 +432,8 @@ match ($path) {
     '/profile/messages/list' => handleProfileMessagesList($pdo, $viewerId, $targetUserId),
     '/profile/messages/send' => handleProfileMessagesSend($pdo, $viewerId, $targetUserId),
     '/profile/messages/chats' => handleProfileMessagesChats($pdo, $viewerId),
+    '/profile/notifications/list' => handleProfileNotificationsList($pdo, $viewerId),
+    '/profile/notifications/read' => handleProfileNotificationsRead($pdo, $viewerId),
     '/profile/footer-counts' => handleProfileFooterCounts($pdo, $viewerId),
     default => profileJsonResponse(['success' => false, 'error' => 'Маршрут не найден'], 404),
 };

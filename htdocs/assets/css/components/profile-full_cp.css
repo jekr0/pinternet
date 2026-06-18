@@ -5,12 +5,25 @@
 }
 
 .profile-full {
-    height: 520px;
+    position: relative;
+    height: 404px;
     margin: 104px 44px 0;
     padding: 52px 12px 0;
     background: #fff;
     border-radius: 32px 32px 0 0;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+
+.profile-full::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 56px;
+    pointer-events: none;
+    background: linear-gradient(to bottom, #fff, rgba(255, 255, 255, 0));
 }
 
 .profile-full__row {

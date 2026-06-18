@@ -13,6 +13,7 @@ class FooterLayout {
         this.activeChatFriend = null;
         this.chatMessages = {};
         this.chatList = [];
+        this.notifications = [];
         this.footerCounts = { messages: 0, notifications: 0 };
         this.countsPollTimer = null;
         this.toggleButton = this.menu.querySelector('.footer-menu__toggle');
@@ -112,6 +113,9 @@ class FooterLayout {
 
     closeMenu() {
         if (!this.menu) return;
+        if (this.substate === 'notifications_state') {
+            void this.markNotificationsRead();
+        }
         this.menu.dataset.state = 'closed';
         this.toggleButton?.setAttribute('aria-expanded', 'false');
     }
@@ -212,6 +216,10 @@ class FooterLayout {
     }
 
     applyState(state) {
+        const previousState = this.substate;
+        if (previousState === 'notifications_state' && state !== 'notifications_state') {
+            void this.markNotificationsRead();
+        }
         this.substate = state;
         this.menu.dataset.substate = state;
         this.titleNode.textContent = this.getStateTitle(state);
@@ -232,6 +240,10 @@ class FooterLayout {
 
         if (state === 'message_state') {
             void this.loadChatList();
+        }
+
+        if (state === 'notifications_state') {
+            void this.loadNotificationsState();
         }
 
         if (state === 'chat_state') {
@@ -273,6 +285,10 @@ class FooterLayout {
 
         if (state === 'message_state') {
             return '<div class="footer-menu__chat-list-wrap"><ul class="footer-menu__chat-list" data-component="footer-menu-chat-list"><li class="footer-menu__friends-placeholder">Загрузка...</li></ul></div>';
+        }
+
+        if (state === 'notifications_state') {
+            return '<div class="footer-menu__chat-list-wrap footer-menu__notif-list-wrap"><ul class="footer-menu__chat-list footer-menu__notif-list" data-component="footer-menu-notif-list"><li class="footer-menu__friends-placeholder">Загрузка...</li></ul></div>';
         }
 
         if (state === 'chat_state') {
@@ -601,6 +617,72 @@ class FooterLayout {
                 </div>
             </li>
         `).join('');
+    }
+
+
+    async loadNotificationsState() {
+        const list = this.content?.querySelector('[data-component="footer-menu-notif-list"]');
+        if (!list) return;
+        try {
+            const response = await fetch('/profile/notifications/list', {
+                method: 'POST',
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            const payload = await response.json();
+            if (!response.ok || !payload.success || !Array.isArray(payload.notifications)) {
+                throw new Error(payload?.error || 'Не удалось загрузить уведомления');
+            }
+            this.notifications = payload.notifications.map((notification) => ({
+                id: Number(notification?.id || 0),
+                title: String(notification?.title || '').trim(),
+                text: String(notification?.text || '').trim(),
+                isRead: Boolean(notification?.is_read),
+                createdAt: String(notification?.created_at || '')
+            })).filter((notification) => notification.id > 0 && notification.title !== '')
+                .sort((left, right) => {
+                    const rightTime = Date.parse(right.createdAt) || 0;
+                    const leftTime = Date.parse(left.createdAt) || 0;
+                    if (rightTime !== leftTime) return rightTime - leftTime;
+                    return right.id - left.id;
+                });
+            this.renderNotificationsList(list);
+        } catch (error) {
+            console.warn('Unable to load footer notifications', error);
+            list.innerHTML = '<li class="footer-menu__friends-placeholder">Не удалось загрузить уведомления</li>';
+        }
+    }
+
+    renderNotificationsList(list) {
+        if (this.notifications.length === 0) {
+            list.innerHTML = '<li class="footer-menu__friends-placeholder">Уведомлений пока нет</li>';
+            return;
+        }
+        list.innerHTML = this.notifications.map((notification) => `
+            <li>
+                <div class="footer-menu__notif-item${notification.isRead ? '' : ' footer-menu__notif-item--unread'}">
+                    <div class="footer-menu__notif-title">${this.escapeHtml(notification.title)}</div>
+                    ${notification.text ? `<div class="footer-menu__notif-text">${this.escapeHtml(notification.text)}</div>` : ''}
+                    <div class="footer-menu__notif-date-time">${this.escapeHtml(this.formatMessageTime(notification.createdAt))}</div>
+                </div>
+            </li>
+        `).join('');
+    }
+
+    async markNotificationsRead() {
+        if (!this.notifications.some((notification) => !notification.isRead)) return;
+        try {
+            const response = await fetch('/profile/notifications/read', {
+                method: 'POST',
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            const payload = await response.json();
+            if (!response.ok || !payload.success) throw new Error(payload?.error || 'Не удалось отметить уведомления');
+            this.notifications = this.notifications.map((notification) => ({ ...notification, isRead: true }));
+            this.footerCounts.notifications = 0;
+            this.renderFooterBadges();
+        } catch (error) {
+            console.warn('Unable to mark footer notifications as read', error);
+        }
     }
 
     async loadFooterCounts(options = {}) {
