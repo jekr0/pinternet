@@ -175,3 +175,21 @@
     border-color: rgb(125, 125, 225);
     color: rgb(125, 125, 225);
 }
+
+.dropdown-collections__collection-item--add {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dropdown-collections__edit-icon,
+.dropdown-collections__edit-icon svg {
+    width: 16px;
+    height: 16px;
+    display: block;
+}
+
+.dropdown-collections__edit-icon svg,
+.dropdown-collections__edit-icon svg * {
+    fill: currentColor;
+}

@@ -166,6 +166,11 @@ class FooterLayout {
             return;
         }
 
+        if (action === 'notifications-clean') {
+            void this.clearNotifications();
+            return;
+        }
+
         if (action === 'friend-message') {
             const friendItem = button?.closest?.('[data-footer-friend-id]');
             this.openChatWithFriend(friendItem?.dataset.footerFriendId);
@@ -307,7 +312,12 @@ class FooterLayout {
         }
 
         if (state === 'notifications_state') {
-            return '<div class="footer-menu__chat-list-wrap footer-menu__notif-list-wrap"><ul class="footer-menu__chat-list footer-menu__notif-list" data-component="footer-menu-notif-list"><li class="footer-menu__friends-placeholder">Загрузка...</li></ul></div>';
+            return `
+                <div class="footer-menu__chat-list-wrap footer-menu__notif-list-wrap"><ul class="footer-menu__chat-list footer-menu__notif-list" data-component="footer-menu-notif-list"><li class="footer-menu__friends-placeholder">Загрузка...</li></ul></div>
+                <button class="footer-menu__clean-button" type="button" data-footer-menu-action="notifications-clean" aria-label="Очистить уведомления">
+                    <span class="footer-menu__clean-icon" data-svg-src="/assets/images/icons/clean.svg" aria-hidden="true"></span>
+                </button>
+            `;
         }
 
         if (state === 'chat_state') {
@@ -710,6 +720,26 @@ class FooterLayout {
         window.location.href = notification.targetUrl;
     }
 
+
+    async clearNotifications() {
+        try {
+            const response = await fetch('/profile/notifications/clear', {
+                method: 'POST',
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            const payload = await response.json();
+            if (!response.ok || !payload.success) throw new Error(payload?.error || 'Не удалось очистить уведомления');
+            this.notifications = [];
+            this.footerCounts.notifications = 0;
+            const list = this.content?.querySelector('[data-component="footer-menu-notif-list"]');
+            if (list) this.renderNotificationsList(list);
+            this.renderFooterBadges();
+        } catch (error) {
+            console.warn('Unable to clear footer notifications', error);
+            document.dispatchEvent(new CustomEvent('app:toast', { detail: { message: error?.message || 'Не удалось очистить уведомления' } }));
+        }
+    }
+
     async markNotificationsRead() {
         if (!this.notifications.some((notification) => !notification.isRead)) return;
         try {
@@ -835,8 +865,11 @@ class FooterLayout {
             </li>
         `).join('')}
             <li>
-                <button class="footer-menu__collection-item footer-menu__collection-item--add" type="button" data-footer-menu-action="collections-create" aria-label="Создать коллекцию">+</button>
+                <button class="footer-menu__collection-item footer-menu__collection-item--add" type="button" data-footer-menu-action="collections-create" aria-label="Редактировать коллекции">
+                    <span class="footer-menu__collection-edit-icon" data-svg-src="/assets/images/icons/L-edit.svg" aria-hidden="true"></span>
+                </button>
             </li>`;
+        this.loadIcons();
     }
 
     isProfileCollectionName(collectionName) {

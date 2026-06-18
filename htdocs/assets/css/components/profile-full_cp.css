@@ -6,7 +6,7 @@
 
 .profile-full {
     position: relative;
-    height: 404px;
+    height: 424px;
     margin: 104px 44px 0;
     padding: 52px 12px 0;
     background: #fff;
@@ -458,27 +458,6 @@
     overflow: hidden;
 }
 
-.profile-full__collections-scroll::before,
-.profile-full__collections-scroll::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    z-index: 2;
-    width: 12px;
-    pointer-events: none;
-}
-
-.profile-full__collections-scroll::before {
-    left: 0;
-    background: linear-gradient(to right, #fff, rgba(255, 255, 255, 0));
-}
-
-.profile-full__collections-scroll::after {
-    right: 0;
-    background: linear-gradient(to left, #fff, rgba(255, 255, 255, 0));
-}
-
 .profile-full__collections-scroll-track {
     position: relative;
     z-index: 1;
@@ -495,13 +474,15 @@
 }
 
 .profile-full__collections-item {
-    flex: 0 0 auto;
+    flex: 0 0 248px;
+    width: 248px;
     height: 40px;
     min-width: 0;
     padding: 0 16px;
     border: 0;
     border-radius: 12px;
     background: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
     font-family: 'NS_def', Arial, sans-serif;
     font-size: 18px;
     line-height: 1;

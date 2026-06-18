@@ -915,3 +915,59 @@
 .footer-menu__message-input.is-blocked:hover {
     border-color: #e0e0e0;
 }
+
+.footer-menu__collection-item--add {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.footer-menu__collection-edit-icon,
+.footer-menu__collection-edit-icon svg {
+    width: 24px;
+    height: 24px;
+    display: block;
+}
+
+.footer-menu__collection-edit-icon svg,
+.footer-menu__collection-edit-icon svg * {
+    fill: currentColor;
+}
+
+.footer-menu__clean-button {
+    position: absolute;
+    right: 16px;
+    bottom: 20px;
+    z-index: 5;
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(1px);
+    -webkit-backdrop-filter: blur(1px);
+    color: rgba(255, 255, 255, 0.5);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    transition: color 0.2s ease, background 0.2s ease;
+}
+
+.footer-menu__clean-button:hover {
+    color: rgba(255, 255, 255, 1);
+    background: rgba(0, 0, 0, 0.25);
+}
+
+.footer-menu__clean-icon,
+.footer-menu__clean-icon svg {
+    width: 24px;
+    height: 24px;
+    display: block;
+}
+
+.footer-menu__clean-icon svg,
+.footer-menu__clean-icon svg * {
+    fill: currentColor;
+}
