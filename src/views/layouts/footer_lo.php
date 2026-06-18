@@ -2,9 +2,10 @@
 if (session_status() === PHP_SESSION_NONE) session_start();
 $footerMenuViewerId = (int) ($_SESSION['user_id'] ?? 0);
 $footerMenuIsAuthenticated = $footerMenuViewerId > 0;
+$footerMenuUsername = (string) ($_SESSION['username'] ?? '');
 ?>
 <footer class="footer" aria-label="Быстрые действия">
-    <div class="footer-menu" data-component="footer-menu" data-state="closed" data-authenticated="<?= $footerMenuIsAuthenticated ? '1' : '0' ?>" data-viewer-id="<?= $footerMenuViewerId ?>">
+    <div class="footer-menu" data-component="footer-menu" data-state="closed" data-authenticated="<?= $footerMenuIsAuthenticated ? '1' : '0' ?>" data-viewer-id="<?= $footerMenuViewerId ?>" data-viewer-username="<?= htmlspecialchars($footerMenuUsername, ENT_QUOTES, 'UTF-8') ?>">
         <button class="footer-menu__toggle" type="button" aria-label="Открыть меню" aria-expanded="false">
             <span class="footer-menu__planet" data-svg-src="/assets/images/icons/planet.svg" aria-hidden="true"></span>
         </button>
@@ -44,3 +45,4 @@ $footerMenuIsAuthenticated = $footerMenuViewerId > 0;
 <?php include '../src/views/components/dropdown-collections_cp.php'; ?>
 
 <?php include '../src/views/components/collection-modul_cp.php'; ?>
+<?php include '../src/views/components/profile-modal_cp.php'; ?>

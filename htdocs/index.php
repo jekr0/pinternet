@@ -111,6 +111,7 @@ switch ($path) {
             'post-full_cp.css',
             'dropdown-collections_cp.css',
             'collection-modal_cp.css',
+            'profile-modal_cp.css',
             'warn-modal_cp.css',
             'toast-stack_cp.css',
             'home_pg.css',
@@ -130,6 +131,7 @@ switch ($path) {
             'post_full.js',
             'dropdown_collections.js',
             'collection_modal.js',
+            'profile_modal.js',
             'masonry_feed.js',
             'adaptive_text.js'
         ];
@@ -161,6 +163,7 @@ switch ($path) {
             'post-full_cp.css',
             'dropdown-collections_cp.css',
             'collection-modal_cp.css',
+            'profile-modal_cp.css',
             'warn-modal_cp.css',
             'toast-stack_cp.css',
             'footer_lo.css'
@@ -177,6 +180,7 @@ switch ($path) {
             'post_modal.js',
             'post_card.js',
             'collection_modal.js',
+            'profile_modal.js',
             'profile_full.js',
             'post_full.js',
             'dropdown_collections.js',
@@ -246,6 +250,7 @@ switch ($path) {
         case '/profile/notifications/read':
         case '/profile/notifications/clear':
         case '/profile/footer-counts':
+        case '/profile/update':
         require_once '../src/controllers/profile_ctrl.php';
         exit;
 

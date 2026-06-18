@@ -117,6 +117,12 @@ class ProfileFullComponent {
             if (action === 'profile-message') {
                 event.preventDefault();
                 this.openFooterChat();
+                return;
+            }
+
+            if (action === 'profile-edit') {
+                event.preventDefault();
+                document.dispatchEvent(new CustomEvent('profile-modal:open'));
             }
         };
 
