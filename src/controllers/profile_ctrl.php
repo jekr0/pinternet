@@ -331,6 +331,7 @@ function handleProfileMessagesChats(PDO $pdo, int $viewerId): never
             'id' => (int) ($chat['id'] ?? 0),
             'username' => (string) ($chat['username'] ?? ''),
             'unread_count' => (int) ($chat['unread_count'] ?? 0),
+            'last_message_at' => (string) ($chat['last_message_at'] ?? ''),
         ], $chats),
     ]);
 }

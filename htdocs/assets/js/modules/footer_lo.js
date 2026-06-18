@@ -426,6 +426,7 @@ class FooterLayout {
             }));
             this.renderChatMessages();
             this.updateMessageInputState();
+            void this.loadFooterCounts({ notify: false });
         } catch (error) {
             console.warn('Unable to load footer chat messages', error);
             document.dispatchEvent(new CustomEvent('app:toast', { detail: { message: error?.message || 'Не удалось загрузить сообщения' } }));
@@ -517,6 +518,8 @@ class FooterLayout {
             input.value = '';
             this.autoResizeMessageInput(input);
             this.renderChatMessages();
+            void this.loadFooterCounts({ notify: false });
+            if (this.substate === 'message_state') void this.loadChatList();
         } catch (error) {
             console.warn('Unable to send footer chat message', error);
             document.dispatchEvent(new CustomEvent('app:toast', { detail: { message: error?.message || 'Не удалось отправить сообщение' } }));
@@ -568,8 +571,16 @@ class FooterLayout {
             this.chatList = payload.chats.map((chat) => ({
                 id: Number(chat?.id || 0),
                 username: String(chat?.username || '').trim(),
-                unread_count: Number(chat?.unread_count || 0)
-            })).filter((chat) => chat.id > 0 && chat.username !== '');
+                unread_count: Number(chat?.unread_count || 0),
+                lastMessageAt: String(chat?.last_message_at || '')
+            }))
+                .filter((chat) => chat.id > 0 && chat.username !== '')
+                .sort((left, right) => {
+                    const rightTime = Date.parse(right.lastMessageAt) || 0;
+                    const leftTime = Date.parse(left.lastMessageAt) || 0;
+                    if (rightTime !== leftTime) return rightTime - leftTime;
+                    return left.username.localeCompare(right.username, undefined, { numeric: true, sensitivity: 'base' });
+                });
             this.renderChatList(list);
         } catch (error) {
             console.warn('Unable to load footer chat list', error);
