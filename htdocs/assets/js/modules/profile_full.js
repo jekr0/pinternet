@@ -24,6 +24,8 @@ class ProfileFullComponent {
         this.clickHandler = null;
         this.statusSeparator = null;
         this.statusNode = null;
+        this.collectionsTrack = null;
+        this.collectionsWheelHandler = null;
     }
 
     init() {
@@ -126,6 +128,9 @@ class ProfileFullComponent {
         const scroll = this.root?.querySelector('[data-profile-collections-scroll]');
         if (!scroll) return;
 
+        this.collectionsTrack = scroll.querySelector('.profile-full__collections-scroll-track');
+        this.bindCollectionsWheelScroll();
+
         const buttons = Array.from(scroll.querySelectorAll('[data-profile-collection-item]'));
         if (buttons.length === 0) return;
 
@@ -140,6 +145,22 @@ class ProfileFullComponent {
         });
 
         this.applyCollectionFilter();
+    }
+
+    bindCollectionsWheelScroll() {
+        if (!this.collectionsTrack || this.collectionsWheelHandler) return;
+
+        this.collectionsWheelHandler = (event) => {
+            if (!this.collectionsTrack || this.collectionsTrack.scrollWidth <= this.collectionsTrack.clientWidth) return;
+
+            const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
+            if (!delta) return;
+
+            event.preventDefault();
+            this.collectionsTrack.scrollLeft += delta;
+        };
+
+        this.collectionsTrack.addEventListener('wheel', this.collectionsWheelHandler, { passive: false });
     }
 
     setCollectionButtonState(button, isActive) {
@@ -793,6 +814,9 @@ class ProfileFullComponent {
     destroy() {
         if (this.root && this.clickHandler) {
             this.root.removeEventListener('click', this.clickHandler);
+        }
+        if (this.collectionsTrack && this.collectionsWheelHandler) {
+            this.collectionsTrack.removeEventListener('wheel', this.collectionsWheelHandler);
         }
         this.closeZoomOverlay();
         clearTimeout(this.zoomHideTimer);
