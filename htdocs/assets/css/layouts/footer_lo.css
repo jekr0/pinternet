@@ -83,7 +83,6 @@
     display: grid;
     grid-template-columns: 84px minmax(0, 1fr) 84px;
     align-items: center;
-    column-gap: 12px;
     height: 36px;
     opacity: 0;
     visibility: hidden;
@@ -109,6 +108,7 @@
     line-height: 1;
     color: #555;
     transition: opacity 0.2s ease, transform 0.2s ease;
+    user-select: none;
 }
 
 .footer-menu__left-controls {
@@ -159,10 +159,12 @@
 }
 
 .footer-menu__pin.is-active {
+    fill: rgb(150, 150, 250);
     color: rgb(150, 150, 250);
 }
 
 .footer-menu__pin.is-active:hover {
+    fill: rgb(100, 100, 200);
     color: rgb(100, 100, 200);
 }
 
@@ -171,7 +173,7 @@
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
-    transform: scale(0.92);
+    transform: scale(0.8);
 }
 
 .footer-menu__control-icon,
@@ -220,7 +222,7 @@
     display: flex;
     align-items: center;
     min-height: 14px;
-    margin: 4px 0;
+    margin: 5px 0;
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
@@ -481,7 +483,7 @@
 .footer-menu__friends-list {
     flex: 1 1 auto;
     min-height: 0;
-    margin: 0;
+    margin: 8px 0 0;
     padding: 0;
     overflow-y: auto;
     list-style: none;
@@ -506,6 +508,7 @@
     font-family: 'SF_def', Arial, sans-serif;
     font-size: 18px;
     color: #333;
+    user-select: none;
     transition: background 0.1s ease, color 0.1s ease;
 }
 
