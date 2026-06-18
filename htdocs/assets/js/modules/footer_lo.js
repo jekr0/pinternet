@@ -4,7 +4,7 @@ class FooterLayout {
         if (!this.menu || this.menu.dataset.bound === '1') return;
 
         this.menu.dataset.bound = '1';
-        this.isPinned = false;
+        this.isPinned = this.shouldRestorePinnedState();
         this.substate = 'home_state';
         this.stateTransitionTimer = null;
         this.stateTransitionFrame = null;
@@ -15,6 +15,10 @@ class FooterLayout {
         this.chatList = [];
         this.notifications = [];
         this.currentUserId = Number(this.menu.dataset.viewerId || 0);
+        if (this.menu.dataset.authenticated !== '1') {
+            this.isPinned = false;
+            this.persistPinnedState();
+        }
         this.footerCounts = { messages: 0, notifications: 0 };
         this.countsPollTimer = null;
         this.toggleButton = this.menu.querySelector('.footer-menu__toggle');
@@ -30,7 +34,11 @@ class FooterLayout {
         this.renderState('home_state', { animate: false });
         this.loadIcons();
         this.bindHandlers();
-        this.closeMenu();
+        if (this.isPinned && this.menu.dataset.authenticated === '1') {
+            this.openMenu();
+        } else {
+            this.closeMenu({ force: true });
+        }
         void this.loadFooterCounts({ notify: false });
         this.countsPollTimer = setInterval(() => this.loadFooterCounts({ notify: true }), 15000);
     }
@@ -112,8 +120,13 @@ class FooterLayout {
         }, 1000);
     }
 
-    closeMenu() {
+    closeMenu(options = {}) {
         if (!this.menu) return;
+        const { force = false } = options;
+        if (this.isPinned && !force) {
+            this.openMenu();
+            return;
+        }
         if (this.substate === 'notifications_state') {
             void this.markNotificationsRead();
         }
@@ -150,6 +163,11 @@ class FooterLayout {
 
         if (action === 'collections-create') {
             document.dispatchEvent(new CustomEvent('collection-modal:open'));
+            return;
+        }
+
+        if (action === 'notifications-clean') {
+            void this.clearNotifications();
             return;
         }
 
@@ -294,7 +312,12 @@ class FooterLayout {
         }
 
         if (state === 'notifications_state') {
-            return '<div class="footer-menu__chat-list-wrap footer-menu__notif-list-wrap"><ul class="footer-menu__chat-list footer-menu__notif-list" data-component="footer-menu-notif-list"><li class="footer-menu__friends-placeholder">Загрузка...</li></ul></div>';
+            return `
+                <div class="footer-menu__chat-list-wrap footer-menu__notif-list-wrap"><ul class="footer-menu__chat-list footer-menu__notif-list" data-component="footer-menu-notif-list"><li class="footer-menu__friends-placeholder">Загрузка...</li></ul></div>
+                <button class="footer-menu__clean-button" type="button" data-footer-menu-action="notifications-clean" aria-label="Очистить уведомления">
+                    <span class="footer-menu__clean-icon" data-svg-src="/assets/images/icons/clean.svg" aria-hidden="true"></span>
+                </button>
+            `;
         }
 
         if (state === 'chat_state') {
@@ -697,6 +720,26 @@ class FooterLayout {
         window.location.href = notification.targetUrl;
     }
 
+
+    async clearNotifications() {
+        try {
+            const response = await fetch('/profile/notifications/clear', {
+                method: 'POST',
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            const payload = await response.json();
+            if (!response.ok || !payload.success) throw new Error(payload?.error || 'Не удалось очистить уведомления');
+            this.notifications = [];
+            this.footerCounts.notifications = 0;
+            const list = this.content?.querySelector('[data-component="footer-menu-notif-list"]');
+            if (list) this.renderNotificationsList(list);
+            this.renderFooterBadges();
+        } catch (error) {
+            console.warn('Unable to clear footer notifications', error);
+            document.dispatchEvent(new CustomEvent('app:toast', { detail: { message: error?.message || 'Не удалось очистить уведомления' } }));
+        }
+    }
+
     async markNotificationsRead() {
         if (!this.notifications.some((notification) => !notification.isRead)) return;
         try {
@@ -822,8 +865,11 @@ class FooterLayout {
             </li>
         `).join('')}
             <li>
-                <button class="footer-menu__collection-item footer-menu__collection-item--add" type="button" data-footer-menu-action="collections-create" aria-label="Создать коллекцию">+</button>
+                <button class="footer-menu__collection-item footer-menu__collection-item--add" type="button" data-footer-menu-action="collections-create" aria-label="Редактировать коллекции">
+                    <span class="footer-menu__collection-edit-icon" data-svg-src="/assets/images/icons/L-edit.svg" aria-hidden="true"></span>
+                </button>
             </li>`;
+        this.loadIcons();
     }
 
     isProfileCollectionName(collectionName) {
@@ -854,7 +900,27 @@ class FooterLayout {
 
     togglePinned() {
         this.isPinned = !this.isPinned;
+        this.persistPinnedState();
+        if (this.isPinned) {
+            this.openMenu();
+        }
         this.updatePinControlForState(this.substate || 'home_state');
+    }
+
+    shouldRestorePinnedState() {
+        try {
+            return window.sessionStorage?.getItem('footer-menu-pinned') === '1';
+        } catch (error) {
+            return false;
+        }
+    }
+
+    persistPinnedState() {
+        try {
+            window.sessionStorage?.setItem('footer-menu-pinned', this.isPinned ? '1' : '0');
+        } catch (error) {
+            // Ignore storage failures; pinning still works for the current instance.
+        }
     }
 
     escapeHtml(value) {
@@ -883,6 +949,12 @@ class FooterLayout {
         if (!currentMenu) {
             this.unbindHandlers();
             this.menu = null;
+            return;
+        }
+
+        if (currentMenu === this.menu) {
+            this.loadIcons();
+            this.renderFooterBadges();
             return;
         }
 

@@ -19,6 +19,7 @@ $profileFullActionState = 'default';
 $profileFullNotificationsEnabled = false;
 $profileFullBlocked = false;
 $profileFullStatus = '';
+$profileFullCollections = [];
 
 $profileFullRequestedUsername = trim(ltrim((string) ($_GET['username'] ?? ''), '@'));
 
@@ -99,12 +100,35 @@ if ($profileFullViewerId > 0 || $profileFullRequestedUsername !== '') {
             } elseif ($viewerFollows) {
                 $profileFullActionState = 'subscribed';
             } elseif ($targetFollows) {
+                $profileFullActionState = 'followed_by';
                 $profileFullStatus = 'Подписан';
             }
         }
     }
 }
 
+
+if ($profileFullUserId > 0 && isset($pdo)) {
+    $collectionsStmt = $pdo->prepare('
+        SELECT c.name, COUNT(DISTINCT cp.post_id) AS posts_count
+        FROM Collections c
+        INNER JOIN Collection_Posts cp ON cp.collection_id = c.id AND cp.user_id = c.user_id
+        WHERE c.user_id = ?
+        GROUP BY c.id, c.name
+        HAVING posts_count > 0
+        ORDER BY c.created_at ASC, c.id ASC
+    ');
+    $collectionsStmt->execute([$profileFullUserId]);
+    $profileFullCollections = $collectionsStmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+}
+
+$profileFullIsProfileCollectionName = static function (string $collectionName): bool {
+    $normalized = mb_strtolower(trim($collectionName));
+    return $normalized === 'profile' || $normalized === 'профиль';
+};
+
+$profileFullSelectedCollection = trim((string) ($_GET['collection'] ?? ''));
+$profileFullSelectedPublications = array_key_exists('publications', $_GET);
 $profileFullZoomSrc = $profileFullHasAvatar ? $profileFullAvatarSrc : '/assets/images/icons/planet.svg';
 ?>
 
@@ -169,7 +193,38 @@ $profileFullZoomSrc = $profileFullHasAvatar ? $profileFullAvatarSrc : '/assets/i
             data-profile-blocked="<?= $profileFullBlocked ? 'true' : 'false' ?>"
             data-viewer-authorized="<?= $profileFullViewerId > 0 ? 'true' : 'false' ?>"
         ></div>
-        <div class="profile-full__medals" aria-hidden="true"></div>
+        <div class="profile-full__progress" aria-hidden="true"></div>
         <div class="profile-full__achievements" aria-hidden="true"></div>
+        <div class="profile-full__line profile-full__line--collections" aria-hidden="true"></div>
+        <div class="profile-full__collections-scroll" aria-label="Коллекции профиля" data-profile-collections-scroll data-profile-username="<?= htmlspecialchars($profileFullUsername, ENT_QUOTES, 'UTF-8') ?>">
+            <div class="profile-full__collections-scroll-track">
+                <?php foreach ($profileFullCollections as $profileFullCollection): ?>
+                    <?php
+                        $profileFullCollectionName = (string) ($profileFullCollection['name'] ?? '');
+                        if ($profileFullCollectionName === '') {
+                            continue;
+                        }
+                        $profileFullIsPublications = $profileFullIsProfileCollectionName($profileFullCollectionName);
+                        $profileFullIsActiveCollection = $profileFullIsPublications
+                            ? $profileFullSelectedPublications
+                            : (!$profileFullSelectedPublications && mb_strtolower($profileFullSelectedCollection) === mb_strtolower($profileFullCollectionName));
+                    ?>
+                    <button
+                        class="profile-full__collections-item<?= $profileFullIsActiveCollection ? ' is-active' : '' ?>"
+                        type="button"
+                        data-profile-collection-item
+                        data-collection-name="<?= htmlspecialchars($profileFullCollectionName, ENT_QUOTES, 'UTF-8') ?>"
+                        data-publications="<?= $profileFullIsPublications ? '1' : '0' ?>"
+                        aria-pressed="<?= $profileFullIsActiveCollection ? 'true' : 'false' ?>"
+                    >
+                        <?php if ($profileFullIsPublications): ?>
+                            Посты <span class="profile-full__collections-item-accent">@<?= htmlspecialchars($profileFullUsername, ENT_QUOTES, 'UTF-8') ?></span>
+                        <?php else: ?>
+                            <?= htmlspecialchars($profileFullCollectionName, ENT_QUOTES, 'UTF-8') ?>
+                        <?php endif; ?>
+                    </button>
+                <?php endforeach; ?>
+            </div>
+        </div>
     </div>
 </section>

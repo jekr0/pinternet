@@ -6,7 +6,7 @@
 
 .profile-full {
     position: relative;
-    height: 404px;
+    height: 428px;
     margin: 104px 44px 0;
     padding: 52px 12px 0;
     background: #fff;
@@ -29,7 +29,7 @@
 .profile-full__row {
     display: grid;
     grid-template-columns: repeat(7, minmax(0, 1fr));
-    grid-template-rows: auto 40px;
+    grid-template-rows: auto 40px auto 40px;
     column-gap: 12px;
     row-gap: 12px;
     align-items: start;
@@ -140,7 +140,6 @@
 
 .profile-full__line {
     width: 100%;
-    min-height: 14px;
     display: flex;
     align-items: center;
 }
@@ -150,6 +149,7 @@
     flex: 1 1 auto;
     height: 2px;
     background: #e0e0e0;
+    margin: 6px 0;
     border-radius: 1px;
 }
 
@@ -328,7 +328,7 @@
     fill: currentColor;
 }
 
-.profile-full__medals {
+.profile-full__progress {
     grid-column: 5 / 8;
     grid-row: 1;
     align-self: start;
@@ -366,20 +366,24 @@
 }
 
 /* Default state: Subscribe fills, Block & Report align to the right */
-.profile-full__actions[data-action-state="default"] {
+.profile-full__actions[data-action-state="default"],
+.profile-full__actions[data-action-state="followed_by"] {
     display: flex;
     gap: 12px;
     grid-template-columns: none;
 }
 
-.profile-full__actions[data-action-state="default"] .profile-full__button--subscribe {
+.profile-full__actions[data-action-state="default"] .profile-full__button--subscribe,
+.profile-full__actions[data-action-state="followed_by"] .profile-full__button--subscribe {
     flex: 1;
     grid-column: auto;
     min-width: 0;
 }
 
 .profile-full__actions[data-action-state="default"] .profile-full__button--block,
-.profile-full__actions[data-action-state="default"] .profile-full__button--report {
+.profile-full__actions[data-action-state="default"] .profile-full__button--report,
+.profile-full__actions[data-action-state="followed_by"] .profile-full__button--block,
+.profile-full__actions[data-action-state="followed_by"] .profile-full__button--report {
     flex: 0 0 auto;
     grid-column: auto;
 }
@@ -403,7 +407,7 @@
 }
 
 /* Ensure other states (subscribed, etc.) keep original grid layout */
-.profile-full__actions:not([data-action-state="default"]):not([data-action-state="yourself"]) {
+.profile-full__actions:not([data-action-state="default"]):not([data-action-state="followed_by"]):not([data-action-state="yourself"]) {
     display: grid;
 }
 
@@ -429,4 +433,71 @@
 .profile-full__actions[data-action-state="subscribed"] > .profile-full__icon-button--bell,
 .profile-full__actions[data-action-state="subscribed"] > .profile-full__icon-button--report {
     justify-self: end;
+}
+
+
+.profile-full__line--collections {
+    grid-column: 1 / 8;
+    margin: 11px 0 3px;
+}
+
+.profile-full__line--collections::before {
+    content: '';
+    flex: 1 1 auto;
+    height: 2px;
+    background: #e0e0e0;
+    border-radius: 1px;
+}
+
+.profile-full__collections-scroll {
+    position: relative;
+    grid-column: 1 / 8;
+    grid-row: 4;
+    height: 40px;
+    overflow: hidden;
+}
+
+.profile-full__collections-scroll-track {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    height: 40px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+}
+
+.profile-full__collections-scroll-track::-webkit-scrollbar {
+    display: none;
+}
+
+.profile-full__collections-item {
+    width: 260px;
+    height: 40px;
+    min-width: 0;
+    border: none;
+    background: none;
+    font-family: 'NS_def', Arial, sans-serif;
+    font-size: 18px;
+    line-height: 1;
+    color: #333;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.profile-full__collections-item.is-active,
+.profile-full__collections-item:hover {
+    background: rgba(50, 50, 150, 0.2);
+}
+
+.profile-full__collections-item-accent {
+    color: rgb(100, 100, 200);
+}
+
+.profile-post-masonry {
+    margin-top: 30px;
 }

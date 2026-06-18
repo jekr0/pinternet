@@ -22,6 +22,8 @@ class ProfileFullComponent {
         this.zoomStartPanX = 0;
         this.zoomStartPanY = 0;
         this.clickHandler = null;
+        this.statusSeparator = null;
+        this.statusNode = null;
     }
 
     init() {
@@ -30,9 +32,12 @@ class ProfileFullComponent {
 
         this.avatar = this.root.querySelector('[data-profile-full-avatar]');
         this.actions = this.root.querySelector('.profile-full__actions');
+        this.statusSeparator = this.root.querySelector('.profile-full__status-separator');
+        this.statusNode = this.root.querySelector('.profile-full__status');
         this.renderActionLine();
         this.initSvgIcons();
         this.bindActions();
+        this.bindCollectionsFilter();
     }
 
     initSvgIcons(scope = this.root) {
@@ -117,6 +122,82 @@ class ProfileFullComponent {
     }
 
 
+    bindCollectionsFilter() {
+        const scroll = this.root?.querySelector('[data-profile-collections-scroll]');
+        if (!scroll) return;
+
+        const buttons = Array.from(scroll.querySelectorAll('[data-profile-collection-item]'));
+        if (buttons.length === 0) return;
+
+        buttons.forEach((button) => {
+            button.addEventListener('click', () => {
+                const shouldActivate = !button.classList.contains('is-active');
+                buttons.forEach((item) => this.setCollectionButtonState(item, false));
+                this.setCollectionButtonState(button, shouldActivate);
+                this.applyCollectionFilter();
+                this.syncCollectionUrl();
+            });
+        });
+
+        this.applyCollectionFilter();
+    }
+
+    setCollectionButtonState(button, isActive) {
+        button.classList.toggle('is-active', isActive);
+        button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+    }
+
+    getActiveCollectionButton() {
+        return this.root?.querySelector('[data-profile-collection-item].is-active') || null;
+    }
+
+    applyCollectionFilter() {
+        const activeButton = this.getActiveCollectionButton();
+        const activeCollection = String(activeButton?.dataset.collectionName || '').trim().toLowerCase();
+        const cards = Array.from(document.querySelectorAll('[data-component="masonry-feed"][data-profile-feed="1"] .post-card'));
+
+        cards.forEach((card) => {
+            const collections = this.getCardCollections(card).map((collection) => collection.toLowerCase());
+            card.hidden = !!activeCollection && !collections.includes(activeCollection);
+        });
+
+        document.dispatchEvent(new CustomEvent('post-full:resize'));
+    }
+
+    getCardCollections(card) {
+        try {
+            const rawCollections = JSON.parse(card.dataset.profileCollections || '[]');
+            return Array.isArray(rawCollections)
+                ? rawCollections.map((collection) => String(collection || '').trim()).filter(Boolean)
+                : [];
+        } catch (error) {
+            return [];
+        }
+    }
+
+    syncCollectionUrl() {
+        const username = String(this.actions?.dataset.profileUsername || '').replace(/^@+/, '').trim();
+        const activeButton = this.getActiveCollectionButton();
+        const params = new URLSearchParams();
+        if (username) params.set('username', username);
+
+        let titleSuffix = username ? `@${username}` : 'Профиль';
+        if (activeButton) {
+            const collectionName = String(activeButton.dataset.collectionName || '').trim();
+            if (activeButton.dataset.publications === '1') {
+                params.set('publications', '');
+            } else if (collectionName) {
+                params.set('collection', collectionName);
+                titleSuffix = username ? `@${username} / ${collectionName}` : collectionName;
+            }
+        }
+
+        const query = params.toString().replace(/publications=$/, 'publications');
+        const nextUrl = `/profile${query ? `?${query}` : ''}`;
+        App.history?.replaceUrl?.(nextUrl);
+        document.title = `Grinderest / ${titleSuffix}`;
+    }
+
     openFooterChat() {
         if (!this.actions) return;
         const user = {
@@ -186,7 +267,44 @@ class ProfileFullComponent {
         };
 
         this.actions.innerHTML = templates[nextState] || templates.default;
+        this.syncStatusForState(nextState);
         this.initSvgIcons(this.actions);
+    }
+
+    syncStatusForState(state) {
+        if (!this.root) return;
+        const topRow = this.root.querySelector('.profile-full__info-top-row');
+        if (!topRow) return;
+
+        const labels = {
+            yourself: 'Вы',
+            friends: 'Друзья',
+            followed_by: 'Подписан'
+        };
+        const label = labels[state] || '';
+
+        if (!label) {
+            this.statusSeparator?.remove();
+            this.statusNode?.remove();
+            this.statusSeparator = null;
+            this.statusNode = null;
+            return;
+        }
+
+        if (!this.statusSeparator) {
+            this.statusSeparator = document.createElement('span');
+            this.statusSeparator.className = 'profile-full__status-separator';
+            this.statusSeparator.setAttribute('aria-hidden', 'true');
+            topRow.appendChild(this.statusSeparator);
+        }
+
+        if (!this.statusNode) {
+            this.statusNode = document.createElement('span');
+            this.statusNode.className = 'profile-full__status';
+            topRow.appendChild(this.statusNode);
+        }
+
+        this.statusNode.textContent = label;
     }
 
     isViewerAuthorized() {
@@ -224,7 +342,7 @@ class ProfileFullComponent {
                 throw new Error(payload.error || 'Не удалось подписаться.');
             }
 
-            const nextState = payload.state === 'friends' ? 'friends' : 'subscribed';
+            const nextState = payload.state === 'friends' ? 'friends' : (payload.state === 'followed_by' ? 'followed_by' : 'subscribed');
             this.renderActionLine(nextState);
             this.showSubscribeToast(username || payload.username || '', nextState);
         } catch (error) {

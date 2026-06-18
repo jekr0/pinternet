@@ -395,6 +395,14 @@ function handleProfileNotificationsRead(PDO $pdo, int $viewerId): never
     profileJsonResponse(['success' => true]);
 }
 
+function handleProfileNotificationsClear(PDO $pdo, int $viewerId): never
+{
+    $stmt = $pdo->prepare('DELETE FROM Notifications WHERE user_id = ?');
+    $stmt->execute([$viewerId]);
+
+    profileJsonResponse(['success' => true]);
+}
+
 function handleProfileFooterCounts(PDO $pdo, int $viewerId): never
 {
     $messagesStmt = $pdo->prepare('SELECT COUNT(*) FROM Messages WHERE to_user_id = ? AND is_read = 0');
@@ -466,6 +474,7 @@ match ($path) {
     '/profile/messages/chats' => handleProfileMessagesChats($pdo, $viewerId),
     '/profile/notifications/list' => handleProfileNotificationsList($pdo, $viewerId),
     '/profile/notifications/read' => handleProfileNotificationsRead($pdo, $viewerId),
+    '/profile/notifications/clear' => handleProfileNotificationsClear($pdo, $viewerId),
     '/profile/footer-counts' => handleProfileFooterCounts($pdo, $viewerId),
     default => profileJsonResponse(['success' => false, 'error' => 'Маршрут не найден'], 404),
 };

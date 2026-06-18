@@ -198,7 +198,9 @@ class DropdownCollectionsComponent {
         const addButton = document.createElement('button');
         addButton.type = 'button';
         addButton.className = 'dropdown-collections__collection-item dropdown-collections__collection-item--add';
-        addButton.textContent = '+';
+        addButton.setAttribute('aria-label', 'Редактировать коллекции');
+        addButton.innerHTML = '<span class="dropdown-collections__edit-icon" data-svg-src="/assets/images/icons/S-edit.svg" aria-hidden="true"></span>';
+        App.utils.loadSVG('/assets/images/icons/S-edit.svg', addButton.querySelector('[data-svg-src]'));
         addButton.addEventListener('click', () => {
             if (!this.activePostId) return;
             document.dispatchEvent(new CustomEvent('collection-modal:open', {

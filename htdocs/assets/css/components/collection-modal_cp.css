@@ -61,3 +61,21 @@
 .collection-modal__button--delete:hover{border-color:rgb(125,125,225);color:rgb(125,125,225)}
 .collection-modal--edit .collection-modal__button--delete{display:inline-flex;align-items:center;justify-content:center}
 .collection-modal--edit .collection-modal__button--submit{flex:1 1 calc(50% - 6px)}
+
+.collection-modal__collection-item--add {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.collection-modal__edit-icon,
+.collection-modal__edit-icon svg {
+    width: 16px;
+    height: 16px;
+    display: block;
+}
+
+.collection-modal__edit-icon svg,
+.collection-modal__edit-icon svg * {
+    fill: currentColor;
+}

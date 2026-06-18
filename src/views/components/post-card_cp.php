@@ -10,6 +10,7 @@
     $isBookmarked = !empty($isBookmarked);
     $isOwner = !empty($isOwner);
     $isPostFullActive = !empty($isPostFullActive);
+    $postCollectionsAttr = isset($postCollectionsAttr) ? (string) $postCollectionsAttr : '';
     $postPublishedLabel = isset($postPublishedLabel) && is_string($postPublishedLabel)
         ? trim($postPublishedLabel)
         : '';
@@ -22,6 +23,7 @@
     data-liked="<?php echo $isLiked ? '1' : '0'; ?>"
     data-bookmarked="<?php echo $isBookmarked ? '1' : '0'; ?>"
     data-owner="<?php echo $isOwner ? '1' : '0'; ?>"
+    <?php if ($postCollectionsAttr !== ''): ?>data-profile-collections="<?php echo $postCollectionsAttr; ?>"<?php endif; ?>
     aria-label="Модуль поста"
 >
     <a
