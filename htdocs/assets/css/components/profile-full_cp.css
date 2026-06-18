@@ -439,7 +439,7 @@
 .profile-full__line--collections {
     grid-column: 1 / 8;
     grid-row: 3;
-    margin: 25px 0;
+    margin: 19px 0;
 }
 
 .profile-full__line--collections::before {
@@ -456,14 +456,6 @@
     grid-row: 4;
     height: 40px;
     overflow: hidden;
-    border: 1px solid #bbb;
-    border-radius: 12px;
-    background: #fff;
-    transition: border-color 0.2s ease;
-}
-
-.profile-full__collections-scroll:hover {
-    border-color: rgb(100, 100, 200);
 }
 
 .profile-full__collections-scroll::before,
@@ -485,4 +477,52 @@
 .profile-full__collections-scroll::after {
     right: 0;
     background: linear-gradient(to left, #fff, rgba(255, 255, 255, 0));
+}
+
+.profile-full__collections-scroll-track {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    gap: 12px;
+    height: 40px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+}
+
+.profile-full__collections-scroll-track::-webkit-scrollbar {
+    display: none;
+}
+
+.profile-full__collections-item {
+    flex: 0 0 auto;
+    height: 40px;
+    min-width: 0;
+    padding: 0 16px;
+    border: 0;
+    border-radius: 12px;
+    background: #fff;
+    font-family: 'NS_def', Arial, sans-serif;
+    font-size: 18px;
+    line-height: 1;
+    color: #333;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.profile-full__collections-item.is-active,
+.profile-full__collections-item:hover {
+    color: rgb(100, 100, 200);
+}
+
+.profile-full__collections-item-accent {
+    color: rgb(100, 100, 200);
+}
+
+.profile-post-masonry {
+    margin-top: 8px;
 }

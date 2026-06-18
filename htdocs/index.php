@@ -139,7 +139,11 @@ switch ($path) {
         case '/profile-editing':
         $page = 'profile_pg.php';
         $profileTitleUsername = trim(ltrim((string) ($_GET['username'] ?? ''), '@'));
+        $profileTitleCollection = trim((string) ($_GET['collection'] ?? ''));
         $pageTitle = $profileTitleUsername !== '' ? '@' . $profileTitleUsername : 'Профиль';
+        if ($profileTitleUsername !== '' && $profileTitleCollection !== '') {
+            $pageTitle .= ' / ' . $profileTitleCollection;
+        }
         $PHP = [
             'header_lo.php',
             'footer_lo.php'
@@ -151,6 +155,8 @@ switch ($path) {
             'profile-container_cp.css',
             'dropdown-profile_cp.css',
             'profile-full_cp.css',
+            'post-card_cp.css',
+            'home_pg.css',
             'post-modal_cp.css',
             'warn-modal_cp.css',
             'toast-stack_cp.css',
@@ -166,8 +172,10 @@ switch ($path) {
             'dropdown_search.js',
             'footer_lo.js',
             'post_modal.js',
+            'post_card.js',
             'collection_modal.js',
             'profile_full.js',
+            'masonry_feed.js',
             'adaptive_text.js'
         ];
         break;

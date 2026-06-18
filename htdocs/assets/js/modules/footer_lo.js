@@ -919,6 +919,12 @@ class FooterLayout {
             return;
         }
 
+        if (currentMenu === this.menu) {
+            this.loadIcons();
+            this.renderFooterBadges();
+            return;
+        }
+
         this.unbindHandlers();
         currentMenu.dataset.bound = '0';
         this.menu = currentMenu;

@@ -37,6 +37,7 @@ class ProfileFullComponent {
         this.renderActionLine();
         this.initSvgIcons();
         this.bindActions();
+        this.bindCollectionsFilter();
     }
 
     initSvgIcons(scope = this.root) {
@@ -120,6 +121,82 @@ class ProfileFullComponent {
         this.root.addEventListener('click', this.clickHandler);
     }
 
+
+    bindCollectionsFilter() {
+        const scroll = this.root?.querySelector('[data-profile-collections-scroll]');
+        if (!scroll) return;
+
+        const buttons = Array.from(scroll.querySelectorAll('[data-profile-collection-item]'));
+        if (buttons.length === 0) return;
+
+        buttons.forEach((button) => {
+            button.addEventListener('click', () => {
+                const shouldActivate = !button.classList.contains('is-active');
+                buttons.forEach((item) => this.setCollectionButtonState(item, false));
+                this.setCollectionButtonState(button, shouldActivate);
+                this.applyCollectionFilter();
+                this.syncCollectionUrl();
+            });
+        });
+
+        this.applyCollectionFilter();
+    }
+
+    setCollectionButtonState(button, isActive) {
+        button.classList.toggle('is-active', isActive);
+        button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+    }
+
+    getActiveCollectionButton() {
+        return this.root?.querySelector('[data-profile-collection-item].is-active') || null;
+    }
+
+    applyCollectionFilter() {
+        const activeButton = this.getActiveCollectionButton();
+        const activeCollection = String(activeButton?.dataset.collectionName || '').trim().toLowerCase();
+        const cards = Array.from(document.querySelectorAll('[data-component="masonry-feed"][data-profile-feed="1"] .post-card'));
+
+        cards.forEach((card) => {
+            const collections = this.getCardCollections(card).map((collection) => collection.toLowerCase());
+            card.hidden = !!activeCollection && !collections.includes(activeCollection);
+        });
+
+        document.dispatchEvent(new CustomEvent('post-full:resize'));
+    }
+
+    getCardCollections(card) {
+        try {
+            const rawCollections = JSON.parse(card.dataset.profileCollections || '[]');
+            return Array.isArray(rawCollections)
+                ? rawCollections.map((collection) => String(collection || '').trim()).filter(Boolean)
+                : [];
+        } catch (error) {
+            return [];
+        }
+    }
+
+    syncCollectionUrl() {
+        const username = String(this.actions?.dataset.profileUsername || '').replace(/^@+/, '').trim();
+        const activeButton = this.getActiveCollectionButton();
+        const params = new URLSearchParams();
+        if (username) params.set('username', username);
+
+        let titleSuffix = username ? `@${username}` : 'Профиль';
+        if (activeButton) {
+            const collectionName = String(activeButton.dataset.collectionName || '').trim();
+            if (activeButton.dataset.publications === '1') {
+                params.set('publications', '');
+            } else if (collectionName) {
+                params.set('collection', collectionName);
+                titleSuffix = username ? `@${username} / ${collectionName}` : collectionName;
+            }
+        }
+
+        const query = params.toString().replace(/publications=$/, 'publications');
+        const nextUrl = `/profile${query ? `?${query}` : ''}`;
+        App.history?.replaceUrl?.(nextUrl);
+        document.title = `Grinderest / ${titleSuffix}`;
+    }
 
     openFooterChat() {
         if (!this.actions) return;

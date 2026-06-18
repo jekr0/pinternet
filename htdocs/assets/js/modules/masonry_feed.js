@@ -21,6 +21,7 @@ class MasonryFeedComponent {
         if (!this.container) return;
 
         this.cards = Array.from(this.container.querySelectorAll('.post-card'));
+        this.topOffset = Number(this.container.dataset.topOffset || this.topOffset);
         if (this.cards.length === 0) return;
 
         this.layout();
@@ -73,7 +74,7 @@ class MasonryFeedComponent {
         }
 
         this.cards.forEach((card) => {
-            if (card.classList.contains('post-card--post-full-active')) return;
+            if (card.classList.contains('post-card--post-full-active') || card.hidden) return;
 
             card.style.setProperty('--post-card-width', `${cardWidth}px`);
 

@@ -205,6 +205,8 @@ const App = {
 
             if (pathname === '/profile') {
                 const username = String(parsedUrl.searchParams.get('username') || '').trim().replace(/^@+/, '');
+                const collection = String(parsedUrl.searchParams.get('collection') || '').trim();
+                if (username && collection) return `@${username} / ${collection}`;
                 return username ? `@${username}` : 'Профиль';
             }
 
