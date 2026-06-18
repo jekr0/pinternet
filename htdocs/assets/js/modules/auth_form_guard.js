@@ -26,11 +26,7 @@ class AuthFormGuardComponent {
             backButton.dataset.bound = '1';
             backButton.addEventListener('click', (event) => {
                 event.preventDefault();
-                if (window.history.length > 1) {
-                    window.history.back();
-                    return;
-                }
-                window.location.href = backButton.getAttribute('href') || '/';
+                window.history.back();
             });
         }
         if (toggleButtons.length === 0) return;

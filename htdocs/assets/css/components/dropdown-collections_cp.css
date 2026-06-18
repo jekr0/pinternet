@@ -67,7 +67,7 @@
     padding: 0;
     overflow-y: auto;
     list-style: none;
-    border: 1.5px solid #e0e0e0;
+    border: 1px solid #e0e0e0;
     border-radius: 8px;
     transition: border-color 0.2s ease;
 }

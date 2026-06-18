@@ -7,11 +7,15 @@ class FooterLayout {
         this.isPinned = false;
         this.substate = 'home_state';
         this.stateTransitionTimer = null;
+        this.stateTransitionFrame = null;
         this.collections = [];
+        this.friends = [];
         this.toggleButton = this.menu.querySelector('.footer-menu__toggle');
         this.compressButton = this.menu.querySelector('.footer-menu__compress');
+        this.backButton = this.menu.querySelector('.footer-menu__back');
         this.pinButton = this.menu.querySelector('.footer-menu__pin');
         this.pinIcon = this.pinButton?.querySelector('[data-svg-src]') || null;
+        this.backIcon = this.backButton?.querySelector('[data-svg-src]') || null;
         this.titleNode = this.menu.querySelector('[data-component="footer-menu-title"]');
         this.content = this.menu.querySelector('.footer-menu__content');
         this.authShakeTimer = null;
@@ -44,12 +48,12 @@ class FooterLayout {
             event.stopPropagation();
             this.closeMenu();
         };
+        this.backHandler = (event) => {
+            event.stopPropagation();
+            this.renderState('home_state');
+        };
         this.pinHandler = (event) => {
             event.stopPropagation();
-            if (this.substate !== 'home_state') {
-                this.renderState('home_state');
-                return;
-            }
             this.togglePinned();
         };
         this.contentClickHandler = (event) => {
@@ -66,6 +70,7 @@ class FooterLayout {
 
         this.toggleButton?.addEventListener('click', this.openHandler);
         this.compressButton?.addEventListener('click', this.closeHandler);
+        this.backButton?.addEventListener('click', this.backHandler);
         this.pinButton?.addEventListener('click', this.pinHandler);
         this.content?.addEventListener('click', this.contentClickHandler);
         document.addEventListener('click', this.outsideClickHandler);
@@ -126,6 +131,16 @@ class FooterLayout {
             return;
         }
 
+        if (action === 'collections-create') {
+            document.dispatchEvent(new CustomEvent('collection-modal:open'));
+            return;
+        }
+
+        if (action === 'friend-message') {
+            this.renderState('message_state');
+            return;
+        }
+
         if (button?.dataset.footerCollection) {
             return;
         }
@@ -147,11 +162,18 @@ class FooterLayout {
         }
 
         clearTimeout(this.stateTransitionTimer);
+        cancelAnimationFrame(this.stateTransitionFrame);
+        this.menu.classList.remove('is-substate-transitioning-in');
         this.menu.classList.add('is-substate-transitioning-out');
         this.stateTransitionTimer = setTimeout(() => {
             this.applyState(normalizedState);
             this.menu.classList.remove('is-substate-transitioning-out');
             this.menu.classList.add('is-substate-transitioning-in');
+            void this.menu.offsetWidth;
+            this.stateTransitionFrame = requestAnimationFrame(() => {
+                this.menu?.classList.remove('is-substate-transitioning-in');
+                this.stateTransitionFrame = null;
+            });
             this.stateTransitionTimer = setTimeout(() => {
                 this.menu?.classList.remove('is-substate-transitioning-in');
                 this.stateTransitionTimer = null;
@@ -160,7 +182,7 @@ class FooterLayout {
     }
 
     getKnownState(state) {
-        return ['home_state', 'messages_state', 'notifications_state', 'friends_state', 'collections_state'].includes(state)
+        return ['home_state', 'message_state', 'messages_state', 'notifications_state', 'friends_state', 'collections_state'].includes(state)
             ? state
             : 'home_state';
     }
@@ -170,17 +192,24 @@ class FooterLayout {
         this.menu.dataset.substate = state;
         this.titleNode.textContent = this.getStateTitle(state);
         this.content.innerHTML = this.getStateContent(state);
+        this.updateBackControlForState(state);
         this.updatePinControlForState(state);
         this.loadIcons();
 
         if (state === 'collections_state') {
             void this.loadCollectionsState();
         }
+
+        if (state === 'friends_state') {
+            this.bindFriendsSearch();
+            void this.loadFriendsState();
+        }
     }
 
     getStateTitle(state) {
         return {
             home_state: 'Меню',
+            message_state: 'Сообщения',
             messages_state: 'Сообщения',
             notifications_state: 'Уведомления',
             friends_state: 'Друзья',
@@ -206,7 +235,80 @@ class FooterLayout {
             return '<ul class="footer-menu__collections-list" data-component="footer-menu-collections-list"><li class="footer-menu__collections-placeholder">Загрузка...</li></ul>';
         }
 
+        if (state === 'friends_state') {
+            return `
+                <label class="footer-menu__friends-search" aria-label="Поиск друзей">
+                    <input class="footer-menu__friends-search-input" type="text" autocomplete="off" placeholder=" " data-component="footer-menu-friends-search">
+                    <span class="footer-menu__friends-search-placeholder" aria-hidden="true">
+                        <span class="footer-menu__friends-search-icon"></span>
+                        <span>Поиск</span>
+                    </span>
+                </label>
+                <ul class="footer-menu__friends-list" data-component="footer-menu-friends-list"><li class="footer-menu__friends-placeholder">Загрузка...</li></ul>
+            `;
+        }
+
         return '<div class="footer-menu__state-placeholder">Скоро здесь появится содержимое</div>';
+    }
+
+
+    bindFriendsSearch() {
+        const searchInput = this.content?.querySelector('[data-component="footer-menu-friends-search"]');
+        if (!searchInput) return;
+
+        searchInput.addEventListener('input', () => this.renderFriendsList());
+    }
+
+    async loadFriendsState() {
+        const list = this.content?.querySelector('[data-component="footer-menu-friends-list"]');
+        if (!list) return;
+
+        try {
+            const response = await fetch('/profile/friends', {
+                method: 'POST',
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            const payload = await response.json();
+            if (!response.ok || !payload.success || !Array.isArray(payload.friends)) {
+                throw new Error(payload?.error || 'Не удалось загрузить друзей');
+            }
+            this.friends = payload.friends
+                .map((friend) => ({
+                    id: Number(friend?.id || 0),
+                    username: String(friend?.username || '').trim()
+                }))
+                .filter((friend) => friend.id > 0 && friend.username !== '')
+                .sort((left, right) => left.username.localeCompare(right.username, undefined, { numeric: true, sensitivity: 'base' }));
+            this.renderFriendsList();
+        } catch (error) {
+            console.warn('Unable to load footer friends', error);
+            list.innerHTML = '<li class="footer-menu__friends-placeholder">Не удалось загрузить друзей</li>';
+        }
+    }
+
+    renderFriendsList() {
+        const list = this.content?.querySelector('[data-component="footer-menu-friends-list"]');
+        if (!list) return;
+
+        const query = String(this.content?.querySelector('[data-component="footer-menu-friends-search"]')?.value || '').trim().toLowerCase();
+        const filteredFriends = this.friends.filter((friend) => friend.username.toLowerCase().includes(query));
+
+        if (filteredFriends.length === 0) {
+            list.innerHTML = '<li class="footer-menu__friends-placeholder">Ничего не найдено</li>';
+            return;
+        }
+
+        list.innerHTML = filteredFriends.map((friend) => `
+            <li>
+                <div class="footer-menu__friend-item" data-footer-friend-id="${friend.id}">
+                    <span class="footer-menu__friend-name">@${this.escapeHtml(friend.username)}</span>
+                    <button class="footer-menu__friend-message" type="button" data-footer-menu-action="friend-message" aria-label="Написать @${this.escapeHtml(friend.username)}">
+                        <span class="footer-menu__friend-message-icon" data-svg-src="/assets/images/icons/message.svg" aria-hidden="true"></span>
+                    </button>
+                </div>
+            </li>
+        `).join('');
+        this.loadIcons();
     }
 
     async loadCollectionsState() {
@@ -240,13 +342,16 @@ class FooterLayout {
             normalizedCollections.push('Профиль');
         }
 
-        list.innerHTML = normalizedCollections.map((collection) => `
+        list.innerHTML = `${normalizedCollections.map((collection) => `
             <li>
                 <button class="footer-menu__collection-item" type="button" data-footer-collection="${this.escapeHtml(collection)}">
                     ${this.escapeHtml(collection)}
                 </button>
             </li>
-        `).join('');
+        `).join('')}
+            <li>
+                <button class="footer-menu__collection-item footer-menu__collection-item--add" type="button" data-footer-menu-action="collections-create" aria-label="Создать коллекцию">+</button>
+            </li>`;
     }
 
     isProfileCollectionName(collectionName) {
@@ -254,15 +359,24 @@ class FooterLayout {
         return normalized === 'profile' || normalized === 'профиль';
     }
 
+    updateBackControlForState(state) {
+        if (!this.backButton || !this.backIcon) return;
+
+        const isHomeState = state === 'home_state';
+        this.backButton.classList.toggle('is-hidden', isHomeState);
+        this.backButton.setAttribute('aria-hidden', isHomeState ? 'true' : 'false');
+        this.loadIcon(this.backIcon);
+    }
+
     updatePinControlForState(state) {
         if (!this.pinButton || !this.pinIcon) return;
 
         const isHomeState = state === 'home_state';
-        this.pinButton.classList.toggle('footer-menu__pin--back', !isHomeState);
+        this.pinButton.classList.toggle('is-hidden', !isHomeState);
         this.pinButton.classList.toggle('is-active', isHomeState && this.isPinned);
-        this.pinButton.setAttribute('aria-label', isHomeState ? (this.isPinned ? 'Открепить меню' : 'Закрепить меню') : 'Назад');
-        this.pinButton.setAttribute('aria-pressed', isHomeState ? (this.isPinned ? 'true' : 'false') : 'false');
-        this.pinIcon.setAttribute('data-svg-src', isHomeState ? (this.isPinned ? '/assets/images/icons/pin-fill.svg' : '/assets/images/icons/pin.svg') : '/assets/images/icons/L-arrow.svg');
+        this.pinButton.setAttribute('aria-label', this.isPinned ? 'Открепить меню' : 'Закрепить меню');
+        this.pinButton.setAttribute('aria-pressed', this.isPinned ? 'true' : 'false');
+        this.pinIcon.setAttribute('data-svg-src', this.isPinned ? '/assets/images/icons/pin-fill.svg' : '/assets/images/icons/pin.svg');
         this.loadIcon(this.pinIcon);
     }
 
@@ -298,6 +412,7 @@ class FooterLayout {
     unbindHandlers() {
         this.toggleButton?.removeEventListener('click', this.openHandler);
         this.compressButton?.removeEventListener('click', this.closeHandler);
+        this.backButton?.removeEventListener('click', this.backHandler);
         this.pinButton?.removeEventListener('click', this.pinHandler);
         this.content?.removeEventListener('click', this.contentClickHandler);
         document.removeEventListener('click', this.outsideClickHandler);
