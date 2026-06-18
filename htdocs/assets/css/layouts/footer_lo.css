@@ -105,7 +105,7 @@
     text-align: center;
     font-family: 'SF_def', Arial, sans-serif;
     font-size: 16px;
-    line-height: 1;
+    line-height: 1.2;
     color: #555;
     transition: opacity 0.2s ease, transform 0.2s ease;
     user-select: none;
@@ -473,8 +473,8 @@
 }
 
 .footer-menu__friends-search-icon {
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
     background: currentColor;
     mask: url('/assets/images/icons/L-search.svg') center / contain no-repeat;
     -webkit-mask: url('/assets/images/icons/L-search.svg') center / contain no-repeat;
@@ -545,8 +545,8 @@
 .footer-menu__friend-message-icon,
 .footer-menu__friend-message-icon svg {
     display: block;
-    width: 20px;
-    height: 20px;
+    width: 16px;
+    height: 16px;
 }
 
 .footer-menu__friend-message-icon svg,
