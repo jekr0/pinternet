@@ -6,7 +6,8 @@
 
 .profile-full {
     position: relative;
-    height: 428px;
+    min-height: 428px;
+    height: auto;
     margin: 104px 44px 0;
     padding: 52px 12px 0;
     background: #fff;

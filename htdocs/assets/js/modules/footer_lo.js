@@ -31,6 +31,7 @@ class FooterLayout {
         this.titleNode = this.menu.querySelector('[data-component="footer-menu-title"]');
         this.content = this.menu.querySelector('.footer-menu__content');
         this.authShakeTimer = null;
+        this.collectionsChangedHandler = null;
 
         this.renderState('home_state', { animate: false });
         this.loadIcons();
@@ -91,6 +92,10 @@ class FooterLayout {
         this.backButton?.addEventListener('click', this.backHandler);
         this.pinButton?.addEventListener('click', this.pinHandler);
         this.content?.addEventListener('click', this.contentClickHandler);
+        this.collectionsChangedHandler = () => {
+            if (this.substate === 'collections_state') this.loadCollectionsState();
+        };
+        document.addEventListener('collections:changed', this.collectionsChangedHandler);
         document.addEventListener('click', this.outsideClickHandler);
     }
 
@@ -447,6 +452,10 @@ class FooterLayout {
             this.chatMessages[friend.id] = [];
         }
         this.renderState('chat_state');
+        if (this.menu) {
+            this.menu.dataset.state = 'opened';
+            this.toggleButton?.setAttribute('aria-expanded', 'true');
+        }
         void this.loadChatMessages();
     }
 
@@ -1000,6 +1009,7 @@ class FooterLayout {
         this.pinButton?.removeEventListener('click', this.pinHandler);
         this.content?.removeEventListener('click', this.contentClickHandler);
         document.removeEventListener('click', this.outsideClickHandler);
+        if (this.collectionsChangedHandler) document.removeEventListener('collections:changed', this.collectionsChangedHandler);
         clearTimeout(this.stateTransitionTimer);
         clearTimeout(this.authShakeTimer);
         clearInterval(this.countsPollTimer);

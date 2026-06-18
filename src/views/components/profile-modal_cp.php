@@ -37,8 +37,7 @@ $profileModalAvatarSrc = $profileModalAvatar !== '' ? '/' . ltrim($profileModalA
         </div>
         <div class="profile-modal__meta-column">
             <h2 class="profile-modal__title" id="profile-modal-title">Изменение профиля</h2>
-            <p class="profile-modal__alert profile-modal__alert--hidden" data-component="profile-modal-alert"></p>
-            <input class="profile-modal__input profile-modal__input--nickname ui-input" type="text" maxlength="12" placeholder="Никнейм" data-component="profile-nickname" autocomplete="off">
+            <input class="profile-modal__input profile-modal__input--nickname ui-input" type="text" maxlength="12" placeholder="@nickname" data-component="profile-nickname" autocomplete="off">
             <div class="profile-modal__about-wrap">
                 <textarea class="profile-modal__input profile-modal__input--about ui-textarea" maxlength="256" placeholder="Описание пользователя" data-component="profile-about"></textarea>
                 <span class="profile-modal__about-counter" data-component="profile-about-counter">0/256</span>
