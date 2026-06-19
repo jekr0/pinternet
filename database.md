@@ -1,5 +1,5 @@
 -- =====================================================================
--- GRINDEREST — финальная схема (с учётом правок)
+-- GRINDEREST
 -- =====================================================================
 
 -- ---------------------------------------------------------------------
@@ -307,19 +307,6 @@ CREATE TABLE Global_Search (
 
     KEY idx_global_search_recent (searched_at),
     KEY idx_global_search_query (query_text)
-);
-
--- ---------------------------------------------------------------------
--- Medals
--- ---------------------------------------------------------------------
-
-CREATE TABLE Medals (
-    id          INT AUTO_INCREMENT PRIMARY KEY,
-    user_id     INT NOT NULL,
-    medal       NVARCHAR(64) NOT NULL,          -- название или код медали
-    awarded_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- опционально, для полноты
-
-    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE
 );
 
 CREATE TABLE Notifications (
