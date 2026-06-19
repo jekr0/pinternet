@@ -34,6 +34,7 @@ if ($profileFullViewerId > 0 || $profileFullRequestedUsername !== '') {
                    u.avatar,
                    u.bio,
                    u.total_likes,
+                   u.level,
                    (SELECT COUNT(*) FROM User_Follows f WHERE f.follower_id = u.id) AS subscriptions_count,
                    (SELECT COUNT(*) FROM User_Follows f WHERE f.following_id = u.id) AS subscribers_count
             FROM Users u
@@ -48,6 +49,7 @@ if ($profileFullViewerId > 0 || $profileFullRequestedUsername !== '') {
                    u.avatar,
                    u.bio,
                    u.total_likes,
+                   u.level,
                    (SELECT COUNT(*) FROM User_Follows f WHERE f.follower_id = u.id) AS subscriptions_count,
                    (SELECT COUNT(*) FROM User_Follows f WHERE f.following_id = u.id) AS subscribers_count
             FROM Users u
@@ -65,6 +67,7 @@ if ($profileFullViewerId > 0 || $profileFullRequestedUsername !== '') {
     $profileFullSubscriptionsCount = (int) ($profileFullUser['subscriptions_count'] ?? 0);
     $profileFullSubscribersCount = (int) ($profileFullUser['subscribers_count'] ?? 0);
     $profileFullTotalLikes = (int) ($profileFullUser['total_likes'] ?? 0);
+    $profileFullLevel = (int) ($profileFullUser['level'] ?? 1);
     $profileFullHasAvatar = $profileFullAvatarSrc !== '';
 
     if ($profileFullViewerId > 0 && $profileFullUserId > 0) {
