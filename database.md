@@ -85,6 +85,19 @@ CREATE TABLE User_Reports (
 );
 
 -- ---------------------------------------------------------------------
+-- Medals
+-- ---------------------------------------------------------------------
+
+CREATE TABLE Medals (
+    id          INT AUTO_INCREMENT PRIMARY KEY,
+    user_id     INT NOT NULL,
+    medal       NVARCHAR(64) NOT NULL,
+    awarded_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE
+);
+
+-- ---------------------------------------------------------------------
 -- Hashtags
 -- ---------------------------------------------------------------------
 
