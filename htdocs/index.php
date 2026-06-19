@@ -138,7 +138,7 @@ switch ($path) {
         break;
 
         case '/profile':
-        case '/profile-editing':
+        case '/profile/edit':
         $page = 'profile_pg.php';
         $profileTitleUsername = trim(ltrim((string) ($_GET['username'] ?? ''), '@'));
         $profileTitleCollection = trim((string) ($_GET['collection'] ?? ''));
@@ -166,6 +166,7 @@ switch ($path) {
             'profile-modal_cp.css',
             'warn-modal_cp.css',
             'toast-stack_cp.css',
+            'home_pg.css',
             'footer_lo.css'
         ];
         $JS  = [

@@ -1,5 +1,4 @@
-<?php
-    // ЗАГЛУШКА
-?>
-<h1>404</h1>
-<p>Страница не найдена (и в разработке)</p>
+<section class="not-found-page" aria-label="Страница не найдена">
+    <div class="not-found-page__title">404</div>
+    <a class="not-found-page__link" href="/">Вернуться на главную</a>
+</section>

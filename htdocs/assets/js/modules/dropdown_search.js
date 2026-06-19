@@ -28,8 +28,7 @@ class DropdownSearchComponent {
             const query = this.normalizeQuery(this.input.value);
             if (!query) return;
             await this.saveQuery(query);
-            await this.loadHistory();
-            this.open();
+            this.goToSearch(query);
         });
 
         this.field.addEventListener('focusout', (event) => {
@@ -69,6 +68,15 @@ class DropdownSearchComponent {
             this.history = [];
             this.render();
         }
+    }
+
+    goToSearch(query) {
+        const nextUrl = `/?q=${encodeURIComponent(query)}`;
+        if (App.nav?.navigate) {
+            App.nav.navigate(nextUrl, { pushUrl: true });
+            return;
+        }
+        window.location.assign(nextUrl);
     }
 
     async saveQuery(query) {
@@ -113,6 +121,7 @@ class DropdownSearchComponent {
                 this.input.value = queryText;
                 this.input.focus();
                 await this.saveQuery(queryText);
+                this.goToSearch(queryText);
             });
 
             this.scroll.appendChild(button);

@@ -20,6 +20,7 @@ $profileFullNotificationsEnabled = false;
 $profileFullBlocked = false;
 $profileFullStatus = '';
 $profileFullCollections = [];
+$profileFullLevel = 1;
 
 $profileFullRequestedUsername = trim(ltrim((string) ($_GET['username'] ?? ''), '@'));
 
@@ -192,8 +193,14 @@ $profileFullZoomSrc = $profileFullHasAvatar ? $profileFullAvatarSrc : '/assets/i
             data-profile-blocked="<?= $profileFullBlocked ? 'true' : 'false' ?>"
             data-viewer-authorized="<?= $profileFullViewerId > 0 ? 'true' : 'false' ?>"
         ></div>
-        <div class="profile-full__progress" aria-hidden="true"></div>
-        <div class="profile-full__achievements" aria-hidden="true"></div>
+        <div class="profile-full__progress" aria-hidden="true">
+            <span class="profile-full__progress-level"><?= $profileFullLevel ?> уровень</span>
+            <span class="profile-full__progress-medal" data-svg-src="/assets/images/medals/beta-medal.svg"></span>
+        </div>
+        <div class="profile-full__achievements" aria-hidden="true">
+            <span class="profile-full__achievements-icon" data-svg-src="/assets/images/icons/lock.svg"></span>
+            <span class="profile-full__achievements-text">В разработке</span>
+        </div>
         <div class="profile-full__line profile-full__line--collections" aria-hidden="true"></div>
         <div class="profile-full__collections-scroll" aria-label="Коллекции профиля" data-profile-collections-scroll data-profile-username="<?= htmlspecialchars($profileFullUsername, ENT_QUOTES, 'UTF-8') ?>">
             <div class="profile-full__collections-scroll-track">

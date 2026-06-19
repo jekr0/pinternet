@@ -12,6 +12,8 @@
     $viewerProfileUrl = '/profile';
     $posts = [];
     $selectedPostId = isset($selectedPostId) ? (int) $selectedPostId : 0;
+    $searchQuery = trim((string) ($_GET['q'] ?? ''));
+    $isSearchPage = $searchQuery !== '';
 
     if ($viewerId > 0) {
         $stmt = $pdo->prepare('
@@ -53,6 +55,63 @@
     }
 
     $posts = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+
+    if ($isSearchPage) {
+        $searchPrefix = mb_substr($searchQuery, 0, 1);
+        $searchTerm = trim(mb_substr($searchQuery, 1));
+        $matchedPostIds = [];
+
+        if ($searchPrefix === '#' && $searchTerm !== '') {
+            $tagStmt = $pdo->prepare('SELECT id, LOWER(name) AS name FROM Hashtags WHERE LOWER(name) LIKE LOWER(?)');
+            $tagStmt->execute([$searchTerm . '%']);
+            $tagRows = $tagStmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+            $tagIds = array_map(static fn(array $row): int => (int) ($row['id'] ?? 0), $tagRows);
+
+            if (!empty($tagIds)) {
+                $tagPlaceholders = implode(',', array_fill(0, count($tagIds), '?'));
+                $postIdsStmt = $pdo->prepare("SELECT DISTINCT post_id FROM Post_Hashtags WHERE hashtag_id IN ($tagPlaceholders)");
+                $postIdsStmt->execute($tagIds);
+                foreach ($postIdsStmt->fetchAll(PDO::FETCH_ASSOC) ?: [] as $postIdRow) {
+                    $matchedPostIds[(int) ($postIdRow['post_id'] ?? 0)] = true;
+                }
+
+                $relatedStmt = $pdo->prepare("
+                    SELECT DISTINCT related_ph.post_id
+                    FROM Post_Hashtags base_ph
+                    INNER JOIN Post_Hashtags related_ph ON related_ph.hashtag_id = base_ph.hashtag_id
+                    WHERE base_ph.post_id IN (
+                        SELECT DISTINCT post_id FROM Post_Hashtags WHERE hashtag_id IN ($tagPlaceholders)
+                    )
+                    LIMIT 200
+                ");
+                $relatedStmt->execute($tagIds);
+                foreach ($relatedStmt->fetchAll(PDO::FETCH_ASSOC) ?: [] as $postIdRow) {
+                    $matchedPostIds[(int) ($postIdRow['post_id'] ?? 0)] = true;
+                }
+            }
+        } elseif ($searchPrefix === '@' && $searchTerm !== '') {
+            $userStmt = $pdo->prepare('SELECT id FROM Users WHERE LOWER(username) = LOWER(?) AND is_deleted = 0 LIMIT 1');
+            $userStmt->execute([$searchTerm]);
+            $searchedUserId = (int) ($userStmt->fetchColumn() ?: 0);
+            if ($searchedUserId > 0) {
+                foreach ($posts as $postRow) {
+                    if ((string) ($postRow['username'] ?? '') === '') continue;
+                    if (mb_strtolower((string) ($postRow['username'] ?? '')) === mb_strtolower($searchTerm)) {
+                        $matchedPostIds[(int) ($postRow['id'] ?? 0)] = true;
+                    }
+                }
+            }
+        } else {
+            $normalizedSearch = mb_strtolower($searchQuery);
+            foreach ($posts as $postRow) {
+                if (mb_strpos(mb_strtolower((string) ($postRow['description'] ?? '')), $normalizedSearch) !== false) {
+                    $matchedPostIds[(int) ($postRow['id'] ?? 0)] = true;
+                }
+            }
+        }
+
+        $posts = array_values(array_filter($posts, static fn(array $postRow): bool => isset($matchedPostIds[(int) ($postRow['id'] ?? 0)])));
+    }
 
     $normalizePublicPath = static function (string $path): string {
         if ($path === '') {
@@ -482,6 +541,13 @@
             $selectedHasComments = $selectedPostCommentsCount > 0;
             include '../src/views/components/post-full_cp.php';
         ?>
+    <?php endif; ?>
+
+    <?php if ($isSearchPage && empty($posts)): ?>
+        <div class="home-search-empty" aria-live="polite">
+            <div class="home-search-empty__title">По вашему запросу ничего не нашлось</div>
+            <a class="home-search-empty__link" href="/">Вернуться на главную</a>
+        </div>
     <?php endif; ?>
 
     <?php foreach ($posts as $row): ?>

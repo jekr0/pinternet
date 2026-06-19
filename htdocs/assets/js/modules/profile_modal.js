@@ -16,6 +16,8 @@ class ProfileModalComponent {
         this.openHandler = null;
         this.closeBlockedTimer = null;
         this.objectUrl = null;
+        this.lastNonModalUrl = App.history?.isModalUrl?.(window.location.href) ? '/' : window.location.pathname + window.location.search;
+        this.currentModalUrl = null;
     }
 
     init() {
@@ -33,7 +35,7 @@ class ProfileModalComponent {
         this.saveButton = this.root.querySelector('[data-component="profile-modal-save"]');
         this.cancelButton = this.root.querySelector('[data-component="profile-modal-cancel"]');
 
-        this.openHandler = () => this.open();
+        this.openHandler = (event) => this.open(event?.detail || {});
         document.addEventListener('profile-modal:open', this.openHandler);
 
         this.dropzone?.addEventListener('click', () => this.fileInput?.click());
@@ -63,14 +65,50 @@ class ProfileModalComponent {
                 this.blockOverlayClose();
                 return;
             }
-            this.close();
+            this.requestClose();
         });
 
         App.modalCtrl?.register('profile-modal', { show: () => this.showOnly(), hide: () => this.hideOnly() });
         App.utils.loadSVG('/assets/images/icons/upload.svg', this.root.querySelector('[data-svg-src]'));
     }
 
-    open() {
+    getModalUrl() {
+        return this.currentModalUrl;
+    }
+
+    setModalUrl(nextUrl, options = {}) {
+        if (!nextUrl) return;
+        const { fromHistory = false } = options;
+        const currentUrl = window.location.pathname + window.location.search;
+        const isCurrentModalUrl = App.history?.isModalUrl?.(currentUrl);
+
+        this.currentModalUrl = nextUrl;
+
+        if (!isCurrentModalUrl) {
+            this.lastNonModalUrl = currentUrl;
+        }
+
+        if (fromHistory || currentUrl === nextUrl) return;
+        if (App.history?.pushUrl) {
+            App.history.pushUrl(nextUrl);
+        } else {
+            window.history.pushState({}, '', nextUrl);
+        }
+    }
+
+    restoreNonModalUrl() {
+        const targetUrl = this.lastNonModalUrl || '/';
+        const currentUrl = window.location.pathname + window.location.search;
+        if (currentUrl === targetUrl) return;
+        if (App.history?.replaceUrl) {
+            App.history.replaceUrl(targetUrl);
+        } else {
+            window.history.replaceState({}, '', targetUrl);
+        }
+    }
+
+    open(options = {}) {
+        this.setModalUrl('/profile/edit', options);
         this.selectedFile = null;
         if (this.fileInput) this.fileInput.value = '';
         if (this.nicknameInput) {
@@ -96,7 +134,13 @@ class ProfileModalComponent {
         this.root.setAttribute('aria-hidden', 'true');
     }
 
-    close() {
+    close(options = {}) {
+        const { skipHistorySync = false } = options;
+        if (!this.root || this.root.classList.contains('profile-modal--hidden')) return;
+        if (!skipHistorySync) {
+            this.restoreNonModalUrl();
+        }
+        this.currentModalUrl = null;
         App.modalCtrl ? App.modalCtrl.close('profile-modal') : this.hideOnly();
     }
 

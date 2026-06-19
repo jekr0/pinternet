@@ -223,6 +223,7 @@ const App = {
                 '/': 'Главная',
                 '/post/create': 'Создание поста',
                 '/collections': 'Коллекции',
+                '/profile/edit': 'Редактирование профиля',
                 '/auth/login': 'Вход',
                 '/auth/register': 'Регистрация',
                 '/auth/registration': 'Регистрация'
@@ -270,6 +271,7 @@ const App = {
             const parsedUrl = this.getUrl(url);
             if (parsedUrl.pathname === '/post/create' || this.getPostEditIdFromUrl(parsedUrl.href) > 0) return 'post-modal';
             if (parsedUrl.pathname === '/collections') return 'collection-modal';
+            if (parsedUrl.pathname === '/profile/edit') return 'profile-modal';
             return null;
         },
         getModalKeyFromPath: function (pathname = window.location.pathname) {
@@ -318,7 +320,7 @@ const App = {
             '/post/create',
             '/collections',
             '/profile',
-            '/profile-editing'
+            '/profile/edit'
         ]),
         getInternalUrl: function (url) {
             try {
@@ -464,13 +466,16 @@ window.addEventListener('popstate', () => {
     const collectionModalInstance = App.components['collection_modal.js'];
     const isPostModalOpen = !!(postModalInstance?.modal && !postModalInstance.modal.classList.contains('post-modal--hidden'));
     const isCollectionModalOpen = !!(collectionModalInstance?.root && !collectionModalInstance.root.classList.contains('collection-modal--hidden'));
+    const profileModalInstance = App.components['profile_modal.js'];
+    const isProfileModalOpen = !!(profileModalInstance?.root && !profileModalInstance.root.classList.contains('profile-modal--hidden'));
     const activeModalUrl = isPostModalOpen
         ? postModalInstance?.getModalUrl?.()
-        : (isCollectionModalOpen ? collectionModalInstance?.getModalUrl?.() : null);
+        : (isCollectionModalOpen ? collectionModalInstance?.getModalUrl?.() : (isProfileModalOpen ? profileModalInstance?.getModalUrl?.() : null));
     const isPostDirty = !!(isPostModalOpen && typeof postModalInstance.hasUnsavedChanges === 'function' && postModalInstance.hasUnsavedChanges());
     const isCollectionDirty = !!(isCollectionModalOpen && typeof collectionModalInstance.hasUnsavedChanges === 'function' && collectionModalInstance.hasUnsavedChanges());
+    const isProfileDirty = !!(isProfileModalOpen && typeof profileModalInstance.hasUnsavedChanges === 'function' && profileModalInstance.hasUnsavedChanges());
 
-    if ((isPostDirty || isCollectionDirty) && activeModalUrl) {
+    if ((isPostDirty || isCollectionDirty || isProfileDirty) && activeModalUrl) {
         App.history.pushUrl(activeModalUrl);
 
         if (isDirtyHistoryPromptOpen || App.overlay?.get?.('warn-modal')) {
@@ -491,6 +496,9 @@ window.addEventListener('popstate', () => {
                 if (isCollectionModalOpen) {
                     collectionModalInstance?.close({ skipHistorySync: true });
                 }
+                if (isProfileModalOpen) {
+                    profileModalInstance?.close({ skipHistorySync: true });
+                }
                 App.history?.markNextPopAsModalOnly?.();
                 window.history.back();
             }
@@ -507,9 +515,9 @@ window.addEventListener('popstate', () => {
         return;
     }
 
-    const hasModalComponents = !!(postModalInstance?.modal || collectionModalInstance?.root);
+    const hasModalComponents = !!(postModalInstance?.modal || collectionModalInstance?.root || profileModalInstance?.root);
     const isModalRoute = App.history?.isModalPath?.();
-    if (hasModalComponents && (isModalRoute || isPostModalOpen || isCollectionModalOpen)) {
+    if (hasModalComponents && (isModalRoute || isPostModalOpen || isCollectionModalOpen || isProfileModalOpen)) {
         openUrlDrivenModalState();
         return;
     }
@@ -534,7 +542,7 @@ function openUrlDrivenModalState() {
     const isPostCreate = pathname === '/post/create';
     const isPostEdit = postEditId > 0;
     const isCollectionsEditing = pathname === '/collections';
-    const isProfileEditing = pathname === '/profile-editing';
+    const isProfileEditing = pathname === '/profile/edit';
 
     if ((isPostCreate || isPostEdit) && collectionModalInstance?.root && !collectionModalInstance.root.classList.contains('collection-modal--hidden')) {
         collectionModalInstance.close({ skipHistorySync: true });
@@ -553,7 +561,7 @@ function openUrlDrivenModalState() {
     }
 
     if (!isProfileEditing && profileModalInstance?.root && !profileModalInstance.root.classList.contains('profile-modal--hidden')) {
-        profileModalInstance.close();
+        profileModalInstance.close({ skipHistorySync: true });
     }
 
     if (!isPostCreate && !isPostEdit && !isCollectionsEditing && !isProfileEditing) {
