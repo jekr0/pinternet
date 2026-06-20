@@ -18,6 +18,8 @@ if (!$selectedPost) {
     data-viewer-avatar-src="<?php echo htmlspecialchars($viewerAvatar, ENT_QUOTES, 'UTF-8'); ?>"
     data-viewer-profile-url="<?php echo htmlspecialchars($viewerProfileUrl, ENT_QUOTES, 'UTF-8'); ?>"
     data-viewer-has-avatar="<?php echo $viewerHasAvatar ? '1' : '0'; ?>"
+    data-viewer-role="<?php echo htmlspecialchars((string) ($_SESSION['role'] ?? 'user'), ENT_QUOTES, 'UTF-8'); ?>"
+    data-viewer-timeout="<?php $pfTimeout = (string) ($_SESSION['timeout_until'] ?? ''); echo ($pfTimeout !== '' && strtotime($pfTimeout) !== false && strtotime($pfTimeout) > time()) ? '1' : '0'; ?>"
     data-post-image-src="<?php echo htmlspecialchars($selectedImagePath, ENT_QUOTES, 'UTF-8'); ?>"
     aria-hidden="false"
 >
@@ -36,8 +38,8 @@ if (!$selectedPost) {
         </button>
 
         <div class="post-full__actions" aria-label="Действия с изображением">
-            <button class="post-full__action-button" type="button" data-action="<?php echo $selectedIsOwner ? 'edit' : 'warning'; ?>" aria-label="<?php echo $selectedIsOwner ? 'Редактировать пост' : 'Пожаловаться'; ?>">
-                <span class="post-full__action-icon" data-svg-src="<?php echo $selectedIsOwner ? '/assets/images/icons/L-edit.svg' : '/assets/images/icons/L-flag.svg'; ?>" aria-hidden="true"></span>
+            <button class="post-full__action-button" type="button" data-action="<?php echo $selectedIsOwner ? 'edit' : (in_array(($_SESSION['role'] ?? 'user'), ['moderator', 'admin'], true) ? 'moderate-post' : 'warning'); ?>" aria-label="<?php echo $selectedIsOwner ? 'Редактировать пост' : (in_array(($_SESSION['role'] ?? 'user'), ['moderator', 'admin'], true) ? 'Удалить пост' : 'Пожаловаться'); ?>">
+                <span class="post-full__action-icon" data-svg-src="<?php echo $selectedIsOwner ? '/assets/images/icons/L-edit.svg' : (in_array(($_SESSION['role'] ?? 'user'), ['moderator', 'admin'], true) ? '/assets/images/icons/L-warning.svg' : '/assets/images/icons/L-flag.svg'); ?>" aria-hidden="true"></span>
             </button>
             <button class="post-full__action-button" type="button" data-action="maximize" aria-label="Развернуть">
                 <span class="post-full__action-icon" data-svg-src="/assets/images/icons/maximize.svg" aria-hidden="true"></span>
@@ -113,7 +115,7 @@ if (!$selectedPost) {
     <?php if (!empty($selectedPostHashtags)): ?>
         <div class="post-full__hashtags" aria-label="Хештеги поста">
             <?php foreach ($selectedPostHashtags as $postHashtag): ?>
-                <span class="post-full__tag-item"><span class="post-full__tag-label">#<?php echo htmlspecialchars($postHashtag, ENT_QUOTES, 'UTF-8'); ?></span></span>
+                <button class="post-full__tag-item" type="button" data-action="tag-search" data-tag="<?php echo htmlspecialchars($postHashtag, ENT_QUOTES, 'UTF-8'); ?>"><span class="post-full__tag-label">#<?php echo htmlspecialchars($postHashtag, ENT_QUOTES, 'UTF-8'); ?></span></button>
             <?php endforeach; ?>
         </div>
     <?php endif; ?>
@@ -194,8 +196,8 @@ if (!$selectedPost) {
                                     <button class="post-full__comment-action-button post-full__comment-action-button--reply" type="button" data-action="comment-reply" aria-label="Ответить на комментарий">
                                         Ответить
                                     </button>
-                                    <button class="post-full__comment-action-button<?php echo $commentIsOwner ? ' post-full__comment-action-button--edit' : ''; ?>" type="button" data-action="<?php echo $commentIsOwner ? 'comment-edit' : 'comment-report'; ?>" aria-label="<?php echo $commentIsOwner ? 'Редактировать комментарий' : 'Пожаловаться на комментарий'; ?>">
-                                        <span class="post-full__comment-action-icon" data-svg-src="<?php echo $commentIsOwner ? '/assets/images/icons/S-edit.svg' : '/assets/images/icons/S-flag.svg'; ?>" aria-hidden="true"></span>
+                                    <button class="post-full__comment-action-button<?php echo $commentIsOwner ? ' post-full__comment-action-button--edit' : ''; ?>" type="button" data-action="<?php echo $commentIsOwner ? 'comment-edit' : (in_array(($_SESSION['role'] ?? 'user'), ['moderator', 'admin'], true) ? 'comment-moderate' : 'comment-report'); ?>" aria-label="<?php echo $commentIsOwner ? 'Редактировать комментарий' : (in_array(($_SESSION['role'] ?? 'user'), ['moderator', 'admin'], true) ? 'Удалить комментарий' : 'Пожаловаться на комментарий'); ?>">
+                                        <span class="post-full__comment-action-icon" data-svg-src="<?php echo $commentIsOwner ? '/assets/images/icons/S-edit.svg' : (in_array(($_SESSION['role'] ?? 'user'), ['moderator', 'admin'], true) ? '/assets/images/icons/S-warning.svg' : '/assets/images/icons/S-flag.svg'); ?>" aria-hidden="true"></span>
                                     </button>
                                     <?php if ($commentIsOwner): ?>
                                         <button class="post-full__comment-action-button post-full__comment-action-button--delete" type="button" data-action="comment-delete" aria-label="Удалить комментарий">

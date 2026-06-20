@@ -241,6 +241,7 @@ switch ($path) {
         case '/profile/follow':
         case '/profile/unfollow':
         case '/profile/report':
+        case '/profile/moderate':
         case '/profile/notifications':
         case '/profile/block':
         case '/profile/friends':

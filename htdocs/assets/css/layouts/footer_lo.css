@@ -971,3 +971,8 @@
 .footer-menu__clean-icon svg * {
     fill: currentColor;
 }
+
+.footer-menu__create-post--timeout,
+.footer-menu__create-post--timeout:hover {
+    background: #bbb;
+}

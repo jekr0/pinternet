@@ -83,3 +83,11 @@ function notifyFollowedUserCreatedPost(PDO $pdo, int $authorUserId, int $postId,
         createActorNotification($pdo, (int) $followerId, $authorUserId, '@nickname выложил новый пост', $postText, $postId);
     }
 }
+
+
+function notifyUserTimedOut(PDO $pdo, int $userId, string $timeoutUntil): void
+{
+    $timestamp = strtotime($timeoutUntil);
+    $text = $timestamp ? 'Он закончится ' . date('d.m в H:i', $timestamp) : null;
+    createNotification($pdo, $userId, 'Вас отправили в таймаут', $text);
+}

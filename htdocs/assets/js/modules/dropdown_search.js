@@ -28,6 +28,8 @@ class DropdownSearchComponent {
             const query = this.normalizeQuery(this.input.value);
             if (!query) return;
             await this.saveQuery(query);
+            this.close();
+            this.input.blur();
             this.goToSearch(query);
         });
 
@@ -71,6 +73,7 @@ class DropdownSearchComponent {
     }
 
     goToSearch(query) {
+        this.close();
         const nextUrl = `/?q=${encodeURIComponent(query)}`;
         if (App.nav?.navigate) {
             App.nav.navigate(nextUrl, { pushUrl: true });
@@ -140,3 +143,13 @@ class DropdownSearchComponent {
 }
 
 App.register('dropdown_search.js', DropdownSearchComponent);
+
+
+document.addEventListener('app:search-query', async (event) => {
+    const query = String(event.detail?.query || '').trim();
+    if (!query) return;
+    const component = App.components?.['dropdown_search.js'];
+    if (component?.input) component.input.value = query;
+    if (component?.saveQuery) await component.saveQuery(query);
+    if (component?.goToSearch) component.goToSearch(query);
+});

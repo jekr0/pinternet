@@ -281,7 +281,7 @@
     };
 
     if ($viewerId > 0) {
-        $viewerStmt = $pdo->prepare('SELECT username, avatar FROM Users WHERE id = ? LIMIT 1');
+        $viewerStmt = $pdo->prepare('SELECT username, avatar, timeout_until FROM Users WHERE id = ? LIMIT 1');
         $viewerStmt->execute([$viewerId]);
         $viewerRow = $viewerStmt->fetch(PDO::FETCH_ASSOC) ?: null;
         if ($viewerRow) {
@@ -289,6 +289,12 @@
             $viewerAvatar = $normalizePublicPath((string) ($viewerRow['avatar'] ?? ''));
             $viewerHasAvatar = $viewerAvatar !== '/uploads/avatars/avatar.jpg';
             $viewerProfileUrl = '/profile?username=' . urlencode($viewerUsername);
+            $viewerTimeoutUntil = (string) ($viewerRow['timeout_until'] ?? '');
+            if ($viewerTimeoutUntil !== '' && strtotime($viewerTimeoutUntil) !== false && strtotime($viewerTimeoutUntil) > time()) {
+                $_SESSION['timeout_until'] = $viewerTimeoutUntil;
+            } else {
+                unset($_SESSION['timeout_until']);
+            }
         }
     }
 

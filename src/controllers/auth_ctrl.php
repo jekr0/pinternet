@@ -31,7 +31,7 @@ function handleLogin(PDO $pdo): void
     }
 
     // Ищем пользователя по логину или почте
-    $stmt = $pdo->prepare('SELECT id, username, password_hash, is_banned, role, exp, level FROM Users WHERE username = ? OR email = ?');
+    $stmt = $pdo->prepare('SELECT id, username, password_hash, is_banned, role, exp, level, timeout_until FROM Users WHERE username = ? OR email = ?');
     $stmt->execute([$login, $login]);
     $user = $stmt->fetch();
 
@@ -55,6 +55,11 @@ function handleLogin(PDO $pdo): void
     $_SESSION['user_id']  = $user['id'];
     $_SESSION['username'] = $user['username'];
     $_SESSION['role']     = $user['role'];
+    if (!empty($user['timeout_until']) && strtotime((string) $user['timeout_until']) > time()) {
+        $_SESSION['timeout_until'] = (string) $user['timeout_until'];
+    } else {
+        unset($_SESSION['timeout_until']);
+    }
     $_SESSION['exp']      = (int) $user['exp'];
     $_SESSION['level']    = $correctLevel;
 
@@ -134,7 +139,7 @@ function handleLoginValidate(PDO $pdo): never
         exit;
     }
 
-    $stmt = $pdo->prepare('SELECT id, username, password_hash, is_banned, role, exp, level FROM Users WHERE username = ? OR email = ?');
+    $stmt = $pdo->prepare('SELECT id, username, password_hash, is_banned, role, exp, level, timeout_until FROM Users WHERE username = ? OR email = ?');
     $stmt->execute([$login, $login]);
     $user = $stmt->fetch();
 
@@ -160,6 +165,11 @@ function handleLoginValidate(PDO $pdo): never
     $_SESSION['user_id']  = $user['id'];
     $_SESSION['username'] = $user['username'];
     $_SESSION['role']     = $user['role'];
+    if (!empty($user['timeout_until']) && strtotime((string) $user['timeout_until']) > time()) {
+        $_SESSION['timeout_until'] = (string) $user['timeout_until'];
+    } else {
+        unset($_SESSION['timeout_until']);
+    }
     $_SESSION['exp']      = (int) $user['exp'];
     $_SESSION['level']    = $correctLevel;
 

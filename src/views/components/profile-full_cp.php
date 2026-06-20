@@ -21,6 +21,7 @@ $profileFullBlocked = false;
 $profileFullStatus = '';
 $profileFullCollections = [];
 $profileFullLevel = 1;
+$profileFullViewerRole = (string) ($_SESSION['role'] ?? 'user');
 
 $profileFullRequestedUsername = trim(ltrim((string) ($_GET['username'] ?? ''), '@'));
 
@@ -195,6 +196,7 @@ $profileFullZoomSrc = $profileFullHasAvatar ? $profileFullAvatarSrc : '/assets/i
             data-notifications-enabled="<?= $profileFullNotificationsEnabled ? 'true' : 'false' ?>"
             data-profile-blocked="<?= $profileFullBlocked ? 'true' : 'false' ?>"
             data-viewer-authorized="<?= $profileFullViewerId > 0 ? 'true' : 'false' ?>"
+            data-viewer-role="<?= htmlspecialchars($profileFullViewerRole, ENT_QUOTES, 'UTF-8') ?>"
         ></div>
         <div class="profile-full__progress" aria-hidden="true">
             <span class="profile-full__progress-level"><?= $profileFullLevel ?> уровень</span>

@@ -257,6 +257,11 @@ class PostFullComponent {
                 return;
             }
 
+            if (action === 'moderate-post') {
+                this.openPostModerationOverlay();
+                return;
+            }
+
             if (action === 'warning') {
                 if (!this.isViewerAuthorized()) {
                     this.notifyAuthRequired();
@@ -418,6 +423,11 @@ class PostFullComponent {
                 return;
             }
 
+            if (action === 'comment-moderate') {
+                this.openCommentModerationOverlay(commentItem);
+                return;
+            }
+
             if (action === 'comment-report') {
                 if (!this.isViewerAuthorized()) {
                     this.notifyAuthRequired();
@@ -428,6 +438,10 @@ class PostFullComponent {
             }
 
             if (action === 'comment-reply') {
+                if (this.isViewerTimedOut()) {
+                    this.dispatchToast('Вы в таймауте');
+                    return;
+                }
                 if (!this.isViewerAuthorized()) {
                     this.notifyAuthRequired();
                     return;
@@ -1100,6 +1114,10 @@ class PostFullComponent {
         return Number(this.postFullElement?.dataset.viewerId || 0) > 0;
     }
 
+    isViewerTimedOut() {
+        return this.postFullElement?.dataset.viewerTimeout === '1';
+    }
+
     notifyAuthRequired() {
         this.dispatchToast('Для этого действия требуется авторизация');
         const profileContainer = document.querySelector('.header__profile-container');
@@ -1155,6 +1173,10 @@ class PostFullComponent {
         const text = commentInput.value.trim();
         if (!this.isViewerAuthorized()) {
             this.notifyAuthRequired();
+            return;
+        }
+        if (this.isViewerTimedOut()) {
+            this.dispatchToast('Вы в таймауте');
             return;
         }
         const parentCommentId = this.replyTargetCommentId > 0 ? this.replyTargetCommentId : 0;
@@ -1371,6 +1393,10 @@ class PostFullComponent {
         const isLiked = !!commentData.isLiked;
         const viewerUsername = String(this.postFullElement?.dataset.viewerUsername || '').trim().replace(/^@+/, '');
         const isOwnComment = viewerUsername !== '' && viewerUsername === username.replace(/^@+/, '');
+        const canModerate = ['moderator', 'admin'].includes(String(this.postFullElement?.dataset.viewerRole || 'user'));
+        const reportAction = canModerate ? 'comment-moderate' : 'comment-report';
+        const reportLabel = canModerate ? 'Удалить комментарий' : 'Пожаловаться на комментарий';
+        const reportIcon = canModerate ? '/assets/images/icons/S-warning.svg' : '/assets/images/icons/S-flag.svg';
         const rootCommentId = Number(commentData.rootCommentId || commentId || 0);
         const hasReplyLabel = parentCommentId > 0 && parentUsername !== '';
         const metaAfterUsername = commentData.isReply
@@ -1430,8 +1456,8 @@ class PostFullComponent {
                         <button class="post-full__comment-action-button post-full__comment-action-button--delete" type="button" data-action="comment-delete" aria-label="Удалить комментарий">
                             <span class="post-full__comment-action-icon" data-svg-src="/assets/images/icons/S-bin.svg" aria-hidden="true"></span>
                         </button>`
-                        : `<button class="post-full__comment-action-button" type="button" data-action="comment-report" aria-label="Пожаловаться на комментарий">
-                            <span class="post-full__comment-action-icon" data-svg-src="/assets/images/icons/S-flag.svg" aria-hidden="true"></span>
+                        : `<button class="post-full__comment-action-button" type="button" data-action="${reportAction}" aria-label="${reportLabel}">
+                            <span class="post-full__comment-action-icon" data-svg-src="${reportIcon}" aria-hidden="true"></span>
                         </button>`}
                 </div>
             </div>
@@ -1560,7 +1586,14 @@ class PostFullComponent {
                 return;
             }
 
-            const deletedIds = Array.isArray(payload.deleted_ids) ? payload.deleted_ids.map((id) => Number(id || 0)).filter((id) => id > 0) : [commentId];
+            const softDeletedId = Number(payload.soft_deleted_id || 0);
+            if (softDeletedId) {
+                const softNode = this.postFullElement?.querySelector(`.post-full__comment-item[data-comment-id="${softDeletedId}"]`);
+                softNode?.querySelector('.post-full__comment-actions')?.remove();
+                const textNode = softNode?.querySelector('.post-full__comment-text');
+                if (textNode) textNode.textContent = 'Комментарий удалён';
+            }
+            const deletedIds = Array.isArray(payload.deleted_ids) ? payload.deleted_ids.map((id) => Number(id || 0)).filter((id) => id > 0) : (softDeletedId ? [] : [commentId]);
             deletedIds.forEach((id) => {
                 const nodes = this.postFullElement?.querySelectorAll(`.post-full__comment-item[data-comment-id="${id}"]`) || [];
                 nodes.forEach((node) => node.remove());
@@ -1856,6 +1889,14 @@ class PostFullComponent {
     layoutPostTags() {
         const tagsContainer = this.postFullElement?.querySelector('.post-full__hashtags');
         if (!tagsContainer) return;
+
+        tagsContainer.addEventListener('click', (event) => {
+            const chip = event.target.closest('[data-action="tag-search"]');
+            if (!chip) return;
+            const tag = String(chip.dataset.tag || chip.textContent || '').replace(/^#+/, '').trim();
+            if (!tag) return;
+            document.dispatchEvent(new CustomEvent('app:search-query', { detail: { query: `#${tag}` } }));
+        }, { once: true });
 
         const tagNodes = Array.from(tagsContainer.querySelectorAll('.post-full__tag-item'));
         if (tagNodes.length === 0) return;
@@ -2204,6 +2245,48 @@ class PostFullComponent {
 
         this.zoomImage.style.transform = `translate3d(${Math.round(this.zoomPanX)}px, ${Math.round(this.zoomPanY)}px, 0) scale(${this.zoomScale})`;
         this.zoomOverlay.classList.toggle('can-pan', this.zoomScale > 1);
+    }
+
+
+    openPostModerationOverlay() {
+        App.warn?.open({
+            title: 'Удалить пост?',
+            description: 'После удаления поста пользователь не сможет его восстановить. Убедитесь, что это необходимая мера',
+            cancelLabel: 'Отмена',
+            confirmLabel: 'Удалить',
+            onConfirm: async () => {
+                await this.deletePostAsModerator();
+            }
+        });
+    }
+
+    async deletePostAsModerator() {
+        const postId = this.getPostId();
+        if (!postId) return;
+        const response = await fetch('/posts/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8', 'Accept': 'application/json' },
+            body: new URLSearchParams({ post_id: String(postId) }).toString()
+        });
+        const payload = await response.json();
+        if (!response.ok || !payload.success) {
+            this.dispatchToast(payload?.error || 'Не удалось удалить пост');
+            return;
+        }
+        this.dispatchToast('Пост удалён');
+        App.nav.navigate('/', { pushUrl: true });
+    }
+
+    openCommentModerationOverlay(commentItem) {
+        App.warn?.open({
+            title: 'Удалить комментарий?',
+            description: 'После удаления комментария пользователь не сможет его восстановить. Убедитесь, что это действительно необходимо',
+            cancelLabel: 'Отмена',
+            confirmLabel: 'Удалить',
+            onConfirm: async () => {
+                await this.deleteCommentByElement(commentItem);
+            }
+        });
     }
 
     openReportOverlay() {

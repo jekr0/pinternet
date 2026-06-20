@@ -204,6 +204,10 @@ class FooterLayout {
         }
 
         if (action === 'create-post') {
+            if (this.menu?.dataset.timeout === '1') {
+                document.dispatchEvent(new CustomEvent('app:toast', { detail: { message: 'Вы в таймауте' } }));
+                return;
+            }
             this.closeAfterAction();
             document.dispatchEvent(new CustomEvent('post-modal:open'));
         }
@@ -305,7 +309,7 @@ class FooterLayout {
                     <button class="footer-menu__content-button" type="button" data-footer-menu-action="friends">Друзья</button>
                     <button class="footer-menu__content-button" type="button" data-footer-menu-action="collections">Коллекции</button>
                 </div>
-                <button class="footer-menu__create-post" type="button" data-footer-menu-action="create-post">Создать пост</button>
+                <button class="footer-menu__create-post${this.menu?.dataset.timeout === '1' ? ' footer-menu__create-post--timeout' : ''}" type="button" data-footer-menu-action="create-post">Создать пост</button>
             `;
         }
 

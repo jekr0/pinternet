@@ -141,6 +141,36 @@ function handleProfileReport(PDO $pdo, int $viewerId, int $targetUserId): never
     profileJsonResponse(['success' => true, 'already_reported' => $alreadyReported]);
 }
 
+function handleProfileModerate(PDO $pdo, int $viewerId, int $targetUserId): never
+{
+    requireProfilePostMethod();
+    if ($targetUserId === $viewerId) {
+        profileJsonResponse(['success' => false, 'error' => 'Нельзя модерировать себя'], 400);
+    }
+    $role = (string) ($_SESSION['role'] ?? 'user');
+    if (!in_array($role, ['moderator', 'admin'], true)) {
+        profileJsonResponse(['success' => false, 'error' => 'Недостаточно прав'], 403);
+    }
+    findProfileTargetUser($pdo, $targetUserId);
+
+    try {
+        if ($role === 'admin') {
+            $stmt = $pdo->prepare('UPDATE Users SET is_banned = 1 WHERE id = ? LIMIT 1');
+            $stmt->execute([$targetUserId]);
+            profileJsonResponse(['success' => true, 'action' => 'ban']);
+        }
+
+        $timeoutUntil = date('Y-m-d H:i:s', time() + 48 * 60 * 60);
+        $stmt = $pdo->prepare('UPDATE Users SET timeout_until = ? WHERE id = ? LIMIT 1');
+        $stmt->execute([$timeoutUntil, $targetUserId]);
+        notifyUserTimedOut($pdo, $targetUserId, $timeoutUntil);
+        profileJsonResponse(['success' => true, 'action' => 'timeout', 'timeout_until' => $timeoutUntil]);
+    } catch (Throwable $e) {
+        error_log('Profile moderate error: ' . $e->getMessage());
+        profileJsonResponse(['success' => false, 'error' => 'Не удалось выполнить действие'], 500);
+    }
+}
+
 function handleProfileNotifications(PDO $pdo, int $viewerId, int $targetUserId): never
 {
     if ($targetUserId === $viewerId) {
@@ -548,6 +578,7 @@ match ($path) {
     '/profile/follow' => handleProfileFollow($pdo, $viewerId, $targetUserId),
     '/profile/unfollow' => handleProfileUnfollow($pdo, $viewerId, $targetUserId),
     '/profile/report' => handleProfileReport($pdo, $viewerId, $targetUserId),
+    '/profile/moderate' => handleProfileModerate($pdo, $viewerId, $targetUserId),
     '/profile/notifications' => handleProfileNotifications($pdo, $viewerId, $targetUserId),
     '/profile/block' => handleProfileBlock($pdo, $viewerId, $targetUserId),
     '/profile/friends' => handleProfileFriends($pdo, $viewerId),

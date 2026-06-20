@@ -111,6 +111,29 @@ if ($path === '/posts/list') {
 
 jsonResponse(['success' => false, 'error' => 'Неизвестный метод'], 404);
 
+
+function currentUserRole(): string
+{
+    return (string) ($_SESSION['role'] ?? 'user');
+}
+
+function isModeratorRole(): bool
+{
+    return in_array(currentUserRole(), ['moderator', 'admin'], true);
+}
+
+function enforceNoTimeout(PDO $pdo, int $userId): void
+{
+    $stmt = $pdo->prepare('SELECT timeout_until FROM Users WHERE id = ? LIMIT 1');
+    $stmt->execute([$userId]);
+    $timeoutUntil = (string) ($stmt->fetchColumn() ?: '');
+    if ($timeoutUntil !== '' && strtotime($timeoutUntil) !== false && strtotime($timeoutUntil) > time()) {
+        $_SESSION['timeout_until'] = $timeoutUntil;
+        jsonResponse(['success' => false, 'error' => 'Вы в таймауте'], 403);
+    }
+    unset($_SESSION['timeout_until']);
+}
+
 function handleCollectionsList(PDO $pdo, int $userId): never
 {
     $stmt = $pdo->prepare('SELECT name FROM Collections WHERE user_id = ? ORDER BY created_at ASC');
@@ -669,6 +692,7 @@ function handlePostReport(PDO $pdo, int $userId): never
 
 function handleCreateComment(PDO $pdo, int $userId): never
 {
+    enforceNoTimeout($pdo, $userId);
     if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
         jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод'], 405);
     }
@@ -917,14 +941,23 @@ function handleDeleteComment(PDO $pdo, int $userId): never
         jsonResponse(['success' => false, 'error' => 'Некорректный comment_id'], 422);
     }
 
-    $ownerStmt = $pdo->prepare('SELECT id FROM Comments WHERE id = ? AND user_id = ? AND is_deleted = 0 LIMIT 1');
-    $ownerStmt->execute([$commentId, $userId]);
+    $ownerStmt = $pdo->prepare('SELECT id FROM Comments WHERE id = ? AND (user_id = ? OR ? = 1) AND is_deleted = 0 LIMIT 1');
+    $ownerStmt->execute([$commentId, $userId, isModeratorRole() ? 1 : 0]);
     if ($ownerStmt->fetchColumn() === false) {
         jsonResponse(['success' => false, 'error' => 'Комментарий не найден или недоступен для удаления'], 404);
     }
 
     try {
         $pdo->beginTransaction();
+
+        $directChildrenStmt = $pdo->prepare('SELECT COUNT(*) FROM Comments WHERE parent_comment_id = ? AND is_deleted = 0');
+        $directChildrenStmt->execute([$commentId]);
+        if ((int) $directChildrenStmt->fetchColumn() > 0) {
+            $pdo->prepare("UPDATE Comments SET is_deleted = 1, content = '' WHERE id = ?")->execute([$commentId]);
+            $pdo->prepare('DELETE FROM Comment_Reports WHERE comment_id = ?')->execute([$commentId]);
+            $pdo->commit();
+            jsonResponse(['success' => true, 'deleted_ids' => [], 'soft_deleted_id' => $commentId]);
+        }
 
         $idsToDelete = [$commentId];
         $cursor = 0;
@@ -1084,8 +1117,8 @@ function handleDeletePost(PDO $pdo, int $userId): never
         jsonResponse(['success' => false, 'error' => 'Некорректный post_id'], 422);
     }
 
-    $postStmt = $pdo->prepare('SELECT image_path FROM Posts WHERE id = ? AND user_id = ? LIMIT 1');
-    $postStmt->execute([$postId, $userId]);
+    $postStmt = $pdo->prepare('SELECT image_path FROM Posts WHERE id = ? AND (user_id = ? OR ? = 1) LIMIT 1');
+    $postStmt->execute([$postId, $userId, isModeratorRole() ? 1 : 0]);
     $imagePath = $postStmt->fetchColumn();
     if ($imagePath === false) {
         jsonResponse(['success' => false, 'error' => 'Пост не найден'], 404);
@@ -1131,8 +1164,8 @@ function handleDeletePost(PDO $pdo, int $userId): never
         $pdo->prepare('DELETE FROM Collection_Posts WHERE post_id = ?')->execute([$postId]);
         $pdo->prepare('DELETE FROM Post_Hashtags WHERE post_id = ?')->execute([$postId]);
 
-        $deletePost = $pdo->prepare('DELETE FROM Posts WHERE id = ? AND user_id = ?');
-        $deletePost->execute([$postId, $userId]);
+        $deletePost = $pdo->prepare('DELETE FROM Posts WHERE id = ?');
+        $deletePost->execute([$postId]);
 
         $pdo->commit();
     } catch (Throwable $e) {
@@ -1150,6 +1183,7 @@ function handleDeletePost(PDO $pdo, int $userId): never
 
 function handleCreatePost(PDO $pdo, int $userId): never
 {
+    enforceNoTimeout($pdo, $userId);
     if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
         jsonResponse(['success' => false, 'error' => 'Неподдерживаемый метод'], 405);
     }

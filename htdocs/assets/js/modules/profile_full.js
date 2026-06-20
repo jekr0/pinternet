@@ -88,6 +88,12 @@ class ProfileFullComponent {
                 return;
             }
 
+            if (action === 'profile-moderate') {
+                event.preventDefault();
+                this.openModerationOverlay(button);
+                return;
+            }
+
             if (action === 'profile-report') {
                 event.preventDefault();
                 if (!this.isViewerAuthorized()) {
@@ -262,14 +268,19 @@ class ProfileFullComponent {
         const bellPressed = notificationsEnabled ? 'true' : 'false';
         const blockPressed = profileBlocked ? 'true' : 'false';
 
+        const isModerator = ['moderator', 'admin'].includes(String(this.actions.dataset.viewerRole || 'user'));
+        const moderationAction = isModerator ? 'profile-moderate' : 'profile-report';
+        const moderationLabel = isModerator ? 'Предупреждение' : 'Пожаловаться';
+        const moderationIcon = isModerator ? '/assets/images/icons/L-warning.svg' : '/assets/images/icons/L-flag.svg';
+
         const templates = {
             default: `
                 <button class="profile-full__button profile-full__button--subscribe" type="button" data-action="profile-subscribe">Подписаться</button>
                 <button class="profile-full__icon-button profile-full__icon-button--block${blockActiveClass}" type="button" data-action="profile-block" aria-label="Заблокировать пользователя" aria-pressed="${blockPressed}">
                     <span class="profile-full__meta-icon" data-icon="block" data-svg-src="${blockIcon}" aria-hidden="true"></span>
                 </button>
-                <button class="profile-full__icon-button profile-full__icon-button--report" type="button" data-action="profile-report" aria-label="Пожаловаться">
-                    <span class="profile-full__meta-icon" data-icon="report" data-svg-src="/assets/images/icons/L-flag.svg" aria-hidden="true"></span>
+                <button class="profile-full__icon-button profile-full__icon-button--report" type="button" data-action="${moderationAction}" aria-label="${moderationLabel}">
+                    <span class="profile-full__meta-icon" data-icon="report" data-svg-src="${moderationIcon}" aria-hidden="true"></span>
                 </button>
             `,
             yourself: `
@@ -283,8 +294,8 @@ class ProfileFullComponent {
                 <button class="profile-full__icon-button profile-full__icon-button--bell${bellActiveClass}" type="button" data-action="profile-bell" aria-label="Уведомления" aria-pressed="${bellPressed}">
                     <span class="profile-full__meta-icon" data-icon="bell" data-svg-src="${bellIcon}" aria-hidden="true"></span>
                 </button>
-                <button class="profile-full__icon-button profile-full__icon-button--report" type="button" data-action="profile-report" aria-label="Пожаловаться">
-                    <span class="profile-full__meta-icon" data-icon="report" data-svg-src="/assets/images/icons/L-flag.svg" aria-hidden="true"></span>
+                <button class="profile-full__icon-button profile-full__icon-button--report" type="button" data-action="${moderationAction}" aria-label="${moderationLabel}">
+                    <span class="profile-full__meta-icon" data-icon="report" data-svg-src="${moderationIcon}" aria-hidden="true"></span>
                 </button>
             `,
             friends: `
@@ -294,8 +305,8 @@ class ProfileFullComponent {
                     <button class="profile-full__icon-button profile-full__icon-button--bell${bellActiveClass}" type="button" data-action="profile-bell" aria-label="Уведомления" aria-pressed="${bellPressed}">
                         <span class="profile-full__meta-icon" data-icon="bell" data-svg-src="${bellIcon}" aria-hidden="true"></span>
                     </button>
-                    <button class="profile-full__icon-button profile-full__icon-button--report" type="button" data-action="profile-report" aria-label="Пожаловаться">
-                        <span class="profile-full__meta-icon" data-icon="report" data-svg-src="/assets/images/icons/L-flag.svg" aria-hidden="true"></span>
+                    <button class="profile-full__icon-button profile-full__icon-button--report" type="button" data-action="${moderationAction}" aria-label="${moderationLabel}">
+                        <span class="profile-full__meta-icon" data-icon="report" data-svg-src="${moderationIcon}" aria-hidden="true"></span>
                     </button>
                 </div>
             `
@@ -435,6 +446,44 @@ class ProfileFullComponent {
                 html: `${this.escapeHtml('Вы отписались от ')}<span class="toast-stack__accent">${this.escapeHtml(nickname)}</span>`
             }
         }));
+    }
+
+
+    openModerationOverlay(button) {
+        const role = String(this.actions?.dataset.viewerRole || 'user');
+        const isAdmin = role === 'admin';
+        App.warn?.open({
+            title: isAdmin ? 'Заблокировать аккаунт?' : 'Отправить пользователя в таймаут?',
+            description: isAdmin
+                ? 'После блокировки аккаунта он перестанет быть доступен для пользователя. Это крайняя мера, убедитесь в её необходимости'
+                : 'В следующие 48 часов пользователь не сможет создавать посты и комментировать их. Таймаут не получится снять до его окончания',
+            cancelLabel: 'Отмена',
+            confirmLabel: isAdmin ? 'Блокировать' : 'Таймаут',
+            onConfirm: async () => {
+                await this.submitProfileModeration(button);
+            }
+        });
+    }
+
+    async submitProfileModeration(button) {
+        const userId = Number(this.actions?.dataset.profileUserId || 0);
+        if (!userId || !button) return;
+        button.disabled = true;
+        try {
+            const response = await fetch('/profile/moderate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8', 'Accept': 'application/json' },
+                body: new URLSearchParams({ user_id: String(userId) }).toString()
+            });
+            const payload = await response.json();
+            if (!response.ok || !payload.success) {
+                document.dispatchEvent(new CustomEvent('app:toast', { detail: { message: payload?.error || 'Не удалось выполнить действие' } }));
+                return;
+            }
+            document.dispatchEvent(new CustomEvent('app:toast', { detail: { message: payload.action === 'ban' ? 'Аккаунт заблокирован' : 'Пользователь в таймауте' } }));
+        } finally {
+            button.disabled = false;
+        }
     }
 
     openReportOverlay(reportButton) {
