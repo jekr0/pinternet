@@ -347,6 +347,8 @@
     font-size: 14px;
     color: #555;
     background: #efefef;
+    border: none;
+    outline: none;
     border-radius: 8px;
     cursor: pointer;
     user-select: none;

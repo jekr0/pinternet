@@ -39,19 +39,36 @@ function handleSearchHistoryGet(PDO $pdo, int $userId): never
 
     $stmt = $pdo->prepare('
         SELECT query_text
-        FROM User_Search
-        WHERE user_id = ?
+        FROM (
+            SELECT query_text, searched_at
+            FROM User_Search
+            WHERE user_id = ?
+            UNION ALL
+            SELECT query_text, searched_at
+            FROM Search
+            WHERE user_id = ?
+        ) recent_queries
         ORDER BY searched_at DESC
         LIMIT ?
     ');
     $stmt->bindValue(1, $userId, PDO::PARAM_INT);
-    $stmt->bindValue(2, $limit, PDO::PARAM_INT);
+    $stmt->bindValue(2, $userId, PDO::PARAM_INT);
+    $stmt->bindValue(3, $limit * 2, PDO::PARAM_INT);
     $stmt->execute();
 
-    $queries = array_values(array_filter(array_map(
-        static fn(array $row): string => trim((string) ($row['query_text'] ?? '')),
-        $stmt->fetchAll(PDO::FETCH_ASSOC) ?: []
-    )));
+    $queries = [];
+    foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
+        $queryText = trim((string) ($row['query_text'] ?? ''));
+        $queryKey = mb_strtolower($queryText);
+        if ($queryText === '' || isset($queries[$queryKey])) {
+            continue;
+        }
+        $queries[$queryKey] = $queryText;
+        if (count($queries) >= $limit) {
+            break;
+        }
+    }
+    $queries = array_values($queries);
 
     jsonResponse(['success' => true, 'queries' => $queries]);
 }

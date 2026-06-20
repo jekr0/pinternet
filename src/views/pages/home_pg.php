@@ -14,10 +14,12 @@
     $selectedPostId = isset($selectedPostId) ? (int) $selectedPostId : 0;
     $searchQuery = trim((string) ($_GET['q'] ?? ''));
     $isSearchPage = $searchQuery !== '';
+    $viewerRole = (string) ($_SESSION['role'] ?? 'user');
+    $isModerationFeed = isset($_GET['moderation']) && in_array($viewerRole, ['moderator', 'admin'], true);
 
     if ($viewerId > 0) {
         $stmt = $pdo->prepare('
-            SELECT p.id, p.image_path, p.description, p.created_at, p.was_redacted, UNIX_TIMESTAMP(p.created_at) AS created_at_ts, u.username, u.avatar AS user_avatar,
+            SELECT p.id, p.image_path, p.description, p.created_at, p.was_redacted, p.report_count, UNIX_TIMESTAMP(p.created_at) AS created_at_ts, u.username, u.avatar AS user_avatar,
                    (pl.id IS NOT NULL) AS is_liked,
                    EXISTS(
                        SELECT 1
@@ -43,7 +45,7 @@
         $stmt->execute([$viewerId, $viewerId, 'Profile', $viewerId, $viewerId]);
     } else {
         $stmt = $pdo->query('
-            SELECT p.id, p.image_path, p.description, p.created_at, p.was_redacted, UNIX_TIMESTAMP(p.created_at) AS created_at_ts, u.username, u.avatar AS user_avatar,
+            SELECT p.id, p.image_path, p.description, p.created_at, p.was_redacted, p.report_count, UNIX_TIMESTAMP(p.created_at) AS created_at_ts, u.username, u.avatar AS user_avatar,
                    0 AS is_liked,
                    0 AS is_bookmarked,
                    (SELECT COUNT(*) FROM Post_Likes pl_all WHERE pl_all.post_id = p.id) AS likes_count,
@@ -55,6 +57,13 @@
     }
 
     $posts = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+
+    if ($isModerationFeed) {
+        $posts = array_values(array_filter($posts, static fn(array $postRow): bool => (int) ($postRow['report_count'] ?? 0) > 0));
+        usort($posts, static fn(array $left, array $right): int => ((int) ($right['report_count'] ?? 0) <=> (int) ($left['report_count'] ?? 0)) ?: ((int) ($right['id'] ?? 0) <=> (int) ($left['id'] ?? 0)));
+    } elseif (isset($_GET['moderation'])) {
+        $posts = [];
+    }
 
     if ($isSearchPage) {
         $searchPrefix = mb_substr($searchQuery, 0, 1);

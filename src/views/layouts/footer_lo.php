@@ -3,6 +3,8 @@ if (session_status() === PHP_SESSION_NONE) session_start();
 $footerMenuViewerId = (int) ($_SESSION['user_id'] ?? 0);
 $footerMenuIsAuthenticated = $footerMenuViewerId > 0;
 $footerMenuUsername = (string) ($_SESSION['username'] ?? '');
+$footerMenuRole = (string) ($_SESSION['role'] ?? 'user');
+$footerMenuCanModerate = in_array($footerMenuRole, ['moderator', 'admin'], true);
 if ($footerMenuViewerId > 0) {
     require_once __DIR__ . '/../../config/database_conf.php';
     $footerTimeoutStmt = $pdo->prepare('SELECT timeout_until FROM Users WHERE id = ? LIMIT 1');
@@ -18,7 +20,7 @@ $footerMenuTimeoutUntil = (string) ($_SESSION['timeout_until'] ?? '');
 $footerMenuInTimeout = $footerMenuTimeoutUntil !== '' && strtotime($footerMenuTimeoutUntil) !== false && strtotime($footerMenuTimeoutUntil) > time();
 ?>
 <footer class="footer" aria-label="Быстрые действия">
-    <div class="footer-menu" data-component="footer-menu" data-state="closed" data-authenticated="<?= $footerMenuIsAuthenticated ? '1' : '0' ?>" data-viewer-id="<?= $footerMenuViewerId ?>" data-viewer-username="<?= htmlspecialchars($footerMenuUsername, ENT_QUOTES, 'UTF-8') ?>" data-timeout="<?= $footerMenuInTimeout ? '1' : '0' ?>">
+    <div class="footer-menu" data-component="footer-menu" data-state="closed" data-authenticated="<?= $footerMenuIsAuthenticated ? '1' : '0' ?>" data-viewer-id="<?= $footerMenuViewerId ?>" data-viewer-username="<?= htmlspecialchars($footerMenuUsername, ENT_QUOTES, 'UTF-8') ?>" data-role="<?= htmlspecialchars($footerMenuRole, ENT_QUOTES, 'UTF-8') ?>" data-timeout="<?= $footerMenuInTimeout ? '1' : '0' ?>">
         <button class="footer-menu__toggle" type="button" aria-label="Открыть меню" aria-expanded="false">
             <span class="footer-menu__planet" data-svg-src="/assets/images/icons/planet.svg" aria-hidden="true"></span>
         </button>
@@ -41,6 +43,9 @@ $footerMenuInTimeout = $footerMenuTimeoutUntil !== '' && strtotime($footerMenuTi
 
         <div class="footer-menu__content" aria-label="Разделы меню">
             <button class="footer-menu__content-button" type="button" data-footer-menu-action="profile">Профиль</button>
+            <?php if ($footerMenuCanModerate): ?>
+                <button class="footer-menu__content-button" type="button" data-footer-menu-action="moderation">Модерация</button>
+            <?php endif; ?>
             <button class="footer-menu__content-button" type="button" data-footer-menu-action="messages">Сообщения</button>
             <button class="footer-menu__content-button" type="button" data-footer-menu-action="notifications">Уведомления</button>
             <button class="footer-menu__content-button" type="button" data-footer-menu-action="friends">Друзья</button>

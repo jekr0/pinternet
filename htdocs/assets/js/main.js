@@ -238,6 +238,21 @@ const App = {
 
     history: {
         skipNextModalOnlyPop: false,
+        scrollKey: function (url = this.getCurrentUrl()) {
+            return `pinterest:scroll:${url}`;
+        },
+        saveScroll: function (url = this.getCurrentUrl()) {
+            try {
+                sessionStorage.setItem(this.scrollKey(url), String(window.scrollY || 0));
+            } catch (_error) {}
+        },
+        getSavedScroll: function (url = this.getCurrentUrl()) {
+            try {
+                return Math.max(0, Number(sessionStorage.getItem(this.scrollKey(url)) || 0));
+            } catch (_error) {
+                return 0;
+            }
+        },
         getCurrentUrl: function () {
             return window.location.pathname + window.location.search;
         },
@@ -245,10 +260,12 @@ const App = {
             return { app: true, url };
         },
         pushUrl: function (url) {
+            this.saveScroll();
             window.history.pushState(this.getState(url), '', url);
             App.title.sync(url);
         },
         replaceUrl: function (url) {
+            this.saveScroll();
             window.history.replaceState(this.getState(url), '', url);
             App.title.sync(url);
         },
@@ -335,8 +352,9 @@ const App = {
             const parsedUrl = App.history.getUrl(url);
             return this.clientPaths.has(parsedUrl.pathname);
         },
+        pendingScrollTop: null,
         navigate: function (url, options = {}) {
-            const { pushUrl = true, target = '#app-main', swap = 'outerHTML', replaceUrl = false, force = false } = options;
+            const { pushUrl = true, target = '#app-main', swap = 'outerHTML', replaceUrl = false, force = false, restoreScroll = false } = options;
             const nextUrl = this.getInternalUrl(url);
             if (!nextUrl) {
                 window.location.href = url;
@@ -361,6 +379,7 @@ const App = {
             }
 
             if (nextUrl !== currentUrl) {
+                this.pendingScrollTop = restoreScroll ? App.history.getSavedScroll(nextUrl) : 0;
                 if (replaceUrl) {
                     App.history.replaceUrl(nextUrl);
                 } else if (pushUrl) {
@@ -369,6 +388,8 @@ const App = {
             } else if (!force) {
                 openUrlDrivenModalState();
                 return;
+            } else {
+                this.pendingScrollTop = restoreScroll ? App.history.getSavedScroll(nextUrl) : 0;
             }
 
             window.htmx.ajax('GET', nextUrl, { target: swapTarget, swap });
@@ -423,9 +444,18 @@ function syncActiveModulesFromMain(target = document.getElementById('app-main'))
 
 // Инициализируем после полной загрузки DOM (все скрипты уже выполнены)
 document.addEventListener('DOMContentLoaded', () => {
+    if ('scrollRestoration' in window.history) {
+        window.history.scrollRestoration = 'manual';
+    }
     App.history.replaceUrl(App.history.getCurrentUrl());
     App.title.sync();
     App.nav.bindLinkInterception();
+    let scrollSaveTimer = 0;
+    window.addEventListener('scroll', () => {
+        window.clearTimeout(scrollSaveTimer);
+        scrollSaveTimer = window.setTimeout(() => App.history.saveScroll(), 120);
+    }, { passive: true });
+    window.addEventListener('beforeunload', () => App.history.saveScroll());
     App.initWithSvgPreload()
         .then(() => App.initWithin(document))
         .finally(() => {
@@ -452,7 +482,14 @@ document.addEventListener('htmx:afterSwap', (event) => {
 
     App.initWithSvgPreload()
         .then(() => App.initWithin(currentMain))
-        .finally(() => openUrlDrivenModalState());
+        .finally(() => {
+            const scrollTop = App.nav.pendingScrollTop;
+            App.nav.pendingScrollTop = null;
+            if (scrollTop !== null && scrollTop !== undefined) {
+                window.scrollTo({ top: scrollTop, behavior: 'auto' });
+            }
+            openUrlDrivenModalState();
+        });
 });
 
 let isDirtyHistoryPromptOpen = false;
@@ -524,7 +561,7 @@ window.addEventListener('popstate', () => {
 
     const currentUrl = App.history.getCurrentUrl();
     if (App.nav.canLoadInShell(currentUrl)) {
-        App.nav.navigate(currentUrl, { pushUrl: false, force: true });
+        App.nav.navigate(currentUrl, { pushUrl: false, force: true, restoreScroll: true });
         return;
     }
 

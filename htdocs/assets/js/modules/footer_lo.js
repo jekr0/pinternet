@@ -152,6 +152,12 @@ class FooterLayout {
             return;
         }
 
+        if (action === 'moderation') {
+            this.closeAfterAction();
+            App.nav.navigate('/?moderation=1', { pushUrl: true });
+            return;
+        }
+
         if (action === 'messages') {
             this.renderState('message_state');
             return;
@@ -304,6 +310,7 @@ class FooterLayout {
             return `
                 <div class="footer-menu__content-main">
                     <button class="footer-menu__content-button" type="button" data-footer-menu-action="profile">Профиль</button>
+                    ${['moderator', 'admin'].includes(String(this.menu?.dataset.role || 'user')) ? '<button class="footer-menu__content-button" type="button" data-footer-menu-action="moderation">Модерация</button>' : ''}
                     <button class="footer-menu__content-button" type="button" data-footer-menu-action="messages"><span>Сообщения</span><span class="footer-menu__badge" data-component="footer-menu-messages-count"></span></button>
                     <button class="footer-menu__content-button" type="button" data-footer-menu-action="notifications"><span>Уведомления</span><span class="footer-menu__badge" data-component="footer-menu-notifications-count"></span></button>
                     <button class="footer-menu__content-button" type="button" data-footer-menu-action="friends">Друзья</button>

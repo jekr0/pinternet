@@ -21,6 +21,7 @@ $profileFullBlocked = false;
 $profileFullStatus = '';
 $profileFullCollections = [];
 $profileFullLevel = 1;
+$profileFullIsBanned = false;
 $profileFullViewerRole = (string) ($_SESSION['role'] ?? 'user');
 
 $profileFullRequestedUsername = trim(ltrim((string) ($_GET['username'] ?? ''), '@'));
@@ -36,6 +37,7 @@ if ($profileFullViewerId > 0 || $profileFullRequestedUsername !== '') {
                    u.bio,
                    u.total_likes,
                    u.level,
+                   u.is_banned,
                    (SELECT COUNT(*) FROM User_Follows f WHERE f.follower_id = u.id) AS subscriptions_count,
                    (SELECT COUNT(*) FROM User_Follows f WHERE f.following_id = u.id) AS subscribers_count
             FROM Users u
@@ -51,6 +53,7 @@ if ($profileFullViewerId > 0 || $profileFullRequestedUsername !== '') {
                    u.bio,
                    u.total_likes,
                    u.level,
+                   u.is_banned,
                    (SELECT COUNT(*) FROM User_Follows f WHERE f.follower_id = u.id) AS subscriptions_count,
                    (SELECT COUNT(*) FROM User_Follows f WHERE f.following_id = u.id) AS subscribers_count
             FROM Users u
@@ -69,6 +72,7 @@ if ($profileFullViewerId > 0 || $profileFullRequestedUsername !== '') {
     $profileFullSubscribersCount = (int) ($profileFullUser['subscribers_count'] ?? 0);
     $profileFullTotalLikes = (int) ($profileFullUser['total_likes'] ?? 0);
     $profileFullLevel = (int) ($profileFullUser['level'] ?? 1);
+    $profileFullIsBanned = !empty($profileFullUser['is_banned']);
     $profileFullHasAvatar = $profileFullAvatarSrc !== '';
 
     if ($profileFullViewerId > 0 && $profileFullUserId > 0) {
@@ -134,6 +138,17 @@ $profileFullIsProfileCollectionName = static function (string $collectionName): 
 $profileFullSelectedCollection = trim((string) ($_GET['collection'] ?? ''));
 $profileFullSelectedPublications = array_key_exists('publications', $_GET);
 $profileFullZoomSrc = $profileFullHasAvatar ? $profileFullAvatarSrc : '/assets/images/icons/planet.svg';
+
+if ($profileFullIsBanned && $profileFullUsername !== '') {
+    ?>
+    <section class="profile-full-blocked" aria-label="Профиль заблокирован">
+        <p class="profile-full-blocked__title">@<?= htmlspecialchars($profileFullUsername, ENT_QUOTES, 'UTF-8') ?> был заблокирован</p>
+        <a class="profile-full-blocked__link" href="/">Вернуться на главную</a>
+    </section>
+    <?php
+    return;
+}
+
 ?>
 
 <section class="profile-full" data-component="profile-full" aria-label="Профиль пользователя">

@@ -596,3 +596,31 @@
     user-select: none;
     -webkit-user-select: none;
 }
+
+.profile-full-blocked {
+    min-height: calc(100vh - 160px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+}
+
+.profile-full-blocked__title {
+    margin: 0;
+    font-family: 'SF_def', Arial, sans-serif;
+    font-size: 36px;
+    color: #555;
+}
+
+.profile-full-blocked__link {
+    margin-top: 12px;
+    font-family: 'SF_def', Arial, sans-serif;
+    font-size: 28px;
+    color: rgb(100, 100, 200);
+    text-decoration: none;
+}
+
+.profile-full-blocked__link:hover {
+    text-decoration: underline;
+}

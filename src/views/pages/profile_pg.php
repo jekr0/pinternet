@@ -1,4 +1,5 @@
 <?php include '../src/views/components/profile-full_cp.php'; ?>
+<?php if (!empty($profileFullIsBanned)) { return; } ?>
 <?php
 require_once __DIR__ . '/../../config/database_conf.php';
 
