@@ -24,6 +24,21 @@ CREATE TABLE Users (
     created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE User_Statistics (
+    user_id                INT NOT NULL PRIMARY KEY,
+    posts_created          INT NOT NULL DEFAULT 0,
+    collections_created    INT NOT NULL DEFAULT 0,
+    comments_written       INT NOT NULL DEFAULT 0,
+    likes_received         INT NOT NULL DEFAULT 0,
+    likes_given            INT NOT NULL DEFAULT 0,
+    subscriptions_count    INT NOT NULL DEFAULT 0,
+    subscribers_count      INT NOT NULL DEFAULT 0,
+    friends_count          INT NOT NULL DEFAULT 0,
+    updated_at             DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE
+);
+
 CREATE TABLE User_Follows (
     id                   INT AUTO_INCREMENT PRIMARY KEY,
     follower_id          INT NOT NULL,
@@ -47,6 +62,30 @@ CREATE TABLE User_Follows_Exp_Awards (
 
     FOREIGN KEY (subscriber_id) REFERENCES Users(id) ON DELETE CASCADE,
     FOREIGN KEY (subscribed_user_id) REFERENCES Users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE User_Achievements (
+    id             INT AUTO_INCREMENT PRIMARY KEY,
+    user_id        INT NOT NULL,
+    achievement_id INT NOT NULL,
+    awarded_at     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    UNIQUE KEY uq_user_achievement (user_id, achievement_id),
+
+    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE,
+    FOREIGN KEY (achievement_id) REFERENCES Achievements(id) ON DELETE CASCADE
+);
+
+CREATE TABLE User_Medals (
+    id             INT AUTO_INCREMENT PRIMARY KEY,
+    user_id        INT NOT NULL,
+    medal_id       INT NOT NULL,
+    awarded_at     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    UNIQUE KEY uq_user_medal (user_id, medal_id),
+
+    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE,
+    FOREIGN KEY (medal_id) REFERENCES Medals(id) ON DELETE CASCADE
 );
 
 CREATE TABLE User_Search (
@@ -82,19 +121,6 @@ CREATE TABLE User_Reports (
 
     FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE,
     FOREIGN KEY (reported_user_id) REFERENCES Users(id) ON DELETE CASCADE
-);
-
--- ---------------------------------------------------------------------
--- Medals
--- ---------------------------------------------------------------------
-
-CREATE TABLE Medals (
-    id          INT AUTO_INCREMENT PRIMARY KEY,
-    user_id     INT NOT NULL,
-    medal       NVARCHAR(64) NOT NULL,
-    awarded_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE
 );
 
 -- ---------------------------------------------------------------------
@@ -332,6 +358,30 @@ CREATE TABLE Notifications (
 );
 
 -- ---------------------------------------------------------------------
+-- Gameset
+-- ---------------------------------------------------------------------
+
+CREATE TABLE Achievements (
+    id             INT AUTO_INCREMENT PRIMARY KEY,
+    name           NVARCHAR(64) NOT NULL UNIQUE,
+    rarity         ENUM('common', 'uncommon', 'rare', 'epic', 'legendary') NOT NULL DEFAULT 'common',
+    exp_reward     INT NOT NULL DEFAULT 0,
+    description    NVARCHAR(256),
+    icon_path      NVARCHAR(256),
+    created_at     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE Medals (
+    id             INT AUTO_INCREMENT PRIMARY KEY,
+    name           NVARCHAR(64) NOT NULL UNIQUE,
+    rarity         ENUM('common', 'uncommon', 'rare', 'epic', 'legendary') NOT NULL DEFAULT 'common',
+    icon_path      NVARCHAR(256),
+    description    NVARCHAR(256),
+    created_at     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+
+-- ---------------------------------------------------------------------
 -- Moderation
 -- ---------------------------------------------------------------------
 
@@ -351,3 +401,175 @@ CREATE TABLE Moderation (
     FOREIGN KEY (post_id) REFERENCES Posts(id) ON DELETE SET NULL,
     FOREIGN KEY (comment_id) REFERENCES Comments(id) ON DELETE SET NULL
 );
+
+-- ---------------------------------------------------------------------
+-- Триггеры для автоматического обновления статистики
+-- ---------------------------------------------------------------------
+
+DELIMITER $$
+
+-- Триггер для обновления статистики при создании поста
+CREATE TRIGGER trg_stats_post_insert
+AFTER INSERT ON Posts
+FOR EACH ROW
+BEGIN
+    INSERT INTO User_Statistics (user_id, posts_created)
+    VALUES (NEW.user_id, 1)
+    ON DUPLICATE KEY UPDATE posts_created = posts_created + 1;
+END$$
+
+-- Триггер для обновления статистики при удалении поста
+CREATE TRIGGER trg_stats_post_delete
+AFTER DELETE ON Posts
+FOR EACH ROW
+BEGIN
+    UPDATE User_Statistics 
+    SET posts_created = posts_created - 1 
+    WHERE user_id = OLD.user_id;
+END$$
+
+-- Триггер для обновления статистики при создании комментария
+CREATE TRIGGER trg_stats_comment_insert
+AFTER INSERT ON Comments
+FOR EACH ROW
+BEGIN
+    INSERT INTO User_Statistics (user_id, comments_written)
+    VALUES (NEW.user_id, 1)
+    ON DUPLICATE KEY UPDATE comments_written = comments_written + 1;
+END$$
+
+-- Триггер для обновления статистики при удалении комментария
+CREATE TRIGGER trg_stats_comment_delete
+AFTER DELETE ON Comments
+FOR EACH ROW
+BEGIN
+    UPDATE User_Statistics 
+    SET comments_written = comments_written - 1 
+    WHERE user_id = OLD.user_id;
+END$$
+
+-- Триггер для обновления статистики при создании коллекции
+CREATE TRIGGER trg_stats_collection_insert
+AFTER INSERT ON Collections
+FOR EACH ROW
+BEGIN
+    INSERT INTO User_Statistics (user_id, collections_created)
+    VALUES (NEW.user_id, 1)
+    ON DUPLICATE KEY UPDATE collections_created = collections_created + 1;
+END$$
+
+-- Триггер для обновления статистики при удалении коллекции
+CREATE TRIGGER trg_stats_collection_delete
+AFTER DELETE ON Collections
+FOR EACH ROW
+BEGIN
+    UPDATE User_Statistics 
+    SET collections_created = collections_created - 1 
+    WHERE user_id = OLD.user_id;
+END$$
+
+-- Триггер для обновления статистики при получении лайка на пост
+CREATE TRIGGER trg_stats_like_received_post
+AFTER INSERT ON Post_Likes
+FOR EACH ROW
+BEGIN
+    DECLARE post_owner INT;
+    
+    SELECT user_id INTO post_owner FROM Posts WHERE id = NEW.post_id;
+    
+    INSERT INTO User_Statistics (user_id, likes_received)
+    VALUES (post_owner, 1)
+    ON DUPLICATE KEY UPDATE likes_received = likes_received + 1;
+END$$
+
+-- Триггер для обновления статистики при удалении лайка с поста
+CREATE TRIGGER trg_stats_like_received_post_delete
+AFTER DELETE ON Post_Likes
+FOR EACH ROW
+BEGIN
+    DECLARE post_owner INT;
+    
+    SELECT user_id INTO post_owner FROM Posts WHERE id = OLD.post_id;
+    
+    UPDATE User_Statistics 
+    SET likes_received = likes_received - 1 
+    WHERE user_id = post_owner;
+END$$
+
+-- Триггер для обновления статистики при получении лайка на комментарий
+CREATE TRIGGER trg_stats_like_received_comment
+AFTER INSERT ON Comment_Likes
+FOR EACH ROW
+BEGIN
+    DECLARE comment_owner INT;
+    
+    SELECT user_id INTO comment_owner FROM Comments WHERE id = NEW.comment_id;
+    
+    INSERT INTO User_Statistics (user_id, likes_received)
+    VALUES (comment_owner, 1)
+    ON DUPLICATE KEY UPDATE likes_received = likes_received + 1;
+END$$
+
+-- Триггер для обновления статистики при удалении лайка с комментария
+CREATE TRIGGER trg_stats_like_received_comment_delete
+AFTER DELETE ON Comment_Likes
+FOR EACH ROW
+BEGIN
+    DECLARE comment_owner INT;
+    
+    SELECT user_id INTO comment_owner FROM Comments WHERE id = OLD.comment_id;
+    
+    UPDATE User_Statistics 
+    SET likes_received = likes_received - 1 
+    WHERE user_id = comment_owner;
+END$$
+
+-- Триггер для обновления статистики при добавлении лайка (поставлено лайков)
+CREATE TRIGGER trg_stats_like_given
+AFTER INSERT ON Post_Likes
+FOR EACH ROW
+BEGIN
+    INSERT INTO User_Statistics (user_id, likes_given)
+    VALUES (NEW.user_id, 1)
+    ON DUPLICATE KEY UPDATE likes_given = likes_given + 1;
+END$$
+
+CREATE TRIGGER trg_stats_like_given_comment
+AFTER INSERT ON Comment_Likes
+FOR EACH ROW
+BEGIN
+    INSERT INTO User_Statistics (user_id, likes_given)
+    VALUES (NEW.user_id, 1)
+    ON DUPLICATE KEY UPDATE likes_given = likes_given + 1;
+END$$
+
+-- Триггеры для обновления подписок
+CREATE TRIGGER trg_stats_follow_insert
+AFTER INSERT ON User_Follows
+FOR EACH ROW
+BEGIN
+    -- Увеличиваем количество подписок у подписчика
+    INSERT INTO User_Statistics (user_id, subscriptions_count)
+    VALUES (NEW.follower_id, 1)
+    ON DUPLICATE KEY UPDATE subscriptions_count = subscriptions_count + 1;
+    
+    -- Увеличиваем количество подписчиков у цели
+    INSERT INTO User_Statistics (user_id, subscribers_count)
+    VALUES (NEW.following_id, 1)
+    ON DUPLICATE KEY UPDATE subscribers_count = subscribers_count + 1;
+END$$
+
+CREATE TRIGGER trg_stats_follow_delete
+AFTER DELETE ON User_Follows
+FOR EACH ROW
+BEGIN
+    UPDATE User_Statistics 
+    SET subscriptions_count = subscriptions_count - 1 
+    WHERE user_id = OLD.follower_id;
+    
+    UPDATE User_Statistics 
+    SET subscribers_count = subscribers_count - 1 
+    WHERE user_id = OLD.following_id;
+END$$
+
+DELIMITER ;
